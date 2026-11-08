@@ -4,269 +4,188 @@
 
 ---
 
-OmniRoute sıxışdırması mühərrik müqavilələri əsasında qurulub. Rejim birbaşa bir mühərriki
-(`caveman` və ya `rtk`) və ya bir neçə mühərriki ardıcıllıqla icra edən deterministik yığılmış konveyeri işlədə bilər.
+OmniRoute sıxılma mühərrik müqavilələri ətrafında qurulur. Rejim birbaşa bir mühərriki (`caveman` və ya `rtk`) və ya bir neçə mühərriki ardıcıllıqla icra edən deterministik yığılmış boru kəmərini işlədə bilər.
 
 ## Rejimlər
 
-| Rejim        | Mühərrik yolu                                                                          | Nəzərdə tutulan giriş                            |
-| ------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `off`        | yoxdur                                                                                 | Sorğunun dəqiq qorunması                         |
-| `lite`       | Caveman lite köməkçiləri                                                               | Aşağı riskli, daim aktiv təmizləmə               |
-| `standard`   | Caveman                                                                                | Təbii dildəki sorğunun yığcamlaşdırılması        |
-| `aggressive` | Caveman + tarix/alət xülasələşdiriciləri                                               | Uzun söhbət sessiyaları                          |
-| `ultra`      | Caveman + ixtisar köməkçiləri                                                          | Kontekst limiti bərpası                          |
-| `rtk`        | RTK                                                                                    | Terminal, qabıq, qurma, test və git çıxışı       |
-| `omniglyph`  | OmniGlyph                                                                              | Doğma provayder xəttində təsvir kimi kontekst    |
-| `stacked`    | Konveyer. Sorğunun standartı `session-dedup -> lite`-dır. `rtk -> caveman` seçimlidir. | Qarışıq alət jurnalları və mətn, maksimum qənaət |
+| Rejim        | Mühərrik yolu                                                                    | Nəzərdə tutulan giriş                          |
+| ------------ | -------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `off`        | heç biri                                                                         | Dəqiq operativ qorunma                         |
+| `lite`       | Caveman lite köməkçiləri                                                         | Aşağı riskli həmişə təmizlik                   |
+| `standard`   | Mağara adamı                                                                     | Təbii dildə sürətli kondensasiya               |
+| `aggressive` | Caveman + history/tool xülasəsi                                                  | Uzun söhbət seansları                          |
+| `ultra`      | Mağara adamı + budama köməkçiləri                                                | Kontekst limitinin bərpası                     |
+| `rtk`        | RTK                                                                              | Terminal, shell, build, test və git çıxışı     |
+| `omniglyph`  | OmniGlyph                                                                        | Doğma provayder telində şəkil kimi kontekst    |
+| `stacked`    | Boru kəməri. Defolt sorğu `session-dedup -> lite` dır. `rtk -> caveman` qoşulur. | Qarışıq alət qeydləri və nəsr, maksimum qənaət |
 
 ### OmniGlyph sıxılma profilləri
 
-`omniglyph` mühərriki (`omniglyph` paketi, 1.4.0+) adlı semantik profili qəbul edir; bu profil
-sıxılma parametrlərində `omniglyph.profile` vasitəsilə qlobal olaraq və ya yığılmış
-konveyerin addım konfiqurasiyası vasitəsilə hər addım üçün təyin edilir:
+`omniglyph` mühərriki (paket `omniglyph`, 1.4.0 +) adlandırılmış semantik profili qəbul edir, sıxılma parametrlərində `omniglyph.profile` vasitəsilə qlobal olaraq və ya yığılmış boru kəmərinin addım konfiqurasiyası vasitəsilə hər addım üçün təyin edilir:
 
-| Profil        | Sərhəd                                                                                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `aggressive`  | Standart. Dərc olunmuş ölçmə nəticələrinin əsaslandığı siyasət — sistem, alət sənədləri və sıx tarix təsvirlərə çevrilir |
-| `balanced`    | Aktiv vəziyyəti doğma formada saxlayır, son 8 gedişi qoruyur, daha köhnə bağlanmış tarixçəni yığcamlaşdırır              |
-| `coding-safe` | Səlahiyyətləri, alət sxemlərini və aktiv alət çıxışını doğma formada saxlayır, son 12 gedişi qoruyur                     |
-| `passthrough` | Çevirmədən yönləndirir; mühərrik ötürülür                                                                                |
+| Profil        | Sərhəd                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Defolt. Dərc edilmiş qəbzlərin siyasəti — şəkillər sistemini, alət sənədlərini və sıx tarixi ölçdü |
+| `balanced`    | Canlı ştatı yerli saxlayır, son 8 dönüşü qoruyur, köhnə qapalı tarixi çökdürür                     |
+| `coding-safe` | Səlahiyyət, alət sxemləri və canlı alət çıxışını yerli saxlayır, son 12 dönüşü qoruyur             |
+| `passthrough` | Transformasiya edilmədən marşrutlar; mühərrik atılır                                               |
 
-Profil **aşağı hədd deyil, yuxarı həddir**: paketdəki `mergeCompressionProfileOptions`
-çağıranın profilin bağladığı itkili zolağı əvəzləməklə yenidən açmasına icazə vermir, buna görə
-hər addım üzrə `preserveSystemPrompt: false` parametri `coding-safe` altında sistem
-sıxılmasını yenidən aktivləşdirə bilməz.
+Profil a** tavan, döşəmə deyil** : paketdəki `mergeCompressionProfileOptions` zəng edənin bağlanmış profili itirmiş zolağı yenidən açmasına icazə verməkdən imtina edir, buna görə də hər bir addım `preserveSystemPrompt: false` `coding-safe` altında sistemin sıxılmasını yenidən aktivləşdirə bilməz.
 
-Bu kod bazasında aparılan ölçmələrə görə: `coding-safe` və `balanced` `minCompressChars`
-dəyərini maksimuma qaldırır və sistemi, alət sxemlərini və alət nəticələrini doğma formada
-saxlayır; buna görə hələ tarixçə toplamamış sessiya `below_min_chars` mərhələsində dayanır və
-mühərrik heç nəyi çevirmir. Məhz buna görə standart olaraq ən təhlükəsiz profil deyil,
-`aggressive` istifadə olunur.
+Bu kod bazasında ölçülür: `coding-safe` və `balanced` `minCompressChars` maksimuma qaldırır və sistemi, alət sxemlərini və alət nəticələrini yerli saxlayır, beləliklə, hələ tarix toplamamış sessiya `below_min_chars` -də dayanır və mühərrik heç nəyi dəyişdirmir. Buna görə defolt ən təhlükəsiz profildən çox `aggressive` dir.
 
-Paket öz model əhatə dairəsini və profilini mühit konfiqurasiyasından müəyyən edir.
-OmniRoute qərarı heç vaxt həvalə etmir: adapter model keçidini paketin ən məhdudlaşdırıcı
-əhatə dairəsinə sabitləyir, buna görə host mühitinin parametrləri icazə siyahısını yalnız
-daralda bilər, onu heç vaxt OmniRoute-un ölçülmüş nəticələrindən kənara genişləndirə bilməz.
+Paket ətraf mühit konfiqurasiyasından öz model əhatə dairəsini və profilini həll edir. OmniRoute heç vaxt qərarı həvalə etmir: adapter model qapısını paketin ən məhdudlaşdırıcı əhatə dairəsinə bağlayır, ona görə də host mühitinin parametrləri yalnız icazə verilən siyahını daralda bilər, heç vaxt onu OmniRoute-nin ölçülmüş qəbzlərindən sonra genişləndirə bilməz.
 
 ## Mühərrik reyestri
 
-Reyestr `open-sse/services/compression/engines/registry.ts` faylında yerləşir. Mühərriklər ortaq
-bir müqavilə təqdim edir:
+Reyestr `open-sse/services/compression/engines/registry.ts` yaşayır. Mühərriklər ortaq müqaviləni ifşa edir:
 
-- `id`: `caveman` və ya `rtk` kimi sabit mühərrik identifikatoru
-- `apply(text, config)`: yığılmış konveyerlər tərəfindən istifadə edilən köhnə icra yolu
-- `compress(input, config)`: mətn + statistika qaytaran əsas icra yolu
-- `getConfigSchema()`: etibarlı konfiqurasiyanın JSON-Schema-ya bənzər strukturunu qaytarır
+- `id`: `caveman` və ya `rtk` kimi sabit mühərrik id
+- `apply(text, config)`: yığılmış boru kəmərləri tərəfindən istifadə edilən köhnə icra yolu
+- `compress(input, config)`: mətn + statistikasını qaytaran əsas icra yolu
+- `getConfigSchema()`: etibarlı konfiqurasiyanın JSON-Sxema kimi formasını qaytarır
 - `validateConfig(config)`: `{ valid, errors[] }` qaytarır
 
-Qeydiyyat üçün `registerCompressionEngine(engine)` (və ya mürəkkəb hallar üçün `registerEngine`)
-istifadə olunur və qəbul etməzdən əvvəl `assertValidEngine()` və `validateConfig(defaultConfig)` çağırılır.
-İcra zamanı mühərriki silmək üçün `unregisterCompressionEngine(id)` istifadə edin.
+Qeydiyyat qəbul etməzdən əvvəl `assertValidEngine()` və `validateConfig(defaultConfig)` çağıran `registerCompressionEngine(engine)` (və ya qabaqcıl hallar üçün `registerEngine` ) istifadə edir. Mühərriki iş vaxtında çıxarmaq üçün `unregisterCompressionEngine(id)` istifadə edin.
 
-`strategySelector.ts` sıxılma işə salınmazdan əvvəl daxili mühərrikləri qeydiyyata alır. Bu, önizləmə,
-icra zamanı sıxılma, yığılmış rejim, testlər və gələcək mühərriklər üçün eyni icra yolundan istifadə etməyə imkan verir.
+`strategySelector.ts` sıxılmadan əvvəl quraşdırılmış mühərrikləri qeyd edir. Bu, önizləmə, iş vaxtının sıxılması, yığılmış rejim, testlər və gələcək mühərriklərə eyni icra yolundan istifadə etməyə imkan verir.
 
-### MCP təsvirinin sıxılması (əlaqəli)
+### MCP təsviri sıxılma (əlaqəli)
 
-Ayrı bir reyestr MCP alət təsvirlərinin metadatasını reyestr səviyyəsində sıxır — baxın:
-`open-sse/mcp-server/descriptionCompressor.ts` və [MCP-SERVER.md](../frameworks/MCP-SERVER.md). O, Caveman
-qaydalarından təkrar istifadə edir, lakin sorğu faydalı yükü deyil, alət metadatası üzərində işləyir.
+Ayrı bir reyestr MCP alətinin təsviri metadatasını reyestr səviyyəsində — sıxışdırır, bax `open-sse/mcp-server/descriptionCompressor.ts` və [MCP-SERVER.md](../frameworks/MCP-SERVER.md). O, Caveman qaydalarını təkrar istifadə edir, lakin faydalı yükləri tələb etmir, alət metadatasında işləyir.
 
-### Əlavə daxili mühərriklər
+### Əlavə quraşdırılmış mühərriklər
 
-Caveman, RTK və LLMLingua-2 ilə yanaşı, reyestr bir neçə ixtisaslaşmış itkisiz /
-struktur mühərriklə təchiz olunur (yığılmış konveyerlər, sınaq mühiti və testlər tərəfindən istifadə edilir):
+Caveman, RTK və LLMLingua-2 dan başqa, reyestr bir neçə ixtisaslaşdırılmış itkisiz/struktur mühərrikləri (yığılmış boru kəmərləri, oyun meydançası və sınaqlar tərəfindən istifadə olunur) göndərir:
 
-| Mühərrik      | Id              | Nə edir                                                                                                                                                                                               |
-| ------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): böyük bitişik mətn bloklarını məzmuna görə ünvanlanan istinadlarla əvəz edir, beləliklə təkrarlanan/böyük bloklar bir dəfə göndərilir və sonra onlara istinad edilir. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): homogen JSON massivi faydalı yüklərinin sütunşəkilli `[N rows]` formasına itkisiz cədvəl sıxlaşdırılması.                                                                     |
-| ionizer       | `ionizer`       | Çox böyük homogen bloklar üçün başlanğıc/orta/son sətir nümunələməsi; buraxılan orta hissəni CCR məzmuna görə ünvanlanan istinad kimi saxlayır.                                                       |
-| session-dedup | `session-dedup` | Məzmun ünvanlı, dialoqlar arası dublikatların aradan qaldırılması (TokenMizer-dən ilhamlanıb): eyni sessiyanın əvvəlki dialoqlarında artıq görülmüş mətni ixtisar edir.                               |
+| Mühərrik     | İd              | Nə edir                                                                                                                                                                              |
+| ------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CCR          | `ccr`           | Content-Compress-Retrieve (H4): böyük bitişik mətn bloklarını məzmun ünvanlı istinadlarla əvəz edir, beləliklə, repeated/large blokları bir dəfə göndərilir və sonra istinad edilir. |
+| baş boşluğu  | `headroom`      | SmartCrusher (H3 + N5): homojen JSON massivinin faydalı yüklərinin sütunlu `[N rows]` formasına itkisiz cədvəl şəklində sıxlaşdırılması.                                             |
+| ionlaşdırıcı | `ionizer`       | çox böyük homojen bloklar üçün Head/middle/tail sıra seçmə, CCR məzmun ünvanlı arayış kimi örtülmüş ortanı saxlayır.                                                                 |
+| sessiya-deup | `session-dedup` | Məzmun ünvanlı çarpaz növbəli təkmilləşdirmə (TokenMizer-dən ilhamlanmış): eyni sessiyanın əvvəlki növbələrində artıq görünən mətni silir.                                           |
 
-**CCR əldəetmə protokolu təlimatı (#8033):** CCR sorğuda ilk dəfə ≥1 bloku əvəz etdikdə,
-mühərrik marker → alət müqaviləsini çağırana öyrədən, bir dəfə əlavə olunan və idempotent
-`system` mesajını (`[CCR protocol]` sentinel-i ilə başlayan) əvvələ əlavə edir:
-`[CCR retrieve hash=<24hex> chars=N]` markerinin nə demək olduğunu, heşin olduğu kimi
-(kopyalanmalı olduğunu (bütün 24 onaltılıq simvol — səhv kopyalanmış heşlər "blok tapılmadı"
-hallarının ehtimal olunan səbəbidir) və `[dedup:ref sha=...]` markerinin "tarixçəyə geri bax"
-mənasını verdiyini, "aləti çağır" demək olmadığını bildirir. Qeyd **yalnız çağıranın elan etdiyi `tools[]`
-onun həqiqətən `omniroute_ccr_retrieve`-ə çata bildiyini təsdiqlədikdə** əlavə edilir
-(`open-sse/services/compression/engines/ccr/protocolInstruction.ts` daxilindəki
-`callerSupportsCcrRetrieve()`) — bu aləti olmayan adi OpenAI-uyğun çağıran heç vaxt çata bilmədiyi
-bir şeyi çağırmaq üçün təlimat almır. İdempotentlik əlavə etməzdən əvvəl mesaj tarixçəsində sentinel-in
-axtarılması ilə təmin olunur, buna görə çoxgedişli sorğular (əvvəlki mesajları yenidən təqdim edənlər)
-qeydi hər gedişdə təkrar-təkrar əlavə etmir.
+**CCR retrieve-protocol təlimatı (#8033):** CCR sorğuda ilk dəfə ≥ 1 blokunu əvəz etdikdə, mühərrik zəng edənə marker → alət müqaviləsini öyrədən tək, idempotent `system` mesajını ( `[CCR protocol]` sentinel ilə aparır) əvvəldən hazırlayır: `[CCR retrieve hash=<24hex> chars=N]` markeri nə deməkdir, heş sözbəsöz kopyalanmalıdır (bütün 24 hexlock simvolu səhv səbəb ola bilər" tapılmadı" səhvləri) və — markerinin `[dedup:ref sha=...]` alətə zəng etmək" deyil, "tarixə nəzər salmaq" mənasını verir. Qeyd enjekte edilir** yalnız zəng edənin elan etdiyi `tools[]` həqiqətən `omniroute_ccr_retrieve` çata biləcəyini sübut etdikdə** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — sadə OpenAI-a uyğun gələn zəng edən, bu aləti olmayan heç vaxt çata bilmədiyi bir şeyə zəng etmək üçün göstəriş almır. Idempotency inyeksiyadan əvvəl gözətçi üçün mesaj tarixçəsini skan etməklə tətbiq edilir, beləliklə, çoxdövrəli sorğular (əvvəlki mesajları təkrarlayan) qeydi hər növbəyə bir dəfə yığmaz.
 
-## Caveman
+## Mağara adamı
 
-Caveman rejimi adi mətnin semantik sıxlaşdırılmasına yönəlib:
+Caveman rejimi normal nəsrin semantik kondensasiyasına diqqət yetirir:
 
-- kod bloklarını, URL-ləri, JSON-u, yolları və strukturlaşdırılmış verilənləri qoruyur
-- artıq sözləri, qeyri-müəyyən ifadələri, təkrarlanan konteksti və həddindən artıq uzun bağlayıcı ifadələri silir
-- `open-sse/services/compression/rules/` daxilində dilə uyğun fayl qaydaları paketlərini dəstəkləyir
-- köhnə `standard`, `aggressive` və `ultra` rejimləri vasitəsilə əlçatan qalır
+- kod bloklarını, URLs, JSON, yolları və strukturlaşdırılmış məlumatları qoruyur
+- doldurucu, hedcinq, təkrar kontekst və ətraflı birləşdirici ifadələri silir
+- `open-sse/services/compression/rules/` da dildən xəbərdar olan fayl qaydaları paketlərini dəstəkləyir
+- köhnə `standard`, `aggressive` və `ultra` rejimləri vasitəsilə əlçatan olaraq qalır
 
-İdarəetmə panelindəki bölmə `Dashboard -> Context & Cache -> Caveman` yolundadır.
+Tablosunun səthi `Dashboard -> Context & Cache -> Caveman`.
 
-Caveman-in yuxarı axın layihəsi çıxış tokenlərinin `~75%` azalmasını, müqayisəli testlərdə
-`22-87%` diapazonu ilə orta hesabla `65%` çıxış qənaətini və `~46%` giriş sıxlaşdırmasını bildirir.
-OmniRoute birləşdirilmiş sorğu/kontekst qənaətini sənədləşdirərkən Caveman-in giriş tərəfi üçün
-göstəricidən istifadə edir; Caveman çıxış rejimi isə ayrıca cavab davranışı funksiyası olaraq qalır.
+Caveman upstream `~75%` daha az çıxış tokeni, `22-87%` diapazonu olan etalonlarda `65%` orta çıxış qənaəti və `~46%` giriş-sıxılma aləti haqqında məlumat verir. OmniRoute yığılmış prompt/context qənaətlərini sənədləşdirərkən Caveman giriş tərəfindəki nömrədən istifadə edir; Caveman çıxış rejimi ayrıca cavab-davranış xüsusiyyəti olaraq qalır.
 
 ## RTK
 
-RTK rejimi əmr və alət çıxışına yönəlib:
+RTK rejimi əmr və alət çıxışına diqqət yetirir:
 
-- `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go testləri,
-  TypeScript/Vite/Webpack yığımları, ESLint, npm audit/quraşdırmaları, Docker jurnalları,
-  shell `find`/`grep`, çağırış stekləri və ümumi jurnallar kimi çıxış siniflərini aşkarlayır
-- `open-sse/services/compression/engines/rtk/filters/` daxilindəki 49 JSON filtrini tətbiq edir
-- RTK üslublu deklarativ emal zəncirini dəstəkləyir: ANSI kodlarının silinməsi, əvəzləmə, çıxış uyğunlaşdıqda qısa qapanma,
-  sətirlərin silinməsi/saxlanması, hər sətir üzrə qısaltma, başlanğıc/son/maksimum sətir üzrə qısaltma və boş nəticə üçün ehtiyat variant
-- `.rtk/filters.json` daxilində etibar yoxlamasından keçən layihə filtrlərini və
-  `DATA_DIR/rtk/filters.json` daxilindəki qlobal filtrləri dəstəkləyir
-- ANSI ardıcıllıqlarını, gedişatla bağlı səs-küyü, təkrarlanan sətirləri və faydasız standart mətnləri silir
-- tədbir görülə bilən xətaları, xəbərdarlıqları, xülasələri, dəyişdirilmiş faylları və son hissədəki konteksti qoruyur
-- bərpa/sazlama üçün redaktə edilmiş xam çıxışı autentifikasiya olunmuş idarəetmə
-  marşrutları vasitəsilə istəyə bağlı olaraq saxlaya bilər
+- `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go testləri, TypeScript/Vite/Webpack qurmaları, ESLint, npm audit/installs, Docker logs, shell `find`/`grep`, stack traces və generic logs kimi çıxış siniflərini aşkar edir
+- `open-sse/services/compression/engines/rtk/filters/` dən 49 JSON filtr tətbiq edir
+- RTK tipli deklarativ boru kəmərini dəstəkləyir: ANSI soyulması, dəyişdirilməsi, uyğun çıxış qısaqapanması, strip/keep xətləri, hər sətirdə kəsilmə, head/tail/max-line kəsilməsi və boş geri qaytarma
+- `.rtk/filters.json` -da güvənli layihə filtrlərini və `DATA_DIR/rtk/filters.json`-də qlobal filtrləri dəstəkləyir
+- zolaqlar ANSI ardıcıllığı, irəliləyiş səs-küyü, təkrarlanan xətlər və faydasız qazan lövhəsi
+- təsirli uğursuzluqları, xəbərdarlıqları, xülasələri, dəyişdirilmiş faylları və quyruq kontekstini qoruyur
+- isteğe bağlı olaraq təsdiqlənmiş idarəetmə marşrutları vasitəsilə recovery/debugging üçün redaktə edilmiş xam məhsulu saxlaya bilər
 
-İdarəetmə panelindəki bölmə `Dashboard -> Context & Cache -> RTK` yolundadır.
+Tablosunun səthi `Dashboard -> Context & Cache -> RTK`.
 
-Fərdi filtrlər, etibar, yoxlama və xam çıxışın bərpası ilə bağlı əməliyyat təfərrüatları
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md) faylında verilib.
+Fərdi filtrlər, etibar, doğrulama və xammalın bərpası üçün əməliyyat təfərrüatları [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md) -da canlıdır.
 
-RTK-nin yuxarı axın layihəsi əmr çıxışının sıxlaşdırılması üçün `60-90%` qənaət bildirir. Onun README nümunəsində
-30 dəqiqəlik Claude Code sessiyasının `~118,000` tokendən `~23,900` tokenə endiyi, yəni `79.7%` qənaət edildiyi göstərilir.
+RTK upstream, əmr-çıxış sıxışdırması üçün `60-90%` qənaətini bildirir. Onun README nümunəsi `~118,000` tokenlərindən `~23,900` və ya `79.7%` saxlanmasına gedən 30 dəqiqəlik Claude Kod sessiyasını göstərir.
 
-## LLMLingua-2 (Semantik budama)
+## LLMLingua-2 (Semantik Budama)
 
-LLMLingua-2 rejimi kiçik ONNX token təsnifatçısından istifadə edərək mətn üzərində
-**semantik token budaması** həyata keçirir və qaydalara əsaslanan Caveman və RTK mühərriklərini tamamlayır:
+LLMLingua-2 rejimi həyata keçirir** semantik işarə budaması** Qayda əsaslı Caveman və RTK mühərriklərini tamamlayan kiçik ONNX token klassifikatorundan istifadə edərək nəsrdə:
 
-- yalnız sistemə aid olmayan mesajlardakı mətni sıxlaşdırır; çəpərlənmiş kod blokları və digər qorunan
-  konstruksiyalar heç vaxt dəyişdirilmir
-- `@atjsh/llmlingua-2` arxa sistemini (`@huggingface/transformers` vasitəsilə ONNX) ayrıca
-  işçi axında işlədir, beləliklə model nəticə çıxarışı sorğunun hadisə dövrəsini heç vaxt bloklamır
-- **zəncirlənə bilir** (`stackPriority` 35): zəncirlənmiş emal xəttində struktur mühərriklərdən
-  (CCR, session-dedup, headroom, Caveman) sonra, lakin `ultra`-dan əvvəl işləyir, çünki
-  semantik budama əvvəlcədən struktur baxımından sıxlaşdırılmış mətn üzərində daha effektivdir — məsələn,
-  `rtk -> caveman -> llmlingua`
-- **istənilən xəta zamanı açıq rejimə keçir** (çatışmayan istəyə bağlı asılılıqlar, işçi axının başladılması, modelin yüklənməsi, nəticə çıxarışı
-  və ya vaxt aşımı) → xəta əvəzinə orijinal mətn dəyişdirilmədən qaytarılır
+- yalnız sistem olmayan mesajlarda nəsri sıxışdırır; hasarlanmış kod blokları və digər qorunan konstruksiyalar heç vaxt dəyişdirilmir
+- `@atjsh/llmlingua-2` backendini (ONNX via `@huggingface/transformers`) işçi ipdə işlədir, buna görə də model nəticəsi sorğu hadisəsi dövrəsini heç vaxt bloklamır.
+- edir** yığıla bilən** (`stackPriority` 35): yığılmış boru kəmərində o, struktur mühərriklərdən (CCR, session-dedup, headroom, Caveman) sonra, lakin `ultra` əvvəl işləyir, çünki semantik budama artıq struktur olaraq sıxılmış mətn — məsələn, `rtk -> caveman -> llmlingua` üzərində ən effektivdir.
+- **hər hansı bir səhvdə uğursuz açılır** (isteğe bağlı deps, işçi kürü, model yükü, nəticə və ya vaxt aşımı yoxdur) → orijinal mətn dəyişdirilmədən qaytarılır, heç vaxt xəta yoxdur
 
-Mühərrikin yerləşdiyi yer: `open-sse/services/compression/engines/llmlingua/`. İdarəetmə panelindəki bölmə
-`Dashboard -> Context & Cache -> LLMLingua` yolundadır.
+Mühərrik yeri: `open-sse/services/compression/engines/llmlingua/`. Tablosunun səthi `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modellər
 
-Standart model **TinyBERT**-dir (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-sürətli). Daha yüksək dəqiqliyə malik **BERT-base** modeli (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) mühərrik konfiqurasiyasındakı `model` sahəsi vasitəsilə əlçatandır. `@huggingface/transformers`
-seçilmiş modeli ilk çağırış zamanı HuggingFace Hub-dan
-`${DATA_DIR}/models/llmlingua` daxilinə tənbəl şəkildə endirir (`modelStore.ts`); `modelPath` konfiqurasiya
-əvəzləməsi isə onu yerli nüsxəyə yönəldir (oflayn / şəbəkədən təcrid olunmuş quraşdırmalar).
+Standart modeldir**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, sürətli). Daha yüksək dəqiqlik** BERT bazası** model (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) mühərrik konfiqurasiyası `model` sahəsi vasitəsilə mövcuddur. `@huggingface/transformers` seçilmiş modeli tənbəlliklə HuggingFace Hub-dan ilk zəngdə `${DATA_DIR}/models/llmlingua` -a endirir (`modelStore.ts`); `modelPath` konfiqurasiyasının ləğvi onu yerli nüsxədə göstərir (oflayn / hava boşluqlu quraşdırmalar).
 
-### İstəyə bağlı asılılıqlar və tələb əsasında quraşdırma
+### Könüllü asılılıqlar və tələb üzrə quraşdırma
 
-Budana bilən LLMLingua icra mühitinin bərabərsəviyyəli asılılıqlar dəsti **istəyə bağlıdır**. İki paket
-`package.json` daxilində `optionalDependencies` kimi elan edilib və istehsal yığımı tərəfindən **xarici**
-saxlanılır (`scripts/build/prepublish.ts` onları paketə daxil etmir):
+Prunable LLMLingua runtime peer stack edir** isteğe bağlıdır** . İki paket `package.json` -də `optionalDependencies` olaraq elan edilir və saxlanılır** xarici** istehsal quruluşuna görə (`scripts/build/prepublish.ts` onları birləşdirmir):
 
-| Paket                | Versiya (sabitlənmiş) | Qeydlər                                                            |
-| -------------------- | --------------------- | ------------------------------------------------------------------ |
-| `@atjsh/llmlingua-2` | `2.0.5`               | Giriş paketi; digərlərini bərabərsəviyyəli asılılıq kimi elan edir |
-| `js-tiktoken`        | `^1.0.20`             | Tokenləşdirici                                                     |
+| Paket                | Versiya (pin) | Qeydlər                                          |
+| -------------------- | ------------- | ------------------------------------------------ |
+| `@atjsh/llmlingua-2` | `2.0.5`       | Giriş paketi; digərlərini həmyaşıdları elan edir |
+| `js-tiktoken`        | `^1.0.20`     | Tokenizer                                        |
 
-`@huggingface/transformers` `^4.2.0` versiyasına sabitlənib (yerli daxiletmələr yolu ilə paylaşılır və
-həmçinin müstəqil paketdə izlənilir); `@atjsh/llmlingua-2@2.0.5` onun üçün
-`"^3.5.2 || ^4.0.0"` bərabərsəviyyəli asılılığını tələb edir, buna görə həm Transformers.js v3, həm də v4 dəstəklənir. 2.0.4-dən etibarən
-`@atjsh/llmlingua-2` artıq `@tensorflow/tfjs` tələb etmir; bununla SLM dəstinə ən böyük töhfə verən
-komponent (TensorFlow.js) çıxarılıb. Yalnız yuxarıdakı iki paket budana bilən SLM
-bərabərsəviyyəli asılılıqlarıdır. Standart `npm install` (inkişaf mühiti), istəyə bağlı
-asılılıqlar buraxılmadığı halda, bu dəsti avtomatik quraşdırır.
+`@huggingface/transformers` `^4.2.0` -də bərkidilir (yerli daxiletmə yolu ilə paylaşılır və həmçinin müstəqil paketdə izlənilir); `@atjsh/llmlingua-2@2.0.5` `"^3.5.2 || ^4.0.0"` ilə həmyaşıddır, ona görə də həm Transformers.js v3, həm də v4 dəstəklənir. 2.0.4-dən bəri, `@atjsh/llmlingua-2` artıq `@tensorflow/tfjs` tələb etmir, bu da ən böyük tək iştirakçını (TensorFlow.js) SLM yığınından çıxardı. Yalnız yuxarıdakı iki paket prunable SLM həmyaşıdlarıdır. Standart `npm install` (dev) isteğe bağlı asılılıqlar buraxılmadığı təqdirdə isteğe bağlı yığını avtomatik quraşdırır.
 
-**Niyə tələb əsasında:** npm-də dərc olunan paket, müstəqil paket və Docker obrazı
-kiçik qalmaq üçün bu asılılıqlar **olmadan** təqdim olunur. Onlar olmadıqda işçi axının asılılıq
-yoxlaması (`worker.ts` daxilində `@atjsh/llmlingua-2` həll etmə sınağı) uğursuz olur və mühərrik
-**səssizcə açıq rejimə keçir** — LLMLingua-nın seçilməsi heç bir əməliyyat icra etmir (mətn dəyişdirilmədən qaytarılır,
-heç bir xəta jurnala yazılmır). Onu budanmış mühitdə aktivləşdirmək üçün istəyə bağlı dəsti quraşdırın:
+**Niyə tələb üzrə:** npm tərəfindən nəşr olunan paket, müstəqil paket və Docker təsvir gəmisi** olmadan** bu deps incə qalmaq üçün. Onlar olmadıqda, işçinin asılılıq qapısı ( `worker.ts`-də `@atjsh/llmlingua-2` həll zondu) uğursuz olur və mühərrik** uğursuz-səssiz açılır** — seçilməsi LLMLingua qeyri-op olur (mətn dəyişdirilmədən qaytarılır, xəta qeydə alınmır). Onu budanmış mühitdə aktivləşdirmək üçün əlavə yığını quraşdırın:
 
 ```bash
-# package.json optionalDependencies daxilində elan edilmiş versiyalara sabitləyin
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-`@tensorflow/tfjs` paketinin çıxarılması (2.0.4+) əvvəllər üstünlük təşkil edən ~800 MB-lıq
-komponenti aradan qaldırır — qalan həcm transformers.js + onnxruntime-node icra mühitlərindən,
-həmçinin ilk istifadə zamanı endirilən (npm vasitəsilə deyil) TinyBERT modelindən (~57 MB) ibarətdir.
+`@tensorflow/tfjs` silinməsi (2.0.4 +) əvvəllər dominant olan ~ 800 MB töhfəçini — aradan qaldırır, qalan iz transformers.js + onnxruntime-node işləmə müddətləri, üstəgəl TinyBERT modeli (~ 57 MB) atpm vasitəsilə endirilməmişdir.
 
-Hər mühit üzrə:
+Ətraf mühitə görə:
 
-- **Dev / `npm install`** — `--omit=optional` (və ya `--no-optional`) parametrini ötürmədiyiniz halda avtomatik quraşdırılır.
-  Heç bir əməliyyat tələb olunmur.
-- **Qlobal npm (`npm i -g omniroute`) / müstəqil paket** — yuxarıdakı quraşdırma əmrini
-  quraşdırılmış paket qovluğunda icra edin və ya optional asılılıqları kənarda saxlamadan yenidən quraşdırın.
-- **Docker** — quraşdırma əmrini törəmə image qatına əlavə edin; yayımlanmış image
-  məqsədli şəkildə minimaldır.
-- **VPS (PM2)** — tətbiqin `node_modules` qovluğuna quraşdırın, sonra worker-in yoxlama mexanizmini
-  yenidən sınaqdan keçirməsi üçün prosesi yenidən başladın.
-- **Xam Next standalone (`npm run build` → `.build/next/standalone/server.js`)** — standalone
-  trace NƏ worker-i, NƏ DƏ optional asılılıqları ehtiva edir, buna görə də mühərrik səssizcə
-  fail-open rejiminə keçir. `scripts/build/colocate-standalone.mjs` hər ikisini yenidən tətbiq edir (worker üçün esbuild +
-  optional asılılıqların tam zəncirini standalone ağacına əlavə edir); o, hər build-dən sonra
-  `postbuild` npm hook-u vasitəsilə avtomatik işləyir. İdempotentdir, asılılıqlar olmadıqda xətanı yumşaq şəkildə idarə edir.
+- **Dev / `npm install`** `--omit=optional` (və ya `--no-optional`) keçmədiyiniz halda — avtomatik olaraq quraşdırılır. Fəaliyyətə ehtiyac yoxdur.
+- **Qlobal npm (`npm i -g omniroute`) / müstəqil** — quraşdırılmış paket qovluğunda yuxarıdakı quraşdırma əmrini işlədin və ya isteğe bağlı depsləri buraxmadan yenidən quraşdırın.
+- **Docker** — əldə edilmiş şəkil qatına quraşdırma əmrini əlavə edin; nəşr olunan təsvir dizayn baxımından incədir.
+- **VPS (PM2)** — tətbiqin `node_modules` ə quraşdırın, sonra prosesi yenidən başladın ki, işçi qapını yenidən yoxlasın.
+- **Raw Next müstəqil (`npm run build` → `.build/next/standalone/server.js`)** — müstəqil izləmə gəmiləri nə işçiyə, nə də isteğe bağlı deplərə NEITHER, beləliklə mühərrik səssizcə sıradan çıxır. `scripts/build/colocate-standalone.mjs` hər ikisini yenidən tətbiq edir (işçi esbuild + isteğe bağlı-dep bağlanması müstəqil ağaca); hər qurduqdan sonra `postbuild` npm çəngəl vasitəsilə avtomatik işləyir. İdempotent, deps olmadıqda uğursuz-yumşaq.
 
-**Aktiv olduğunu yoxlayın:** LLMLingua seçildikdə real mətn həqiqətən qısalır (mühərrik
-fail-open rejiminə keçməyi dayandırır) və ilk sorğu modelin
-`${DATA_DIR}/models/llmlingua` qovluğuna endirilməsini başladır. Yoxlama mexanizmi qəsdən yalnız `@atjsh/llmlingua-2` paketini yoxlayır —
-digər peer-lər yalnız ESM üçündür və mövcud olsalar belə `require.resolve` onlar üçün xəta atır — buna görə də
-`import()` zamanı hər hansı peer həqiqətən çatışmırsa, worker yenə fail-open rejiminə keçir.
+**Aktiv olduğunu yoxlayın:** LLMLingua seçildikdə, real nəsr əslində kiçilir (mühərrik uğursuz açılışı dayandırır) və ilk sorğu modelin `${DATA_DIR}/models/llmlingua`-ə endirilməsini tetikler. Qapı qəsdən yalnız `@atjsh/llmlingua-2` — yoxlayır, digər həmyaşıdlar yalnız ESM-dir və `require.resolve` hətta mövcud — olduqda belə onlara atır, beləliklə, `import()` vaxtında hər hansı həmyaşıd həqiqətən itibsə, işçi hələ də uğursuz açılır.
 
-## Ard-arda düzülmüş konveyerlər
+## Yığılmış boru kəmərləri
 
-Ard-arda düzülmüş rejim konveyer addımlarını sıra ilə icra edir. Standart ardıcıllıq belədir:
+Yığılmış rejim boru kəməri addımlarını ardıcıllıqla icra edir. Varsayılan olaraq:
 
 ```txt
 rtk -> caveman
 ```
 
-Bu rejimi əmrlərin çıxışını insan və ya köməkçi tərəfindən yazılmış mətnlə birləşdirən sorğuların olduğu kodlaşdırma agenti sessiyaları üçün istifadə edin. Əvvəlcə RTK səs-küylü alət jurnallarını azaldır, sonra Caveman qalan təbii dili sıxır.
+Bunu, əmr çıxışını insan və ya köməkçi nəsrlə birləşdirdiyi kodlaşdırma-agent seansları üçün istifadə edin. RTK əvvəlcə səs-küylü alət qeydlərini azaldır, sonra Caveman qalan təbii dili sıxır.
 
-Konveyer addımları sıxılma parametrlərində `stackedPipeline` ilə və ya sıxılma kombinasiyaları vasitəsilə konfiqurasiya edilir.
+Boru kəməri addımları sıxılma parametrlərində və ya sıxılma kombinasiyalarında `stackedPipeline` ilə konfiqurasiya edilir.
 
-Hər iki mühərrik eyni uyğun məlumat yükünü azaltdıqda qənaət kumulyativ olur:
+Hər iki mühərrik eyni uyğun yükü azaltdıqda, qənaət kompleksi yaranır:
 
 ```txt
-birləşdirilmiş = 1 - (1 - RTK qənaəti) * (1 - Caveman giriş qənaəti)
-orta           = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
-diapazon        = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
+combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
+average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
+range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## MCP əlçatanlıq ağacı filtri
+## MCP Əlçatanlıq Ağacı Filtri
 
-MCP əlçatanlıq ağacının ağıllı filtri sorğularda və ya kontekstdə deyil, MCP **alət nəticələrində** işləyən icradan sonrakı sıxılma qatıdır. O, Playwright, computer-use və brauzer avtomatlaşdırması üçün MCP serverləri kimi alətlərin qaytardığı çoxhəcmli əlçatanlıq ağacı və brauzer anlıq görüntü məlumatlarını hədəfləyir.
+MCP accessibility-tree smart filter MCP üzərində işləyən icradan sonrakı sıxılma qatıdır.** alət nəticələri** , göstərişlər və ya kontekstdə deyil. O Playwright, kompüter istifadəsi və brauzer avtomatlaşdırılması MCP serverləri kimi alətlər tərəfindən qaytarılan ətraflı əlçatanlıq ağacını və brauzerin snapshot yüklərini hədəfləyir.
 
 ### Nə edir
 
-1. **Səs-küyün təmizlənməsi** — boş ümumi/mətn qeydlərini (`- generic:`, `- text: ""`) silir
-2. **Qonşu elementlərin yığılması** — ≥ `collapseThreshold` (standart olaraq 30) ardıcıl sətir struktur baxımından təkrarlandıqda, onları ilk `collapseKeepHead` (standart olaraq 10) sətirə + say xülasəsinə + son `collapseKeepTail` (standart olaraq 5) sətirə yığır
-3. **İstinadların qorunması** — Playwright/computer-use üçün tələb olunan `[ref=eXX]` lövbərlərinə heç vaxt toxunulmur
-4. **Sərt kəsilmə** — yığılmadan sonra mətn hələ də `maxTextChars` (standart olaraq 50,000) həddini aşırsa, agentin işi davam etdirə bilməsi üçün naviqasiya göstərişi əlavə etməklə mətni kəsir
+1. **Səs-küyün çıxarılması** — boş generic/text girişlərini silir (`- generic:`, `- text: ""`)
+2. **Qardaşın dağılması** — ≥ `collapseThreshold` (defolt 30) ardıcıl sətirlər struktur təkrarları olduqda, onları ilk `collapseKeepHead` (standart 10) sətirlərə yığır + a count xülasə + sonuncu `collapseKeepTail` (defolt 5) sətirlər
+3. **Ref mühafizəsi** Playwright/computer-use tərəfindən tələb olunan — `[ref=eXX]` lövbərlərinə heç vaxt toxunulmur
+4. **Sərt kəsmə** — çökdükdən sonra mətn hələ də `maxTextChars` (defolt 50,000) keçirsə, naviqasiya işarəsi ilə kəsilir ki, agent işə davam edə bilsin
 
-### Mühərrikin yerləşdiyi yer
+### Mühərrikin yeri
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← smartFilterText() giriş nöqtəsi
-  collapseRepeated.ts ← qonşu elementləri yığma alqoritmi
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Konfiqurasiya
 
-Qlobal parametrlərdəki `compression.mcpAccessibility` ilə idarə olunur (miqrasiya 056). Standart konfiqurasiya:
+Qlobal parametrlərdə `compression.mcpAccessibility` tərəfindən idarə olunur (miqrasiya 056). Defolt konfiqurasiya:
 
 ```json
 {
@@ -279,122 +198,174 @@ Qlobal parametrlərdəki `compression.mcpAccessibility` ilə idarə olunur (miqr
 }
 ```
 
-Filtr yalnız `type` dəyəri `"text"` olan və uzunluğu `minLengthToProcess` həddini aşan alət nəticəsi məlumatlarına tətbiq edilir. O, sorğuların sıxılmasına və ya sorğu məlumatlarına təsir etmir.
+Filtr yalnız `type` `"text"` olan və uzunluğu `minLengthToProcess` çox olan alət-nəticə yüklərinə tətbiq edilir. Bu, tez sıxılmaya və ya tələb yüklərinə təsir etmir.
 
 ### Gözlənilən qənaət
 
-Səhifənin mürəkkəbliyindən asılı olaraq brauzer anlıq görüntüsü alət nəticələrində 60–80% qənaət. Yığılma alqoritminin sətir sayına görə mürəkkəbliyi O(n)-dir və cüzi gecikmə yaradır.
+Səhifənin mürəkkəbliyindən asılı olaraq brauzer snapshot aləti nəticələrində 60-80%. Dağılma alqoritmi sətir sayında O(n)-dir və əhəmiyyətsiz gecikmə əlavə edir.
 
-### Bu filtrlə yuxarıdakı sıxılma mühərriklərinin müqayisəsi
+### Bu filtr yuxarıdakı sıxılma mühərriklərinə qarşı
 
-| Aspekt             | Caveman / RTK / Ard-arda düzülmüş | MCP əlçatanlıq filtri                  |
-| ------------------ | --------------------------------- | -------------------------------------- |
-| Hədəf              | Sorğular / kontekst               | MCP alət nəticələri                    |
-| İşəsalma mexanizmi | Sıxılma rejimi parametri          | `compression.mcpAccessibility.enabled` |
-| Əhatə dairəsi      | Bütün SSE mesajları               | Yalnız alət nəticələri                 |
-| İstinad lövbərləri | Tətbiq edilmir                    | Şərtsiz qorunur                        |
+| Aspekt         | Mağara adamı / RTK / Yığılmış | MCP əlçatanlıq filtri                  |
+| -------------- | ----------------------------- | -------------------------------------- |
+| Hədəf          | Sorğu göstərişləri / kontekst | MCP alətinin nəticələri                |
+| Tətik          | Sıxılma rejiminin təyini      | `compression.mcpAccessibility.enabled` |
+| Əhatə dairəsi  | Bütün SSE mesajları           | Yalnız alət nəticələri                 |
+| Ref lövbərləri | N/A                           | Şərtsiz saxlanılır                     |
 
 ---
 
-## Sıxılma kombinasiyaları
+## Sıxılma birləşmələri
 
-Sıxılma kombinasiyaları marşrutlaşdırma kombinasiyalarına təyin edilə bilən adlandırılmış sıxılma profilləridir:
+Sıxılma kombinləri marşrutlaşdırıcı kombinələrə təyin edilə bilən sıxılma profilləri adlanır:
 
-- `compression_combos`: rejimi, emal konveyerini, RTK konfiqurasiyasını, dil konfiqurasiyasını və standart göstəricini saxlayır
+- `compression_combos`: rejimi, boru xəttini, RTK konfiqurasiyasını, dil konfiqurasiyasını və defolt markeri saxlayır
 - `compression_combo_assignments`: sıxılma kombinasiyasını marşrutlaşdırma kombinasiyası ilə əlaqələndirir
-- icra mühiti inteqrasiyası ümumi kombinasiya əvəzləmələrindən əvvəl təyin edilmiş sıxılma kombinasiyasını müəyyən edir
+- iş vaxtı inteqrasiyası təyin edilmiş sıxılma kombinasiyasını ümumi kombin ləğv etməzdən əvvəl həll edir
 - analitikaya `compression_combo_id` və `engine` daxildir
 
-İdarə panelindəki yeri: `İdarə paneli -> Kontekst və keş -> Sıxılma kombinasiyaları`.
+Tablosunun səthi: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## API interfeysi
+## İlkin şərtlər / operator təlimatı (CCR & session-dedup)
 
-| Marşrut                                | Məqsəd                                                                         |
-| -------------------------------------- | ------------------------------------------------------------------------------ |
-| `/api/settings/compression`            | Qlobal sıxılma parametrləri (`mcpAccessibility` konfiqurasiyası daxil olmaqla) |
-| `/api/compression/preview`             | İstənilən sıxılma rejiminə önbaxış                                             |
-| `/api/compression/language-packs`      | Mövcud Caveman dil paketlərini siyahıya almaq                                  |
-| `/api/context/caveman/config`          | Caveman parametrləri üçün alternativ ad                                        |
-| `/api/context/rtk/config`              | RTK standartları və parametrləri                                               |
-| `/api/context/rtk/filters`             | RTK filtrləri kataloqu                                                         |
-| `/api/context/rtk/test`                | RTK önbaxış/sınaq son nöqtəsi                                                  |
-| `/api/context/rtk/raw-output/[id]`     | Autentifikasiya tələb edən, məxfi hissələri çıxarılmış xam çıxışın bərpası     |
-| `/api/context/combos`                  | Sıxılma kombinasiyaları üçün CRUD                                              |
-| `/api/context/combos/[id]/assignments` | Marşrutlaşdırma kombinasiyası təyinatları üçün CRUD                            |
-| `/api/context/analytics`               | Sıxılma analitikası üçün alternativ ad                                         |
+CCR (`ccr`) və `session-dedup` mətni əvəz edir və ya silir və tərk edir a** marker** arxada. Bu bölmə müştəriyə naqil çəkmək, iki markeri oxumaq və örtülmüş məzmunu əldə etmək və ya diaqnostika etmək üçün operator istinadıdır. Hər bir mühərrikin mexanikası yuxarıda əhatə olunmuşdur; bu "necə işlədirəm" təbəqəsidir.
 
-İdarəetmə marşrutları idarəetmə autentifikasiyası və ya API açarı siyasəti yoxlamalarını tələb edir.
+### Nəqliyyatlar və son nöqtələr
 
-## MCP alətləri
+CCR alətlərini ifşa edən MCP serverinə üç yolla çatmaq olar. Defolt əsas URL `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
 
-Sıxılma beş MCP aləti təqdim edir:
+| Nəqliyyat                                        | URL / əmr                               | Qeydlər                                                                                                                                                 |
+| ------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Yayım edilə bilən HTTP (müştəri, tövsiyə olunur) | `http://localhost:20128/api/mcp/stream` | Mövcud MCP müştərilərinin danışdıqları son nöqtə.                                                                                                       |
+| Legacy SSE singleton                             | `http://localhost:20128/api/mcp/sse`    | Köhnə singleton nəqliyyatı. Bu** bağlayır** axın edilə bilən seanslar; `streamable-http` müştərilərini `/api/mcp/stream` qarşı istifadə edin, bu deyil. |
+| stdio                                            | `omniroute --mcp`                       | Prosesi doğuran IDE MCP konfiqurasiyası üçün. `--dev` bayrağı yoxdur; `omniroute --mcp` stdio giriş nöqtəsidir.                                         |
 
-| Alət                                | Əhatə dairəsi       | Məqsəd                                              |
-| ----------------------------------- | ------------------- | --------------------------------------------------- |
-| `omniroute_compression_status`      | `read:compression`  | Parametrlər, analitika, keş statistikası            |
-| `omniroute_compression_configure`   | `write:compression` | Qlobal parametrləri yeniləmək                       |
-| `omniroute_set_compression_engine`  | `write:compression` | Rejimi və istəyə bağlı emal konveyerini təyin etmək |
-| `omniroute_list_compression_combos` | `read:compression`  | Sıxılma kombinasiyalarını siyahıya almaq            |
-| `omniroute_compression_combo_stats` | `read:compression`  | Kombinasiya/mühərrik analitikasını oxumaq           |
+### Yaddaş səviyyələri (yenidən başladıqdan sonra sağ qalan)
+
+CCR a** iki qatlı** mağaza, yalnız yaddaşda deyil:
+
+- **İsti yaddaşdaxili səviyyə** — hər blok üçün qapaq 2 MiB, hər əsas üzrə 16 MiB, qlobal 64 MiB. Girişlər standart olaraq 24 saat TTL (maksimum 7 gün). Yaddaşdan tam MCP axtarışı 256 KiB ilə məhdudlaşır; Menzilli / grep rejimləri vasitəsilə daha böyük hər hansı bir şey əldə edilə bilər.
+- **Davamlı SQLite səviyyəsi** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, defolt olaraq aktivdir) — yaddaşdaxili pilləni dəstəkləyir, beləliklə blok LRU çıxarılmasından, yenidən işə salınmadan və ya başqa nüsxədə bərpa enişindən sağ qalsın. Sətir blokun TTL saxlayır, ona görə də TTL dən keçən blok hər iki səviyyədən ayrılır.
+
+Üç mühafizəçi dayanıqlı səviyyəni məhdudlaşdıran — blokunu yalnız aşağıdakı hallarda yaddaşda saxlayır:
+
+1. blok bitdi** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. iş vaxtı bulud işləmə vaxtıdır (yerli disk yoxdur);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Beləliklə, "blok itdi" ümumi yenidən başladın hekayəsi deyil: yerli, buludsuz işləmə müddətindəki sub-512 KB bloku TTL bitənə qədər dayanıqlı səviyyə vasitəsilə yenidən başlamağa davam edir. Dəyişən üçün [Ətraf Mühit arayışına](../reference/ENVIRONMENT.md) baxın.
+
+### İki marker
+
+| Marker                                | Mənası                                                                                                                                        | Model nə etməlidir                                                                                                                                                                                    |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Böyük bir blok məzmun ünvanlı saxlanıldı.                                                                                                     | ilə `omniroute_ccr_retrieve` zəng edin** 24 hex hex hərfi kopyalandı** orijinal mətni geri almaq üçün.                                                                                                |
+| `[dedup:ref sha=…]`                   | `session-dedup` elided mətn artıq eyni sessiyanın əvvəlki növbəsində göndərilmişdir. Bu bir** qəsdən geriyə baxmaq** , itki və ya səhv deyil. | Et** yox** istənilən alətə zəng edin və edin** yox** onu "yenidən qurmağa" çalışın. Mətnin ilk təkrarlanması kanonik surətdir; cari növbə heç vaxt yenidən yazılmır, sonrakı döngədə deupsiya edilir. |
+
+Bu `[dedup:ref]` geri baxış qəsdən protokol qərar — heç bir əvvəlcədən göndərmə yenidən qurulması var. Bunu "bu dəqiq mətn bu sessiyada əvvəllər teldə idi" kimi qəbul edin.
+
+### Müştəri ilkin şərtləri
+
+- **Açar (stdio):** stdio zəng edən şəxs hər sorğu üçün şəxsiyyət daşımır, ona görə də o, `OMNIROUTE_API_KEY` ilə autentifikasiya edir ( MCP serverinin `env` də təyin olunur). Onsuz zəng edən şəxs anonimdir və direktor tələb edən alətlər pisləşə bilər.
+- **`tools[]` inyeksiya üçün ilkin şərtdir.** CCR retrieve-protocol təlimatı (#8033) yeridilir** yalnız** sorğunun elan edilmiş `tools[]` müştərinin həqiqətən `omniroute_ccr_retrieve` çata biləcəyini sübut etdikdə. Uyğunluq ayırıcı (`__`, `.`, `/`, `:`) ilə məhdudlaşan arxa seqment uyğunluğudur — heç vaxt çılpaq alt sətir — buna görə də `mcp__gateway__omniroute_ccr_retrieve` kimi ad boşluqlu ad hələ də sayılır. Qeyri-uyğun və ya uyğun olmayan `tools[]` o deməkdir ki, təlimat dizayna görə yeridilməyib.
+- **`codemode:false` (OpenCode müştəriləri).** OpenCode defolt olaraq Kod Rejiminə uyğun olaraq modelə yalnız yerli alətlərini reklam edir və** etmir** MCP alətlərini yerli `tools[]` siyahısına qoyun. MCP server girişində `codemode: false` təyin edin ki, `omniroute_ccr_*` alətləri reklam olunsun. Bu a** müştəri** qəbulu, bir OmniRoute bir deyil. O, hələ CCR təlimatını daxil etmir: OpenCode aləti `<server>_<tool>` adlandırır, ona görə də `omniroute` adlı server `omniroute_omniroute_ccr_retrieve` ifşa edir və `_` uyğun separatorlardan biri deyil.
+- **Direktorlar.** Saxlama və axtarış autentifikasiya edilmiş əsas üzrə ( API açarına görə) təcrid olunur. Açar yalnız öz bloklarını görür.
+
+### Alət üçün əhatə dairəsi
+
+Dar əhatəli HTTP/SSE zəng edənlər üçün əhatə dairəsinin tətbiqi həmişə aktivdir. `omniroute_` CCR alətləri tələb edir:
+
+| Alət                     | Əhatə dairəsi       |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Çatışmayan əhatə dairəsi a qaytarır**MCP aləti xətası nəticəsi** (`isError: true`, HTTP 403 — deyil, `403 LOCAL_ONLY` ayrıca geri dönmə marşrutu qoruyucu auth-dur): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Minimal uzaqdan idarəetmə açarı `mcp:connect` (yalnız `/api/mcp/` yerli kəsilməsinə icazə verir) və ona lazım olan xüsusi read/write əhatəsini saxlaya bilər.
+
+### Müştəri matrisi
+
+| Müştəri           | Nəqliyyat                              | İstifadə etmək üçün konfiqurasiya                                                                                                                                                                                                                        | `tools[]` reklam olunur? (→ CCR təlimatı yeridildi)                                                                                                                                             |
+| ----------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude kodu       | axın edilə bilən-http                  | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                        | Bəli — MCP qabiliyyəti; enjekte edilir.                                                                                                                                                         |
+| Cursor / Cline    | `stdio`** və ya** `streamable-http`    | stdio: `env` ilə `OMNIROUTE_API_KEY` ilə `omniroute --mcp` ; və ya `http://localhost:20128/api/mcp/stream` yə işarə edən uzaq MCP girişi (bax. [Quraşdırma Bələdçisi → MCP Müştəri Konfiqurasiyası](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Bəli — `omniroute_ccr_*` alətlərini reklam edin.                                                                                                                                                |
+| OpenCode          | axın edilə bilən-http                  | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, plus `codemode: false`                                                                                                                                                         | Yalnız `codemode: false` ilə reklam edilən alətlər; təlimat hələ də yeridilməyib, çünki `omniroute_omniroute_ccr_retrieve` uyğun gəlmir (bax [Müştəri ilkin şərtləri](#client-prerequisites) ). |
+| OpenAI-a uyğundur | OpenAI uyğun HTTP (chat tamamlamaları) | OpenAI uyğun son nöqtəyə qarşı standart söhbət tamamlama müştərisi                                                                                                                                                                                       | **Heç vaxt** — adi OpenAI-a uyğun gələn zəng edənə heç vaxt alətə zəng etmək deyilmir və təlimat vurulmur.                                                                                      |
+
+### Axtarış limitləri və səhifələşdirmə
+
+MCP alətinin mətn nəticələri `mcpAccessibility.maxTextChars` ətrafında kəsilir (defolt `50000`). Blokun `full` axtarışı 256 KiB — ilə məhdudlaşır** heç bir məhdudiyyətsiz tam bərpa yoxdur** . Blokun `chars=N` böyük olduqda, hər şeyi çəkmək əvəzinə onu səhifələyin:
+
+- Əsas qayda:**`chars > 40000` → `mode` istifadə edin** , heç vaxt çılpaq dolu.
+- `mode:"grep"` — regex `pattern` sətir-sətir, 1000-ə qədər uyğun sətir (`unique: true` düşmə təkrarlanır), "lazım olan bir xətti tap" üçün ən ucuzdur.
+- `mode:"lines"` — 1 indeksli xətt diapazonu; həm `start`, həm də `end` lazımdır.
+- `mode:"head"` / `mode:"tail"` — first/last `n` xətləri.
+- `mode:"stats"` — sətri, simvolu və bayt sayları gövdəsiz.
+
+Hər şeyi bir anda tələb etməkdənsə, səhifələrdə uzun bir blok gəzmək üçün `start`/`end` ilə `mode:"lines"` istifadə edin.
+
+### Alətin adlandırılması
+
+Axtarış aləti hazırda `omniroute_ccr_retrieve` adlanır ( `omniroute_` prefiksi serverlər arası adların toqquşması üçün tarixi keçmiş həll yoludur). Daha təmiz məhdudlaşdırılmış şəkilçi alət adı və MCP JSON nəticələri üçün düzəliş, kəsilmiş orta sətir yuxarı axın izləmələri kimi izlənilir; bu səhifə yalnız cari, göndərilmiş davranışı sənədləşdirir.
+
+### Sessiyanın həyat dövrü
+
+Streamable-HTTP seansları boş qalır və server onları yığır; boş pəncərə `MCP_SESSION_IDLE_MS` sabitidir (sabit kodlaşdırılmış dəyər deyil, adla istinad edilir, ona görə də bu səhifə dəyişdikdə sürüşmür). Boş qalan sessiyanın simptomu `Unknown Mcp-Session-Id` — ilə HTTP 404-dür, çarə sessiyanı yenidən qoşmaq və ya yenidən başlatmaqdır,** yox** düyməni fırlatmaq, əhatə dairəsini dəyişdirmək və ya alətin adını dəyişmək üçün.
+
+## API Səthi
+
+| Marşrut                                | Məqsəd                                                                     |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| `/api/settings/compression`            | Qlobal sıxılma parametrləri ( `mcpAccessibility` konfiqurasiyası daxildir) |
+| `/api/compression/preview`             | İstənilən sıxılma rejiminə baxın                                           |
+| `/api/compression/language-packs`      | Mövcud Caveman dil paketlərini sadalayın                                   |
+| `/api/context/caveman/config`          | Caveman parametrləri ləqəbi                                                |
+| `/api/context/rtk/config`              | RTK defoltları və parametrləri                                             |
+| `/api/context/rtk/filters`             | RTK filtr kataloqu                                                         |
+| `/api/context/rtk/test`                | RTK preview/test son nöqtəsi                                               |
+| `/api/context/rtk/raw-output/[id]`     | Təsdiqlənmiş redaktə edilmiş xam-çıxış bərpası                             |
+| `/api/context/combos`                  | Kompress CRUD                                                              |
+| `/api/context/combos/[id]/assignments` | Marşrutlaşdırma-kombo təyinatı CRUD                                        |
+| `/api/context/analytics`               | Sıxılma analitik ləqəbi                                                    |
+
+İdarəetmə marşrutları idarəetmə identifikasiyası və ya API açarı siyasətinin yoxlanılmasını tələb edir.
+
+## MCP Alətləri
+
+Sıxılma beş MCP alətini ifşa edir:
+
+| Alət                                | Əhatə dairəsi       | Məqsəd                                   |
+| ----------------------------------- | ------------------- | ---------------------------------------- |
+| `omniroute_compression_status`      | `read:compression`  | Parametrlər, analitika, keş statistikası |
+| `omniroute_compression_configure`   | `write:compression` | Qlobal parametrləri yeniləyin            |
+| `omniroute_set_compression_engine`  | `write:compression` | Rejimi və əlavə boru kəmərini təyin edin |
+| `omniroute_list_compression_combos` | `read:compression`  | Sıxılma kombinlərinin siyahısı           |
+| `omniroute_compression_combo_stats` | `read:compression`  | combo/engine analitikasını oxuyun        |
 
 ## Əhatə dairəsi və istisnalar
 
-**Embeddinqlər heç vaxt sıxılmır.** `open-sse/handlers/embeddings.ts` heç bir
-sıxılma mühərrikini çağırmır — sorğu/cavab gövdələri dəyişdirilmədən birbaşa icraçıya ötürülür.
-Hazırda bu, struktur səviyyəsində təmin edilir (embeddinqlər və çat tamamlamaları ayrı-ayrı emalçılardır),
-icra mühiti yoxlaması deyil, lakin bu o deməkdir ki, #8034-dəki vektor təhrifinə dair narahatlığın
-embeddinq yolunda heç bir təsir səthi yoxdur.
+**Yerləşdirmələr heç vaxt sıxılmır.** `open-sse/handlers/embeddings.ts` heç vaxt heç bir sıxılma mühərriki — çağırmır request/response gövdələri toxunulmamış birbaşa icraçıya keçir. Bu, bu gün strukturdur (yerləşdirilmələr və söhbət tamamlamaları ayrı-ayrı idarəçilərdir), iş vaxtının yoxlanışı deyil, lakin bu o deməkdir ki #8034 -də vektor təhrif probleminin yerləşdirmə yolunda heç bir məruz qalma səthi yoxdur.
 
-**Model/son nöqtə üzrə istisna filtri (#8034).** Çat tamamlamaları üçün operator heç vaxt
-sıxılmamalı olan model id-lərini / `provider/model` hədəflərini göstərə bilər — bu, sıxılma
-gələcəkdə embeddinqə yaxın bir yola qoşularsa faydalı olan qoruyucu mexanizmdir və ümumiyyətlə,
-bayt-bayt tam eyni promptun vacib olduğu istənilən model üçün yararlıdır (deterministik
-qiymətləndirmələr, keşə həssas prefikslər və s.).
+**Per-model/endpoint istisna filtri (#8034).** Söhbətin tamamlanması üçün operator heç vaxt sıxılmamalı model identifikatorlarını / `provider/model` hədəflərini adlandıra bilər. — sıxılma sonradan əlavələr üçün bitişik yola daha da yaxınlaşdıqda faydalı olan qoruyucu və ümumiyyətlə bayt üçün dəqiq məlumat tələb edən hər hansı model üçün faydalıdır (deterministik qiymətləndirmələr, keş-həssas prefikslər və s.).
 
-- Parametrlər sahəsi: qlobal sıxılma konfiqurasiyasında `exclusions?: string[]`
-  (`GET`/`PUT /api/settings/compression`); mövcud `key_value` sıxılma ad məkanı
-  (`src/lib/db/compression.ts`) vasitəsilə saxlanılır — yeni cədvəl yoxdur.
-- İdarə paneli nişanı: **İdarə paneli → Sıxılma → İstisnalar**
-  (`/dashboard/compression/exclusions`).
-- Nümunə sintaksisi: `*` yeganə əvəzedici simvoldur. Nümunədəki bütün digər regex metasimvolları
-  uyğunlaşdırmadan əvvəl ekranlaşdırılır, buna görə `gpt-5.6` yalnız hərfi sətri uyğunlaşdırır,
-  heç vaxt `gpt-5x6` ilə uyğun gəlmir (ReDoS-a qarşı təhlükəsizdir, məhduddur və iç-içə kvantifikatorlar
-  yoxdur). Nümunələr həm yalnız model id-si, həm də `provider/model` birləşməsi ilə registrdən asılı
-  olmadan uyğunlaşdırılır — `gpt-5-6`, `openai/gpt-5-6` və `openai/*` hamısı işləyir,
-  yalnız `*` isə hər modeli istisna edir.
-- Uyğunlaşdırma: `open-sse/services/compression/exclusions.ts` daxilində
-  `isCompressionExcluded()` / `normalizeCompressionExclusions()`. `chatCore.ts` istisna edilən
-  hədəfi sıxılma parametrlərini müəyyən etdikdən dərhal sonra, **hər hansı mühərrik işə düşməzdən əvvəl**
-  yoxlayır və uyğunluğu sıxılmanın qlobal şəkildə deaktiv edilməsi ilə tam eyni formada emal edir —
-  sorğu gövdəsinin bayt səviyyəsində tam eyni olduğu sübut edilə bilər. Buraxılma analitikada
-  görünməsi üçün `writeCompressionSkip(..., "excluded")` vasitəsilə qeydə alınır.
-- Standart davranış (boş/mövcud olmayan siyahı): #8034-dən əvvəlki davranışla eynidir —
-  heç nə istisna edilmir.
+- Parametrlər sahəsi: qlobal sıxılma konfiqurasiyasında `exclusions?: string[]` (`GET`/`PUT /api/settings/compression`), mövcud `key_value` sıxılma ad məkanı (`src/lib/db/compression.ts`) vasitəsilə davam etdi — yeni cədvəl yoxdur.
+- İdarə paneli nişanı:** Dashboard → Compression → İstisnalar** (`/dashboard/compression/exclusions`).
+- Nümunə sintaksisi: `*` yeganə joker simvoldur. Nümunədəki hər bir digər regex metaxarakteri uyğunlaşmadan əvvəl qaçır, ona görə də `gpt-5.6` yalnız hərfi sətirlə uyğun gəlir, heç vaxt `gpt-5x6` deyil (ReDoS-təhlükəsiz, məhdud, iç-içə kəmiyyət göstəriciləri yoxdur). Nümunələr həm çılpaq model id-si, həm də `provider/model` kompozit — `gpt-5-6`, `openai/gpt-5-6` və `openai/*` ilə böyük hərf-həssas olmayan şəkildə uyğunlaşır və hamısı işləyir və tək `*` hər modeli istisna edir.
+- Uyğunluq: `isCompressionExcluded()` / `normalizeCompressionExclusions()` in `open-sse/services/compression/exclusions.ts`. `chatCore.ts` sıxılma parametrlərini həll etdikdən dərhal sonra xaric edilmiş hədəfi yoxlayır,** hər hansı bir mühərrik işləməzdən əvvəl** , və uyğunluğu tam olaraq qlobal miqyasda deaktiv edilmiş sıxılma kimi rəftar edir — sorğu orqanının bayt-eynidir. Analitikanın görünməsi üçün keçid `writeCompressionSkip(..., "excluded")` vasitəsilə qeydə alınır.
+- Defolt (empty/absent siyahısı):#8034 dən əvvəlki davranışla eynidir, — heç nə istisna edilmir.
 
 ## Məlum məhdudiyyətlər
 
-- **LLMLingua-2 (SLM) yanaşı yerləşdirilmiş əlavə asılılıqlar tələb edir.** Worker yalnız
-  `@atjsh/llmlingua-2` və onun peer asılılıqları `dist/node_modules` daxilində yanaşı
-  yerləşdirildikdə production build-də işləyir (bax: `scripts/build/colocateOptionals.mjs`,
-  #4286). Onlar olmadan engine xəta zamanı ilkin mətni qaytarır. Worker-in həll edilməsi
-  artıq `import.meta.url`-dan asılı deyil (o, standalone bundle daxilində işləmir) — əsas
-  kimi runtime cwd / `argv[1]` istifadə olunur.
-- **Caveman dil paketləri `de` / `fr` / `ja` qisməndir.** Onlar `context` + `filler` +
-  `structural` qaydaları ilə təchiz edilir, lakin `dedup` / `ultra` paketlərini ehtiva
-  etmir; buna görə həmin dillər üçün `ultra` intensivliyi `full` intensivliyindən daha
-  güclü deyil (onlar yalnız öz qaydalarından istifadə edir — xarici dildəki mətni korlaya
-  biləcək ingilis dilindəki `dedup`/`ultra` qaydalarına gizli geri dönüş yoxdur).
-  `en` / `es` / `id` / `pt-BR` tamdır. Qismən paketlər üçün `dedup.json` + `ultra.json`
-  töhfələri qəbul olunur.
-- **Yığılmış telemetriya yalnız sıxılma həyata keçirmiş engine-ləri sadalayır.**
-  Engine-i işə düşən, lakin 0 % qənaət təmin edən yığılmış pipeline addımı `stats:null`
-  qaytarır və buna görə `engineBreakdown` daxilində görünmür — bu, ötürülmüş addımdan
-  fərqləndirilə bilmir. "İşə düşdü, 0 %" ilə "ötürüldü" hallarını fərqləndirmək üçün
-  breakdown modelində dəyişiklik tələb olunur və bu, sonraya saxlanılıb.
+- **LLMLingua-2 (SLM) birgə yerləşdirilmiş isteğe bağlı deps tələb edir.** İşçi yalnız `@atjsh/llmlingua-2` + həmyaşıdları `dist/node_modules` -də birgə yerləşdikdə istehsal quruluşunda işləyir (bax: `scripts/build/colocateOptionals.mjs`, #4286). Onlar olmadan mühərrik uğursuz olur (orijinal mətni qaytarır). İşçinin həlli artıq cwd / `argv[1]` işləmə müddətində lövbər etdiyi `import.meta.url` — (müstəqil paketdə ölür) asılı deyil.
+- **Caveman dil paketləri `de` / `fr` / `ja` qisməndir.** Onlar `context` + `filler` + `structural` qaydaları göndərirlər, lakin `dedup` / `ultra` paketləri yoxdur, buna görə də `ultra` intensivliyi həmin dillər üçün `full` -dən güclü deyil (onlar yalnız öz qaydalarından istifadə edirlər — İngilis dili `dedup`/`ultra` qaydalarına səssiz geri dönmə yoxdur, bu da xarici mətni pozar). `en` / `es` / `id` / `pt-BR` tamamlandı. Qismən paketlər üçün `dedup.json` + `ultra.json` töhfələri qəbul edilir.
+- **Yığılmış telemetriya yalnız sıxılmış mühərrikləri siyahıya alır.** Mühərriki işləyən, lakin 0% qənaət hasil edən yığılmış boru kəməri addımı `stats:null` qaytarır və beləliklə `engineBreakdown` — atlanan addımdan fərqlənə bilməyəcək şəkildə görünmür. "Qaçdı, 0 %"ni "atlandı"dan fərqləndirmək parçalanma modelinin dəyişdirilməsini tələb edir və təxirə salınır.
 
-## Yoxlama
+## Doğrulama
 
-Bu sahə üzrə hədəflənmiş yoxlama mərhələləri bunlardır:
+Bu sahə üçün diqqət mərkəzində olan qapılar:
 
 ```bash
 node --import tsx/esm --test tests/unit/compression/rtk-*.test.ts tests/unit/compression/pipeline-integration.test.ts tests/unit/compression/context-compression-api.test.ts

@@ -4,234 +4,158 @@
 
 ---
 
-Compresia OmniRoute este construită în jurul contractelor motoarelor. Un mod poate rula direct un singur motor
-(`caveman` sau `rtk`) ori o conductă stivuită deterministă care execută mai multe motoare în ordine.
+Compresia OmniRoute este construită în jurul contractelor de motor. Un mod poate rula direct un motor (`caveman` sau `rtk`) sau o conductă stivuită deterministă care execută mai multe motoare în ordine.
 
 ## Moduri
 
-| Mod          | Cale motor                                                                                                                                            | Intrare intenționată                            |
-| :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
-| `off`        | niciuna                                                                                                                                               | Păstrarea exactă a promptului                   |
-| `lite`       | Ajutoare Caveman lite                                                                                                                                 | Curățare permanentă cu risc scăzut              |
-| `standard`   | Caveman                                                                                                                                               | Condensarea promptului în limbaj natural        |
-| `aggressive` | Caveman + sumarizatoare istoric/instrumente                                                                                                           | Sesiuni lungi de chat                           |
-| `ultra`      | Caveman + ajutoare de tăiere                                                                                                                          | Recuperare limită de context                    |
-| `rtk`        | RTK                                                                                                                                                   | Ieșire terminal, shell, build, test și git      |
-| `omniglyph`  | OmniGlyph                                                                                                                                             | Context ca imagine pe cablul furnizorului nativ |
-| `stacked`    | Pipeline. Implicit pentru cerere este `session-dedup -> lite`. `rtk -> caveman` este opțional. Jurnale mixte de instrumente și proză, economii maxime |
+| Modul        | Calea motorului                                                                         | Intrare intenționată                             |
+| ------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `off`        | nici unul                                                                               | Conservare exactă promptă                        |
+| `lite`       | Caveman Lite helpers                                                                    | Curățare permanentă cu risc scăzut               |
+| `standard`   | Omul cavernelor                                                                         | Condens rapid în limbaj natural                  |
+| `aggressive` | Rezumate caveman + history/tool                                                         | Sesiuni lungi de chat                            |
+| `ultra`      | Caveman + ajutoare de tăiere                                                            | Recuperare limită de context                     |
+| `rtk`        | RTK                                                                                     | Terminal, shell, build, test și ieșire git       |
+| `omniglyph`  | OmniGlyph                                                                               | Context-ca imagine pe firul furnizorului nativ   |
+| `stacked`    | Conductă. Cererea implicită este `session-dedup -> lite`. `rtk -> caveman` este opt-in. | Bușteni de scule mixte și proză, economii maxime |
 
-### Profile de compresie OmniGlyph
+### profile de compresie OmniGlyph
 
-Motorul `omniglyph` (pachetul `omniglyph`, 1.4.0+) acceptă un profil semantic numit, setat
-global prin `omniglyph.profile` în setările de compresie sau per pas prin
-configurația pasului pipeline-ului stivuit:
+Motorul `omniglyph` (pachetul `omniglyph`, 1.4.0 +) acceptă un profil semantic numit, setat global prin `omniglyph.profile` în setările de compresie sau pe pas prin configurația pasului conductei stivuite:
 
-| Profil        | Limită                                                                                                                    |
-| :------------ | :------------------------------------------------------------------------------------------------------------------------ |
-| `aggressive`  | Implicit. Politica măsurată de chitanțele publicate — sistem de imagini, documente de instrumente și istoric dens         |
-| `balanced`    | Menține starea live nativă, protejează ultimele 8 interacțiuni, colapsează istoricul închis mai vechi                     |
-| `coding-safe` | Menține autoritatea, schemele de instrumente și ieșirea live a instrumentelor nativă, protejează ultimele 12 interacțiuni |
-| `passthrough` | Redirecționează fără transformare; motorul este omis                                                                      |
+| Profil        | Hotar                                                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Implicit. Politica chitanțelor publicate a măsurat sistemul de imagini —, documentele instrumentului și istoricul dens |
+| `balanced`    | Păstrează starea de viață nativă, protejează ultimele 8 viraje, prăbușește istoricul închis mai vechi                  |
+| `coding-safe` | Păstrează autoritatea, schemele de instrumente și ieșirea instrumentelor live native, protejează ultimele 12 ture      |
+| `passthrough` | Trasee fără transformare; motorul este sarit                                                                           |
 
-Profilul este un **plafon, nu un prag**: `mergeCompressionProfileOptions` din pachet
-refuză să permită unui apelant să suprascrie redeschiderea unei căi cu pierderi pe care
-profilul a închis-o, astfel încât un `preserveSystemPrompt: false` per pas nu poate
-reactiva compresia sistemului sub `coding-safe`.
+Profilul este a** tavan, nu podea** : `mergeCompressionProfileOptions` din pachet refuză să permită apelantului să anuleze redeschiderea unei benzi cu pierderi profil închis, astfel încât un `preserveSystemPrompt: false` la pas nu poate reactiva compresia sistemului sub `coding-safe`.
 
-Măsurat pe această bază de cod: `coding-safe` și `balanced` ridică `minCompressChars` la
-maxim și mențin sistemul, schemele de instrumente și rezultatele instrumentelor native,
-astfel încât o sesiune care nu a acumulat încă istoric se oprește la `below_min_chars` și
-motorul nu transformă nimic. Acesta este motivul pentru care implicit este `aggressive` și
-nu cel mai sigur profil.
+Măsurat pe această bază de cod: `coding-safe` și `balanced` ridică `minCompressChars` la maximum și păstrează sistemul, schemele de instrumente și rezultatele instrumentelor native, deci o sesiune care nu a acumulat încă istoric se oprește la `below_min_chars` și motorul nu transformă nimic. De aceea, implicit este mai degrabă `aggressive` decât cel mai sigur profil.
 
-Pachetul își rezolvă propriul domeniu de aplicare al modelului și profilul din
-configurația mediului său. OmniRoute nu deleagă niciodată decizia: adaptorul fixează
-poarta modelului la cel mai restrictiv domeniu de aplicare al pachetului, astfel încât
-setările mediului gazdă pot doar restrânge lista permisă, niciodată să o extindă dincolo
-de chitanțele măsurate de OmniRoute.
+Pachetul își rezolvă propriul domeniu de aplicare și profil din configurația mediului. OmniRoute nu deleagă niciodată decizia: adaptorul fixează poarta modelului la cel mai restrictiv domeniu de aplicare al pachetului, astfel încât setările mediului gazdă nu pot decât să restrângă lista de permise, să nu o extindă niciodată dincolo de chitanțele măsurate ale OmniRoute.
 
-## Registrul motoarelor
+## Registrul motorului
 
-Registrul se află în `open-sse/services/compression/engines/registry.ts`. Motoarele expun un contract
-comun:
+Registrul locuiește în `open-sse/services/compression/engines/registry.ts`. Motoarele expun un contract comun:
 
-- `id`: ID stabil al motorului, precum `caveman` sau `rtk`
-- `apply(text, config)`: calea de execuție moștenită, utilizată de pipeline-urile stivuite
-- `compress(input, config)`: calea principală de execuție, care returnează textul + statisticile
-- `getConfigSchema()`: returnează structura similară cu JSON Schema a configurației valide
+- `id`: id-ul motor stabil, cum ar `caveman` sau `rtk`
+- `apply(text, config)`: calea de execuție moștenită utilizată de conductele stivuite
+- `compress(input, config)`: calea de execuție primară care returnează text + stats
+- `getConfigSchema()`: returnează forma JSON-Schema-like a configurației valide
 - `validateConfig(config)`: returnează `{ valid, errors[] }`
 
-Înregistrarea utilizează `registerCompressionEngine(engine)` (sau `registerEngine` pentru cazuri avansate),
-care apelează `assertValidEngine()` și `validateConfig(defaultConfig)` înainte de acceptare.
-Utilizați `unregisterCompressionEngine(id)` pentru a elimina un motor în timpul execuției.
+Înregistrarea folosește `registerCompressionEngine(engine)` (sau `registerEngine` pentru cazuri avansate), care apelează `assertValidEngine()` și `validateConfig(defaultConfig)` înainte de a accepta. Utilizați `unregisterCompressionEngine(id)` pentru a elimina un motor în timpul rulării.
 
-`strategySelector.ts` înregistrează motoarele încorporate înainte de rularea comprimării. Astfel, previzualizarea,
-comprimarea în timpul execuției, modul stivuit, testele și motoarele viitoare pot utiliza aceeași cale de execuție.
+`strategySelector.ts` înregistrează motoarele încorporate înainte de rularea compresiei. Acest lucru permite previzualizării, compresiei de rulare, modul stivuit, testele și motoarele viitoare să utilizeze aceeași cale de execuție.
 
-### Comprimarea descrierilor MCP (subiect asociat)
+### MCP descriere compresie (relativ)
 
-Un registru separat comprimă metadatele descrierilor instrumentelor MCP la nivelul registrului — consultați
-`open-sse/mcp-server/descriptionCompressor.ts` și [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Acesta reutilizează
-regulile Caveman, dar operează asupra metadatelor instrumentelor, nu asupra sarcinilor utile ale cererilor.
+Un registru separat comprimă metadatele descrierii instrumentului MCP la nivel de registru — vezi `open-sse/mcp-server/descriptionCompressor.ts` și [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Refolosește regulile Caveman, dar operează pe metadatele instrumentului, nu solicită încărcături utile.
 
-### Motoare încorporate suplimentare
+### Motoare suplimentare incorporate
 
-Pe lângă Caveman, RTK și LLMLingua-2, registrul include mai multe motoare specializate fără pierderi /
-structurale (utilizate de pipeline-urile stivuite, mediul de testare interactiv și teste):
+Dincolo de Caveman, RTK și LLMLingua-2, registrul oferă mai multe motoare specializate fără pierderi / structurale (utilizate de conducte stivuite, locul de joacă și teste):
 
-| Motor         | ID              | Ce face                                                                                                                                                                                                   |
-| ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): înlocuiește blocurile mari de text contiguu cu referințe adresate după conținut, astfel încât blocurile repetate/mari să fie trimise o singură dată și referite ulterior. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): compactare tabelară fără pierderi a sarcinilor utile constând în matrice JSON omogene, într-o formă columnară `[N rows]`.                                                         |
-| ionizer       | `ionizer`       | Eșantionează rânduri de la începutul/mijlocul/sfârșitul blocurilor omogene foarte mari, stocând secțiunea mediană omisă ca referință CCR adresată după conținut.                                          |
-| session-dedup | `session-dedup` | Deduplicare adresată după conținut între interacțiuni (inspirată de TokenMizer): omite textul deja întâlnit în interacțiunile anterioare ale aceleiași sesiuni.                                           |
+| Motor             | Id              | Ce face                                                                                                                                                                                           |
+| ----------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR               | `ccr`           | Content-Compress-Retrieve (H4): înlocuiește blocurile mari de text învecinate cu referințe adresate conținutului, astfel încât blocurile repeated/large sunt trimise o dată și referite ulterior. |
+| spațiu pentru cap | `headroom`      | SmartCrusher (H3 + N5): compactare tabelară fără pierderi a sarcinilor utile JSON omogene într-o formă `[N rows]` coloană.                                                                        |
+| ionizator         | `ionizer`       | eșantionarea rândurilor Head/middle/tail pentru blocuri omogene foarte mari, stocând mijlocul elidizat ca referință adresată conținutului CCR.                                                    |
+| sesiune-dedus     | `session-dedup` | Deduplicarea încrucișată încrucișată de conținut (inspirată de TokenMizer): elidează textul deja văzut în rândurile anterioare ale aceleiași sesiuni.                                             |
 
-**Instrucțiune privind protocolul de recuperare CCR (#8033):** prima dată când CCR înlocuiește ≥1 bloc dintr-o
-cerere, motorul adaugă la început un singur mesaj `system` idempotent (începând cu santinela
-`[CCR protocol]`), care explică apelantului contractul marcaj → instrument: ce înseamnă un marcaj
-`[CCR retrieve hash=<24hex> chars=N]`, faptul că hash-ul trebuie copiat textual
-(toate cele 24 de caractere hexazecimale — hash-urile copiate greșit reprezintă cauza probabilă a erorilor
-„blocul nu a fost găsit”) și faptul că un marcaj `[dedup:ref sha=...]` înseamnă „caută înapoi în istoric”, nu „apelează
-instrumentul”. Nota este injectată **numai atunci când `tools[]` declarate de apelant demonstrează că acesta poate
-accesa efectiv `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` din
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — un apelant simplu,
-compatibil cu OpenAI, fără acel instrument, nu primește niciodată instrucțiunea de a apela ceva
-ce nu poate accesa. Idempotența este asigurată prin scanarea istoricului mesajelor pentru santinelă
-înainte de injectare, astfel încât cererile cu mai multe interacțiuni (care redau mesajele anterioare) să nu adauge
-nota încă o dată la fiecare interacțiune.
+**Instrucțiunea de preluare a protocolului CCR (#8033):** prima dată când CCR înlocuiește blocul ≥ 1 într-o solicitare, motorul adaugă un singur mesaj `system` idempotent (conducând cu sentinelul `[CCR protocol]` ) învățând apelantul marcatorul instrumentul → contract: ce înseamnă un marker `[CCR retrieve hash=<24hex> chars=N]`, că hash-ul trebuie copiat literal (toate cele 24 de caractere — nu sunt cauzate probabil de erori de blocare). găsit" ratează), și că un marker `[dedup:ref sha=...]` înseamnă "priviți înapoi în istorie", nu "sunați instrumentul". Nota este injectată** numai atunci când `tools[]` anunțat de apelant demonstrează că poate ajunge efectiv `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` în `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — un apelant simplu compatibil OpenAI fără acel instrument nu primește niciodată o instrucțiune să apeleze ceva la care nu poate ajunge. Idempotenta este impusă prin scanarea istoricului mesajelor pentru santinelă înainte de injectare, astfel încât cererile cu mai multe ture (care reda mesajele anterioare) nu stivuiesc nota o dată pe tură.
 
-## Caveman
+## Omul cavernelor
 
-Modul Caveman se concentrează pe condensarea semantică a prozei obișnuite:
+Modul Caveman se concentrează pe condensarea semantică a prozei normale:
 
-- păstrează blocurile de cod, URL-urile, JSON-ul, căile și datele structurate
-- elimină textul de umplutură, formulările ezitante, contextul repetat și expresiile de legătură verbose
-- acceptă pachete de reguli specifice limbii pentru fișiere în `open-sse/services/compression/rules/`
+- păstrează blocurile de cod, URLs, JSON, căile și datele structurate
+- elimină umplerea, acoperirea, contextul repetat și frazele conjunctive verbose
+- acceptă pachete de reguli de fișiere care știe limba în `open-sse/services/compression/rules/`
 - rămâne disponibil prin modurile vechi `standard`, `aggressive` și `ultra`
 
-Secțiunea din panoul de control este `Dashboard -> Context & Cache -> Caveman`.
+Suprafața tabloului de bord este `Dashboard -> Context & Cache -> Caveman`.
 
-Proiectul Caveman din amonte raportează cu `~75%` mai puțini tokeni de ieșire, economii medii de `65%` pentru ieșire în testele de performanță, cu un interval de `22-87%`, și un instrument de comprimare a intrării de `~46%`. OmniRoute utilizează valoarea Caveman pentru partea de intrare atunci când documentează economiile cumulate pentru prompt/context; modul de ieșire Caveman rămâne o funcționalitate separată privind comportamentul răspunsului.
+Caveman în amonte raportează `~75%` mai puține jetoane de ieșire, `65%` economii medii de ieșire în benchmark-uri cu un interval `22-87%` și un instrument de compresie de intrare `~46%`. OmniRoute folosește numărul din partea de intrare a Caveman atunci când documentează economiile prompt/context stivuite; Modul de ieșire Caveman rămâne o caracteristică separată de răspuns-comportament.
 
 ## RTK
 
-Modul RTK se concentrează pe ieșirea comenzilor și a instrumentelor:
+Modul RTK se concentrează pe comandă și instrumente:
 
-- detectează clase de ieșire precum `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  testele Cargo/Go, buildurile TypeScript/Vite/Webpack, ESLint, auditurile/instalările npm, jurnalele Docker,
-  comenzile shell `find`/`grep`, traseele stivei și jurnalele generice
-- aplică 49 de filtre JSON din `open-sse/services/compression/engines/rtk/filters/`
-- acceptă pipeline-ul declarativ în stil RTK: eliminarea ANSI, înlocuire, scurtcircuitarea la potrivirea ieșirii,
-  eliminarea/păstrarea liniilor, trunchierea fiecărei linii, trunchierea începutului/sfârșitului/numărului maxim de linii și revenirea alternativă când rezultatul este gol
-- acceptă filtre de proiect condiționate de încredere în `.rtk/filters.json` și filtre globale în
-  `DATA_DIR/rtk/filters.json`
-- elimină secvențele ANSI, zgomotul indicatorilor de progres, liniile repetate și textul standard inutil
-- păstrează erorile asupra cărora se poate acționa, avertismentele, rezumatele, fișierele modificate și contextul final
-- poate păstra opțional ieșirea brută redactată pentru recuperare/depanare prin rute de administrare autentificate
+- detectează clase de ieșire, cum ar fi `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go tests, TypeScript/Vite/Webpack builds, ESLint, npm audit/installs, Docker logs, shell `find`/`grep`, stiva urme și jurnalele generice
+- aplică 49 de filtre JSON de `open-sse/services/compression/engines/rtk/filters/`
+- acceptă conducta declarativă în stil RTK: ANSI stripping, replace, match-output short-circuit, linii strip/keep, trunchiere pe linie, trunchiere head/tail/max-line și fallback on-empty
+- acceptă filtre de proiect bazate pe încredere în `.rtk/filters.json` și filtre globale în `DATA_DIR/rtk/filters.json`
+- secvențe ANSI, zgomot de progres, linii repetate și boilerplate inutil
+- păstrează eșecurile acționabile, avertismentele, rezumatele, fișierele modificate și contextul final
+- poate reține opțional rezultatul brut redactat pentru recovery/debugging prin rute de gestionare autentificate
 
-Secțiunea din panoul de control este `Dashboard -> Context & Cache -> RTK`.
+Suprafața tabloului de bord este `Dashboard -> Context & Cache -> RTK`.
 
-Detaliile operaționale pentru filtrele personalizate, încredere, verificare și recuperarea ieșirii brute se găsesc în
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Detalii operaționale pentru filtre personalizate, încredere, verificare și recuperarea rezultatelor brute live în [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-Proiectul RTK din amonte raportează economii de `60-90%` pentru comprimarea ieșirii comenzilor. Exemplul din README prezintă o sesiune Claude Code de 30 de minute care scade de la `~118,000` de tokeni la `~23,900`, adică o economie de `79.7%`.
+RTK în amonte raportează economii `60-90%` pentru compresia comandă-ieșire. Exemplul său README arată o sesiune de cod Claude de 30 de minute care trece de la jetoane `~118,000` la `~23,900` sau `79.7%` salvat.
 
-## LLMLingua-2 (Eliminare semantică)
+## LLMLingua-2 (Tăiere semantică)
 
-Modul LLMLingua-2 efectuează **eliminarea semantică a tokenilor** din proză folosind un mic clasificator ONNX de tokeni, completând motoarele Caveman și RTK bazate pe reguli:
+modul LLMLingua-2 funcționează** tăierea cu simbol semantic** pe proză folosind un mic clasificator de jetoane ONNX, completând motoarele Caveman și RTK bazate pe reguli:
 
-- comprimă proza numai în mesajele care nu sunt de sistem; blocurile de cod delimitate și celelalte
-  elemente păstrate nu sunt modificate niciodată
-- rulează backendul `@atjsh/llmlingua-2` (ONNX prin `@huggingface/transformers`) într-un
-  fir de execuție worker, astfel încât inferența modelului să nu blocheze niciodată bucla de evenimente a cererii
-- este **combinabil** (`stackPriority` 35): într-un pipeline combinat rulează după motoarele
-  structurale (CCR, session-dedup, headroom, Caveman), dar înainte de `ultra`, deoarece
-  eliminarea semantică este cea mai eficientă pentru textul deja comprimat structural — de exemplu,
-  `rtk -> caveman -> llmlingua`
-- **continuă fără efect la orice eroare** (dependențe opționale lipsă, pornirea workerului, încărcarea modelului, inferență
-  sau expirarea timpului) → textul original este returnat nemodificat, niciodată o eroare
+- comprimă proza numai în mesaje non-sistem; blocurile de cod îngrădite și alte construcții păstrate nu sunt niciodată modificate
+- rulează backend-ul `@atjsh/llmlingua-2` (ONNX prin `@huggingface/transformers`) într-un fir de lucru, astfel încât inferența modelului nu blochează niciodată bucla de eveniment de solicitare
+- este** stivuibile** (`stackPriority` 35): într-o conductă stivuită, rulează după motoarele structurale (CCR, session-dedup, headroom, Caveman ) dar înainte de `ultra`, deoarece tăierea semantică este cea mai eficientă pe textul deja comprimat structural — de exemplu `rtk -> caveman -> llmlingua`
+- **fail-deschide la orice eroare** (lipsesc dep-uri opționale, generarea lucrătorului, încărcarea modelului, inferența sau expirarea timpului) → textul original este returnat neschimbat, niciodată o eroare
 
-Locația motorului: `open-sse/services/compression/engines/llmlingua/`. Secțiunea din panoul de control
-este `Dashboard -> Context & Cache -> LLMLingua`.
+Locația motorului: `open-sse/services/compression/engines/llmlingua/`. Suprafața tabloului de bord este `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modele
 
-Modelul implicit este **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-rapid). Un model **BERT-base** cu acuratețe mai mare (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) este disponibil prin câmpul `model` din configurația motorului. `@huggingface/transformers`
-descarcă în mod leneș modelul selectat din HuggingFace Hub în
-`${DATA_DIR}/models/llmlingua` la primul apel (`modelStore.ts`); o suprascriere prin opțiunea
-`modelPath` din configurație indică în schimb o copie locală (pentru instalări offline / izolate de rețea).
+Modelul implicit este**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, rapid). O precizie mai mare** BERT-bază** modelul (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) este disponibil prin câmpul `model` config motor. `@huggingface/transformers` descarcă leneș modelul selectat din HuggingFace Hub în `${DATA_DIR}/models/llmlingua` la primul apel (`modelStore.ts`); o modificare a configurației `modelPath` îl indică în schimb către o copie locală (instalări offline / cu aer întrerupt).
 
 ### Dependențe opționale și instalare la cerere
 
-Stiva de peer dependencies pentru runtime-ul LLMLingua eliminabil este **opțională**. Două pachete sunt declarate ca
-`optionalDependencies` în `package.json` și sunt păstrate **externe** de buildul de producție
-(`scripts/build/prepublish.ts` nu le include în bundle):
+Stiva de peer time LLMLingua care poate fi tăiată este** opțional** . Două pachete sunt declarate ca `optionalDependencies` în `package.json` și păstrate** extern** prin construcția de producție (`scripts/build/prepublish.ts` nu le grupează):
 
-| Pachet               | Versiune (fixată) | Observații                                          |
-| -------------------- | ----------------- | --------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`           | Pachet de intrare; le declară pe celelalte ca peers |
-| `js-tiktoken`        | `^1.0.20`         | Tokenizator                                         |
+| Pachet               | Versiune (pin) | Note                                                  |
+| -------------------- | -------------- | ----------------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`        | Pachetul de intrare; îi declară pe ceilalţi ca semeni |
+| `js-tiktoken`        | `^1.0.20`      | Tokenizer                                             |
 
-`@huggingface/transformers` este fixat la `^4.2.0` (partajat cu ruta locală pentru embeddings și
-inclus, de asemenea, prin urmărire în bundle-ul autonom); `@atjsh/llmlingua-2@2.0.5` îl declară ca peer cu
-`"^3.5.2 || ^4.0.0"`, astfel încât sunt acceptate atât Transformers.js v3, cât și v4. Începând cu 2.0.4,
-`@atjsh/llmlingua-2` nu mai necesită `@tensorflow/tfjs`, ceea ce a eliminat cel mai mare
-contributor individual (TensorFlow.js) din stiva SLM. Numai cele două pachete de mai sus sunt peers SLM
-eliminabili. Un `npm install` standard (dezvoltare) instalează automat stiva opțională, cu excepția cazului în care dependențele
-opționale sunt omise.
+`@huggingface/transformers` este fixat la `^4.2.0` (partajat cu calea de încorporare locală și, de asemenea, urmărit în pachetul independent); `@atjsh/llmlingua-2@2.0.5` se conectează cu `"^3.5.2 || ^4.0.0"`, deci sunt acceptate atât Transformers.js v3, cât și v4. Din 2.0.4, `@atjsh/llmlingua-2` nu mai necesită `@tensorflow/tfjs`, care a eliminat cel mai mare contributor unic (TensorFlow.js) din stiva SLM. Doar cele două pachete de mai sus sunt egali SLM care pot fi tăiate. Un `npm install` standard (dev) instalează automat stiva opțională, cu excepția cazului în care dependențele opționale sunt omise.
 
-**De ce la cerere:** pachetul publicat pe npm, bundle-ul autonom și imaginea Docker
-sunt livrate **fără** aceste dependențe pentru a rămâne compacte. Când acestea lipsesc, verificarea
-dependențelor efectuată de worker (o încercare de rezolvare pentru `@atjsh/llmlingua-2` în `worker.ts`) eșuează, iar motorul
-**continuă silențios fără efect** — selectarea LLMLingua nu produce nicio modificare (textul este returnat nemodificat, fără
-înregistrarea vreunei erori). Pentru a-l activa într-un mediu redus, instalați stiva opțională:
+**De ce la cerere:** pachetul publicat de npm, pachetul independent și imaginea Docker** fără** aceste deps să rămână subțiri. Când acestea lipsesc, poarta de dependență a lucrătorului (o sondă de rezolvare `@atjsh/llmlingua-2` în `worker.ts`) eșuează și motorul** fail-se deschide în tăcere** — selectând LLMLingua devine un no-op (textul returnat neschimbat, nicio eroare înregistrată). Pentru a-l activa într-un mediu tăiat, instalați stiva opțională:
 
 ```bash
-# fixați versiunile la cele declarate în optionalDependencies din package.json
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Eliminarea `@tensorflow/tfjs` (2.0.4+) înlătură componenta anterior dominantă, de ~800 MB
-— spațiul rămas este ocupat de runtime-urile transformers.js + onnxruntime-node,
-plus modelul TinyBERT (~57 MB), descărcat la prima utilizare (nu prin npm).
+Eliminarea `@tensorflow/tfjs` (2.0.4 +) elimină contributorul ~ 800 MB dominant anterior — amprenta rămasă este timpii de rulare transformers.js + onnxruntime-node, plus modelul TinyBERT (~ 57 MB) descărcat la prima utilizare (nu t).
 
-Pentru fiecare mediu:
+Pe mediu:
 
-- **Dezvoltare / `npm install`** — instalat automat, cu excepția cazului în care ați folosit `--omit=optional`
-  (sau `--no-optional`). Nu este necesară nicio acțiune.
-- **npm global (`npm i -g omniroute`) / autonom** — rulați comanda de instalare de mai sus în
-  directorul pachetului instalat sau reinstalați fără a omite dependențele opționale.
-- **Docker** — adăugați comanda de instalare într-un strat al unei imagini derivate; imaginea publicată
-  este livrată în mod intenționat într-o formă minimală.
-- **VPS (PM2)** — instalați în `node_modules` al aplicației, apoi reporniți procesul pentru ca
-  workerul să verifice din nou mecanismul de control.
-- **Next autonom neprelucrat (`npm run build` → `.build/next/standalone/server.js`)** — trasarea
-  autonomă nu include NICI workerul, NICI dependențele opționale, astfel că motorul permite în mod silențios
-  continuarea în caz de eroare. `scripts/build/colocate-standalone.mjs` le adaugă din nou pe ambele (workerul esbuild +
-  închiderea dependențelor opționale în arborele autonom); acesta rulează automat prin hookul npm
-  `postbuild` după fiecare compilare. Idempotent, tolerează erorile atunci când dependențele lipsesc.
+- **Dev / `npm install`** — instalat automat, cu excepția cazului în care ați trecut `--omit=optional` (sau `--no-optional`). Nu este necesară nicio acțiune.
+- **Npm global (`npm i -g omniroute`) / independent** — rulează comanda de instalare de mai sus în directorul pachetului instalat sau reinstalează fără a omite dep-urile opționale.
+- **Docker** — adaugă comanda de instalare într-un strat de imagine derivat; imaginea publicată este subțire prin design.
+- **VPS (PM2)** — se instalează în `node_modules` al aplicației, apoi repornește procesul, astfel încât lucrătorul să re-sonda poarta.
+- **Raw Next standalone (`npm run build` → `.build/next/standalone/server.js`)** — navele de urmărire de sine stătătoare NEITHER lucrătorul și nici dep-urile opționale, astfel încât motorul se defectează în tăcere. `scripts/build/colocate-standalone.mjs` le reaplică pe ambele (worker esbuild + optional-dep closure în arborele autonom); rulează automat prin intermediul cârligului `postbuild` npm după fiecare build. Idempotent, eșuează-moale când dep-urile sunt absente.
 
-**Verificați dacă este activ:** când LLMLingua este selectat, textul real chiar se comprimă (motorul
-nu mai permite continuarea în caz de eroare), iar prima solicitare declanșează descărcarea modelului în
-`${DATA_DIR}/models/llmlingua`. Mecanismul de control verifică în mod intenționat doar `@atjsh/llmlingua-2` —
-celelalte pachete peer sunt exclusiv ESM, iar `require.resolve` generează o excepție pentru ele chiar și atunci când sunt prezente — astfel că
-workerul permite în continuare continuarea în caz de eroare dacă vreun pachet peer lipsește cu adevărat la momentul apelului `import()`.
+**Verificați că este activ:** cu LLMLingua selectat, proza reală se micșorează de fapt (motorul oprește deschiderea eșuată), iar prima solicitare declanșează descărcarea modelului în `${DATA_DIR}/models/llmlingua`. Poarta sondează în mod intenționat doar `@atjsh/llmlingua-2` — ceilalți colegi sunt doar ESM și `require.resolve` aruncă asupra lor chiar și atunci când este prezent — astfel încât lucrătorul încă nu se deschide dacă vreun peer lipsește cu adevărat la momentul `import()`.
 
-## Pipeline-uri stivuite
+## Conducte stivuite
 
-Modul stivuit execută pașii pipeline-ului în ordine. Ordinea implicită este:
+Modul stivuit rulează pașii conductei în ordine. Valoarea implicită este:
 
 ```txt
 rtk -> caveman
 ```
 
-Utilizați acest mod pentru sesiunile cu agenți de programare în care un prompt combină rezultatul comenzilor cu proză scrisă de utilizator sau de asistent. RTK reduce mai întâi jurnalele zgomotoase ale instrumentelor, apoi Caveman comprimă limbajul natural rămas.
+Utilizați acest lucru pentru sesiunile de agent de codare în care un prompt combină ieșirea comenzii cu proza umană sau de asistent. RTK reduce mai întâi jurnalele de instrumente zgomotoase, apoi Caveman comprimă limbajul natural rămas.
 
-Pașii pipeline-ului sunt configurați prin `stackedPipeline` în setările de compresie sau prin combinații de compresie.
+Pașii pipeline sunt configurați cu `stackedPipeline` în setările de compresie sau prin combo-uri de compresie.
 
-Când ambele motoare reduc aceeași sarcină utilă eligibilă, economiile se cumulează:
+Atunci când ambele motoare reduc aceeași sarcină utilă eligibilă, economiile sunt compuse:
 
 ```txt
 combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
@@ -239,29 +163,29 @@ average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
 range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## Filtrul arborelui de accesibilitate MCP
+## MCP Filtru arbore de accesibilitate
 
-Filtrul inteligent pentru arborele de accesibilitate MCP este un strat de compresie aplicat după execuție, care operează asupra **rezultatelor instrumentelor** MCP, nu asupra prompturilor sau contextului. Acesta vizează sarcinile utile detaliate ale arborelui de accesibilitate și instantaneele browserului returnate de instrumente precum Playwright, computer-use și serverele MCP pentru automatizarea browserului.
+Filtrul inteligent din arborele de accesibilitate MCP este un strat de compresie post-execuție care rulează pe MCP** rezultatele instrumentului** , nu pe solicitări sau context. Acesta vizează arborele de accesibilitate și sarcinile utile de instantanee ale browserului returnate de instrumente precum Playwright, utilizarea computerului și serverele MCP de automatizare a browserului.
 
 ### Ce face
 
-1. **Eliminarea zgomotului** — elimină intrările generice/textuale goale (`- generic:`, `- text: ""`)
-2. **Comprimarea elementelor vecine** — când ≥ `collapseThreshold` (implicit 30) linii consecutive reprezintă repetări structurale, le comprimă la primele `collapseKeepHead` (implicit 10) linii + un rezumat al numărului + ultimele `collapseKeepTail` (implicit 5) linii
-3. **Păstrarea referințelor** — ancorele `[ref=eXX]` necesare pentru Playwright/computer-use nu sunt modificate niciodată
-4. **Trunchiere strictă** — dacă textul rezultat după comprimare depășește în continuare `maxTextChars` (implicit 50.000), acesta este trunchiat și se adaugă un indiciu de navigare, astfel încât agentul să își poată continua activitatea
+1. **Eliminarea zgomotului** — elimină intrările generic/text goale (`- generic:`, `- text: ""`)
+2. **Colapsul fraților** — când ≥ `collapseThreshold` (implicit 30) linii consecutive sunt repetări structurale, le restrânge în primele `collapseKeepHead` (implicit 10) linii + un rezumat al numărului + ultimele `collapseKeepTail` (implicit 5) linii
+3. **Conservarea ref** Ancorele — `[ref=eXX]` cerute de Playwright/computer-use nu sunt niciodată atinse
+4. **Trunchiere dură** — dacă textul după colaps depășește în continuare `maxTextChars` (implicit 50.000), trunchiază cu un indiciu de navigare, astfel încât agentul să poată continua să lucreze
 
 ### Locația motorului
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← punctul de intrare smartFilterText()
-  collapseRepeated.ts ← algoritmul de comprimare a elementelor vecine
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Configurare
 
-Controlat prin `compression.mcpAccessibility` în setările globale (migrarea 056). Configurația implicită:
+Controlat de `compression.mcpAccessibility` în setările globale (migrarea 056). Configurație implicită:
 
 ```json
 {
@@ -274,118 +198,174 @@ Controlat prin `compression.mcpAccessibility` în setările globale (migrarea 05
 }
 ```
 
-Filtrul este aplicat numai sarcinilor utile ale rezultatelor instrumentelor al căror `type` este `"text"` și a căror lungime depășește `minLengthToProcess`. Acesta nu afectează compresia prompturilor sau sarcinile utile ale cererilor.
+Filtrul este aplicat numai sarcinilor utile rezultate de instrumente a căror `type` este `"text"` și a căror lungime depășește `minLengthToProcess`. Nu afectează comprimarea promptă sau sarcinile utile de solicitare.
 
-### Economii estimate
+### Economii așteptate
 
-60–80% pentru rezultatele instrumentelor care conțin instantanee ale browserului, în funcție de complexitatea paginii. Algoritmul de comprimare are complexitatea O(n) în raport cu numărul de linii și adaugă o latență neglijabilă.
+60–80% din rezultatele instrumentului de instantanee ale browserului, în funcție de complexitatea paginii. Algoritmul de colaps este O(n) în număr de linii și adaugă o latență neglijabilă.
 
-### Acest filtru comparativ cu motoarele de compresie de mai sus
+### Acest filtru față de motoarele de compresie de mai sus
 
-| Aspect              | Caveman / RTK / Stacked      | Filtrul de accesibilitate MCP          |
-| ------------------- | ---------------------------- | -------------------------------------- |
-| Țintă               | Prompturi / context cerere   | Rezultatele instrumentelor MCP         |
-| Declanșator         | Setarea modului de compresie | `compression.mcpAccessibility.enabled` |
-| Domeniu de aplicare | Toate mesajele SSE           | Numai rezultatele instrumentelor       |
-| Ancore de referință | Nu se aplică                 | Păstrate necondiționat                 |
+| Aspect               | Caveman / RTK / Stacked         | filtrul de accesibilitate MCP          |
+| -------------------- | ------------------------------- | -------------------------------------- |
+| Ţintă                | Solicitare solicitări / context | rezultatele instrumentului MCP         |
+| Trigger              | Setarea modului de compresie    | `compression.mcpAccessibility.enabled` |
+| Domeniul de aplicare | Toate mesajele SSE              | Numai rezultatele instrumentului       |
+| Ref ancore           | N/A                             | Păstrată necondiționat                 |
 
 ---
 
-## Combinații de compresie
+## Combo de compresie
 
-Combinațiile de compresie sunt profiluri de compresie denumite care pot fi atribuite combinațiilor de rutare:
+Combinările de compresie sunt denumite profiluri de compresie care pot fi atribuite combinărilor de rutare:
 
-- `compression_combos`: stochează modul, pipeline-ul, configurația RTK, configurația de limbă și marcajul implicit
-- `compression_combo_assignments`: asociază o combinație de compresie cu o combinație de rutare
-- integrarea în timpul execuției rezolvă o combinație de compresie atribuită înaintea suprascrierilor generice ale combinației
-- datele analitice includ `compression_combo_id` și `engine`
+- `compression_combos`: stochează modul, pipeline, configurația RTK, configurația limbii și marcatorul implicit
+- `compression_combo_assignments`: mapează un combo de compresie cu un combo de rutare
+- integrarea în timp de execuție rezolvă un combo de compresie atribuit înainte de înlocuirea combo-ului generic
+- analizele includ `compression_combo_id` și `engine`
 
-Locație în panoul de control: `Dashboard -> Context & Cache -> Compression Combos`.
+Suprafața tabloului de bord: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## Suprafața API
+## Cerințe preliminare / ghid operator (CCR și session-dedup)
 
-| Rută                                   | Scop                                                                  |
-| -------------------------------------- | --------------------------------------------------------------------- |
-| `/api/settings/compression`            | Setări globale de compresie (include configurația `mcpAccessibility`) |
-| `/api/compression/preview`             | Previzualizarea oricărui mod de compresie                             |
-| `/api/compression/language-packs`      | Listează pachetele lingvistice Caveman disponibile                    |
-| `/api/context/caveman/config`          | Alias pentru setările Caveman                                         |
-| `/api/context/rtk/config`              | Valori implicite și setări RTK                                        |
-| `/api/context/rtk/filters`             | Catalogul de filtre RTK                                               |
-| `/api/context/rtk/test`                | Endpoint RTK pentru previzualizare/testare                            |
-| `/api/context/rtk/raw-output/[id]`     | Recuperarea autentificată a ieșirii brute cu date sensibile eliminate |
-| `/api/context/combos`                  | Operații CRUD pentru combinațiile de compresie                        |
-| `/api/context/combos/[id]/assignments` | Operații CRUD pentru atribuirea combinațiilor de rutare               |
-| `/api/context/analytics`               | Alias pentru datele analitice privind compresia                       |
+CCR (`ccr`) și `session-dedup` înlocuiesc sau elid textul și lasă a** marker** din spatele. Această secțiune este referința operatorului pentru conectarea unui client, citirea celor doi markeri și preluarea sau diagnosticarea conținutului elidizat. Mecanica fiecărui motor este tratată mai sus; acesta este stratul „cum îl rulez”.
 
-Rutele de administrare necesită autentificare de administrare sau verificări ale politicii privind cheia API.
+### Transporturi și puncte finale
 
-## Instrumente MCP
+Serverul MCP care expune instrumentele CCR poate fi accesat în trei moduri. Baza implicită URL este `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
 
-Compresia expune cinci instrumente MCP:
+| Transport                                                | URL / comanda                           | Note                                                                                                                                                                     |
+| -------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| HTTP care poate fi transmis în flux (client, recomandat) | `http://localhost:20128/api/mcp/stream` | Punctul final cu care vorbesc clienții actuali MCP.                                                                                                                      |
+| Legacy SSE singleton                                     | `http://localhost:20128/api/mcp/sse`    | Transport singleton mai vechi. Ea** se inchide** sesiuni care pot fi transmise în flux; utilizați clienții `streamable-http` împotriva `/api/mcp/stream`, nu a acestuia. |
+| stdio                                                    | `omniroute --mcp`                       | Pentru IDE MCP config care generează procesul. Nu există niciun steag `--dev` ; `omniroute --mcp` este punctul de intrare stdio.                                         |
 
-| Instrument                          | Domeniu             | Scop                                               |
-| ----------------------------------- | ------------------- | -------------------------------------------------- |
-| `omniroute_compression_status`      | `read:compression`  | Setări, date analitice, statistici cache           |
-| `omniroute_compression_configure`   | `write:compression` | Actualizarea setărilor globale                     |
-| `omniroute_set_compression_engine`  | `write:compression` | Setarea modului și a pipeline-ului opțional        |
-| `omniroute_list_compression_combos` | `read:compression`  | Listează combinațiile de compresie                 |
-| `omniroute_compression_combo_stats` | `read:compression`  | Citește datele analitice despre combinații/motoare |
+### Niveluri de stocare (ceea ce supraviețuiește unei reporniri)
+
+CCR este a** pe două niveluri** magazin, nu numai în memorie:
+
+- **Nivel fierbinte în memorie** — per-block cap 2 MiB, per-principal 16 MiB, global 64 MiB. Intrările sunt implicite la 24 h TTL (maximum 7 zile). Preluarea completă MCP din memorie este limitată la 256 KiB; orice mai mare este încă accesibil prin modurile ranged / grep.
+- **Nivel SQLite durabil** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, activat în mod implicit) — susține nivelul în memorie, astfel încât un bloc să supraviețuiască evacuarii LRU, unei reporniri sau unei aterizări de recuperare pe o altă instanță. Rândul păstrează TTL ul blocului, astfel încât un bloc dincolo de TTL său dispare de la ambele niveluri.
+
+Trei apărătoare păstrează nivelul durabil delimitat — un bloc rămâne doar pentru memorie atunci când:
+
+1. blocul s-a terminat** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. timpul de rulare este un timp de rulare în cloud (fără disc local);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Deci „blocul a dispărut” nu este o poveste de repornire generală: un bloc sub-512 KB pe un timp de execuție local, non-cloud supraviețuiește unei reporniri prin nivelul durabil până când TTL său se epuizează. Consultați [Referința mediului](../reference/ENVIRONMENT.md) pentru variabilă.
+
+### Cele două marcaje
+
+| Marker                                | Sens                                                                                                                                                             | Ce ar trebui să facă modelul                                                                                                                                                                                 |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `[CCR retrieve hash=<24hex> chars=N]` | Un bloc mare a fost stocat la adresa de conținut.                                                                                                                | Sună `omniroute_ccr_retrieve` cu** 24-hex hash copiat text** pentru a recupera textul original.                                                                                                              |
+| `[dedup:ref sha=…]`                   | Textul `session-dedup` elid deja trimis într-o tură anterioară a aceleiași sesiuni. Acesta este un** privire înapoi intenționată** , nu o pierdere sau o eroare. | Do** nu** apelați orice unealtă și faceți** nu** încercați să o „reconstituiți”. Prima apariție a textului este copia canonică; tura curentă nu este niciodată rescrisă, este dedusă într-o tură ulterioară. |
+
+Analiza `[dedup:ref]` în urmă este o decizie deliberată a protocolului — nu există nicio reconstrucție pre-trimitere. Tratați-l ca „acest text exact a fost deja pe fir mai devreme în această sesiune”.
+
+### Cerințe preliminare ale clientului
+
+- **Cheie (stdio):** un apelant stdio nu poartă nicio identitate pe cerere, așa că se autentifică cu `OMNIROUTE_API_KEY` (setat în `env` al serverului MCP ). Fără el, apelantul este anonim, iar instrumentele care necesită un principal se pot degrada.
+- **`tools[]` este condiția prealabilă a injecției.** Instrucțiunea CCR retrieve-protocol (#8033) este injectată** numai** când `tools[]` anunțat al cererii demonstrează că clientul poate ajunge efectiv `omniroute_ccr_retrieve`. Potrivirea este o potrivire de segment final delimitată de un separator (`__`, `.`, `/`, `:`) — niciodată un subșir simplu — așa că un nume cu spațiu de nume, cum ar fi `mcp__gateway__omniroute_ccr_retrieve` contează în continuare. Un `tools[]` absent sau care nu se potrivește înseamnă că instrucțiunea este _nu_ injectată, prin proiectare.
+- **`codemode:false` (clienți OpenCode ).** OpenCode este implicit la Modul Cod, care face publicitate doar instrumentelor sale native pentru model și** nu** puneți instrumentele MCP pe lista nativă `tools[]`. Setați `codemode: false` pe intrarea serverului MCP, astfel încât instrumentele `omniroute_ccr_*` să fie promovate. Acesta este un** client** setare, nu una OmniRoute. Încă nu primește instrucțiunea CCR injectată: OpenCode denumește un instrument `<server>_<tool>`, astfel încât un server numit `omniroute` expune `omniroute_omniroute_ccr_retrieve`, iar `_` nu este unul dintre separatorii potriviți.
+- **Directori.** Stocarea și preluarea sunt izolate pe principal autentificat (pe cheie API ). O cheie își vede numai propriile blocuri.
+
+### Scopuri per instrument
+
+Aplicarea domeniului de aplicare este întotdeauna activată pentru apelanții HTTP/SSE cu domeniu îngust. Instrumentele `omniroute_` CCR necesită:
+
+| Instrument               | Domeniul de aplicare |
+| ------------------------ | -------------------- |
+| `omniroute_ccr_store`    | `write:compression`  |
+| `omniroute_ccr_delete`   | `write:compression`  |
+| `omniroute_ccr_retrieve` | `read:compression`   |
+| `omniroute_ccr_inspect`  | `read:compression`   |
+| `omniroute_ccr_list`     | `read:compression`   |
+| `omniroute_ccr_stats`    | `read:compression`   |
+
+Un domeniu lipsă returnează un** rezultatul erorii instrumentului MCP** (`isError: true`, nu un HTTP 403 — `403 LOCAL_ONLY` este autentificarea separată de gardă a rutei de loopback): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` O cheie minimă de la distanță poate deține `mcp:connect` (autorizează `/api/mcp/` -out doar local) plus domeniul de aplicare read/write specific de care are nevoie.
+
+### Matricea clientului
+
+| Client               | Transport                                      | Configurație de utilizat                                                                                                                                                                                                                                           | `tools[]` reclamă? (instrucțiunea → CCR injectată)                                                                                                                                                                                |
+| -------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Codul Claude         | streamable-http                                | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                                  | Da — compatibil MCP; injectat.                                                                                                                                                                                                    |
+| Cursor / Cline       | `stdio`** sau** `streamable-http`              | stdio: `omniroute --mcp` cu `OMNIROUTE_API_KEY` în `env`; sau o intrare MCP de la distanță care indică `http://localhost:20128/api/mcp/stream` (consultați [Ghidul de configurare → MCP Client Configuration](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Da — publicitate instrumentelor `omniroute_ccr_*`.                                                                                                                                                                                |
+| OpenCode             | streamable-http                                | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, plus `codemode: false`                                                                                                                                                                   | Instrumente promovate numai cu `codemode: false`; instrucțiunea nu este încă injectată, deoarece `omniroute_omniroute_ccr_retrieve` nu se potrivește (consultați [Cerințele preliminare ale clientului](#client-prerequisites) ). |
+| Compatibil cu OpenAI | HTTP compatibil cu OpenAI (finalizări de chat) | client standard de finalizare a chat-ului față de punctul final compatibil OpenAI                                                                                                                                                                                  | **Nu** — unui apelant simplu compatibil cu OpenAI nu i se spune niciodată să sune instrumentul, iar instrucțiunea nu este injectată.                                                                                              |
+
+### Limite de recuperare și paginare
+
+Rezultatele textului instrumentului MCP sunt tăiate în jurul `mcpAccessibility.maxTextChars` ( `50000` implicit). O recuperare `full` a unui bloc este limitată la 256 KiB —** nu există o recuperare completă nelimitată** . Când `chars=N` unui bloc este mare, paginați-l în loc să trageți totul:
+
+- Regula generală:**`chars > 40000` → folosește un `mode`** , niciodată un plin gol.
+- `mode:"grep"` — regex `pattern` potriviți linie cu linie, până la 1.000 de linii de potrivire (`unique: true` drops repetă), cel mai ieftin pentru „găsiți singura linie de care am nevoie”.
+- `mode:"lines"` — un interval de 1 linii indexate; are nevoie atât `start` cât și `end`.
+- `mode:"head"` / `mode:"tail"` — first/last `n` linii.
+- `mode:"stats"` — numărul de linii, caractere și octeți fără corp.
+
+Utilizați `mode:"lines"` cu `start`/`end` pentru a parcurge un bloc lung în pagini, mai degrabă decât să solicitați întregul odată.
+
+### Denumirea instrumentului
+
+Instrumentul de recuperare se numește în prezent `omniroute_ccr_retrieve` (prefixul `omniroute_` este o soluție datată pentru coliziunile de nume între servere). Un nume de instrument cu sufix delimitat mai curat și o remediere pentru rezultatele MCP JSON trunchiate la mijlocul șirului sunt urmărite ca urmăriri în amonte; această pagină documentează numai comportamentul curent, expediat.
+
+### Ciclul de viață al sesiunii
+
+Sesiunile HTTP care pot fi transmise în flux sunt inactiv și serverul le recunoaște; fereastra inactivă este constanta `MCP_SESSION_IDLE_MS` (referită prin nume, nu o valoare codificată, deci această pagină nu se deplasează atunci când se schimbă). Simptomul unei sesiuni inactiv este un HTTP 404 cu `Unknown Mcp-Session-Id` — remediul este reconectarea sau repornirea sesiunii,** nu** pentru a roti o cheie, a schimba un domeniu sau a redenumi un instrument.
+
+## API Suprafață
+
+| Traseu                                 | Scop                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------- |
+| `/api/settings/compression`            | Setări globale de compresie (include configurația `mcpAccessibility` ) |
+| `/api/compression/preview`             | Previzualizează orice mod de compresie                                 |
+| `/api/compression/language-packs`      | Listați pachetele de limbi disponibile Caveman                         |
+| `/api/context/caveman/config`          | Alias pentru setările Caveman                                          |
+| `/api/context/rtk/config`              | RTK implicite și setări                                                |
+| `/api/context/rtk/filters`             | catalog de filtre RTK                                                  |
+| `/api/context/rtk/test`                | RTK preview/test punct final                                           |
+| `/api/context/rtk/raw-output/[id]`     | Recuperare autentificată a ieșirii brute redactate                     |
+| `/api/context/combos`                  | Combo de compresie CRUD                                                |
+| `/api/context/combos/[id]/assignments` | Atribuire combo de rutare CRUD                                         |
+| `/api/context/analytics`               | Alias de analiză a compresiei                                          |
+
+Rutele de gestionare necesită autentificare de management sau verificări ale politicii cheii API.
+
+## MCP Tools
+
+Compresia expune cinci instrumente MCP :
+
+| Instrument                          | Domeniul de aplicare | Scop                               |
+| ----------------------------------- | -------------------- | ---------------------------------- |
+| `omniroute_compression_status`      | `read:compression`   | Setări, analize, statistici cache  |
+| `omniroute_compression_configure`   | `write:compression`  | Actualizați setările globale       |
+| `omniroute_set_compression_engine`  | `write:compression`  | Setați modul și conducta opțională |
+| `omniroute_list_compression_combos` | `read:compression`   | Lista combo de compresie           |
+| `omniroute_compression_combo_stats` | `read:compression`   | Citiți analitice combo/engine      |
 
 ## Domeniu de aplicare și excluderi
 
-**Încorporările nu sunt comprimate niciodată.** `open-sse/handlers/embeddings.ts` nu apelează niciodată niciun
-motor de compresie — corpurile cererilor/răspunsurilor sunt transmise direct executorului, fără modificări.
-În prezent, acest lucru este structural (încorporările și completările conversaționale au gestionari separați), nu o
-verificare în timpul execuției, dar înseamnă că problema distorsionării vectorilor din #8034 nu are nicio suprafață de expunere
-pe calea încorporărilor.
+**Înglobările nu sunt niciodată comprimate.** `open-sse/handlers/embeddings.ts` nu apelează niciodată niciun motor de compresie — corpurile request/response trec direct executorului neatinse. Acest lucru este structural astăzi (înglobările și completările de chat sunt manipulatori disjunși), nu o verificare în timpul execuției, dar înseamnă că problema de distorsiune vectorială în #8034 nu are suprafață de expunere în calea înglobărilor.
 
-**Filtru de excludere per model/endpoint (#8034).** Pentru completările conversaționale, un operator poate specifica
-ID-uri de modele / destinații `provider/model` care nu trebuie comprimate niciodată — o măsură de protecție utilă dacă,
-ulterior, compresia este conectată mai aproape de o cale adiacentă încorporărilor și, în general, utilă
-pentru orice model în cazul căruia contează ca promptul să fie identic octet cu octet (evaluări deterministe, prefixe
-sensibile la cache etc.).
+**filtrul de excludere Per-model/endpoint (#8034).** Pentru finalizarea chat-ului, un operator poate denumi ID-uri de model / ținte `provider/model` care nu trebuie să fie niciodată comprimate — o balustradă utilă dacă compresia este vreodată conectată mai aproape de o cale adiacentă înglobărilor și, în general, utilă pentru orice model al cărui prompt octet pentru octet contează (evaluări deterministe, prefixe sensibile la cache etc.).
 
-- Câmp de setări: `exclusions?: string[]` în configurația globală de compresie
-  (`GET`/`PUT /api/settings/compression`), păstrat prin spațiul de nume existent `key_value` pentru compresie
-  (`src/lib/db/compression.ts`) — fără tabel nou.
-- Filă în panoul de control: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Sintaxa modelelor: `*` este singurul metacaracter. Orice alt metacaracter de expresie regulată dintr-un model este
-  escap-at înainte de potrivire, astfel încât `gpt-5.6` se potrivește numai cu șirul literal, niciodată cu `gpt-5x6`
-  (sigur împotriva ReDoS, limitat, fără cuantificatori imbricați). Modelele sunt comparate fără a ține cont de majuscule și minuscule atât cu
-  ID-ul simplu al modelului, cât și cu forma compusă `provider/model` — `gpt-5-6`, `openai/gpt-5-6`
-  și `openai/*` funcționează toate, iar `*` singur exclude fiecare model.
-- Potrivire: `isCompressionExcluded()` / `normalizeCompressionExclusions()` în
-  `open-sse/services/compression/exclusions.ts`. `chatCore.ts` verifică destinația exclusă
-  imediat după rezolvarea setărilor de compresie, **înainte de rularea oricărui motor**, și tratează o potrivire
-  exact ca și cum compresia ar fi dezactivată global — corpul cererii este în mod demonstrabil
-  identic octet cu octet. Omiterea este înregistrată prin `writeCompressionSkip(..., "excluded")` pentru
-  vizibilitate în datele analitice.
-- Valoare implicită (listă goală/absentă): comportament identic cu cel anterior #8034 — nimic nu este exclus.
+- Câmp de setări: `exclusions?: string[]` în configurația globală de compresie (`GET`/`PUT /api/settings/compression`), a persistat prin spațiul de nume de compresie `key_value` existent (`src/lib/db/compression.ts`) — nici un tabel nou.
+- Fila tablou de bord:** Tabloul de bord → Compresie → Excluderi** (`/dashboard/compression/exclusions`).
+- Sintaxa modelului: `*` este singurul wildcard. Fiecare alt metacaracter regex dintr-un model este eliminat înainte de potrivire, astfel încât `gpt-5.6` se potrivește numai cu șirul literal, niciodată `gpt-5x6` (sigur pentru ReDoS, mărginit, fără cuantificatori imbricați). Modelele se potrivesc fără a ține seama de majuscule și minuscule atât cu id-ul modelului complet, cât și cu `provider/model` compozit — `gpt-5-6`, `openai/gpt-5-6` și `openai/*`, iar `*` singur exclude fiecare model.
+- Potrivire: `isCompressionExcluded()` / `normalizeCompressionExclusions()` în `open-sse/services/compression/exclusions.ts`. `chatCore.ts` verifică ținta exclusă imediat după rezolvarea setărilor de compresie,** înainte ca orice motor să pornească** , și tratează o potrivire exact ca compresia fiind dezactivată la nivel global — corpul cererii este probabil identic pentru octeți. Omiterea este înregistrată prin `writeCompressionSkip(..., "excluded")` pentru vizibilitate analitică.
+- Implicit ( lista empty/absent ): identic cu comportamentul pre-#8034 — nimic nu este exclus.
 
 ## Limitări cunoscute
 
-- **LLMLingua-2 (SLM) necesită dependențe opționale colocate.** Workerul rulează într-un
-  build de producție numai atunci când `@atjsh/llmlingua-2` și dependențele peer sunt colocate în
-  `dist/node_modules` (consultați `scripts/build/colocateOptionals.mjs`, #4286). Fără acestea,
-  motorul continuă în mod sigur (returnează textul original). Rezolvarea workerului nu mai depinde de
-  `import.meta.url` (aceasta eșuează în bundle-ul independent) — se ancorează în directorul de lucru
-  din timpul execuției / `argv[1]`.
-- **Pachetele lingvistice Caveman `de` / `fr` / `ja` sunt parțiale.** Acestea includ reguli
-  `context` + `filler` + `structural`, dar nu și pachete `dedup` / `ultra`, astfel încât intensitatea
-  `ultra` nu este mai puternică decât `full` pentru limbile respective (acestea utilizează exclusiv
-  propriile reguli — nu există nicio revenire implicită la regulile `dedup`/`ultra` pentru limba
-  engleză, care ar altera textul în limbi străine). `en` / `es` / `id` / `pt-BR` sunt complete.
-  Contribuțiile cu `dedup.json` + `ultra.json` pentru pachetele parțiale sunt binevenite.
-- **Telemetria stivuită enumeră numai motoarele care au comprimat.** Un pas al pipeline-ului
-  stivuit al cărui motor a rulat, dar a produs economii de 0 %, returnează `stats:null` și, prin
-  urmare, nu apare în `engineBreakdown` — fiind imposibil de diferențiat de un pas omis. Diferențierea
-  dintre „a rulat, 0 %” și „omis” ar necesita o modificare a modelului de detaliere și este amânată.
+- **LLMLingua-2 (SLM) necesită dep-uri opționale colocate.** Lucrătorul rulează într-o versiune de producție numai atunci când `@atjsh/llmlingua-2` + peers sunt colocați în `dist/node_modules` (a se vedea `scripts/build/colocateOptionals.mjs`, #4286). Fără ele, motorul se deschide (returnează textul original). Rezoluția lucrătorului nu mai depinde de `import.meta.url` (moare în pachetul autonom) — se ancorează pe runtime cwd / `argv[1]`.
+- **Pachetele lingvistice Caveman `de` / `fr` / `ja` sunt parțiale.** Ei expediază reguli `context` + `filler` + `structural`, dar nu pachete `dedup` / `ultra`, deci intensitatea `ultra` nu este mai puternică decât `full` pentru acele limbi (ei folosesc doar propriile reguli — nu există nicio retragere silențioasă la regulile engleze `dedup`/`ultra`, care ar distruge textul străin). `en` / `es` / `id` / `pt-BR` sunt complete. Contribuțiile `dedup.json` + `ultra.json` pentru pachetele parțiale sunt binevenite.
+- **Telemetria stivuită listează doar motoarele care s-au comprimat.** O etapă de conductă stivuită al cărei motor a funcționat, dar a produs economii de 0 %, returnează `stats:null` și, prin urmare, nu apare în `engineBreakdown` — care nu se poate distinge de un pas care a fost omis. Distingerea „a alergat, 0 %” de „sărit” ar necesita o modificare a modelului de defalcare și este amânată.
 
 ## Validare
 
-Testele cheie pentru această zonă sunt:
+Porțile focalizate pentru această zonă sunt:
 
 ```bash
 node --import tsx/esm --test tests/unit/compression/rtk-*.test.ts tests/unit/compression/pipeline-integration.test.ts tests/unit/compression/context-compression-api.test.ts

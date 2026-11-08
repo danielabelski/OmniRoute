@@ -4,241 +4,158 @@
 
 ---
 
-Tá comhbhrú OmniRoute bunaithe ar chonarthaí innill. Is féidir le mód inneall amháin a rith go díreach
-(`caveman` nó `rtk`) nó píblíne chruachta chinntitheach a ritheann innill iolracha in ord.
+Tá comhbhrú OmniRoute bunaithe ar chonarthaí innill. Is féidir le mód inneall amháin a rith go díreach (`caveman` nó `rtk`) nó píblíne cruachta cinntitheach a fheidhmíonn innill iolracha in ord.
 
-## Módanna
+## Modhanna
 
-| Mód          | Conair an innill                                                                             | Ionchur beartaithe                                     |
-| ------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `off`        | ar bith                                                                                      | Caomhnú beacht an phrasa                               |
-| `lite`       | Cúntóirí éadroma Caveman                                                                     | Glanadh i gcónaí le riosca íseal                       |
-| `standard`   | Caveman                                                                                      | Comhdhlúthú pras teanga nádúrtha                       |
-| `aggressive` | Caveman + achoimritheoirí staire/uirlisí                                                     | Seisiúin chomhrá fada                                  |
-| `ultra`      | Caveman + cúntóirí bearrtha                                                                  | Aisghabháil teorainn comhthéacs                        |
-| `rtk`        | RTK                                                                                          | Aschur teirminéil, sliogáin, tógála, tástála, agus git |
-| `omniglyph`  | OmniGlyph                                                                                    | Comhthéacs mar íomhá ar shreang an tsoláthraí dúchais  |
-| `stacked`    | Píblíne. Is é `session-dedup -> lite` an réamhshocrú iarratais. Is rogha é `rtk -> caveman`. | Logaí uirlisí measctha agus prós, an coigilt is mó     |
+| Mód          | Conair innill                                                                                              | Ionchur beartaithe                                    |
+| ------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `off`        | aon cheann                                                                                                 | Caomhnú pras cruinn                                   |
+| `lite`       | Cúntóirí Caveman Lite                                                                                      | Riosca íseal glantacháin i gcónaí                     |
+| `standard`   | Fear Uaimh                                                                                                 | Comhdhlúthú pras teanga nádúrtha                      |
+| `aggressive` | Caveman + history/tool achoimrí                                                                            | Seisiúin comhrá fada                                  |
+| `ultra`      | Cúntóirí bearradh Caveman +                                                                                | Aisghabháil teorann comhthéacs                        |
+| `rtk`        | RTK                                                                                                        | Teirminéal, sliogán, tógáil, tástáil, agus aschur git |
+| `omniglyph`  | OmniGlyph                                                                                                  | Comhthéacs-mar-íomhá ar an sreang soláthraí dúchais   |
+| `stacked`    | Píblíne. Is é `session-dedup -> lite` réamhshocrú an iarratais. Is rogha an diúltaithe é `rtk -> caveman`. | Logs uirlisí measctha agus prós, coigilteas uasta     |
 
-### Próifílí comhbhrú OmniGlyph
+### próifílí comhbhrú OmniGlyph
 
-Glacann an t-inneall `omniglyph` (pacáiste `omniglyph`, 1.4.0+) le próifíl sheiminteach ainmnithe, atá socraithe
-go domhanda trí `omniglyph.profile` sna socruithe comhbhrú nó in aghaidh an chéim tríd an
-cumraíocht chéim den phíblíne chruachta:
+Glacann an t-inneall `omniglyph` (pacáiste `omniglyph`, 1.4.0 +) le próifíl shéimeantach ainmnithe, socraithe go domhanda trí `omniglyph.profile` sna socruithe comhbhrú nó in aghaidh na céime trí chéim cumraíochta na píblíne cruachta:
 
-| Próifíl       | Teorainn                                                                                                             |
-| ------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Réamhshocrú. An polasaí a tomhaiseadh na hadmhálacha foilsithe — córas íomhánna, doiciméid uirlisí agus stair dhlúth |
-| `balanced`    | Coinníonn sé staid bheo dúchasach, cosnaíonn sé na 8 seal deireanacha, titeann sé stair níos sine dúnta              |
-| `coding-safe` | Coinníonn sé údarás, scéimeanna uirlisí agus aschur uirlisí beo dúchasach, cosnaíonn sé na 12 seal deireanacha       |
-| `passthrough` | Bealaí gan claochlú; scipeáiltear an t-inneall                                                                       |
+| Próifíl       | Teorainn                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Réamhshocrú. Thomhais an beartas admhálacha foilsithe córas íomhánna —, doiciméid uirlisí agus stair dhlúth |
+| `balanced`    | Coinníonn an stát beo ó dhúchas, cosnaíonn sé na 8 n-iompú deiridh, laghdaítear stair dhúnta níos sine      |
+| `coding-safe` | Coimeádann údarás, scéimre uirlisí agus aschur uirlisí beo ó dhúchas, cosnaíonn sé na 12 casadh deiridh     |
+| `passthrough` | Bealaí gan athrú; tá an t-inneall skip                                                                      |
 
-Is **uasteorainn, ní urlár**, an phróifíl: diúltaíonn `mergeCompressionProfileOptions` sa phacáiste
-ligean do ghlaoiteoir lána caillteanach a dhún an phróifíl a athoscailt, mar sin ní féidir le
-`preserveSystemPrompt: false` in aghaidh an chéim comhbhrú córais a athchumasú faoi `coding-safe`.
+Tá an phróifíl a** uasteorainn, ní urlár** : diúltaíonn `mergeCompressionProfileOptions` sa phacáiste ligean don ghlaoiteoir lána caillte a athoscailt agus an phróifíl dúnta a athoscailt, mar sin ní féidir le `preserveSystemPrompt: false` in aghaidh na céime comhbhrú córais a athchumasú faoi `coding-safe`.
 
-Tomhaiste ar an gcódchóras seo: ardaíonn `coding-safe` agus `balanced` `minCompressChars` go dtí a
-uasmhéid agus coinníonn siad córas, scéimeanna uirlisí agus torthaí uirlisí dúchasach, mar sin seisiún nach bhfuil
-stair carntha aige fós stopann sé ag `below_min_chars` agus ní chlaochlaíonn an t-inneall aon rud. Sin
-an fáth go bhfuil an réamhshocrú `aggressive` seachas an phróifíl is sábháilte.
+Arna thomhas ar an mbunachar cód seo: ardaíonn `coding-safe` agus `balanced` `minCompressChars` go dtí a uasmhéid agus coinníonn siad córas, scéimre uirlisí agus torthaí uirlisí ó dhúchas, mar sin stopann seisiún nach bhfuil stair carntha fós ag `below_min_chars` agus ní athraíonn an t-inneall rud ar bith. Sin é an fáth gurb é `aggressive` an réamhshocrú seachas an phróifíl is sábháilte.
 
-Réitíonn an pacáiste a scóip mhúnla féin agus a phróifíl óna chumraíocht timpeallachta.
-Ní tharmligeann OmniRoute an cinneadh riamh: cuireann an t-oiriúnóir an geata múnla chuig an scóip is sriantaí den phacáiste,
-mar sin ní féidir le socruithe timpeallachta óstach ach an liosta ceadaithe a chúngú, ní féidir leo é a leathnú
-riamh thar admhálacha tomhaiste OmniRoute.
+Réitíonn an pacáiste a raon feidhme múnla féin agus a phróifíl óna chumraíocht timpeallachta. Ní tharmligeann OmniRoute an cinneadh riamh: cuireann an t-oiriúnóir geata an mhúnla ar an raon feidhme is sriantaí atá ag an bpacáiste, mar sin ní féidir le socruithe timpeallachta óstach ach an liosta ceadaithe a chaolú, gan é a leathnú thar fháltais tomhaiste OmniRoute.
 
-## Clárlann na nInneall
+## Clárlann Inneall
 
-Tá an chlárlann suite in `open-sse/services/compression/engines/registry.ts`. Cuireann na hinnill conradh
-comhroinnte ar fáil:
+Cónaíonn an chlárlann i `open-sse/services/compression/engines/registry.ts`. Nochtann innill conradh comhroinnte:
 
-- `id`: aitheantas cobhsaí innill amhail `caveman` nó `rtk`
-- `apply(text, config)`: sean-chonair rite a úsáideann píblínte cruachta
-- `compress(input, config)`: príomhchonair rite a thugann téacs + staitisticí ar ais
-- `getConfigSchema()`: tugann sí ar ais cruth cosúil le JSON-Schema don chumraíocht bhailí
-- `validateConfig(config)`: tugann sí `{ valid, errors[] }` ar ais
+- `id`: aitheantas inneall cobhsaí ar nós `caveman` nó `rtk`
+- `apply(text, config)`: cosán forghníomhaithe oidhreachta a úsáideann píblínte cruachta
+- `compress(input, config)`: cosán forghníomhaithe príomhúil ag filleadh téacs + stats
+- `getConfigSchema()`: filleann sé an cruth atá cosúil le Scéimre JSON de chumraíocht bhailí
+- `validateConfig(config)`: filleann `{ valid, errors[] }`
 
-Úsáidtear `registerCompressionEngine(engine)` don chlárú (nó `registerEngine` i gcásanna casta),
-a ghlaonn `assertValidEngine()` agus `validateConfig(defaultConfig)` sula nglactar leis.
-Úsáid `unregisterCompressionEngine(id)` chun inneall a bhaint ag am rite.
+Úsáideann clárú `registerCompressionEngine(engine)` (nó `registerEngine` do chásanna chun cinn), a ghlaonn `assertValidEngine()` agus `validateConfig(defaultConfig)` sula nglactar leis. Úsáid `unregisterCompressionEngine(id)` chun inneall a bhaint ag am rite.
 
-Cláraíonn `strategySelector.ts` na hinnill ionsuite sula ritear an comhbhrú. Fágann sé seo gur féidir leis an réamhamharc,
-leis an gcomhbhrú ag am rite, leis an mód cruachta, le tástálacha, agus le hinnill amach anseo an chonair rite chéanna a úsáid.
+cláraíonn `strategySelector.ts` na hinnill ionsuite sula ritheann an comhbhrú. Ligeann sé seo réamhamharc, comhbhrú ama rite, modh cruachta, tástálacha, agus innill sa todhchaí úsáid a bhaint as an cosán céanna cur i gcrích.
 
-### Comhbhrú tuairiscí MCP (gaolmhar)
+### comhbhrú tuairisc MCP (gaolmhar)
 
-Déanann clárlann ar leith meiteashonraí tuairiscí uirlisí MCP a chomhbhrú ar leibhéal na clárlainne — féach
-`open-sse/mcp-server/descriptionCompressor.ts` agus [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Athúsáideann sí
-rialacha Caveman ach oibríonn sí ar mheiteashonraí uirlisí, seachas ar phálaí iarratais.
+Comhbhrúíonn clárlann ar leith meiteashonraí cur síos uirlis MCP ag leibhéal na clárlainne — féach `open-sse/mcp-server/descriptionCompressor.ts` agus [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Athúsáideann sé rialacha Caveman ach feidhmíonn sé ar mheiteashonraí uirlisí, ní iarrann sé ualaí pála.
 
-### Innill ionsuite bhreise
+### Innill bhreise ionsuite
 
-Taobh amuigh de Caveman, RTK, agus LLMLingua-2, soláthraíonn an chlárlann roinnt inneall speisialaithe gan chaillteanas /
-struchtúrtha (a úsáideann píblínte cruachta, an clós súgartha, agus tástálacha):
+Taobh amuigh de Caveman, RTK, agus LLMLingua-2, cuireann an chlárlann roinnt innill speisialaithe gan chaillteanas / struchtúracha (a úsáideann píblínte cruachta, an clós súgartha, agus tástálacha):
 
-| Inneall       | Aitheantas      | A ndéanann sé                                                                                                                                                                                                                    |
-| ------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): cuireann sé tagairtí atá seolta de réir ábhair in ionad bloic mhóra téacs chomhthadhaill, ionas go seoltar bloic athfhillteacha/móra uair amháin agus go ndéantar tagairt dóibh ina dhiaidh sin. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): dlúthú táblach gan chaillteanas ar phálaí d'eagair aonchineálacha JSON go foirm cholúnach `[N rows]`.                                                                                                    |
-| ionizer       | `ionizer`       | Sampláil rónna ag an tús/an lár/an deireadh le haghaidh bloic aonchineálacha an-mhór, agus an chuid láir a fágadh ar lár á stóráil mar thagairt CCR atá seolta de réir ábhair.                                                   |
-| session-dedup | `session-dedup` | Dí-dhúbláil thras-seala bunaithe ar ábhar (arna spreagadh ag TokenMizer): fágann sé ar lár téacs a chonacthas cheana i sealanna níos luaithe den seisiún céanna.                                                                 |
+| Inneall         | Id              | Cad a dhéanann sé                                                                                                                                                                                             |
+| --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR             | `ccr`           | Ábhar-Compress-Retrieve (H4): cuirtear tagairtí atá dírithe ar ábhar in ionad bloic téacs mór comhtheagmhálacha, mar sin seoltar bloic repeated/large uair amháin agus déantar tagairt dóibh ina dhiaidh sin. |
+| seomra cloiginn | `headroom`      | SmartCrusher (H3 + N5): balcadh tábla gan chailliúint ar ualaí pála-eagraithe JSON aonchineálach isteach i bhfoirm columnar `[N rows]`.                                                                       |
+| ianóir          | `ionizer`       | sampláil as a chéile Head/middle/tail do bhloic aonchineálacha an-mhóra, ag stóráil an lárchriostaithe mar thagairt inneachar-dhírithe CCR.                                                                   |
+| seisiún-dedup   | `session-dedup` | Dídhúbailt tras-casaidh dírithe ar ábhar (TokenMizer-spreag): cuireann sé deireadh le téacs atá le feiceáil cheana féin i casadh níos luaithe den seisiún céanna.                                             |
 
-**Treoir phrótacail aisghabhála CCR (#8033):** an chéad uair a chuireann CCR ≥1 bhloc in ionad i
-iarratas, cuireann an t-inneall teachtaireacht aonair, idéimpitéinseach `system` leis ag an tús (a thosaíonn leis an
-sentinel `[CCR protocol]`) chun conradh marcóra → uirlise a mhúineadh don ghlaoiteoir: cad is brí le marcóir
-`[CCR retrieve hash=<24hex> chars=N]`, go gcaithfear an hais a chóipeáil focal ar fhocal
-(na 24 charachtar heicsidheachúlacha ar fad — is dócha gurb iad haiseanna a cóipeáladh go mícheart is cúis le
-teipeanna "níor aimsíodh an bloc"), agus go gciallaíonn marcóir `[dedup:ref sha=...]` "féach siar sa stair", seachas "glaoigh ar an
-uirlis". Ní instealltar an nóta **ach amháin nuair a chruthaíonn `tools[]` fógartha an ghlaoiteora gur féidir leis
-`omniroute_ccr_retrieve` a bhaint amach i ndáiríre** (`callerSupportsCcrRetrieve()` in
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — ní fhaigheann glaoiteoir simplí atá comhoiriúnach le
-OpenAI treoir riamh chun glaoch ar rud nach féidir leis a bhaint amach mura bhfuil an uirlis sin aige.
-Cuirtear idéimpitéinseacht i bhfeidhm trí stair na dteachtaireachtaí a scanadh don sentinel sula ndéantar instealladh,
-ionas nach ndéanann iarratais ilseala (a athsheinneann teachtaireachtaí roimhe seo) an nóta a chruachadh
-uair amháin in aghaidh an tseala.
+**teagasc prótacal aisghabhála CCR (#8033):** an chéad uair a chuirtear CCR in ionad bloc ≥ 1 in iarratas, réamhdhéanann an t-inneall teachtaireacht `system` amháin, idempotent (ar a bhfuil an sentinel `[CCR protocol]` ) ag múineadh don ghlaoiteoir an marcóir conradh uirlis → : cad a chiallaíonn marcóir `[CCR retrieve hash=<24hex> chars=N]`, go gcaithfear an hash a chóipeáil focal ar fhocal (gach 24 carachtar heicsidheachúlach — nach bhfuarthas aon mhí-chóipeáil), agus gur dócha nach bhfuarthas "zjblock" mar chúis leis na mí- `[dedup:ref sha=...]`. ciallaíonn marcóir "féachaint siar ar an stair", ní "glaoch ar an uirlis". Tá an nóta instealladh** go dtí go gcruthóidh `tools[]` fógraithe an ghlaoiteora gur féidir leis `omniroute_ccr_retrieve` a bhaint amach i ndáiríre** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — ní fhaigheann glaoiteoir simplí OpenAI-comhoiriúnach gan an uirlis sin treoir chun glaoch ar rud éigin nach féidir leis a bhaint amach. Cuirtear an neamhláithreacht i bhfeidhm trí stair na dteachtaireachtaí a scanadh don fheighlí sula gcuirtear instealladh é, mar sin ní chruann iarratais iliompaithe (a athsheinntear teachtaireachtaí roimhe seo) an nóta uair amháin in aghaidh an tseala.
 
-## Caveman
+## Fear Uaimh
 
-Díríonn mód Caveman ar chomhdhlúthú séimeantach gnáthphróis:
+Díríonn mód Caveman ar chomhdhlúthú shéimeantach den ghnáthphrós:
 
-- caomhnaíonn sé bloic chóid, URLanna, JSON, conairí agus sonraí struchtúrtha
-- baineann sé ábhar líonta, maolú cainte, comhthéacs athráite agus nathanna ceangail fadálacha
-- tacaíonn sé le pacáistí rialacha comhaid atá feasach ar theanga in `open-sse/services/compression/rules/`
-- tá sé fós ar fáil trí na seanmhóid `standard`, `aggressive` agus `ultra`
+- caomhnaíonn sé bloic cód, URLs, JSON, cosáin, agus sonraí struchtúrtha
+- baintear filler, fálaithe, comhthéacs arís agus arís eile, agus frásaíocht nascach briathra
+- tacaíonn sé le pacáistí rialacha comhaid atá feasach ar an teanga in `open-sse/services/compression/rules/`
+- fós ar fáil trí na modhanna oidhreachta `standard`, `aggressive`, agus `ultra`
 
-Is é `Dashboard -> Context & Cache -> Caveman` an comhéadan ar an deais.
+Is é `Dashboard -> Context & Cache -> Caveman` dromchla an deais.
 
-Tuairiscíonn Caveman réamhtheachtach `~75%` níos lú comharthaí aschuir, meánchoigilteas aschuir de `65%` i dtagarmharcanna
-le raon `22-87%`, agus uirlis comhbhrú ionchuir de `~46%`. Úsáideann OmniRoute uimhir thaobh ionchuir
-Caveman agus coigilteas cruachta leid/comhthéacs á dhoiciméadú aige; fanann mód aschuir Caveman ina
-ghné ar leith d’iompar freagartha.
+Tuairiscíonn Caveman in aghaidh an tsrutha `~75%` bhfuil níos lú comharthaí aschuir, coigilteas aschuir meán `65%` i tagarmharcanna le raon `22-87%`, agus uirlis comhbhrú ionchuir `~46%`. úsáideann OmniRoute uimhir an taobh ionchuir Caveman agus coigilteas prompt/context cruachta á dhoiciméadú; Tá modh aschuir Caveman fós ina ghné freagartha-iompraíochta ar leith.
 
 ## RTK
 
-Díríonn mód RTK ar aschur orduithe agus uirlisí:
+Díríonn mód RTK ar ordú agus aschur uirlisí:
 
-- braitheann sé aicmí aschuir amhail `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  tástálacha Cargo/Go, tiomsúcháin TypeScript/Vite/Webpack, ESLint, iniúchtaí/suiteálacha npm, logaí Docker,
-  `find`/`grep` sliogáin, rianta cruach agus logaí cineálacha
-- cuireann sé 49 scagaire JSON ó `open-sse/services/compression/engines/rtk/filters/` i bhfeidhm
-- tacaíonn sé leis an bpíblíne dhearbhaithe ar nós RTK: baint ANSI, ionadú, gearrchiorcadú match-output,
-  baint/coimeád línte, teascadh de réir líne, teascadh ceann/eireaball/uasmhéid líne, agus cúltaca nuair atá sé folamh
-- tacaíonn sé le scagairí tionscadail atá rialaithe ag iontaoibh in `.rtk/filters.json` agus scagairí domhanda in
-  `DATA_DIR/rtk/filters.json`
-- baineann sé seichimh ANSI, torann dul chun cinn, línte athráite agus téacs caighdeánach neamhchabhrach
-- caomhnaíonn sé teipeanna inghníomhaithe, rabhaidh, achoimrí, comhaid athraithe agus comhthéacs deiridh
-- is féidir leis, go roghnach, aschur amh folaithe a choinneáil le haghaidh aisghabhála/dífhabhtaithe trí bhealaí bainistíochta
-  fíordheimhnithe
+- aimsíonn sé aicmí aschuir mar `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, tástálacha Cargo/Go, tógann TypeScript/Vite/Webpack, ESLint, npm audit/installs, logaí Docker, blaosc `find`/`grep`, rianta stoic, agus logaí cineálacha
+- Baineann 49 scagairí JSON ó `open-sse/services/compression/engines/rtk/filters/`
+- Tacaíonn an píblíne dearbhaithe ar stíl RTK: ANSI stripping, athsholáthair, gearrchiorcad aschuir mheaitseáil, línte strip/keep, teascadh in aghaidh an líne, teascadh head/tail/max-line, agus cúlú folamh
+- tacaíonn sé le scagairí tionscadail le geata muiníne i `.rtk/filters.json` agus scagairí domhanda i `DATA_DIR/rtk/filters.json`
+- sraitheanna ANSI stiallacha, torann dul chun cinn, línte arís agus arís eile, agus pláta coire gan chuidiú
+- caomhnaíonn teipeanna inchaingne, rabhaidh, achoimrí, comhaid athraithe, agus comhthéacs eireaball
+- is féidir leis an aschur amh athcheartaithe do recovery/debugging a choinneáil go roghnach trí bhealaí bainistíochta fíordheimhnithe
 
-Is é `Dashboard -> Context & Cache -> RTK` an comhéadan ar an deais.
+Is é `Dashboard -> Context & Cache -> RTK` dromchla an deais.
 
-Tá sonraí oibríochtúla maidir le scagairí saincheaptha, iontaoibh, fíorú agus aisghabháil aschuir amh le fáil in
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Tá sonraí oibriúcháin maidir le scagairí saincheaptha, muinín, fíorú, agus aisghabháil amh-aschuir beo i [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-Tuairiscíonn RTK réamhtheachtach coigilteas `60-90%` i gcomhbhrú aschuir orduithe. Léiríonn sampla a README
-seisiún 30 nóiméad de Claude Code ag dul ó `~118,000` comhartha go `~23,900`, nó coigilteas `79.7%`.
+Tuairiscíonn RTK in aghaidh an tsrutha coigilteas `60-90%` le haghaidh comhbhrú ordaithe-aschuir. Léiríonn a shampla README seisiún Cód Claude 30-nóiméad ag dul ó `~118,000` tokens go `~23,900`, nó `79.7%` a shábháil.
 
-## LLMLingua-2 (Bearradh Séimeantach)
+## LLMLingua-2 (bearradh Séimeantach)
 
-Déanann mód LLMLingua-2 **bearradh séimeantach comharthaí** ar phrós trí aicmitheoir beag comharthaí
-ONNX a úsáid, mar chomhlánú ar innill riailbhunaithe Caveman agus RTK:
+Feidhmíonn modh LLMLingua-2** bearradh chomhartha shéimeantach** ar phrós ag baint úsáide as aicmitheoir comharthaí ONNX beag, a chomhlánaíonn na hinnill Caveman agus RTK atá bunaithe ar rialacha:
 
-- comhbhrúnn sé prós i dteachtaireachtaí neamhchórais amháin; ní athraítear bloic chóid fhálaithe ná déantáin chaomhnaithe
-  eile riamh
-- ritheann sé inneall `@atjsh/llmlingua-2` (ONNX trí `@huggingface/transformers`) i
-  snáithe oibrí, ionas nach gcuireann tátal na samhla bac riamh ar lúb teagmhas na hiarrata
-- tá sé **inchruachta** (`stackPriority` 35): i bpíblíne chruachta ritheann sé i ndiaidh na
-  n-inneall struchtúrach (CCR, session-dedup, headroom, Caveman) ach roimh `ultra`, mar
-  is éifeachtaí bearradh séimeantach ar théacs atá comhbhrúite go struchtúrach cheana — e.g.
-  `rtk -> caveman -> llmlingua`
-- **teipeann sé go hoscailte i gcás aon earráide** (spleáchais roghnacha ar iarraidh, sceitheadh oibrí, lódáil samhla, tátal,
-  nó teorainn ama) → seoltar an buntéacs ar ais gan athrú, agus ní sheoltar earráid riamh
+- comhbhrúiteann prós i dteachtaireachtaí neamhchórais amháin; ní athraítear bloic chóid fálaithe agus tógálacha caomhnaithe eile riamh
+- ritheann an t-inneall `@atjsh/llmlingua-2` (ONNX via `@huggingface/transformers`) i snáithe oibrí, mar sin ní bhacann tátal sa tsamhail choíche lúb imeachta an iarratais
+- tá** stackable** (`stackPriority` 35 ): i bpíblíne cruachta ritheann sé tar éis na n-innill struchtúracha (CCR, session-dedup, headroom, Caveman) ach roimh `ultra`, ós rud é go bhfuil bearradh shéimeantach is éifeachtaí ar théacs atá comhbhrúite cheana féin — eg `rtk -> caveman -> llmlingua`
+- **fail-osclaíonn ar aon earráid** (deps roghnacha ar iarraidh, sceith oibrithe, ualach an mhúnla, tátal, nó teorainn ama) → cuirtear an buntéacs ar ais gan athrú, ní earráid
 
-Suíomh an innill: `open-sse/services/compression/engines/llmlingua/`. Is é an comhéadan ar an deais
-`Dashboard -> Context & Cache -> LLMLingua`.
+Suíomh an innill: `open-sse/services/compression/engines/llmlingua/`. Is é `Dashboard -> Context & Cache -> LLMLingua` dromchla an deais.
 
-### Samhlacha
+### Múnlaí
 
-Is é **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-tapa) an tsamhail réamhshocraithe. Tá samhail **BERT-base** níos cruinne (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) ar fáil trí réimse `model` chumraíocht an innill. Íoslódálann `@huggingface/transformers`
-an tsamhail roghnaithe go mall ón HuggingFace Hub isteach i
-`${DATA_DIR}/models/llmlingua` ar an gcéad ghlao (`modelStore.ts`); díríonn sárú cumraíochta `modelPath`
-ar chóip áitiúil ina ionad sin (suiteálacha as líne / aerbhearnaithe).
+Is é an tsamhail réamhshocraithe**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, tapa). Cruinneas níos airde** BERT-bun** múnla (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) ar fáil tríd an inneall config réimse `model`. íoslódálann `@huggingface/transformers` an tsamhail roghnaithe go leisciúil ón Mol HuggingFace go `${DATA_DIR}/models/llmlingua` ar an gcéad ghlao (`modelStore.ts`); cuireann config `modelPath` sáraíocht in iúl é ag cóip áitiúil ina ionad sin (suiteálacha as líne / aerbhealaithe).
 
 ### Spleáchais roghnacha & suiteáil ar éileamh
 
-Tá cruach spleáchais phiara ama rite LLMLingua inbhearrtha **roghnach**. Dearbhaítear dhá phacáiste mar
-`optionalDependencies` in `package.json` agus coinnítear **seachtrach** iad sa tiomsúchán táirgeachta
-(ní chuireann `scripts/build/prepublish.ts` i mbeart iad):
+Is é an chairn piaraí ama rite prunable LLMLingua** roghnach** . Déantar dhá phacáiste a dhearbhú mar `optionalDependencies` i `package.json` agus a choinneáil** seachtrach** de réir na tógála táirgeachta (ní chuachta `scripts/build/prepublish.ts` iad):
 
-| Pacáiste             | Leagan (seasta) | Nótaí                                                      |
-| -------------------- | --------------- | ---------------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`         | Pacáiste iontrála; dearbhaíonn sé na cinn eile mar phiaraí |
-| `js-tiktoken`        | `^1.0.20`       | Comharthóir                                                |
+| Pacáiste             | Leagan (bioráin) | Nótaí                                                      |
+| -------------------- | ---------------- | ---------------------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`          | Pacáiste iontrála; dearbhaíonn sé na cinn eile mar phiaraí |
+| `js-tiktoken`        | `^1.0.20`        | Tokenizer                                                  |
 
-Tá `@huggingface/transformers` socraithe ag `^4.2.0` (roinnte le conair na leabuithe áitiúla agus
-rianaithe isteach sa bheart neamhspleách freisin); tá `@atjsh/llmlingua-2@2.0.5` ag brath air mar phiara le
-`"^3.5.2 || ^4.0.0"`, mar sin tacaítear le Transformers.js v3 agus v4 araon. Ó 2.0.4 i leith,
-ní éilíonn `@atjsh/llmlingua-2` `@tensorflow/tfjs` a thuilleadh, rud a bhain an ranníocóir aonair ba mhó
-(TensorFlow.js) den chruach SLM. Níl ach an dá phacáiste thuas ina bpiaraí SLM inbhearrtha.
-Suiteálann `npm install` caighdeánach (forbairt) an chruach roghnach go huathoibríoch mura bhfágtar spleáchais
-roghnacha ar lár.
+tá `@huggingface/transformers` pinned ag `^4.2.0` (roinnte leis an cosán leabaithe áitiúil agus freisin rianaithe isteach sa bheart neamhspleách); piaraí `@atjsh/llmlingua-2@2.0.5` air le `"^3.5.2 || ^4.0.0"`, mar sin tacaítear le Transformers.js v3 agus v4 araon. Ó 2.0.4, ní éilíonn `@atjsh/llmlingua-2` `@tensorflow/tfjs` a thuilleadh, rud a bhain an ranníocóir aonair is mó (TensorFlow.js) as an gcruach SLM. Níl ach an dá phacáiste thuas ina bpiaraí SLM prunable. Déanann `npm install` caighdeánach (dev) an stack roghnach a shuiteáil go huathoibríoch mura bhfágtar spleáchais roghnacha ar lár.
 
-**Cén fáth ar éileamh:** seoltar an pacáiste atá foilsithe ar npm, an beart neamhspleách agus an íomhá Docker
-**gan** na spleáchais seo chun iad a choinneáil beag. Nuair nach mbíonn siad ann, teipeann ar gheata spleáchais
-an oibrí (tóraíocht réitigh `@atjsh/llmlingua-2` in `worker.ts`) agus **teipeann an t-inneall go hoscailte gan torann**
-— ní dhéanann roghnú LLMLingua tada (seoltar an téacs ar ais gan athrú, ní logáiltear aon earráid).
-Chun é a ghníomhachtú i dtimpeallacht bhearrtha, suiteáil an chruach roghnach:
+**Cén fáth ar éileamh:** an pacáiste foilsithe npm, an beart neamhspleách, agus an long íomhá Docker** sin** na deps chun fanacht caol. Nuair a bhíonn siad as láthair, teipeann ar gheata spleáchais an oibrí ( taiscéalaí réitigh `@atjsh/llmlingua-2` i `worker.ts`) agus an t-inneall** fail-osclaíonn go ciúin** — roghnú LLMLingua thiocfaidh chun bheith ina aon-op (téacs ar ais gan athrú, aon earráid logáilte). Chun é a ghníomhachtú i dtimpeallacht bearrtha, suiteáil an stack roghnach:
 
 ```bash
-# socraigh de réir na leaganacha atá dearbhaithe in package.json optionalDependencies
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Cuireann baint `@tensorflow/tfjs` (2.0.4+) deireadh leis an ranníocóir ~800 MB ba mhó roimhe seo
-— is é atá fágtha den lorg ná amanna rite transformers.js + onnxruntime-node,
-mar aon leis an tsamhail TinyBERT (~57 MB) a íoslódáiltear ar an gcéad úsáid (ní trí npm).
+Cuireann baint `@tensorflow/tfjs` (2.0.4 +) deireadh leis an ranníocóir ceannasach ~ 800 MB — roimhe seo is é an lorg atá fágtha ná amanna rite transformers.js + onnxruntime-node, móide an tsamhail TinyBERT (~ 57 MB) a íoslódáladh ar an gcéad úsáid (ní trí npm).
 
 De réir timpeallachta:
 
-- **Forbairt / `npm install`** — suiteáiltear go huathoibríoch é mura ndearna tú `--omit=optional`
-  (nó `--no-optional`) a shonrú. Ní gá aon ghníomh a dhéanamh.
-- **npm domhanda (`npm i -g omniroute`) / neamhspleách** — rith an t-ordú suiteála thuas laistigh
-  d'eolaire an phacáiste suiteáilte, nó athshuiteáil gan na spleáchais roghnacha a fhágáil ar lár.
-- **Docker** — cuir an t-ordú suiteála le sraith íomhá díorthaithe; soláthraítear an íomhá fhoilsithe
-  i bhfoirm éadrom d'aon ghnó.
-- **VPS (PM2)** — suiteáil isteach i `node_modules` na haipe é, ansin atosaigh an próiseas ionas go
-  ndéanfaidh an t-oibrí an geata a phromhadh arís.
-- **Next neamhspleách amh (`npm run build` → `.build/next/standalone/server.js`)** — NÍ
-  sholáthraíonn an rian neamhspleách an t-oibrí ná na spleáchais roghnacha, mar sin
-  osclaíonn an t-inneall ar theip gan fógra. Cuireann `scripts/build/colocate-standalone.mjs`
-  an dá rud i bhfeidhm arís (esbuild an oibrí + clabhsúr na spleáchas roghnach isteach sa chrann
-  neamhspleách); ritheann sé go huathoibríoch tríd an gcrúca npm `postbuild` tar éis gach tógála.
-  Idéimpitéinseach, agus teipeann sé go bog nuair nach mbíonn na spleáchais ann.
+- **Dev / `npm install`** — suiteáilte go huathoibríoch ach amháin má ritheann tú `--omit=optional` (nó `--no-optional`). Níl gá le gníomh.
+- **npm domhanda (`npm i -g omniroute`) / standalone** — reáchtáil an t-ordú suiteála thuas taobh istigh den eolaire pacáiste suiteáilte, nó athshuiteáil gan deps roghnacha a fhágáil ar lár.
+- **Docker** — cuir an t-ordú suiteála i gciseal íomhá díorthaithe; na longa íomhá foilsithe caol le dearadh.
+- **VPS (PM2)** — a shuiteáil isteach i `node_modules` an aip , ansin atosú ar an bpróiseas ionas go ndéanfaidh an t-oibrí an geata a athscrúdú.
+- **Raw Next standalone (`npm run build` → `.build/next/standalone/server.js`)** — na longa rian aonair NEITHER an t-oibrí ná na deps roghnacha, mar sin teipeann an t-inneall go ciúin-osclaíonn. cuireann `scripts/build/colocate-standalone.mjs` an dá cheann i bhfeidhm (esbuild oibrí + dúnadh roghnach-dep isteach sa chrann aonair); ritheann sé go huathoibríoch tríd an hook `postbuild` npm tar éis gach tógála. Neamhchumhachtach, teip-bog nuair a bhíonn deps as láthair.
 
-**Deimhnigh go bhfuil sé gníomhach:** agus LLMLingua roghnaithe, crapann fíorphrós i ndáiríre
-(stopann an t-inneall de bheith ag oscailt ar theip), agus spreagann an chéad iarratas íoslódáil
-na samhla isteach i `${DATA_DIR}/models/llmlingua`. D'aon ghnó, ní phromhann an geata ach
-`@atjsh/llmlingua-2` — is ESM amháin iad na piaraí eile agus caitheann `require.resolve`
-eisceacht orthu fiú nuair atá siad i láthair — mar sin osclaíonn an t-oibrí ar theip fós má bhíonn
-aon phiara ar iarraidh i ndáiríre ag am `import()`.
+**Fíoraigh go bhfuil sé gníomhach:** le LLMLingua roghnaithe, crapadh iarbhír prós (stopann an t-inneall oscailt theip), agus cuireann an chéad iarratas tús leis an íoslódáil múnla isteach `${DATA_DIR}/models/llmlingua`. Ní dhéanann an geata iniúchadh d'aon ghnó ach `@atjsh/llmlingua-2` — níl na piaraí eile ach ESM-amháin agus caitheann `require.resolve` orthu fiú nuair a bhíonn — i láthair ionas go dteipeann ar an oibrí fós - osclaíonn má tá aon phiara ar iarraidh i ndáiríre ag am `import()`.
 
 ## Píblínte Cruachta
 
-Ritheann an mód cruachta céimeanna píblíne in ord. Is é seo an réamhshocrú:
+Ritheann mód Cruachta céimeanna píblíne in ord. Is é an réamhshocrú:
 
 ```txt
 rtk -> caveman
 ```
 
-Úsáid é seo le haghaidh seisiúin oibreáin códaithe ina gcomhcheanglaíonn leid aschur ordaithe le prós
-daonna nó cúntóra. Laghdaíonn RTK logaí torannacha uirlisí ar dtús, ansin comhbhrúnn Caveman an teanga nádúrtha atá fágtha.
+Bain úsáid as seo le haghaidh seisiúin gníomhaire códaithe nuair a nascann leid aschur na n-orduithe le prós daonna nó cúnta. laghdaíonn RTK logaí uirlisí noisy ar dtús, ansin déanann Caveman an teanga nádúrtha atá fágtha a chomhbhrú.
 
-Cumraítear céimeanna píblíne le `stackedPipeline` sna socruithe comhbhrúite nó trí theaglamaí
-comhbhrúite.
+Tá céimeanna píblíne cumraithe le `stackedPipeline` i socruithe comhbhrú nó trí combos comhbhrú.
 
-Nuair a laghdaíonn an dá inneall an pálasta incháilithe céanna, déantar na coigiltis a iolrú:
+Nuair a laghdaíonn an dá inneall an pálasta incháilithe céanna, cumaisc choigiltis:
 
 ```txt
 combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
@@ -246,35 +163,29 @@ average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
 range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## Scagaire Crainn Inrochtaineachta MCP
+## MCP Scagaire Crann Inrochtaineachta
 
-Is ciseal comhbhrúite iar-fhorghníomhaithe é scagaire cliste crainn inrochtaineachta MCP a ritheann ar
-**thorthaí uirlisí** MCP, ní ar leideanna ná ar chomhthéacs. Díríonn sé ar na pálastaí fadálacha crainn inrochtaineachta agus
-léargais bhrabhsálaí a sheolann uirlisí ar ais, amhail Playwright, computer-use, agus freastalaithe MCP
-uathoibrithe brabhsálaí.
+Is ciseal comhbhrú iar-fhorghníomhaithe é an scagaire cliste inrochtaineachta-crann MCP a ritheann ar MCP** torthaí uirlisí** , ní ar leideanna nó comhthéacs. Díríonn sé ar na hualaí pála-sracléarscáil focal inrochtaineachta agus brabhsálaí a sheoltar ar ais le huirlisí mar Playwright, úsáid ríomhaire, agus freastalaithe MCP -uathoibriú brabhsálaí.
 
-### A ndéanann sé
+### Cad a dhéanann sé
 
-1. **Baint torainn** — baintear iontrálacha cineálacha/téacs folmha (`- generic:`, `- text: ""`)
-2. **Crapadh siblíní** — nuair atá ≥ `collapseThreshold` (30 de réir réamhshocraithe) líne struchtúracha
-   athchleachtacha as a chéile, crapann sé iad go dtí na chéad `collapseKeepHead` (10 de réir réamhshocraithe) líne + achoimre chomhairimh +
-   na `collapseKeepTail` (5 de réir réamhshocraithe) líne dheireanacha
-3. **Caomhnú tagairtí** — ní dhéantar teagmháil riamh le hancairí `[ref=eXX]` atá riachtanach do Playwright/computer-use
-4. **Teascadh docht** — má sháraíonn an téacs tar éis craptha `maxTextChars` fós (50,000 de réir réamhshocraithe),
-   teasctar é le leid nascleanúna ionas gur féidir leis an oibreán leanúint den obair
+1. **Torann ag baint** Baineann — iontrálacha folamha generic/text amach (`- generic:`, `- text: ""`)
+2. **Titim siblín** — nuair a bhíonn línte comhleanúnacha ≥ `collapseThreshold` (30 réamhshocraithe) ina n-athrá struchtúrtha, titfidh siad isteach sa chéad línte `collapseKeepHead` (réamhshocraithe 10) + achomair comhairimh + na línte `collapseKeepTail` deiridh (réamhshocraithe 5)
+3. **Caomhnú tag** Ní dhéantar teagmháil riamh le ancairí — `[ref=eXX]` a theastaíonn ó Playwright/computer-use
+4. **Teascadh crua** — má sháraíonn an téacs tar éis titime fós `maxTextChars` (réamhshocraithe 50,000), teascann sé le leid nascleanúna ionas gur féidir leis an ngníomhaire leanúint ag obair
 
-### Suíomh an innill
+### Suíomh inneall
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← pointe iontrála smartFilterText()
-  collapseRepeated.ts ← algartam craptha siblíní
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Cumraíocht
 
-Rialaítear é le `compression.mcpAccessibility` sna socruithe domhanda (ascnamh 056). Cumraíocht réamhshocraithe:
+Rialaithe ag `compression.mcpAccessibility` i suíomhanna domhanda (imirce 056). Cumraíocht réamhshocraithe:
 
 ```json
 {
@@ -287,116 +198,170 @@ Rialaítear é le `compression.mcpAccessibility` sna socruithe domhanda (ascnamh
 }
 ```
 
-Ní chuirtear an scagaire i bhfeidhm ach ar phálastaí torthaí uirlisí arb é `"text"` a `type` agus a bhfuil a bhfad
-níos mó ná `minLengthToProcess`. Ní dhéanann sé difear do chomhbhrú leideanna ná do phálastaí iarratais.
+Ní chuirtear an scagaire i bhfeidhm ach ar ualaí pála-thorthaí uirlisí a bhfuil `type` `"text"` agus a bhfuil a fhad níos mó ná `minLengthToProcess`. Ní chuireann sé isteach ar chomhbhrú pras nó ar ualaí pá a iarraidh.
 
-### Coigiltis ionchasacha
+### Coigilteas ionchais
 
-60–80% ar thorthaí uirlisí léargais bhrabhsálaí, ag brath ar chastacht an leathanaigh. Tá an t-algartam craptha
-O(n) de réir líon na línte agus cuireann sé aga folaigh dhiomaibhseach leis.
+60–80% ar thorthaí uirlisí seat brabhsálaí, ag brath ar chastacht an leathanaigh. Is é O(n) an t-algartam um thitim i gcomhaireamh líne agus cuireann sé diomaibhseach leis an bhfola.
 
-### An scagaire seo i gcomparáid leis na hinnill chomhbhrúite thuas
+### An scagaire seo vs na hinnill comhbhrú thuas
 
-| Gné              | Caveman / RTK / Cruachta         | Scagaire inrochtaineachta MCP          |
-| ---------------- | -------------------------------- | -------------------------------------- |
-| Sprioc           | Leideanna iarratais / comhthéacs | Torthaí uirlisí MCP                    |
-| Truicear         | Socrú móid chomhbhrúite          | `compression.mcpAccessibility.enabled` |
-| Raon             | Gach teachtaireacht SSE          | Torthaí uirlisí amháin                 |
-| Ancairí tagartha | N/B                              | Caomhnaithe gan choinníoll             |
+| Gné          | Caveman / RTK / Cruachta        | scagaire inrochtaineachta MCP          |
+| ------------ | ------------------------------- | -------------------------------------- |
+| Sprioc       | Iarraidh leideanna / comhthéacs | torthaí uirlisí MCP                    |
+| Truicear     | Socrú mód comhbhrúite           | `compression.mcpAccessibility.enabled` |
+| Raon feidhme | Gach teachtaireacht SSE         | Torthaí uirlisí amháin                 |
+| Tag ancairí  | N/A                             | Caomhnaithe gan choinníoll             |
 
 ---
 
-## Teaglamaí Comhbhrúite
+## Comhbhrúiteanna Comhbhrú
 
-Is próifílí comhbhrúite ainmnithe iad teaglamaí comhbhrúite is féidir a shannadh do theaglamaí ródúcháin:
+Ainmnítear teaglama comhbhrúite mar phróifílí comhbhrú ar féidir iad a shannadh do combos ródaithe:
 
-- `compression_combos`: stórálann sé mód, píblíne, cumraíocht RTK, cumraíocht teanga agus marcóir réamhshocraithe
-- `compression_combo_assignments`: mapálann sé teaglama comhbhrúite chuig teaglama ródúcháin
-- réitíonn comhtháthú ag am rite teaglama comhbhrúite sannta roimh sháruithe cineálacha teaglama
-- áirítear `compression_combo_id` agus `engine` san anailísíocht
+- `compression_combos`: modh stórais, píblíne, cumraíocht RTK, cumraíocht teanga, agus marcóir réamhshocraithe
+- `compression_combo_assignments`: mapálann teaglama comhbhrú go teaglama ródaithe
+- réitíonn comhtháthú ama rite teaglama comhbhrú sannta sula sáraítear teaglama cineálach
+- áirítear leis an anailísíocht `compression_combo_id` agus `engine`
 
-Dromchla an deais: `Deais -> Comhthéacs & Taisce -> Teaglamaí Comhbhrúite`.
+Dromchla an phainéil: `Dashboard -> Context & Cache -> Compression Combos`.
+
+## Réamhriachtanais / treoir oibreora (CCR & session-dedup)
+
+CCR (`ccr`) agus `session-dedup` cuir téacs in ionad nó cuir deireadh leis agus fág a** marcóir** taobh thiar. Is é an t-alt seo an tagairt oibreora chun cliant a shreangú, an dá mharcóir a léamh, agus an t-ábhar a bhfuil gá leis a aisghabháil nó a dhiagnóisiú. Tá meicnic gach innill clúdaithe thuas; is é seo an ciseal "conas a rith liom é".
+
+### Iompar & críochphointí
+
+Is féidir an freastalaí MCP a nochtann na huirlisí CCR a bhaint amach ar thrí bhealach. Is é `http://localhost:20128` (`OMNIROUTE_BASE_URL`) an bonn réamhshocraithe URL :
+
+| Iompar                          | URL / ordú                              | Nótaí                                                                                                                                            |
+| ------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| HTTP sruthaithe (cliant, molta) | `http://localhost:20128/api/mcp/stream` | Labhraíonn na cliaint MCP reatha críochphointe leo.                                                                                              |
+| Oidhreacht SSE singleton        | `http://localhost:20128/api/mcp/sse`    | Iompar singleton níos sine. é** dhúnann** seisiúin insruthaithe; cliaint `streamable-http` a úsáid i gcoinne `/api/mcp/stream`, ní an ceann seo. |
+| stdio                           | `omniroute --mcp`                       | Le haghaidh IDE MCP config a sceitheann an próiseas. Níl aon bhratach `--dev` ; Is é `omniroute --mcp` pointe iontrála an stdio.                 |
+
+### Sraitheanna stórála (cad a mhairfidh atosú)
+
+Tá CCR a** dhá shraith** siopa, ní i gcuimhne amháin:
+
+- **Sraith te i gcuimhne** caipín in aghaidh an bhloic — 2 MiB, in aghaidh an phríomhoide 16 MiB, domhanda 64 MiB. Réamhshocrú iontrálacha chuig TTL 24 h (7 lá ar a mhéad). Cuirtear teorainn de 256 KiB le haisghabháil iomlán MCP ón gcuimhne; is féidir teacht ar aon rud níos mó fós trí na modhanna raoin / grep.
+- **Sraith SQLite durable** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, ar aghaidh de réir réamhshocraithe) Tacaíonn — leis an tsraith in-chuimhne agus mar sin maireann bloc díshealbhú LRU, atosú, nó tuirlingt aisghabhála ar chás eile. Coinníonn an tsraith TTL an bhloic , agus mar sin tá bloc thar a TTL imithe ón dá shraith.
+
+Coinníonn trí gharda an tsraith marthanach teorantach — a fhanann bloc cuimhne-amháin nuair:
+
+1. tá an bloc thart** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. is am rite scamall é an t-am rite (gan diosca áitiúil);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Mar sin ní scéal atosaithe iomlán é "imithe an bloc": maireann bloc sub-512 KB ar am rite áitiúil neamh-scamall ar atosú tríd an tsraith marthanach go dtí go n-imíonn a TTL amach. Féach [an tagairt Comhshaoil](../reference/ENVIRONMENT.md) don athróg.
+
+### An dá marcóir
+
+| Marcóir                               | Brí                                                                                                                                                         | Cad ba cheart don mhúnla a dhéanamh                                                                                                                                                                                                            |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Stóráladh bloc mór le seoladh ábhar.                                                                                                                        | Cuir glaoch ar `omniroute_ccr_retrieve` leis an** hash 24-heicsiceo arna chóipeáil focal ar fhocal** chun an buntéacs a fháil ar ais.                                                                                                          |
+| `[dedup:ref sha=…]`                   | `session-dedup` téacs elided seolta cheana féin i seal níos luaithe den seisiún céanna. Is é seo an** amharc siar d'aon ghnó** , ní caillteanas nó earráid. | Déan** nach bhfuil** glaoch ar aon uirlis agus a dhéanamh** nach bhfuil** déan iarracht é a "athchruthú". Is é an chóip chanónach an chéad rud a tharla sa téacs; ní athscríobhtar an seal reatha riamh, díothaítear é ar chasadh níos déanaí. |
+
+Is cinneadh prótacal d'aon ghnó é an breathnú siar `[dedup:ref]` — níl aon atógáil réamhsheolta. Caitheamh é mar "bhí an téacs cruinn seo ar an tsreang cheana féin níos luaithe sa seisiún seo."
+
+### Réamhriachtanais an chliaint
+
+- **Eochair (stdio):** ní iompraíonn glaoiteoir stdio aitheantas in aghaidh an iarratais, mar sin fíordheimhníonn sé le `OMNIROUTE_API_KEY` (suite i `env` an fhreastalaí MCP ). Gan é tá an té atá ag glaoch gan ainm agus d'fhéadfadh uirlisí a dteastaíonn príomhoide uathu díghrádú.
+- **Is é `tools[]` an réamhchoinníoll insteallta.** Déantar an treoir prótacal aisghabhála CCR (#8033) a instealladh** amháin** nuair a chruthaíonn `tools[]` fógraithe an iarratais gur féidir leis an gcliant `omniroute_ccr_retrieve` a bhaint amach i ndáiríre. Is cluiche deighleog leantach é an meaitseáil agus deighilteoir teoranta air (`__`, `.`, `/`, `:`) — nach bhfotheaghrán lom — riamh é agus mar sin ní áirítear ainm spásáilte mar `mcp__gateway__omniroute_ccr_retrieve` fós. Ciallaíonn `tools[]` as láthair nó neamh-mheaitseála go gcuirtear an treoir _not_ instealladh, de réir dearadh.
+- **`codemode:false` (cliaint OpenCode ).** OpenCode mainneachtainí go Mód Cód, a fhógairt ach a uirlisí dúchais leis an tsamhail agus** ní dhéanann** cuir uirlisí MCP ar an liosta dúchais `tools[]`. Socraigh `codemode: false` ar iontráil an fhreastalaí MCP ionas go bhfógrófar na huirlisí `omniroute_ccr_*`. Seo a** cliant** socrú, ní ceann OmniRoute. Ní fhaigheann sé an treoir CCR instealladh go fóill: ainmníonn OpenCode uirlis `<server>_<tool>`, mar sin nochtann freastalaí ar a dtugtar `omniroute` `omniroute_omniroute_ccr_retrieve`, agus níl `_` ar cheann de na deighilteoirí comhoiriúnaithe.
+- **Príomhoidí.** Déantar stóráil agus aisghabháil a leithlisiú de réir an phríomhaí fíordheimhnithe (in aghaidh na heochrach API ). Ní fheiceann eochair ach a bloic féin.
+
+### Scóipeanna in aghaidh an uirlis
+
+Bíonn forfheidhmiú scóip ar siúl i gcónaí do ghlaoiteoirí HTTP/SSE caol-scóip. Éilíonn na huirlisí `omniroute_` CCR :
+
+| Uirlis                   | Raon feidhme        |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Tugann raon feidhme ar iarraidh ar ais an** toradh earráid uirlis MCP** (`isError: true`, ní HTTP 403 — Is é an `403 LOCAL_ONLY` an loopback ar leith bealach-garda auth): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Is féidir le eochair iargúlta íosta a shealbhú `mcp:connect` (údaraíonn an `/api/mcp/` áitiúil-amháin carve-amach) móide an raon feidhme read/write sonrach a theastaíonn uaidh.
+
+### maitrís cliant
+
+| Cliant               | Iompar                                              | Cumraíocht le húsáid                                                                                                                                                                                                                                   | `tools[]` fógraithe? (treoir → CCR insteallta)                                                                                                                                                                    |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cód Claude           | insruthaithe- http                                  | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                      | Tá — MCP-in ann; ghann.                                                                                                                                                                                           |
+| Cursor / Cline       | `stdio`** nó** `streamable-http`                    | stdio: `omniroute --mcp` le `OMNIROUTE_API_KEY` i `env`; nó iontráil chianda MCP atá dírithe ar `http://localhost:20128/api/mcp/stream` (féach [an Treoir Socraithe → MCP Cumraíocht an Chliaint](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Sea — fógraíocht a dhéanamh ar na huirlisí `omniroute_ccr_*`.                                                                                                                                                     |
+| OpenCode             | insruthaithe- http                                  | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, móide `codemode: false`                                                                                                                                                      | Uirlisí fógraithe le `codemode: false` amháin; níl an treoir instealladh fós, toisc nach bhfuil `omniroute_omniroute_ccr_retrieve` ag teacht leis (féach [réamhriachtanais an Chliaint](#client-prerequisites) ). |
+| OpenAI-comhoiriúnach | HTTP -comhoiriúnach le OpenAI (críochnaithe comhrá) | cliant críochnaithe comhrá caighdeánach i gcoinne críochphointe atá comhoiriúnach le OpenAI                                                                                                                                                            | **Riamh** — ní insítear do ghlaoiteoir simplí OpenAI-comhoiriúnach riamh glaoch ar an uirlis, agus ní instealladh an treoir.                                                                                      |
+
+### Teorainneacha aisghabhála & uimhrigh
+
+Gearrtar torthaí téacs uirlis MCP thart ar `mcpAccessibility.maxTextChars` (réamhshocraithe `50000`). Tá teorainn ag 256 KiB — le haisghabháil bloc `full`** níl aon aisghabháil iomlán gan teorainn** . Nuair a bhíonn `chars=N` bloc mór, leathanach é in ionad an rud ar fad a tharraingt:
+
+- Riail ordóg:**`chars > 40000` → úsáid `mode`** , riamh lom iomlán.
+- `mode:"grep"` — regex `pattern` mheaitseáil líne ar líne, suas le 1,000 línte meaitseála (`unique: true` titeann arís), is saoire le haghaidh "faigh an líne amháin atá ag teastáil uaim."
+- `mode:"lines"` — raon líne 1-innéacs; riachtanais an dá `start` agus `end`.
+- línte `mode:"head"` / `mode:"tail"` — first/last `n`.
+- `mode:"stats"` — líne, carachtar, agus comhaireamh beart gan an comhlacht.
+
+Bain úsáid as `mode:"lines"` le `start`/`end` chun bloc fada a shiúil i leathanaigh seachas an rud ar fad a iarraidh láithreach.
+
+### Ainmniú uirlisí
+
+Tugtar `omniroute_ccr_retrieve` ar an uirlis aisghabhála faoi láthair (tá an réimír `omniroute_` ina réiteach dátaithe le haghaidh imbhuailtí le hainmneacha trasfhreastalaí). Rianaítear ainm uirlise iarmhír teorann níos glaine agus ceartúchán do thorthaí MCP JSON teasctha lártheaghráin mar bhearta leantacha in aghaidh an tsrutha; ní dhoiciméadaíonn an leathanach seo ach an t-iompar seolta atá ann faoi láthair.
+
+### Saolré an tseisiúin
+
+Seisiúin insruthaithe-HTTP díomhaoin agus sroicheann an freastalaí iad; is é an tairiseach `MCP_SESSION_IDLE_MS` an fhuinneog díomhaoin (tagairt de réir ainm, ní luach códaithe crua, mar sin ní sruthaíonn an leathanach seo nuair a athraíonn sé). Is é an comhartha a bhaineann le seisiún díomhaoin ná HTTP 404 le `Unknown Mcp-Session-Id` — is é an leigheas ná an seisiún a athcheangal nó a atosú,** nach bhfuil** chun eochair a rothlú, raon feidhme a athrú, nó uirlis a athainmniú.
 
 ## Dromchla API
 
-| Bealach                                | Cuspóir                                                                        |
-| -------------------------------------- | ------------------------------------------------------------------------------ |
-| `/api/settings/compression`            | Socruithe comhbhrúite domhanda (lena n-áirítear cumraíocht `mcpAccessibility`) |
-| `/api/compression/preview`             | Réamhamharc ar aon mhód comhbhrúite                                            |
-| `/api/compression/language-packs`      | Liostaigh pacáistí teanga Caveman atá ar fáil                                  |
-| `/api/context/caveman/config`          | Ailias do shocruithe Caveman                                                   |
-| `/api/context/rtk/config`              | Réamhshocruithe agus socruithe RTK                                             |
-| `/api/context/rtk/filters`             | Catalóg scagairí RTK                                                           |
-| `/api/context/rtk/test`                | Críochphointe réamhamhairc/tástála RTK                                         |
-| `/api/context/rtk/raw-output/[id]`     | Aisghabháil fhíordheimhnithe ar aschur amh folaithe                            |
-| `/api/context/combos`                  | CRUD do theaglamaí comhbhrúite                                                 |
-| `/api/context/combos/[id]/assignments` | CRUD do shannadh teaglama ródúcháin                                            |
-| `/api/context/analytics`               | Ailias d’anailísíocht chomhbhrúite                                             |
+| Bealach                                | Cuspóir                                                                 |
+| -------------------------------------- | ----------------------------------------------------------------------- |
+| `/api/settings/compression`            | Socruithe comhbhrú domhanda (lena n-áirítear `mcpAccessibility` config) |
+| `/api/compression/preview`             | Réamhamharc ar aon mhodh comhbhrú                                       |
+| `/api/compression/language-packs`      | Déan liosta de na pacáistí teanga Caveman atá ar fáil                   |
+| `/api/context/caveman/config`          | Ailias socruithe Caveman                                                |
+| `/api/context/rtk/config`              | mainneachtainí agus socruithe RTK                                       |
+| `/api/context/rtk/filters`             | Íoslódáil catalóg RTK scagaire                                          |
+| `/api/context/rtk/test`                | críochphointe RTK preview/test                                          |
+| `/api/context/rtk/raw-output/[id]`     | Aisghabháil amh-aschuir fíordheimhnithe fíordheimhnithe                 |
+| `/api/context/combos`                  | Comhbhrú teaglama CRUD                                                  |
+| `/api/context/combos/[id]/assignments` | Ródú-teaglaim tasc CRUD                                                 |
+| `/api/context/analytics`               | Ailias anailíse comhbhrú                                                |
 
-Éilíonn bealaí bainistíochta fíordheimhniú bainistíochta nó seiceálacha beartais eochrach API.
+Teastaíonn fíordheimhniú bainistíochta nó seiceálacha beartais eochair-API ar bhealaí bainistíochta.
 
-## Uirlisí MCP
+## MCP
 
-Nochtann comhbhrú cúig uirlis MCP:
+Nochtann comhbhrú cúig uirlis MCP :
 
-| Uirlis                              | Scóip               | Cuspóir                                     |
+| Uirlis                              | Raon feidhme        | Cuspóir                                     |
 | ----------------------------------- | ------------------- | ------------------------------------------- |
 | `omniroute_compression_status`      | `read:compression`  | Socruithe, anailísíocht, staitisticí taisce |
 | `omniroute_compression_configure`   | `write:compression` | Nuashonraigh socruithe domhanda             |
-| `omniroute_set_compression_engine`  | `write:compression` | Socraigh mód agus píblíne roghnach          |
-| `omniroute_list_compression_combos` | `read:compression`  | Liostaigh teaglamaí comhbhrúite             |
-| `omniroute_compression_combo_stats` | `read:compression`  | Léigh anailísíocht teaglama/innill          |
+| `omniroute_set_compression_engine`  | `write:compression` | Modh socraithe agus píblíne roghnach        |
+| `omniroute_list_compression_combos` | `read:compression`  | Liosta combos comhbhrú                      |
+| `omniroute_compression_combo_stats` | `read:compression`  | Léigh combo/engine Analytics                |
 
 ## Scóip & eisiaimh
 
-**Ní chomhbhrúitear leabuithe choíche.** Ní ghlaonn `open-sse/handlers/embeddings.ts` ar aon
-inneall comhbhrúite choíche — téann corp an iarratais/an fhreagra díreach chuig an seiceadóir gan athrú.
-Tá sé seo struchtúrach faoi láthair (tá láimhseálaithe ar leith ag leabuithe agus comhlánuithe comhrá), ní
-seiceáil ag am rite, ach ciallaíonn sé nach bhfuil aon dromchla nochta ag an imní faoi shaobhadh veicteora
-in #8034 i gcosán na leabuithe.
+**Ní dhéantar leabaithe riamh a chomhbhrú.** Ní chuireann `open-sse/handlers/embeddings.ts` glaoch ar aon inneall comhbhrú — téann na comhlachtaí request/response díreach chuig an seiceadóir gan teagmháil. Tá sé seo struchtúrach sa lá atá inniu ann (láimhseálaithe dí-chomhpháirteacha iad leabaithe agus comhlánú comhrá), ní seiceáil am rite, ach ciallaíonn sé nach bhfuil aon dromchla nochta i gcosán an leabaithe ag an imní maidir le saobhadh veicteoirí in #8034.
 
-**Scagaire eisiaimh de réir samhla/críochphointe (#8034).** I gcás comhlánuithe comhrá, is féidir le hoibreoir
-aitheantais samhlacha / spriocanna `provider/model` a ainmniú nach ceadmhach iad a chomhbhrú choíche — cosaint atá úsáideach má
-shreangaítear comhbhrú níos gaire do chonair atá tadhlach le leabuithe amach anseo, agus atá úsáideach go ginearálta
-d’aon samhail ina bhfuil tábhacht le leid atá cruinn beart ar bheart (meastóireachtaí cinntitheacha, réimíreanna
-atá íogair don taisce, etc.).
+**scagaire eisiamh Per-model/endpoint (#8034).** Maidir le comhlánú comhrá, is féidir le hoibreoir spriocanna samhail ids / `provider/model` a ainmniú nach mór a chomhbhrú riamh — ráille cosanta úsáideach má dhéantar comhbhrú a shreangú riamh níos gaire do chosán in aice le leabaithe níos déanaí, agus úsáideach go ginearálta d’aon mhúnla a bhfuil a bheart cruinn beart-le-beart ceisteanna (evals cinntitheach, réimíreanna taisce-íogair, etc.).
 
-- Réimse socruithe: `exclusions?: string[]` ar an gcumraíocht chomhbhrúite dhomhanda
-  (`GET`/`PUT /api/settings/compression`), arna bhuanú tríd an ainmspás comhbhrúite `key_value`
-  atá ann cheana (`src/lib/db/compression.ts`) — gan tábla nua.
-- Cluaisín deaise: **Deais → Comhbhrú → Eisiaimh**
-  (`/dashboard/compression/exclusions`).
-- Comhréir patrúin: is é `*` an t-aon saoróg. Éalaítear gach meiteacharachtar slonn rialta eile i bpatrún
-  roimh mheaitseáil, mar sin ní mheaitseálann `gpt-5.6` ach an teaghrán litriúil, agus ní mheaitseálann sé `gpt-5x6`
-  choíche (sábháilte ar ReDoS, teoranta, gan cainníochtóirí neadaithe). Déantar patrúin a mheaitseáil gan beann ar chás
-  i gcoinne aitheantas lom na samhla agus an chomhshuímh `provider/model` araon — oibríonn `gpt-5-6`, `openai/gpt-5-6`,
-  agus `openai/*` go léir, agus eisiann `*` leis féin gach samhail.
-- Meaitseáil: `isCompressionExcluded()` / `normalizeCompressionExclusions()` in
-  `open-sse/services/compression/exclusions.ts`. Seiceálann `chatCore.ts` an sprioc eisiata
-  díreach tar éis dó na socruithe comhbhrúite a réiteach, **sula ritheann aon inneall**, agus déileálann sé le meaitseáil
-  díreach mar a bheadh comhbhrú díchumasaithe go domhanda — is féidir a chruthú go bhfuil corp an iarratais
-  comhionann beart ar bheart. Taifeadtar an scipeáil trí `writeCompressionSkip(..., "excluded")` chun
-  infheictheacht anailísíochta a sholáthar.
-- Réamhshocrú (liosta folamh/as láthair): comhionann leis an iompar roimh #8034 — ní eisiatar rud ar bith.
+- Réimse socruithe: `exclusions?: string[]` ar an gcumraíocht comhbhrú domhanda (`GET`/`PUT /api/settings/compression`), leanadh leis an ainmspás comhbhrú `key_value` reatha (`src/lib/db/compression.ts`) — gan tábla nua.
+- Táb an phainéil:** Painéal na nIonstraimí → →** (`/dashboard/compression/exclusions`).
+- Comhréir patrúin: Is é `*` an t-aon saoróg. Éalaítear gach meiteacharacter regex eile i bpatrún roimh mheaitseáil, mar sin ní mheaitseálann `gpt-5.6` ach an teaghrán litriúil, ní `gpt-5x6` riamh (ReDoS-sábháilte, teorantach, gan aon chainníochtóirí neadaithe). Meaitseálann patrúin cás-neamhíogair araon i gcoinne an id samhail lom agus an `provider/model` ilchodach — `gpt-5-6`, `openai/gpt-5-6`, agus `openai/*` gach obair, agus ní áirítear `*` amháin gach samhail.
+- Meaitseáil: `isCompressionExcluded()` / `normalizeCompressionExclusions()` in `open-sse/services/compression/exclusions.ts`. Seiceálann `chatCore.ts` an sprioc eisiata díreach tar éis socruithe comhbhrú a réiteach,** sula ritheann aon inneall** , agus déileálann sé le cluiche díreach cosúil le comhbhrú a bheith díchumasaithe ar fud an domhain — is dócha go bhfuil an comhlacht iarratais comhionann le beart. Déantar an scipe a thaifeadadh trí `writeCompressionSkip(..., "excluded")` le haghaidh infheictheacht anailíse.
+- Réamhshocrú ( liosta empty/absent ): comhionann le hiompar réamh-#8034 — níl aon rud eisiata.
 
 ## Teorainneacha aitheanta
 
-- **Teastaíonn spleáchais roghnacha comhshuite ó LLMLingua-2 (SLM).** Ní ritheann an t-oibrí i
-  leagan táirgeachta ach amháin nuair a bhíonn `@atjsh/llmlingua-2` + a chomhspleáchais comhshuite in
-  `dist/node_modules` (féach `scripts/build/colocateOptionals.mjs`, #4286). Gan iad,
-  teipeann an t-inneall go hoscailte (cuireann sé an buntéacs ar ais). Ní bhraitheann réiteach an oibrí ar
-  `import.meta.url` a thuilleadh (cliseann sé sa bheart neamhspleách) — tá sé fréamhaithe i
-  cwd / `argv[1]` an ama rite.
-- **Tá pacáistí teanga Caveman `de` / `fr` / `ja` neamhiomlán.** Seoltar iad le rialacha `context` +
-  `filler` + `structural`, ach gan pacáistí `dedup` / `ultra`, mar sin níl déine `ultra`
-  níos láidre ná `full` do na teangacha sin (ní úsáideann siad ach a rialacha féin — níl aon
-  chúltitim chiúin chuig rialacha Béarla `dedup`/`ultra`, rud a dhéanfadh praiseach de théacs i dteangacha eile).
-  Tá `en` / `es` / `id` / `pt-BR` iomlán. Cuirtear fáilte roimh ranníocaíochtaí de `dedup.json` + `ultra.json`
-  do na pacáistí neamhiomlána.
-- **Ní liostaíonn teiliméadracht chruachta ach innill a rinne comhbhrú.** Céim i bpíblíne chruachta ar
-  ritheadh a hinneall ach a ghnóthaigh coigilteas 0 %, cuireann sí `stats:null` ar ais agus dá bhrí sin ní bhíonn sí le feiceáil in
-  `engineBreakdown` — ní féidir í a idirdhealú ó chéim a scipeáladh. Chun idirdhealú a dhéanamh idir
-  "ritheadh, 0 %" agus "scipeáladh", bheadh athrú ar an tsamhail miondealaithe ag teastáil agus tá sé curtha siar.
+- **Éilíonn LLMLingua-2 (SLM) deps roghnacha comhlonnaithe.** Ní ritheann an t-oibrí i dtógáil táirgeachta ach amháin nuair a chomhlonnaítear piaraí `@atjsh/llmlingua-2` + i `dist/node_modules` (féach `scripts/build/colocateOptionals.mjs`, #4286). Gan iad osclaíonn an t-inneall teip (ar ais an téacs bunaidh). Ní bhraitheann réiteach oibrithe a thuilleadh ar `import.meta.url` (bíonn sé bás sa bheart neamhspleách) — cuireann sé ancaire ar an runtime cwd / `argv[1]`.
+- **Tá pacáistí teanga Caveman `de` / `fr` / `ja` páirteach.** Seolfaidh siad rialacha `context` + `filler` + `structural` ach níl aon phacáistí `dedup` / `ultra` ann, mar sin níl an déine `ultra` níos láidre ná `full` do na teangacha sin (ní úsáideann siad ach a gcuid rialacha féin — níl aon titim ar ais go ciúin ar na rialacha Béarla `dedup`/`ultra`, a dhéanfadh mangle téacs iasachta). Tá `en` / `es` / `id` / `pt-BR` críochnaithe. Tá fáilte roimh ranníocaíochtaí `dedup.json` + `ultra.json` le haghaidh na bpacáistí páirteacha.
+- **Ní liostaíonn teiliméadracht chruachta ach innill a chomhbhrúigh.** Céim píblíne cruachta a raibh a hinneall ag rith ach a tháirg aischuir choigiltis 0 % `stats:null` agus mar sin níl sé le feiceáil in `engineBreakdown` — nach féidir a aithint ó chéim a seachnaíodh. Chun “rith, 0 %” a idirdhealú ó “skipped” bheadh gá le hathrú ar an tsamhail mhiondealaithe agus tá sé curtha siar.
 
 ## Bailíochtú
 

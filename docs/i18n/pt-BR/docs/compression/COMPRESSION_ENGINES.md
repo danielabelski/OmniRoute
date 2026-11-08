@@ -4,224 +4,144 @@
 
 ---
 
-A compactação do OmniRoute é estruturada em torno de contratos de mecanismos. Um modo pode executar um mecanismo diretamente
-(`caveman` ou `rtk`) ou um pipeline empilhado determinístico que executa vários mecanismos em ordem.
+A compactação OmniRoute é construída em torno de contratos de mecanismo. Um modo pode executar um mecanismo diretamente (`caveman` ou `rtk`) ou um pipeline empilhado determinístico que executa vários mecanismos em ordem.
 
 ## Modos
 
-| Modo | Caminho do motor  
-| Entrada pretendida |
-| ------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `off` | nenhum | Preservação exata do prompt |
-| `lite` | Ajudantes Caveman lite | Limpeza de baixo risco sempre ativa |
-| `standard` | Caveman | Condensação de prompt em linguagem natural |
-| `aggressive` | Caveman + sumarizadores de histórico/ferramentas | Sessões de chat longas |
-| `ultra` | Caveman + ajudantes de poda | Recuperação de limite de contexto |
-| `rtk` | RTK | Saída de terminal, shell, build, teste e git |
-| `omniglyph` | OmniGlyph | Contexto como imagem no provedor nativo |
-| `stacked` | Pipeline. O padrão da requisição é `session-dedup -> lite`. `rtk -> caveman` é opcional. | Logs de ferramentas mistos e prosa, economia máxima |
+| Modo         | Caminho do motor                                                                          | Entrada pretendida                                       |
+| ------------ | ----------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `off`        | nenhum                                                                                    | Preservação imediata e exata                             |
+| `lite`       | Ajudantes leves do homem das cavernas                                                     | Limpeza sempre ativa de baixo risco                      |
+| `standard`   | Homem das cavernas                                                                        | Condensação imediata em linguagem natural                |
+| `aggressive` | Resumidores do homem das cavernas + history/tool                                          | Longas sessões de bate-papo                              |
+| `ultra`      | Ajudantes de poda do homem das cavernas +                                                 | Recuperação de limite de contexto                        |
+| `rtk`        | RTK                                                                                       | Terminal, shell, compilação, teste e saída git           |
+| `omniglyph`  | OmniGlyph                                                                                 | Contexto como imagem na conexão do provedor nativo       |
+| `stacked`    | Gasoduto. O padrão da solicitação é `session-dedup -> lite`. `rtk -> caveman` é opcional. | Registros e prosa de ferramentas mistas, economia máxima |
 
-### Perfis de compressão OmniGlyph
+### perfis de compactação OmniGlyph
 
-O motor `omniglyph` (pacote `omniglyph`, 1.4.0+) aceita um perfil semântico nomeado, definido
-globalmente através de `omniglyph.profile` nas configurações de compressão ou por etapa através da
-configuração de etapa do pipeline empilhado:
+O mecanismo `omniglyph` (pacote `omniglyph`, 1.4.0 +) aceita um perfil semântico nomeado, definido globalmente por meio de `omniglyph.profile` nas configurações de compactação ou por etapa por meio da configuração de etapa do pipeline empilhado:
 
-| Perfil        | Limite                                                                                                                 |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Padrão. A política que os recibos publicados mediram — sistema de imagens, documentos de ferramentas e histórico denso |
-| `balanced`    | Mantém o estado nativo, protege as últimas 8 rodadas, colapsa o histórico fechado mais antigo                          |
-| `coding-safe` | Mantém a autoridade, esquemas de ferramentas e saída de ferramentas nativas, protege as últimas 12 rodadas             |
-| `passthrough` | Roteia sem transformar; o motor é ignorado                                                                             |
+| Perfil        | Limite                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Padrão. A política dos recibos publicados mediu o sistema de imagens —, documentos de ferramentas e histórico denso |
+| `balanced`    | Mantém o estado ativo nativo, protege os últimos 8 turnos, colapsa o histórico fechado mais antigo                  |
+| `coding-safe` | Mantém autoridade, esquemas de ferramentas e saída de ferramentas em tempo real, protegendo os últimos 12 turnos    |
+| `passthrough` | Rotas sem transformação; o motor é ignorado                                                                         |
 
-O perfil é um **teto, não um piso**: `mergeCompressionProfileOptions` no pacote
-recusa-se a permitir que um chamador substitua e reabra uma via com perdas que o perfil fechou, então um
-`preserveSystemPrompt: false` por etapa não pode reativar a compressão do sistema sob `coding-safe`.
+O perfil é um** teto, não um chão** : `mergeCompressionProfileOptions` no pacote se recusa a permitir que um chamador substitua a reabertura de uma pista com perdas que o perfil fechou, portanto, um `preserveSystemPrompt: false` por etapa não pode reativar a compactação do sistema em `coding-safe`.
 
-Medido nesta base de código: `coding-safe` e `balanced` elevam `minCompressChars` ao seu
-máximo e mantêm o sistema, esquemas de ferramentas e resultados de ferramentas nativos, então uma sessão que não
-acumulou histórico ainda para em `below_min_chars` e o motor não transforma nada. É
-por isso que o padrão é `aggressive` em vez do perfil mais seguro.
+Medido nesta base de código: `coding-safe` e `balanced` elevam `minCompressChars` ao máximo e mantêm o sistema, os esquemas de ferramentas e os resultados das ferramentas nativos, de modo que uma sessão que não acumulou histórico ainda pare em `below_min_chars` e o mecanismo não transforme nada. É por isso que o padrão é `aggressive` em vez do perfil mais seguro.
 
-O pacote resolve seu próprio escopo de modelo e perfil a partir de sua configuração de ambiente.
-OmniRoute nunca delega a decisão: o adaptador fixa o gate do modelo ao
-escopo mais restritivo do pacote, então as configurações do ambiente host só podem
-estreitar a lista de permissões, nunca ampliá-la além dos recibos medidos do OmniRoute.
+O pacote resolve seu próprio escopo e perfil de modelo a partir da configuração de seu ambiente. OmniRoute nunca delega a decisão: o adaptador fixa a porta do modelo ao escopo mais restritivo do pacote, de modo que as configurações do ambiente host podem apenas restringir a lista de permissões, nunca ampliá-la além dos recibos medidos de OmniRoute.
 
-## Registro de engines
+## Registro do motor
 
-O registro está localizado em `open-sse/services/compression/engines/registry.ts`. Os engines expõem um
-contrato compartilhado:
+O registro reside em `open-sse/services/compression/engines/registry.ts`. Os mecanismos expõem um contrato compartilhado:
 
-- `id`: ID estável do engine, como `caveman` ou `rtk`
+- `id`: ID de mecanismo estável, como `caveman` ou `rtk`
 - `apply(text, config)`: caminho de execução legado usado por pipelines empilhados
-- `compress(input, config)`: caminho de execução principal que retorna texto + estatísticas
-- `getConfigSchema()`: retorna a estrutura semelhante a JSON Schema da configuração válida
+- `compress(input, config)`: caminho de execução primário retornando texto + stats
+- `getConfigSchema()`: retorna o formato do esquema JSON da configuração válida
 - `validateConfig(config)`: retorna `{ valid, errors[] }`
 
-O registro usa `registerCompressionEngine(engine)` (ou `registerEngine` para casos avançados),
-que chama `assertValidEngine()` e `validateConfig(defaultConfig)` antes de aceitar.
-Use `unregisterCompressionEngine(id)` para remover um engine em tempo de execução.
+O registro usa `registerCompressionEngine(engine)` (ou `registerEngine` para casos avançados), que chama `assertValidEngine()` e `validateConfig(defaultConfig)` antes de aceitar. Use `unregisterCompressionEngine(id)` para remover um mecanismo em tempo de execução.
 
-`strategySelector.ts` registra os engines integrados antes da execução da compactação. Isso permite que a pré-visualização,
-a compactação em tempo de execução, o modo empilhado, os testes e futuros engines usem o mesmo caminho de execução.
+`strategySelector.ts` registra os mecanismos integrados antes da execução da compactação. Isso permite que a visualização, a compactação de tempo de execução, o modo empilhado, os testes e os mecanismos futuros usem o mesmo caminho de execução.
 
-### Compactação de descrições MCP (relacionado)
+### compactação de descrição MCP (relacionado)
 
-Um registro separado compacta os metadados de descrição das ferramentas MCP no nível do registro — consulte
-`open-sse/mcp-server/descriptionCompressor.ts` e [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Ele reutiliza
-as regras do Caveman, mas opera nos metadados das ferramentas, não nos payloads das requisições.
+Um registro separado compacta os metadados de descrição da ferramenta MCP no nível do registro — consulte `open-sse/mcp-server/descriptionCompressor.ts` e [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Ele reutiliza as regras do Caveman, mas opera com base em metadados de ferramentas, e não em cargas úteis de solicitação.
 
-### Engines integrados adicionais
+### Motores integrados adicionais
 
-Além de Caveman, RTK e LLMLingua-2, o registro inclui vários engines especializados sem perdas /
-estruturais (usados por pipelines empilhados, pelo playground e por testes):
+Além de Caveman, RTK e LLMLingua-2, o registro fornece vários mecanismos estruturais/sem perdas especializados (usados por pipelines empilhados, playground e testes):
 
-| Engine        | Id              | O que faz                                                                                                                                                                                                         |
-| ------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): substitui grandes blocos contíguos de texto por referências endereçadas por conteúdo, de modo que blocos repetidos/grandes sejam enviados uma vez e referenciados posteriormente. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): compactação tabular sem perdas de payloads de arrays JSON homogêneos em um formato colunar `[N rows]`.                                                                                    |
-| ionizer       | `ionizer`       | Amostragem de linhas do início/meio/fim para blocos homogêneos muito grandes, armazenando o meio omitido como uma referência CCR endereçada por conteúdo.                                                         |
-| session-dedup | `session-dedup` | Desduplicação entre turnos endereçada por conteúdo (inspirada no TokenMizer): omite texto já visto em turnos anteriores da mesma sessão.                                                                          |
+| Motor                   | Eu ia           | O que isso faz                                                                                                                                                                                                    |
+| ----------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR                     | `ccr`           | Content-Compress-Retrieve (H4): substitui grandes blocos de texto contíguos por referências endereçadas ao conteúdo, de forma que os blocos repeated/large sejam enviados uma vez e referenciados posteriormente. |
+| altura livre            | `headroom`      | SmartCrusher (H3 + N5): compactação tabular sem perdas de cargas úteis de array JSON homogêneas em um formato `[N rows]` colunar.                                                                                 |
+| ionizador               | `ionizer`       | amostragem de linha Head/middle/tail para blocos homogêneos muito grandes, armazenando o meio elidido como uma referência CCR endereçada ao conteúdo.                                                             |
+| desduplicação de sessão | `session-dedup` | Desduplicação de turnos cruzados endereçado ao conteúdo (inspirado no TokenMizer): elimina o texto já visto em turnos anteriores da mesma sessão.                                                                 |
 
-**Instrução do protocolo de recuperação do CCR (#8033):** na primeira vez em que o CCR substitui ≥1 bloco em uma
-requisição, o engine adiciona no início uma única mensagem `system` idempotente (começando com a sentinela
-`[CCR protocol]`) que ensina ao chamador o contrato entre marcador e ferramenta: o que significa um marcador
-`[CCR retrieve hash=<24hex> chars=N]`, que o hash deve ser copiado literalmente
-(todos os 24 caracteres hexadecimais — hashes copiados incorretamente são a causa provável de erros
-"block not found") e que um marcador `[dedup:ref sha=...]` significa "consultar o histórico", não "chamar a
-ferramenta". A observação é injetada **somente quando o `tools[]` anunciado pelo chamador comprova que ele consegue
-realmente acessar `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` em
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — um chamador comum
-compatível com OpenAI sem essa ferramenta nunca recebe uma instrução para chamar algo que
-não consegue acessar. A idempotência é garantida pela verificação do histórico de mensagens em busca da sentinela
-antes da injeção, de modo que requisições com vários turnos (que reproduzem mensagens anteriores) não acumulem a
-observação uma vez por turno.
+**Instrução do protocolo de recuperação CCR (#8033):** na primeira vez CCR substitui o bloco ≥ 1 em uma solicitação, o mecanismo acrescenta uma mensagem `system` única e idempotente (iniciando com o sentinela `[CCR protocol]` ) ensinando ao chamador o contrato da ferramenta → marcador: o que um marcador `[CCR retrieve hash=<24hex> chars=N]` significa, que o hash deve ser copiado literalmente (todos os 24 caracteres hexadecimais hashes — mal copiados são a causa provável de falhas de "bloco não encontrado"), e que um marcador `[dedup:ref sha=...]` significa "olhar para trás em histórico", não "chame a ferramenta". A nota é injetada** somente quando o `tools[]` anunciado pelo chamador provar que ele pode realmente alcançar `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — um chamador simples compatível com OpenAI sem essa ferramenta nunca recebe uma instrução para chamar algo que não pode alcançar. A idempotência é reforçada verificando o histórico de mensagens em busca do sentinela antes de injetar, de modo que solicitações multi-turno (que reproduzem mensagens anteriores) não empilhem a nota uma vez por turno.
 
-## Caveman
+## Homem das cavernas
 
-O modo Caveman concentra-se na condensação semântica de prosa comum:
+O modo Caveman concentra-se na condensação semântica da prosa normal:
 
 - preserva blocos de código, URLs, JSON, caminhos e dados estruturados
-- remove conteúdo supérfluo, ressalvas, contexto repetido e frases de ligação verbosas
-- oferece suporte a conjuntos de regras de arquivo específicos por idioma em `open-sse/services/compression/rules/`
-- continua disponível por meio dos modos legados `standard`, `aggressive` e `ultra`
+- remove preenchimento, cobertura, contexto repetido e fraseado conectivo detalhado
+- suporta pacotes de regras de arquivos com reconhecimento de idioma no `open-sse/services/compression/rules/`
+- permanece disponível através dos modos herdados `standard`, `aggressive` e `ultra`
 
-A interface no painel é `Dashboard -> Context & Cache -> Caveman`.
+A superfície do painel é `Dashboard -> Context & Cache -> Caveman`.
 
-O projeto upstream do Caveman relata `~75%` menos tokens de saída, uma economia média de `65%` na saída em benchmarks,
-com uma faixa de `22-87%`, e uma ferramenta de compressão de entrada de `~46%`. O OmniRoute usa o valor de entrada
-do Caveman ao documentar economias combinadas de prompt/contexto; o modo de saída do Caveman continua sendo um recurso
-separado de comportamento da resposta.
+O upstream do Caveman relata `~75%` menos tokens de saída, economia média de produção `65%` em benchmarks com um intervalo `22-87%` e uma ferramenta de compactação de entrada `~46%`. OmniRoute usa o número do lado de entrada do Caveman ao documentar economias prompt/context empilhadas; O modo de saída Caveman continua sendo um recurso de comportamento de resposta separado.
 
 ## RTK
 
 O modo RTK concentra-se na saída de comandos e ferramentas:
 
-- detecta classes de saída como `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  testes do Cargo/Go, builds do TypeScript/Vite/Webpack, ESLint, auditorias/instalações do npm, logs do Docker,
-  `find`/`grep` do shell, rastreamentos de pilha e logs genéricos
-- aplica 49 filtros JSON de `open-sse/services/compression/engines/rtk/filters/`
-- oferece suporte ao pipeline declarativo no estilo do RTK: remoção de ANSI, substituição, interrupção antecipada por correspondência da saída,
-  remoção/manutenção de linhas, truncamento por linha, truncamento de início/fim/máximo de linhas e fallback quando vazio
-- oferece suporte a filtros de projeto condicionados à confiança em `.rtk/filters.json` e filtros globais em
-  `DATA_DIR/rtk/filters.json`
-- remove sequências ANSI, ruído de progresso, linhas repetidas e texto padronizado sem utilidade
+- detecta classes de saída como `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, testes Cargo/Go, compilações TypeScript/Vite/Webpack, ESLint, npm audit/installs, logs Docker, shell `find`/`grep`, rastreamentos de pilha e logs genéricos
+- aplica 49 filtros JSON do `open-sse/services/compression/engines/rtk/filters/`
+- suporta o pipeline declarativo estilo RTK: remoção ANSI, substituição, curto-circuito de saída correspondente, linhas strip/keep, truncamento por linha, truncamento head/tail/max-line e fallback on-empty
+- suporta filtros de projeto confiáveis em `.rtk/filters.json` e filtros globais em `DATA_DIR/rtk/filters.json`
+- remove sequências ANSI, ruído de progresso, linhas repetidas e clichês inúteis
 - preserva falhas acionáveis, avisos, resumos, arquivos alterados e contexto final
-- pode, opcionalmente, reter a saída bruta com dados sensíveis removidos para recuperação/depuração por meio de rotas
-  autenticadas de gerenciamento
+- opcionalmente, pode reter a saída bruta editada para recovery/debugging por meio de rotas de gerenciamento autenticadas
 
-A interface no painel é `Dashboard -> Context & Cache -> RTK`.
+A superfície do painel é `Dashboard -> Context & Cache -> RTK`.
 
-Os detalhes operacionais sobre filtros personalizados, confiança, verificação e recuperação da saída bruta estão em
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Detalhes operacionais para filtros personalizados, confiança, verificação e recuperação de saída bruta estão disponíveis em [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-O projeto upstream do RTK relata uma economia de `60-90%` na compressão de saídas de comandos. O exemplo no README mostra uma
-sessão de 30 minutos do Claude Code passando de `~118,000` tokens para `~23,900`, ou uma economia de `79.7%`.
+RTK upstream relata economia de `60-90%` para compactação de saída de comando. Seu exemplo README mostra uma sessão de código Claude de 30 minutos indo de tokens `~118,000` para `~23,900` ou `79.7%` salvos.
 
-## LLMLingua-2 (Poda Semântica)
+## LLMLingua-2 (poda semântica)
 
-O modo LLMLingua-2 realiza **poda semântica de tokens** em prosa usando um pequeno classificador
-de tokens ONNX, complementando os mecanismos Caveman e RTK baseados em regras:
+modo LLMLingua-2 executa** poda de token semântico** em prosa usando um pequeno classificador de token ONNX, complementando os mecanismos Caveman e RTK baseados em regras:
 
-- comprime a prosa apenas em mensagens que não sejam do sistema; blocos de código delimitados e outras estruturas
-  preservadas nunca são alterados
-- executa o backend `@atjsh/llmlingua-2` (ONNX por meio de `@huggingface/transformers`) em uma
-  thread de trabalho, para que a inferência do modelo nunca bloqueie o loop de eventos da solicitação
-- é **combinável** (`stackPriority` 35): em um pipeline combinado, é executado depois dos
-  mecanismos estruturais (CCR, session-dedup, headroom, Caveman), mas antes de `ultra`, pois
-  a poda semântica é mais eficaz em texto que já passou por compressão estrutural — por exemplo,
-  `rtk -> caveman -> llmlingua`
-- **prossegue sem falhar em qualquer erro** (dependências opcionais ausentes, criação do worker, carregamento do modelo, inferência
-  ou tempo limite) → o texto original é retornado sem alterações, nunca um erro
+- compacta a prosa apenas em mensagens que não são do sistema; blocos de código protegidos e outras construções preservadas nunca são alteradas
+- executa o back-end `@atjsh/llmlingua-2` (ONNX via `@huggingface/transformers`) em um thread de trabalho, para que a inferência do modelo nunca bloqueie o loop de eventos de solicitação
+- é** empilhável** (`stackPriority` 35): em um pipeline empilhado, ele é executado após os mecanismos estruturais (CCR, session-dedup, headroom, Caveman), mas antes de `ultra`, uma vez que a poda semântica é mais eficaz em texto já compactado estruturalmente — por exemplo `rtk -> caveman -> llmlingua`
+- **fail-opens em qualquer erro** (faltando dependências opcionais, geração de trabalhadores, carregamento de modelo, inferência ou tempo limite) → o texto original é retornado inalterado, nunca um erro
 
-Localização do mecanismo: `open-sse/services/compression/engines/llmlingua/`. A interface no painel
-é `Dashboard -> Context & Cache -> LLMLingua`.
+Localização do motor: `open-sse/services/compression/engines/llmlingua/`. A superfície do painel é `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modelos
 
-O modelo padrão é o **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-rápido). Um modelo **BERT-base** de maior precisão (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) está disponível por meio do campo `model` da configuração do mecanismo. `@huggingface/transformers`
-baixa o modelo selecionado sob demanda do HuggingFace Hub para
-`${DATA_DIR}/models/llmlingua` na primeira chamada (`modelStore.ts`); uma substituição pela configuração
-`modelPath` aponta para uma cópia local (instalações offline / isoladas da rede).
+O modelo padrão é**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, rápido). Uma maior precisão** Base BERT** modelo (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) está disponível através do campo `model` de configuração do mecanismo. `@huggingface/transformers` baixa lentamente o modelo selecionado do HuggingFace Hub para `${DATA_DIR}/models/llmlingua` na primeira chamada (`modelStore.ts`); uma substituição de configuração `modelPath` aponta para uma cópia local (instalações off-line/air-gapped).
 
 ### Dependências opcionais e instalação sob demanda
 
-A pilha de peers do runtime removível do LLMLingua é **opcional**. Dois pacotes são declarados como
-`optionalDependencies` em `package.json` e mantidos como **externos** pelo build de produção
-(`scripts/build/prepublish.ts` não os inclui no bundle):
+A pilha de pares de tempo de execução LLMLingua prundível é** opcional** . Dois pacotes são declarados como `optionalDependencies` em `package.json` e mantidos** externo** pela compilação de produção (`scripts/build/prepublish.ts` não os agrupa):
 
-| Pacote               | Versão (fixada) | Observações                                     |
-| -------------------- | --------------- | ----------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`         | Pacote de entrada; declara os demais como peers |
-| `js-tiktoken`        | `^1.0.20`       | Tokenizador                                     |
+| Pacote               | Versão (pino) | Notas                                           |
+| -------------------- | ------------- | ----------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`       | Pacote de entrada; declara os outros como pares |
+| `js-tiktoken`        | `^1.0.20`     | Tokenizador                                     |
 
-`@huggingface/transformers` está fixado em `^4.2.0` (compartilhado com o caminho de embeddings locais e
-também rastreado no bundle independente); `@atjsh/llmlingua-2@2.0.5` o declara como peer com
-`"^3.5.2 || ^4.0.0"`, portanto há suporte tanto para Transformers.js v3 quanto para v4. Desde a versão 2.0.4,
-`@atjsh/llmlingua-2` não exige mais `@tensorflow/tfjs`, o que removeu da pilha SLM seu maior
-componente individual (TensorFlow.js). Apenas os dois pacotes acima são peers SLM removíveis.
-Um `npm install` padrão (desenvolvimento) instala a pilha opcional automaticamente, a menos que as dependências
-opcionais sejam omitidas.
+`@huggingface/transformers` é fixado em `^4.2.0` (compartilhado com o caminho de embeddings local e também rastreado no pacote independente); `@atjsh/llmlingua-2@2.0.5` peers nele com `"^3.5.2 || ^4.0.0"`, portanto, tanto Transformers.js v3 quanto v4 são suportados. Desde a versão 2.0.4, `@atjsh/llmlingua-2` não requer mais `@tensorflow/tfjs`, o que removeu o maior contribuidor único (TensorFlow.js) da pilha SLM. Apenas os dois pacotes acima são pares SLM prudáveis. Um `npm install` (dev) padrão instala a pilha opcional automaticamente, a menos que dependências opcionais sejam omitidas.
 
-**Por que sob demanda:** o pacote publicado no npm, o bundle independente e a imagem Docker
-são distribuídos **sem** essas dependências para permanecerem enxutos. Quando elas estão ausentes, a verificação
-de dependências do worker (uma sondagem de resolução de `@atjsh/llmlingua-2` em `worker.ts`) falha, e o mecanismo
-**prossegue silenciosamente sem falhar** — selecionar o LLMLingua não produz efeito (o texto é retornado sem alterações e nenhum
-erro é registrado). Para ativá-lo em um ambiente reduzido, instale a pilha opcional:
+**Por que sob demanda:** o pacote publicado pelo npm, o pacote independente e o envio da imagem Docker** sem** essas dependências para permanecerem magras. Quando eles estão ausentes, o portão de dependência do trabalhador (um teste `@atjsh/llmlingua-2` resolve em `worker.ts`) falha e o mecanismo** falha abre silenciosamente** — selecionando LLMLingua torna-se autônomo (texto retornado inalterado, nenhum erro registrado). Para ativá-lo em um ambiente limpo, instale a pilha opcional:
 
 ```bash
-# fixe nas versões declaradas em optionalDependencies de package.json
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-A remoção de `@tensorflow/tfjs` (2.0.4+) elimina o componente anteriormente dominante de ~800 MB
-— o espaço restante é ocupado pelos runtimes do transformers.js + onnxruntime-node,
-além do modelo TinyBERT (~57 MB), baixado no primeiro uso (não por meio do npm).
+A remoção `@tensorflow/tfjs` (2.0.4 +) elimina o contribuidor ~ 800 MB anteriormente dominante — o espaço restante são os tempos de execução transformers.js + onnxruntime-node, mais o modelo TinyBERT (~ 57 MB) baixado no primeiro uso (não via npm).
 
 Por ambiente:
 
-- **Desenvolvimento / `npm install`** — instalado automaticamente, a menos que você tenha usado `--omit=optional`
-  (ou `--no-optional`). Nenhuma ação necessária.
-- **npm global (`npm i -g omniroute`) / autônomo** — execute o comando de instalação acima dentro
-  do diretório do pacote instalado ou reinstale sem omitir as dependências opcionais.
-- **Docker** — adicione o comando de instalação em uma camada de imagem derivada; a imagem publicada
-  é distribuída de forma enxuta por design.
-- **VPS (PM2)** — instale no `node_modules` do aplicativo e reinicie o processo para que o
-  worker verifique novamente o gate.
-- **Next autônomo bruto (`npm run build` → `.build/next/standalone/server.js`)** — o
-  rastreamento autônomo não inclui NEM o worker NEM as dependências opcionais, portanto o mecanismo
-  silenciosamente permite a execução em caso de falha. `scripts/build/colocate-standalone.mjs` reaplica ambos (esbuild do worker +
-  fechamento das dependências opcionais na árvore autônoma); ele é executado automaticamente por meio do
-  hook `postbuild` do npm após cada build. Idempotente e tolerante a falhas quando as dependências estão ausentes.
+- **Dev/ `npm install`** — instalado automaticamente, a menos que você passe `--omit=optional` (ou `--no-optional`). Nenhuma ação necessária.
+- **Npm global (`npm i -g omniroute`)/autônomo** — execute o comando de instalação acima dentro do diretório do pacote instalado ou reinstale sem omitir deps opcionais.
+- **Docker** — adicione o comando de instalação em uma camada de imagem derivada; a imagem publicada é elegante por design.
+- **VPS (PM2)** — instale no `node_modules` do aplicativo e reinicie o processo para que o trabalhador teste novamente o portão.
+- **Raw Próximo autônomo (`npm run build` → `.build/next/standalone/server.js`)** — o rastreamento independente envia NEITHER o trabalhador nem as dependências opcionais, de modo que o mecanismo falha silenciosamente. `scripts/build/colocate-standalone.mjs` reaplica ambos (worker esbuild + opcional-dep encerramento na árvore autônoma); ele é executado automaticamente por meio do gancho `postbuild` npm após cada compilação. Idempotente, anti-falha quando as dependências estão ausentes.
 
-**Verifique se está ativo:** com o LLMLingua selecionado, textos reais de fato são reduzidos (o mecanismo
-deixa de permitir a execução em caso de falha), e a primeira solicitação aciona o download do modelo para
-`${DATA_DIR}/models/llmlingua`. O gate verifica intencionalmente apenas `@atjsh/llmlingua-2` —
-os outros peers são exclusivos de ESM, e `require.resolve` gera um erro para eles mesmo quando estão presentes — portanto,
-o worker ainda permite a execução em caso de falha se algum peer estiver realmente ausente no momento do `import()`.
+**Verifique se está ativo:** com LLMLingua selecionado, a prosa real realmente diminui (o mecanismo para de abrir com falha) e a primeira solicitação aciona o download do modelo em `${DATA_DIR}/models/llmlingua`. O portão testa intencionalmente apenas `@atjsh/llmlingua-2` — os outros pares são apenas ESM e `require.resolve` lança sobre eles mesmo quando — está presente, de modo que o trabalhador ainda falha na abertura se algum par estiver realmente faltando no momento `import()`.
 
 ## Pipelines empilhados
 
@@ -231,41 +151,41 @@ O modo empilhado executa as etapas do pipeline em ordem. O padrão é:
 rtk -> caveman
 ```
 
-Use isso em sessões de agentes de programação nas quais um prompt combina a saída de comandos com texto em linguagem natural produzido por uma pessoa ou pelo assistente. O RTK reduz primeiro os logs ruidosos das ferramentas; depois, o Caveman comprime a linguagem natural restante.
+Use isto para sessões do agente de codificação em que um prompt combina a saída do comando com prosa humana ou assistente. RTK reduz primeiro os logs de ferramentas barulhentos e, em seguida, o Caveman compacta a linguagem natural restante.
 
-As etapas do pipeline são configuradas com `stackedPipeline` nas configurações de compactação ou por meio de combinações de compactação.
+As etapas do pipeline são configuradas com `stackedPipeline` nas configurações de compactação ou por meio de combos de compactação.
 
-Quando ambos os mecanismos reduzem a mesma carga qualificada, a economia é composta:
+Quando ambos os motores reduzem a mesma carga útil elegível, a economia aumenta:
 
 ```txt
-combinada = 1 - (1 - economia do RTK) * (1 - economia de entrada do Caveman)
-média     = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
-intervalo = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
+combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
+average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
+range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## Filtro da árvore de acessibilidade do MCP
+## Filtro de árvore de acessibilidade MCP
 
-O filtro inteligente da árvore de acessibilidade do MCP é uma camada de compactação pós-execução que atua nos **resultados de ferramentas** do MCP, não nos prompts nem no contexto. Ele processa as cargas extensas de árvores de acessibilidade e snapshots do navegador retornadas por ferramentas como Playwright, computer-use e servidores MCP de automação de navegador.
+O filtro inteligente de árvore de acessibilidade MCP é uma camada de compactação pós-execução que roda em MCP** resultados da ferramenta** , não em prompts ou contexto. Ele tem como alvo as cargas detalhadas da árvore de acessibilidade e do instantâneo do navegador retornadas por ferramentas como Playwright, uso do computador e servidores MCP de automação do navegador.
 
-### O que ele faz
+### O que isso faz
 
-1. **Remoção de ruído** — remove entradas genéricas/de texto vazias (`- generic:`, `- text: ""`)
-2. **Agrupamento de elementos irmãos** — quando ≥ `collapseThreshold` (padrão: 30) linhas consecutivas são repetições estruturais, agrupa-as nas primeiras `collapseKeepHead` (padrão: 10) linhas + um resumo da contagem + as últimas `collapseKeepTail` (padrão: 5) linhas
-3. **Preservação de referências** — as âncoras `[ref=eXX]` exigidas pelo Playwright/computer-use nunca são alteradas
-4. **Truncamento rígido** — se o texto após o agrupamento ainda exceder `maxTextChars` (padrão: 50.000), ele será truncado com uma dica de navegação para que o agente possa continuar trabalhando
+1. **Remoção de ruído** — remove entradas generic/text vazias (`- generic:`, `- text: ""`)
+2. **Colapso de irmão** — quando ≥ `collapseThreshold` (padrão 30) linhas consecutivas são repetições estruturais, recolhe-as nas primeiras linhas `collapseKeepHead` (padrão 10) + um resumo de contagem + as últimas linhas `collapseKeepTail` (padrão 5)
+3. **Preservação de referência** As âncoras — `[ref=eXX]` exigidas pelo Playwright/computer-use nunca são tocadas
+4. **Truncamento rígido** — se o texto após o recolhimento ainda exceder `maxTextChars` (padrão 50.000), será truncado com uma dica de navegação para que o agente possa continuar trabalhando
 
-### Localização do mecanismo
+### Localização do motor
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← ponto de entrada smartFilterText()
-  collapseRepeated.ts ← algoritmo de agrupamento de elementos irmãos
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Configuração
 
-Controlado por `compression.mcpAccessibility` nas configurações globais (migração 056). Configuração padrão:
+Controlado por `compression.mcpAccessibility` em configurações globais (migração 056). Configuração padrão:
 
 ```json
 {
@@ -278,118 +198,174 @@ Controlado por `compression.mcpAccessibility` nas configurações globais (migra
 }
 ```
 
-O filtro é aplicado somente às cargas de resultados de ferramentas cujo `type` seja `"text"` e cujo comprimento exceda `minLengthToProcess`. Ele não afeta a compactação de prompts nem as cargas das solicitações.
+O filtro é aplicado apenas a cargas de resultado de ferramenta cujo `type` é `"text"` e cujo comprimento excede `minLengthToProcess`. Isso não afeta a compactação de prompt ou cargas úteis de solicitação.
 
 ### Economia esperada
 
-De 60% a 80% nos resultados de ferramentas de snapshot do navegador, dependendo da complexidade da página. O algoritmo de agrupamento tem complexidade O(n) em relação ao número de linhas e acrescenta latência insignificante.
+60–80% nos resultados da ferramenta de instantâneo do navegador, dependendo da complexidade da página. O algoritmo de colapso é O(n) na contagem de linhas e adiciona latência insignificante.
 
-### Este filtro em comparação com os mecanismos de compactação acima
+### Este filtro versus os mecanismos de compressão acima
 
-| Aspecto               | Caveman / RTK / Empilhado           | Filtro de acessibilidade do MCP        |
-| --------------------- | ----------------------------------- | -------------------------------------- |
-| Alvo                  | Prompts/contexto da solicitação     | Resultados de ferramentas do MCP       |
-| Acionamento           | Configuração do modo de compactação | `compression.mcpAccessibility.enabled` |
-| Escopo                | Todas as mensagens SSE              | Somente resultados de ferramentas      |
-| Âncoras de referência | N/A                                 | Preservadas incondicionalmente         |
+| Aspecto               | Homem das cavernas / RTK / empilhado | filtro de acessibilidade MCP           |
+| --------------------- | ------------------------------------ | -------------------------------------- |
+| Alvo                  | Solicitar prompts/contexto           | resultados da ferramenta MCP           |
+| Acionar               | Configuração do modo de compressão   | `compression.mcpAccessibility.enabled` |
+| Escopo                | Todas as mensagens SSE               | Somente resultados da ferramenta       |
+| Âncoras de referência | N/A                                  | Preservado incondicionalmente          |
 
 ---
 
 ## Combos de compressão
 
-Combos de compressão são perfis de compressão nomeados que podem ser atribuídos a combos de roteamento:
+Os combos de compactação são chamados de perfis de compactação que podem ser atribuídos aos combos de roteamento:
 
-- `compression_combos`: armazena modo, pipeline, configuração do RTK, configuração de idioma e marcador padrão
-- `compression_combo_assignments`: mapeia um combo de compressão para um combo de roteamento
-- a integração em tempo de execução resolve um combo de compressão atribuído antes das substituições genéricas de combo
-- as análises incluem `compression_combo_id` e `engine`
+- `compression_combos`: armazena modo, pipeline, configuração RTK, configuração de idioma e marcador padrão
+- `compression_combo_assignments`: mapeia um combo de compactação para um combo de roteamento
+- a integração em tempo de execução resolve um combo de compactação atribuído antes das substituições de combos genéricos
+- análises incluem `compression_combo_id` e `engine`
 
-Área no dashboard: `Dashboard -> Context & Cache -> Compression Combos`.
+Superfície do painel: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## Superfície da API
+## Pré-requisitos/guia do operador (CCR e session-dedup)
 
-| Rota                                   | Finalidade                                                                     |
-| -------------------------------------- | ------------------------------------------------------------------------------ |
-| `/api/settings/compression`            | Configurações globais de compressão (inclui a configuração `mcpAccessibility`) |
-| `/api/compression/preview`             | Visualizar qualquer modo de compressão                                         |
-| `/api/compression/language-packs`      | Listar os pacotes de idioma Caveman disponíveis                                |
-| `/api/context/caveman/config`          | Alias das configurações do Caveman                                             |
-| `/api/context/rtk/config`              | Padrões e configurações do RTK                                                 |
-| `/api/context/rtk/filters`             | Catálogo de filtros do RTK                                                     |
-| `/api/context/rtk/test`                | Endpoint de visualização/teste do RTK                                          |
-| `/api/context/rtk/raw-output/[id]`     | Recuperação autenticada da saída bruta com dados sensíveis ocultados           |
-| `/api/context/combos`                  | CRUD de combos de compressão                                                   |
-| `/api/context/combos/[id]/assignments` | CRUD de atribuições de combos de roteamento                                    |
-| `/api/context/analytics`               | Alias das análises de compressão                                               |
+CCR (`ccr`) e `session-dedup` substituem ou eliminam o texto e deixam um** marcador** atrás. Esta seção é a referência do operador para conectar um cliente, ler os dois marcadores e recuperar ou diagnosticar o conteúdo elidido. A mecânica de cada motor é abordada acima; esta é a camada "como faço para executá-la".
 
-As rotas de gerenciamento exigem autenticação de gerenciamento ou verificações de política de chave de API.
+### Transportes e terminais
+
+O servidor MCP que expõe as ferramentas CCR pode ser acessado de três maneiras. A base URL padrão é `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
+
+| Transporte                             | URL / comando                           | Notas                                                                                                                                      |
+| -------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| HTTP streamável (cliente, recomendado) | `http://localhost:20128/api/mcp/stream` | O endpoint com o qual os clientes MCP atuais conversam.                                                                                    |
+| Singleton SSE legado                   | `http://localhost:20128/api/mcp/sse`    | Transporte singleton mais antigo. Isto** fecha** sessões transmitíveis; use clientes `streamable-http` contra `/api/mcp/stream`, não este. |
+| estúdio                                | `omniroute --mcp`                       | Para IDE MCP config que gera o processo. Não há sinalizador `--dev` ; `omniroute --mcp` é o ponto de entrada do stdio.                     |
+
+### Camadas de armazenamento (o que sobrevive a uma reinicialização)
+
+CCR é um** dois níveis** armazenar, não apenas na memória:
+
+- **Camada quente na memória** — por bloco cap 2 MiB, por principal 16 MiB, global 64 MiB. As inscrições têm como padrão um TTL de 24 horas (máximo 7 dias). A recuperação completa MCP da memória é limitada a 256 KiB; qualquer coisa maior ainda pode ser alcançada através dos modos ranged/grep.
+- **Camada SQLite durável** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, on por padrão) — faz backup da camada de memória para que um bloco sobreviva à remoção LRU, a uma reinicialização ou a uma recuperação em outra instância. A linha mantém o bloco TTL, portanto, um bloco após seu TTL desaparece de ambas as camadas.
+
+Três guardas mantêm a camada durável limitada — um bloco permanece somente na memória quando:
+
+1. o bloco acabou** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. o tempo de execução é um tempo de execução em nuvem (sem disco local);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Portanto, "o bloco desapareceu" não é uma história de reinicialização geral: um bloco sub-512 KB em um tempo de execução local, fora da nuvem, sobrevive a uma reinicialização por meio da camada durável até que seu TTL se esgote. Consulte [Referência de ambiente](../reference/ENVIRONMENT.md) para a variável.
+
+### Os dois marcadores
+
+| Marcador                              | Significado                                                                                                                                        | O que o modelo deve fazer                                                                                                                                                                                   |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Um grande bloco foi armazenado com conteúdo endereçado.                                                                                            | Ligue para `omniroute_ccr_retrieve` com o** Hash de 24 hexadecimais copiado literalmente** para recuperar o texto original.                                                                                 |
+| `[dedup:ref sha=…]`                   | `session-dedup` texto elidido já enviado em um turno anterior da mesma sessão. Este é um** retrospectiva intencional** , não uma perda ou um erro. | Fazer** não** chame qualquer ferramenta e faça** não** tente "reconstruí-lo". A primeira ocorrência do texto é a cópia canônica; o turno atual nunca é reescrito, ele é desduplicado em um turno posterior. |
+
+A retrospectiva `[dedup:ref]` é uma decisão deliberada do protocolo — não há reconstrução pré-envio. Trate-o como "este texto exato já estava sendo transmitido no início desta sessão".
+
+### Pré-requisitos do cliente
+
+- **Chave (estdio):** um chamador stdio não carrega nenhuma identidade por solicitação, portanto, ele é autenticado com `OMNIROUTE_API_KEY` (definido no `env` do servidor MCP ). Sem ele, o chamador é anônimo e as ferramentas que exigem um principal podem ser degradadas.
+- **`tools[]` é a pré-condição da injeção.** A instrução do protocolo de recuperação CCR (#8033) é injetada** apenas** quando o `tools[]` anunciado da solicitação prova que o cliente pode realmente alcançar `omniroute_ccr_retrieve`. A correspondência é uma correspondência de segmento final delimitada por um separador (`__`, `.`, `/`, `:`) — nunca uma substring nua — portanto, um nome com namespace como `mcp__gateway__omniroute_ccr_retrieve` ainda conta. Um `tools[]` ausente ou não correspondente significa que a instrução _não_ foi injetada, por design.
+- **`codemode:false` (clientes OpenCode ).** O padrão do OpenCode é o Modo Código, que anuncia apenas suas ferramentas nativas para o modelo e** não** coloque as ferramentas MCP na lista nativa `tools[]`. Defina `codemode: false` na entrada do servidor MCP para que as ferramentas `omniroute_ccr_*` sejam anunciadas. Este é um** cliente** configuração, não OmniRoute. A instrução CCR ainda não foi injetada: OpenCode nomeia uma ferramenta `<server>_<tool>`, portanto, um servidor chamado `omniroute` expõe `omniroute_omniroute_ccr_retrieve` e `_` não é um dos separadores correspondentes.
+- **Diretores.** O armazenamento e a recuperação são isolados por entidade autenticada (por chave API ). Uma chave vê apenas seus próprios blocos.
+
+### Escopos por ferramenta
+
+A aplicação do escopo está sempre ativada para chamadores HTTP/SSE com escopo restrito. As ferramentas `omniroute_` CCR requerem:
+
+| Ferramenta               | Escopo              |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Um escopo ausente retorna um** resultado de erro da ferramenta MCP** (`isError: true`, não um HTTP 403 — o `403 LOCAL_ONLY` é a autenticação de proteção de rota de loopback separada): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Uma chave remota mínima pode conter `mcp:connect` (autoriza a divisão `/api/mcp/` apenas local) mais o escopo read/write específico necessário.
+
+### Matriz de clientes
+
+| Cliente               | Transporte                                           | Configuração para usar                                                                                                                                                                                                                                          | `tools[]` anunciado? (instrução → CCR injetada)                                                                                                                                                                   |
+| --------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Código Claude         | streaming-http                                       | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                               | Sim — compatível com MCP; injetado.                                                                                                                                                                               |
+| Cursor / Cline        | `stdio`** ou** `streamable-http`                     | stdio: `omniroute --mcp` com `OMNIROUTE_API_KEY` em `env`; ou uma entrada MCP remota apontando para `http://localhost:20128/api/mcp/stream` (consulte [Guia de configuração → MCP Configuração do cliente](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Sim — anuncia as ferramentas `omniroute_ccr_*`.                                                                                                                                                                   |
+| OpenCode              | streaming-http                                       | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, mais `codemode: false`                                                                                                                                                                | Ferramentas anunciadas apenas com `codemode: false`; a instrução ainda não foi injetada porque `omniroute_omniroute_ccr_retrieve` não corresponde (consulte [Pré-requisitos do cliente](#client-prerequisites) ). |
+| Compatível com OpenAI | HTTP compatível com OpenAI (conclusões de bate-papo) | cliente padrão de conclusão de bate-papo em relação ao endpoint compatível com OpenAI                                                                                                                                                                           | **Nunca** — um chamador simples compatível com OpenAI nunca é instruído a chamar a ferramenta e a instrução não é injetada.                                                                                       |
+
+### Limites de recuperação e paginação
+
+Os resultados do texto da ferramenta MCP são recortados em torno de `mcpAccessibility.maxTextChars` (padrão `50000`). Uma recuperação `full` de um bloco é limitada a 256 KiB —** não há recuperação completa ilimitada** . Quando o `chars=N` de um bloco for grande, page-o em vez de extrair tudo:
+
+- Regra prática:**`chars > 40000` → use um `mode`** , nunca totalmente cheio.
+- `mode:"grep"` — regex `pattern` combinado linha por linha, até 1.000 linhas correspondentes (`unique: true` elimina repetições), mais barato para "encontrar a linha que preciso".
+- `mode:"lines"` — um intervalo de linhas indexadas em 1; precisa de `start` e `end`.
+- linhas `mode:"head"` / `mode:"tail"` — first/last `n`.
+- `mode:"stats"` — contagens de linhas, caracteres e bytes sem o corpo.
+
+Use `mode:"lines"` com `start`/`end` para percorrer um longo bloco nas páginas, em vez de solicitar tudo de uma vez.
+
+### Nomenclatura de ferramentas
+
+A ferramenta de recuperação atualmente é chamada `omniroute_ccr_retrieve` (o prefixo `omniroute_` é uma solução alternativa desatualizada para colisões de nomes entre servidores). Um nome de ferramenta de sufixo limitado mais limpo e uma correção para resultados MCP JSON truncados no meio da string são rastreados como acompanhamentos upstream; esta página documenta apenas o comportamento atual enviado.
+
+### Ciclo de vida da sessão
+
+As sessões Streamable-HTTP ficam inativas e o servidor as colhe; a janela inativa é a constante `MCP_SESSION_IDLE_MS` (referenciada pelo nome, não por um valor codificado, portanto, esta página não oscila quando muda). O sintoma de uma sessão ociosa é um HTTP 404 com `Unknown Mcp-Session-Id` — a solução é reconectar ou reiniciar a sessão,** não** para girar uma chave, alterar um escopo ou renomear uma ferramenta.
+
+## Superfície API
+
+| Rota                                   | Propósito                                                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `/api/settings/compression`            | Configurações de compactação global (inclui configuração `mcpAccessibility` ) |
+| `/api/compression/preview`             | Visualize qualquer modo de compactação                                        |
+| `/api/compression/language-packs`      | Listar os pacotes de idiomas Caveman disponíveis                              |
+| `/api/context/caveman/config`          | Alias de configurações do Caveman                                             |
+| `/api/context/rtk/config`              | Padrões e configurações RTK                                                   |
+| `/api/context/rtk/filters`             | catálogo de filtros RTK                                                       |
+| `/api/context/rtk/test`                | ponto de extremidade RTK preview/test                                         |
+| `/api/context/rtk/raw-output/[id]`     | Recuperação de saída bruta autenticada e redigida                             |
+| `/api/context/combos`                  | Combinação de compressão CRUD                                                 |
+| `/api/context/combos/[id]/assignments` | Atribuição de combinação de roteamento CRUD                                   |
+| `/api/context/analytics`               | Alias de análise de compactação                                               |
+
+As rotas de gerenciamento exigem autenticação de gerenciamento ou verificações de políticas de chave de API.
 
 ## Ferramentas MCP
 
-A compressão disponibiliza cinco ferramentas MCP:
+A compactação expõe cinco ferramentas MCP :
 
-| Ferramenta                          | Escopo              | Finalidade                                      |
-| ----------------------------------- | ------------------- | ----------------------------------------------- |
-| `omniroute_compression_status`      | `read:compression`  | Configurações, análises e estatísticas de cache |
-| `omniroute_compression_configure`   | `write:compression` | Atualizar configurações globais                 |
-| `omniroute_set_compression_engine`  | `write:compression` | Definir modo e pipeline opcional                |
-| `omniroute_list_compression_combos` | `read:compression`  | Listar combos de compressão                     |
-| `omniroute_compression_combo_stats` | `read:compression`  | Consultar análises de combos/engines            |
+| Ferramenta                          | Escopo              | Propósito                                      |
+| ----------------------------------- | ------------------- | ---------------------------------------------- |
+| `omniroute_compression_status`      | `read:compression`  | Configurações, análises, estatísticas de cache |
+| `omniroute_compression_configure`   | `write:compression` | Atualizar configurações globais                |
+| `omniroute_set_compression_engine`  | `write:compression` | Definir modo e pipeline opcional               |
+| `omniroute_list_compression_combos` | `read:compression`  | Combinações de compactação de lista            |
+| `omniroute_compression_combo_stats` | `read:compression`  | Leia análises combo/engine                     |
 
 ## Escopo e exclusões
 
-**Embeddings nunca são comprimidos.** `open-sse/handlers/embeddings.ts` nunca chama nenhum
-engine de compressão — os corpos da solicitação/resposta são encaminhados diretamente ao executor sem alterações.
-Atualmente, isso é estrutural (embeddings e conclusões de chat têm handlers separados), não uma
-verificação em tempo de execução, mas significa que a preocupação com distorção de vetores em #8034 não tem superfície de exposição
-no caminho de embeddings.
+**Os embeddings nunca são compactados.** `open-sse/handlers/embeddings.ts` nunca chama nenhum mecanismo de compressão — os corpos request/response passam direto para o executor sem serem tocados. Isso é estrutural hoje (embeddings e conclusões de bate-papo são manipuladores separados), não uma verificação de tempo de execução, mas significa que a preocupação com distorção vetorial no #8034 não tem superfície de exposição no caminho dos embeddings.
 
-**Filtro de exclusão por modelo/endpoint (#8034).** Para conclusões de chat, um operador pode especificar
-ids de modelo/alvos `provider/model` que nunca devem ser comprimidos — uma proteção útil caso
-a compressão seja futuramente conectada mais perto de um caminho adjacente a embeddings e, em geral, útil
-para qualquer modelo em que o prompt exato, byte por byte, seja importante (avaliações determinísticas, prefixos
-sensíveis ao cache etc.).
+**filtro de exclusão Per-model/endpoint (#8034).** Para conclusões de bate-papo, um operador pode nomear ids de modelo/alvos `provider/model` que nunca devem ser compactados — um guardrail útil se a compactação for conectada mais perto de um caminho adjacente aos embeddings posteriormente e geralmente útil para qualquer modelo cujo prompt exato de byte por byte é importante (avaliações determinísticas, prefixos sensíveis ao cache, etc.).
 
-- Campo de configuração: `exclusions?: string[]` na configuração global de compressão
-  (`GET`/`PUT /api/settings/compression`), persistido por meio do namespace de compressão `key_value`
-  existente (`src/lib/db/compression.ts`) — nenhuma tabela nova.
-- Aba do dashboard: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Sintaxe dos padrões: `*` é o único curinga. Todos os demais metacaracteres de regex em um padrão são
-  escapados antes da correspondência, de modo que `gpt-5.6` corresponde apenas à string literal, nunca a `gpt-5x6`
-  (seguro contra ReDoS, limitado, sem quantificadores aninhados). Os padrões são comparados sem distinção entre maiúsculas e minúsculas
-  tanto com o id simples do modelo quanto com o composto `provider/model` — `gpt-5-6`, `openai/gpt-5-6`
-  e `openai/*` funcionam, e `*` sozinho exclui todos os modelos.
-- Correspondência: `isCompressionExcluded()` / `normalizeCompressionExclusions()` em
-  `open-sse/services/compression/exclusions.ts`. `chatCore.ts` verifica o alvo excluído
-  logo após resolver as configurações de compressão, **antes da execução de qualquer engine**, e trata uma correspondência
-  exatamente como se a compressão estivesse globalmente desabilitada — o corpo da solicitação é comprovadamente
-  idêntico byte por byte. A omissão é registrada por meio de `writeCompressionSkip(..., "excluded")` para
-  visibilidade nas análises.
-- Padrão (lista vazia/ausente): idêntico ao comportamento anterior ao #8034 — nada é excluído.
+- Campo de configurações: `exclusions?: string[]` na configuração de compactação global (`GET`/`PUT /api/settings/compression`), persistido por meio do namespace de compactação `key_value` existente (`src/lib/db/compression.ts`) — sem nova tabela.
+- Guia Painel:** Dashboard → Compressão → Exclusões** (`/dashboard/compression/exclusions`).
+- Sintaxe do padrão: `*` é o único curinga. Todos os outros metacaracteres regex em um padrão são escapados antes da correspondência, então `gpt-5.6` corresponde apenas à string literal, nunca `gpt-5x6` (seguro para ReDoS, limitado, sem quantificadores aninhados). Os padrões não diferenciam maiúsculas de minúsculas do id do modelo simples e do `provider/model` composto — `gpt-5-6`, `openai/gpt-5-6` e `openai/*` funcionam, e `*` sozinho exclui todos os modelos.
+- Correspondência: `isCompressionExcluded()` / `normalizeCompressionExclusions()` em `open-sse/services/compression/exclusions.ts`. `chatCore.ts` verifica o alvo excluído logo após resolver as configurações de compactação,** antes de qualquer motor funcionar** e trata uma correspondência exatamente como a compactação sendo desativada globalmente — o corpo da solicitação é provavelmente idêntico em bytes. O salto é registrado via `writeCompressionSkip(..., "excluded")` para visibilidade analítica.
+- Padrão (lista empty/absent ): idêntico ao comportamento pré-#8034 — nada é excluído.
 
 ## Limitações conhecidas
 
-- **O LLMLingua-2 (SLM) exige dependências opcionais colocalizadas.** O worker só é executado em uma
-  compilação de produção quando `@atjsh/llmlingua-2` + pares são colocalizados em
-  `dist/node_modules` (consulte `scripts/build/colocateOptionals.mjs`, #4286). Sem eles, o
-  mecanismo falha de forma aberta (retorna o texto original). A resolução do worker não depende mais de
-  `import.meta.url` (isso falha no bundle independente) — ela se ancora no
-  cwd / `argv[1]` do runtime.
-- **Os pacotes de idiomas `de` / `fr` / `ja` do Caveman são parciais.** Eles incluem regras de `context` +
-  `filler` + `structural`, mas não incluem pacotes `dedup` / `ultra`; portanto, a intensidade `ultra` não é
-  mais forte que `full` para esses idiomas (eles usam apenas suas próprias regras — não há
-  fallback silencioso para as regras `dedup`/`ultra` em inglês, que corromperiam textos em outros idiomas).
-  `en` / `es` / `id` / `pt-BR` estão completos. Contribuições de `dedup.json` + `ultra.json`
-  para os pacotes parciais são bem-vindas.
-- **A telemetria empilhada lista apenas os mecanismos que realizaram compressão.** Uma etapa do pipeline empilhado cujo
-  mecanismo foi executado, mas produziu 0 % de economia, retorna `stats:null` e, portanto, não aparece em
-  `engineBreakdown` — não sendo possível distingui-la de uma etapa que foi ignorada. Distinguir
-  "executada, 0 %" de "ignorada" exigiria uma alteração no modelo de detalhamento e foi adiado.
+- **LLMLingua-2 (SLM) requer dependências opcionais co-localizadas.** O trabalhador só é executado em uma construção de produção quando os pares `@atjsh/llmlingua-2` + estão co-localizados em `dist/node_modules` (consulte `scripts/build/colocateOptionals.mjs`, #4286). Sem eles o motor falha (retorna o texto original). A resolução do trabalhador não depende mais de `import.meta.url` (ele morre no pacote independente) — ele ancora no tempo de execução cwd / `argv[1]`.
+- **Os pacotes de idiomas Caveman `de` / `fr` / `ja` são parciais.** Eles enviam regras `context` + `filler` + `structural`, mas não há pacotes `dedup` / `ultra`, então a intensidade `ultra` não é mais forte que `full` para esses idiomas (eles usam apenas suas próprias regras — não há retorno silencioso às regras `dedup`/`ultra` em inglês, o que distorceria o texto estrangeiro). `en` / `es` / `id` / `pt-BR` estão completos. Contribuições de `dedup.json` + `ultra.json` para os pacotes parciais são bem-vindas.
+- **A telemetria empilhada lista apenas os mecanismos compactados.** Uma etapa de pipeline empilhado cujo mecanismo funcionou, mas produziu 0% de economia, retorna `stats:null` e, portanto, não aparece em `engineBreakdown` — indistinguível de uma etapa que foi ignorada. Distinguir "executado, 0%" de "ignorado" exigiria uma mudança no modelo de detalhamento e é adiado.
 
 ## Validação
 
-Os "gates" focados para esta área são:
+Os portões focados para esta área são:
 
 ```bash
 node --import tsx/esm --test tests/unit/compression/rtk-*.test.ts tests/unit/compression/pipeline-integration.test.ts tests/unit/compression/context-compression-api.test.ts

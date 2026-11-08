@@ -4,267 +4,188 @@
 
 ---
 
-Kompresi OmniRoute dibangun berdasarkan kontrak mesin. Sebuah mode dapat menjalankan satu mesin secara langsung
-(`caveman` atau `rtk`) atau pipeline bertumpuk deterministik yang mengeksekusi beberapa mesin secara berurutan.
+kompresi OmniRoute dibangun berdasarkan kontrak mesin. Sebuah mode dapat menjalankan satu mesin secara langsung (`caveman` atau `rtk`) atau pipeline bertumpuk deterministik yang mengeksekusi beberapa mesin secara berurutan.
 
 ## Mode
 
-| Mode         | Jalur mesin                                                                                    | Input yang dimaksudkan                            |
-| ------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `off`        | tidak ada                                                                                      | Preservasi prompt yang tepat                      |
-| `lite`       | Pembantu Caveman lite                                                                          | Pembersihan berisiko rendah yang selalu aktif     |
-| `standard`   | Caveman                                                                                        | Kondensasi prompt bahasa alami                    |
-| `aggressive` | Caveman + perangkum riwayat/alat                                                               | Sesi obrolan panjang                              |
-| `ultra`      | Caveman + pembantu pemangkasan                                                                 | Pemulihan batas konteks                           |
-| `rtk`        | RTK                                                                                            | Output terminal, shell, build, test, dan git      |
-| `omniglyph`  | OmniGlyph                                                                                      | Konteks sebagai gambar pada jalur penyedia asli   |
-| `stacked`    | Pipeline. Default permintaan adalah `session-dedup -> lite`. `rtk -> caveman` adalah opsional. | Log alat dan prosa campuran, penghematan maksimal |
+| Mode         | Jalur mesin                                                                                      | Masukan yang dimaksudkan                          |
+| ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `off`        | tidak ada                                                                                        | Pelestarian cepat yang tepat                      |
+| `lite`       | Pembantu ringan manusia gua                                                                      | Pembersihan selalu berisiko rendah                |
+| `standard`   | Manusia gua                                                                                      | Kondensasi cepat dalam bahasa alami               |
+| `aggressive` | Ringkasan manusia + history/tool                                                                 | Sesi obrolan panjang                              |
+| `ultra`      | Pembantu pemangkasan + manusia gua                                                               | Pemulihan batas konteks                           |
+| `rtk`        | RTK                                                                                              | Terminal, shell, build, test, dan keluaran git    |
+| `omniglyph`  | OmniGlyph                                                                                        | Konteks-sebagai-gambar pada kabel penyedia asli   |
+| `stacked`    | Saluran pipa. Default permintaannya adalah `session-dedup -> lite`. `rtk -> caveman` ikut serta. | Log alat campuran dan prosa, penghematan maksimal |
 
-### Profil kompresi OmniGlyph
+### profil kompresi OmniGlyph
 
-Mesin `omniglyph` (paket `omniglyph`, 1.4.0+) menerima profil semantik bernama, yang diatur
-secara global melalui `omniglyph.profile` dalam pengaturan kompresi atau per langkah melalui
-konfigurasi langkah pipeline bertumpuk:
+Mesin `omniglyph` (paket `omniglyph`, 1.4.0 +) menerima profil semantik bernama, diatur secara global melalui `omniglyph.profile` dalam pengaturan kompresi atau per langkah melalui konfigurasi langkah pipa bertumpuk:
 
-| Profil        | Batasan                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `aggressive`  | Default. Kebijakan yang diukur oleh tanda terima yang diterbitkan — sistem gambar, dokumen alat, dan riwayat padat |
-| `balanced`    | Menjaga status langsung tetap asli, melindungi 8 giliran terakhir, mengempiskan riwayat tertutup yang lebih lama   |
-| `coding-safe` | Menjaga otoritas, skema alat, dan output alat langsung tetap asli, melindungi 12 giliran terakhir                  |
-| `passthrough` | Merutekan tanpa transformasi; mesin dilewati                                                                       |
+| Profil        | Batas                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Bawaan. Kebijakan penerimaan yang diterbitkan mengukur sistem gambar —, dokumen alat, dan riwayat padat |
+| `balanced`    | Mempertahankan status asli, melindungi 8 putaran terakhir, meruntuhkan riwayat tertutup yang lebih lama |
+| `coding-safe` | Menjaga otoritas, skema alat, dan keluaran alat langsung tetap asli, melindungi 12 putaran terakhir     |
+| `passthrough` | Rute tanpa transformasi; mesin dilewati                                                                 |
 
-Profil adalah **batas atas, bukan batas bawah**: `mergeCompressionProfileOptions` dalam paket
-menolak untuk membiarkan pemanggil menimpa membuka kembali jalur yang hilang yang ditutup oleh profil,
-sehingga `preserveSystemPrompt: false` per langkah tidak dapat mengaktifkan kembali kompresi sistem di bawah `coding-safe`.
+Profilnya adalah a** langit-langit, bukan lantai** : `mergeCompressionProfileOptions` dalam paket menolak untuk membiarkan penelepon menimpa membuka kembali jalur lossy profil ditutup, sehingga `preserveSystemPrompt: false` per langkah tidak dapat mengaktifkan kembali kompresi sistem di bawah `coding-safe`.
 
-Diukur pada basis kode ini: `coding-safe` dan `balanced` menaikkan `minCompressChars` ke
-maksimumnya dan menjaga sistem, skema alat, dan hasil alat tetap asli, sehingga sesi yang
-belum mengumpulkan riwayat berhenti pada `below_min_chars` dan mesin tidak mengubah apa pun.
-Itulah mengapa defaultnya adalah `aggressive` daripada profil teraman.
+Diukur pada basis kode ini: `coding-safe` dan `balanced` menaikkan `minCompressChars` ke maksimum dan menjaga sistem, skema alat, dan hasil alat tetap asli, sehingga sesi yang belum mengumpulkan riwayat berhenti di `below_min_chars` dan mesin tidak mengubah apa pun. Itu sebabnya defaultnya adalah `aggressive` daripada profil teraman.
 
-Paket menyelesaikan cakupan model dan profilnya sendiri dari konfigurasi lingkungannya.
-OmniRoute tidak pernah mendelegasikan keputusan: adaptor mengunci gerbang model ke cakupan
-paket yang paling ketat, sehingga pengaturan lingkungan host hanya dapat mempersempit daftar
-izin, tidak pernah memperluasnya melewati tanda terima yang diukur OmniRoute.
+Paket ini menyelesaikan cakupan model dan profilnya sendiri dari konfigurasi lingkungannya. OmniRoute tidak pernah mendelegasikan keputusan: adaptor menyematkan gerbang model ke cakupan paket yang paling ketat, sehingga pengaturan lingkungan host hanya dapat mempersempit daftar yang diizinkan, tidak pernah memperluasnya melebihi penerimaan terukur OmniRoute.
 
-## Registri Engine
+## Registri Mesin
 
-Registri berada di `open-sse/services/compression/engines/registry.ts`. Engine menyediakan kontrak
-bersama:
+Registri tinggal di `open-sse/services/compression/engines/registry.ts`. Mesin memaparkan kontrak bersama:
 
-- `id`: id engine stabil seperti `caveman` atau `rtk`
-- `apply(text, config)`: jalur eksekusi lama yang digunakan oleh pipeline bertumpuk
-- `compress(input, config)`: jalur eksekusi utama yang mengembalikan teks + statistik
-- `getConfigSchema()`: mengembalikan struktur mirip JSON Schema dari konfigurasi yang valid
+- `id`: id mesin stabil seperti `caveman` atau `rtk`
+- `apply(text, config)`: jalur eksekusi lama yang digunakan oleh saluran pipa bertumpuk
+- `compress(input, config)`: jalur eksekusi utama yang mengembalikan teks statistik +
+- `getConfigSchema()`: mengembalikan bentuk konfigurasi valid seperti Skema JSON
 - `validateConfig(config)`: mengembalikan `{ valid, errors[] }`
 
-Pendaftaran menggunakan `registerCompressionEngine(engine)` (atau `registerEngine` untuk kasus lanjutan),
-yang memanggil `assertValidEngine()` dan `validateConfig(defaultConfig)` sebelum menerimanya.
-Gunakan `unregisterCompressionEngine(id)` untuk menghapus engine saat runtime.
+Pendaftaran menggunakan `registerCompressionEngine(engine)` (atau `registerEngine` untuk kasus tingkat lanjut), yang memanggil `assertValidEngine()` dan `validateConfig(defaultConfig)` sebelum menerima. Gunakan `unregisterCompressionEngine(id)` untuk melepas mesin saat runtime.
 
-`strategySelector.ts` mendaftarkan engine bawaan sebelum kompresi dijalankan. Hal ini memungkinkan pratinjau,
-kompresi runtime, mode bertumpuk, pengujian, dan engine mendatang menggunakan jalur eksekusi yang sama.
+`strategySelector.ts` mendaftarkan mesin bawaan sebelum kompresi dijalankan. Hal ini memungkinkan pratinjau, kompresi waktu proses, mode bertumpuk, pengujian, dan mesin masa depan menggunakan jalur eksekusi yang sama.
 
-### Kompresi deskripsi MCP (terkait)
+### kompresi deskripsi MCP (terkait)
 
-Registri terpisah mengompresi metadata deskripsi alat MCP pada tingkat registri — lihat
-`open-sse/mcp-server/descriptionCompressor.ts` dan [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Registri ini menggunakan kembali
-aturan Caveman, tetapi beroperasi pada metadata alat, bukan payload permintaan.
+Registri terpisah memampatkan metadata deskripsi alat MCP di tingkat registri — lihat `open-sse/mcp-server/descriptionCompressor.ts` dan [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Ini menggunakan kembali aturan Caveman tetapi beroperasi pada metadata alat, bukan muatan permintaan.
 
-### Engine bawaan tambahan
+### Mesin bawaan tambahan
 
-Selain Caveman, RTK, dan LLMLingua-2, registri menyediakan beberapa engine lossless /
-struktural khusus (digunakan oleh pipeline bertumpuk, playground, dan pengujian):
+Di luar Caveman, RTK, dan LLMLingua-2, registri mengirimkan beberapa mesin lossless/struktural khusus (digunakan oleh saluran pipa bertumpuk, taman bermain, dan pengujian):
 
-| Engine        | Id              | Fungsinya                                                                                                                                                                            |
-| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): mengganti blok teks berurutan yang besar dengan referensi berbasis konten, sehingga blok yang berulang/besar dikirim sekali dan selanjutnya dirujuk. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): pemadatan tabular lossless untuk payload array JSON homogen menjadi bentuk kolumnar `[N rows]`.                                                              |
-| ionizer       | `ionizer`       | Pengambilan sampel baris awal/tengah/akhir untuk blok homogen yang sangat besar, dengan menyimpan bagian tengah yang dihilangkan sebagai referensi berbasis konten CCR.              |
-| session-dedup | `session-dedup` | Deduplikasi lintas giliran berbasis konten (terinspirasi TokenMizer): menghilangkan teks yang telah terlihat pada giliran sebelumnya dalam sesi yang sama.                           |
+| Mesin        | Pengenal        | Apa fungsinya                                                                                                                                                                                             |
+| ------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR          | `ccr`           | Content-Compress-Retrieve (H4): menggantikan blok teks besar yang bersebelahan dengan referensi yang ditujukan pada konten, sehingga blok repeated/large dikirim satu kali dan direferensikan setelahnya. |
+| ruang kepala | `headroom`      | SmartCrusher (H3 + N5): pemadatan tabel lossless dari muatan array JSON homogen ke dalam bentuk `[N rows]` kolom.                                                                                         |
+| pengion      | `ionizer`       | pengambilan sampel baris Head/middle/tail untuk blok homogen yang sangat besar, menyimpan bagian tengah yang tereliminasi sebagai referensi alamat konten CCR.                                            |
+| sesi-dedup   | `session-dedup` | Deduplikasi lintas putaran yang ditujukan pada konten (terinspirasi oleh TokenMizer): menghilangkan teks yang sudah terlihat di putaran sebelumnya pada sesi yang sama.                                   |
 
-**Instruksi protokol pengambilan CCR (#8033):** saat pertama kali CCR mengganti ≥1 blok dalam suatu
-permintaan, engine menambahkan satu pesan `system` idempoten di awal (diawali dengan
-sentinel `[CCR protocol]`) yang mengajarkan kontrak penanda → alat kepada pemanggil: arti
-penanda `[CCR retrieve hash=<24hex> chars=N]`, bahwa hash harus disalin apa adanya
-(semua 24 karakter heksadesimal — hash yang salah disalin kemungkinan menjadi penyebab kegagalan
-"blok tidak ditemukan"), dan bahwa penanda `[dedup:ref sha=...]` berarti "lihat kembali riwayat", bukan "panggil
-alat". Catatan tersebut disisipkan **hanya ketika `tools[]` yang diumumkan pemanggil membuktikan bahwa pemanggil benar-benar dapat
-mengakses `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` dalam
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — pemanggil biasa yang kompatibel dengan
-OpenAI tanpa alat tersebut tidak pernah menerima instruksi untuk memanggil sesuatu yang
-tidak dapat diaksesnya. Idempotensi diberlakukan dengan memindai riwayat pesan untuk mencari sentinel
-sebelum penyisipan, sehingga permintaan multi-giliran (yang memutar ulang pesan sebelumnya) tidak menumpuk
-catatan sekali per giliran.
+**instruksi protokol pengambilan CCR (#8033):** pertama kali CCR menggantikan blok ≥ 1 dalam permintaan, mesin menambahkan satu pesan `system` idempoten (dimulai dengan penjaga `[CCR protocol]` ) mengajarkan kepada pemanggil kontrak alat penanda → : apa arti penanda `[CCR retrieve hash=<24hex> chars=N]`, bahwa hash harus disalin kata demi kata (semua 24 karakter hex hash — yang salah disalin kemungkinan besar menyebabkan kesalahan "blok tidak ditemukan"), dan bahwa penanda `[dedup:ref sha=...]` berarti "lihat kembali ke dalam history", bukan "panggil alat". Catatan itu disuntikkan** hanya jika `tools[]` yang diiklankan penelepon membuktikan bahwa ia benar-benar dapat mencapai `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — penelepon biasa yang kompatibel dengan OpenAI tanpa alat itu tidak akan pernah menerima instruksi untuk memanggil sesuatu yang tidak dapat dijangkau. Idempotensi diterapkan dengan memindai riwayat pesan untuk sentinel sebelum melakukan injeksi, sehingga permintaan multi-turn (yang memutar ulang pesan sebelumnya) tidak menumpuk catatan satu kali per giliran.
 
-## Caveman
+## Manusia gua
 
-Mode Caveman berfokus pada pemadatan semantik prosa normal:
+Mode manusia gua berfokus pada kondensasi semantik dari prosa normal:
 
-- mempertahankan blok kode, URL, JSON, jalur, dan data terstruktur
-- menghapus kata-kata pengisi, ungkapan keraguan, konteks berulang, dan frasa penghubung yang bertele-tele
-- mendukung paket aturan berkas yang mengenali bahasa di `open-sse/services/compression/rules/`
-- tetap tersedia melalui mode lama `standard`, `aggressive`, dan `ultra`
+- mempertahankan blok kode, URLs, JSON, jalur, dan data terstruktur
+- menghilangkan pengisi, lindung nilai, konteks berulang, dan frasa penghubung verbose
+- mendukung paket aturan file yang sadar bahasa di `open-sse/services/compression/rules/`
+- tetap tersedia melalui mode `standard`, `aggressive`, dan `ultra` lama
 
-Tampilan dasbornya berada di `Dashboard -> Context & Cache -> Caveman`.
+Permukaan dasbornya `Dashboard -> Context & Cache -> Caveman`.
 
-Proyek hulu Caveman melaporkan token keluaran `~75%` lebih sedikit, penghematan keluaran rata-rata `65%` dalam tolok ukur
-dengan rentang `22-87%`, serta alat kompresi masukan sebesar `~46%`. OmniRoute menggunakan angka sisi masukan Caveman
-saat mendokumentasikan penghematan prompt/konteks bertumpuk; mode keluaran Caveman tetap merupakan fitur
-perilaku respons yang terpisah.
+Laporan hulu Caveman `~75%` lebih sedikit token keluaran, penghematan keluaran rata-rata `65%` dalam tolok ukur dengan rentang `22-87%`, dan alat kompresi masukan `~46%`. OmniRoute menggunakan nomor sisi input Caveman saat mendokumentasikan tumpukan simpanan prompt/context ; Mode keluaran manusia gua tetap menjadi fitur perilaku respons yang terpisah.
 
 ## RTK
 
-Mode RTK berfokus pada keluaran perintah dan alat:
+mode RTK berfokus pada keluaran perintah dan alat:
 
-- mendeteksi kelas keluaran seperti `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  pengujian Cargo/Go, build TypeScript/Vite/Webpack, ESLint, audit/instalasi npm, log Docker,
-  `find`/`grep` shell, stack trace, dan log generik
+- mendeteksi kelas keluaran seperti `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go tes, TypeScript/Vite/Webpack build, ESLint, npm audit/installs, Docker logs, shell `find`/`grep`, stack trace, dan generic logs
 - menerapkan 49 filter JSON dari `open-sse/services/compression/engines/rtk/filters/`
-- mendukung pipeline deklaratif bergaya RTK: penghapusan ANSI, penggantian, penghentian singkat berdasarkan kecocokan keluaran,
-  penghapusan/penyimpanan baris, pemotongan per baris, pemotongan bagian awal/akhir/jumlah baris maksimum, dan fallback saat kosong
-- mendukung filter proyek berbasis kepercayaan di `.rtk/filters.json` dan filter global di
-  `DATA_DIR/rtk/filters.json`
-- menghapus urutan ANSI, derau progres, baris berulang, dan teks standar yang tidak membantu
-- mempertahankan kegagalan yang dapat ditindaklanjuti, peringatan, ringkasan, berkas yang berubah, dan konteks bagian akhir
-- dapat secara opsional menyimpan keluaran mentah yang telah disunting untuk pemulihan/debugging melalui rute pengelolaan
-  terautentikasi
+- mendukung pipeline deklaratif gaya RTK: ANSI stripping, replace, match-output short-circle, strip/keep line, per-line truncation, head/tail/max-line truncation, dan on-empty fallback
+- mendukung filter proyek yang terjaga keamanannya di `.rtk/filters.json` dan filter global di `DATA_DIR/rtk/filters.json`
+- menghapus urutan ANSI, kebisingan kemajuan, garis berulang, dan boilerplate yang tidak membantu
+- mempertahankan kegagalan, peringatan, ringkasan, file yang diubah, dan konteks ekor yang dapat ditindaklanjuti
+- secara opsional dapat mempertahankan keluaran mentah yang telah disunting untuk recovery/debugging melalui rute manajemen yang diautentikasi
 
-Tampilan dasbornya berada di `Dashboard -> Context & Cache -> RTK`.
+Permukaan dasbornya `Dashboard -> Context & Cache -> RTK`.
 
-Detail operasional untuk filter khusus, kepercayaan, verifikasi, dan pemulihan keluaran mentah tersedia di
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Detail operasional untuk filter khusus, kepercayaan, verifikasi, dan pemulihan keluaran mentah ada di [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-Proyek hulu RTK melaporkan penghematan `60-90%` untuk kompresi keluaran perintah. Contoh dalam README-nya menunjukkan
-sesi Claude Code selama 30 menit berkurang dari `~118,000` token menjadi `~23,900`, atau menghemat `79.7%`.
+RTK upstream melaporkan penghematan `60-90%` untuk kompresi keluaran perintah. Contoh README -nya menunjukkan sesi Kode Claude selama 30 menit yang beralih dari token `~118,000` ke `~23,900`, atau `79.7%` disimpan.
 
 ## LLMLingua-2 (Pemangkasan Semantik)
 
-Mode LLMLingua-2 melakukan **pemangkasan token semantik** pada prosa menggunakan pengklasifikasi
-token ONNX berukuran kecil, sebagai pelengkap mesin Caveman dan RTK yang berbasis aturan:
+mode LLMLingua-2 berfungsi** pemangkasan token semantik** pada prosa menggunakan pengklasifikasi token ONNX kecil, melengkapi mesin Caveman dan RTK berbasis aturan:
 
-- mengompresi prosa hanya dalam pesan non-sistem; blok kode berpagar dan konstruksi lain yang dipertahankan
-  tidak pernah diubah
-- menjalankan backend `@atjsh/llmlingua-2` (ONNX melalui `@huggingface/transformers`) dalam
-  thread pekerja, sehingga inferensi model tidak pernah memblokir event loop permintaan
-- **dapat ditumpuk** (`stackPriority` 35): dalam pipeline bertumpuk, mode ini berjalan setelah
-  mesin struktural (CCR, session-dedup, headroom, Caveman), tetapi sebelum `ultra`, karena
-  pemangkasan semantik paling efektif pada teks yang sudah dikompresi secara struktural — mis.
-  `rtk -> caveman -> llmlingua`
-- **tetap beroperasi saat terjadi kesalahan apa pun** (dependensi opsional tidak tersedia, pembuatan pekerja, pemuatan model, inferensi,
-  atau timeout) → teks asli dikembalikan tanpa perubahan, bukan kesalahan
+- mengompresi prosa hanya dalam pesan non-sistem; blok kode berpagar dan konstruksi lain yang diawetkan tidak pernah diubah
+- menjalankan backend `@atjsh/llmlingua-2` (ONNX via `@huggingface/transformers`) di thread pekerja, sehingga inferensi model tidak pernah memblokir loop peristiwa permintaan
+- adalah** dapat ditumpuk** (`stackPriority` 35): dalam pipa bertumpuk, ini berjalan setelah mesin struktural (CCR, session-dedup, headroom, Caveman) tetapi sebelum `ultra`, karena pemangkasan semantik paling efektif pada teks yang sudah dikompresi secara struktural — misalnya `rtk -> caveman -> llmlingua`
+- **gagal-terbuka pada kesalahan apa pun** (tidak ada deps opsional, kemunculan pekerja, pemuatan model, inferensi, atau batas waktu) → teks asli dikembalikan tidak berubah, tidak pernah ada kesalahan
 
-Lokasi mesin: `open-sse/services/compression/engines/llmlingua/`. Tampilan dasbornya
-berada di `Dashboard -> Context & Cache -> LLMLingua`.
+Lokasi mesin: `open-sse/services/compression/engines/llmlingua/`. Permukaan dasbornya `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Model
 
-Model default adalah **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-cepat). Model **BERT-base** dengan akurasi lebih tinggi (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) tersedia melalui kolom `model` dalam konfigurasi mesin. `@huggingface/transformers`
-mengunduh model yang dipilih secara tertunda dari HuggingFace Hub ke
-`${DATA_DIR}/models/llmlingua` pada pemanggilan pertama (`modelStore.ts`); penimpaan konfigurasi `modelPath`
-akan mengarahkannya ke salinan lokal (untuk instalasi offline / terisolasi).
+Model defaultnya adalah**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, cepat). Akurasi yang lebih tinggi** Basis BERT** model (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) tersedia melalui bidang konfigurasi mesin `model`. `@huggingface/transformers` mengunduh model yang dipilih dengan malas dari HuggingFace Hub ke `${DATA_DIR}/models/llmlingua` pada panggilan pertama (`modelStore.ts`); penggantian konfigurasi `modelPath` mengarahkannya ke salinan lokal (pemasangan offline/pemasangan udara).
 
-### Dependensi opsional & instalasi sesuai permintaan
+### Ketergantungan opsional & pemasangan sesuai permintaan
 
-Stack peer runtime LLMLingua yang dapat dipangkas bersifat **opsional**. Dua paket dideklarasikan sebagai
-`optionalDependencies` dalam `package.json` dan tetap **eksternal** pada build produksi
-(`scripts/build/prepublish.ts` tidak membundelkannya):
+Tumpukan peer runtime LLMLingua yang dapat dipangkas adalah** opsional** . Dua paket dideklarasikan sebagai `optionalDependencies` di `package.json` dan disimpan** luar** oleh build produksi (`scripts/build/prepublish.ts` tidak menggabungkannya):
 
-| Paket                | Versi (pin) | Catatan                                           |
-| -------------------- | ----------- | ------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`     | Paket entri; mendeklarasikan lainnya sebagai peer |
-| `js-tiktoken`        | `^1.0.20`   | Tokenizer                                         |
+| Kemasan              | Versi (pin) | Catatan                                         |
+| -------------------- | ----------- | ----------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`     | Paket masuk; menyatakan yang lain sebagai rekan |
+| `js-tiktoken`        | `^1.0.20`   | Tokenizer                                       |
 
-`@huggingface/transformers` dipatok pada `^4.2.0` (digunakan bersama jalur embedding lokal dan
-juga ditelusuri ke dalam bundle mandiri); `@atjsh/llmlingua-2@2.0.5` menggunakan dependensi peer
-`"^3.5.2 || ^4.0.0"` untuk paket tersebut, sehingga Transformers.js v3 dan v4 sama-sama didukung. Sejak 2.0.4,
-`@atjsh/llmlingua-2` tidak lagi memerlukan `@tensorflow/tfjs`, yang menghapus kontributor tunggal
-terbesar (TensorFlow.js) dari stack SLM. Hanya dua paket di atas yang merupakan peer SLM yang
-dapat dipangkas. `npm install` standar (dev) menginstal stack opsional secara otomatis, kecuali dependensi
-opsional dihilangkan.
+`@huggingface/transformers` disematkan di `^4.2.0` (dibagi dengan jalur penyematan lokal dan juga ditelusuri ke dalam bundel mandiri); `@atjsh/llmlingua-2@2.0.5` melakukan rekanan dengan `"^3.5.2 || ^4.0.0"`, sehingga Transformers.js v3 dan v4 didukung. Sejak 2.0.4, `@atjsh/llmlingua-2` tidak lagi memerlukan `@tensorflow/tfjs`, yang menghapus kontributor tunggal terbesar (TensorFlow.js) dari tumpukan SLM. Hanya dua paket di atas yang merupakan rekan SLM yang dapat dipangkas. `npm install` (dev) standar menginstal tumpukan opsional secara otomatis kecuali dependensi opsional dihilangkan.
 
-**Alasan instalasi sesuai permintaan:** paket yang dipublikasikan di npm, bundle mandiri, dan image Docker
-dikirim **tanpa** dependensi ini agar tetap ramping. Jika dependensi tersebut tidak tersedia, pemeriksaan
-dependensi milik pekerja (probe resolusi `@atjsh/llmlingua-2` dalam `worker.ts`) akan gagal dan mesin
-**tetap beroperasi tanpa menampilkan kesalahan** — memilih LLMLingua tidak akan melakukan apa pun (teks dikembalikan tanpa perubahan dan tidak ada
-kesalahan yang dicatat). Untuk mengaktifkannya di lingkungan yang telah dipangkas, instal stack opsional:
+**Mengapa sesuai permintaan:** paket yang diterbitkan npm, paket mandiri, dan pengiriman gambar Docker** tanpa** deps ini untuk tetap langsing. Ketika mereka tidak ada, gerbang ketergantungan pekerja (probe penyelesaian `@atjsh/llmlingua-2` di `worker.ts`) gagal dan mesin** gagal-terbuka secara diam-diam** — memilih LLMLingua menjadi larangan operasi (teks dikembalikan tidak berubah, tidak ada kesalahan yang tercatat). Untuk mengaktifkannya di lingkungan yang dipangkas, instal tumpukan opsional:
 
 ```bash
-# patok ke versi yang dideklarasikan dalam optionalDependencies di package.json
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Penghapusan `@tensorflow/tfjs` (2.0.4+) meniadakan kontributor yang sebelumnya dominan sebesar ~800 MB
-— ruang yang tersisa digunakan oleh runtime transformers.js + onnxruntime-node,
-ditambah model TinyBERT (~57 MB) yang diunduh saat penggunaan pertama (bukan melalui npm).
+Penghapusan `@tensorflow/tfjs` (2.0.4 +) menghilangkan kontributor ~ 800 MB yang sebelumnya dominan — jejak yang tersisa adalah runtime transformers.js + onnxruntime-node, ditambah model TinyBERT (~ 57 MB) yang diunduh pada penggunaan pertama (bukan melalui npm).
 
 Per lingkungan:
 
-- **Dev / `npm install`** — diinstal secara otomatis kecuali Anda menggunakan `--omit=optional`
-  (atau `--no-optional`). Tidak diperlukan tindakan apa pun.
-- **npm global (`npm i -g omniroute`) / mandiri** — jalankan perintah instalasi di atas di dalam
-  direktori paket yang telah diinstal, atau instal ulang tanpa menghilangkan dependensi opsional.
-- **Docker** — tambahkan perintah instalasi dalam sebuah lapisan image turunan; image yang dipublikasikan
-  sengaja dibuat ramping.
-- **VPS (PM2)** — instal ke dalam `node_modules` milik aplikasi, lalu mulai ulang proses agar
-  worker memeriksa ulang gate.
-- **Next mandiri mentah (`npm run build` → `.build/next/standalone/server.js`)** — trace
-  mandiri TIDAK menyertakan worker maupun dependensi opsional, sehingga engine secara diam-diam
-  terbuka saat gagal. `scripts/build/colocate-standalone.mjs` menerapkan kembali keduanya (esbuild worker +
-  closure dependensi opsional ke dalam struktur mandiri); skrip ini berjalan secara otomatis melalui hook npm
-  `postbuild` setelah setiap build. Idempoten, gagal secara lunak ketika dependensi tidak tersedia.
+- **Dev / `npm install`** — diinstal secara otomatis kecuali Anda melewati `--omit=optional` (atau `--no-optional`). Tidak diperlukan tindakan.
+- **Npm global (`npm i -g omniroute`) / mandiri** — jalankan perintah install di atas di dalam direktori paket yang diinstal, atau instal ulang tanpa menghilangkan deps opsional.
+- **Docker** — menambahkan perintah install di lapisan gambar turunan; gambar yang dipublikasikan dikirimkan dengan desain yang ramping.
+- **VPS (PM2)** — install ke `node_modules` aplikasi, lalu mulai ulang prosesnya sehingga pekerja memeriksa ulang gerbangnya.
+- **Mentah Berikutnya mandiri (`npm run build` → `.build/next/standalone/server.js`)** — jejak mandiri mengirimkan NEITHER pekerja maupun deps opsional, sehingga mesin gagal terbuka secara diam-diam. `scripts/build/colocate-standalone.mjs` menerapkan kembali keduanya (pekerja esbuild + penutupan opsional-dep ke pohon mandiri); ini berjalan secara otomatis melalui hook `postbuild` npm setelah setiap build. Idempoten, lunak ketika deps tidak ada.
 
-**Verifikasi bahwa fitur ini aktif:** saat LLMLingua dipilih, prosa nyata benar-benar menyusut (engine
-tidak lagi terbuka saat gagal), dan permintaan pertama memicu pengunduhan model ke
-`${DATA_DIR}/models/llmlingua`. Gate sengaja hanya memeriksa `@atjsh/llmlingua-2` —
-peer lainnya hanya mendukung ESM dan `require.resolve` melempar error untuk peer tersebut meskipun tersedia — sehingga
-worker tetap terbuka saat gagal jika ada peer yang benar-benar tidak tersedia pada waktu `import()`.
+**Pastikan itu aktif:** dengan LLMLingua dipilih, prosa sebenarnya sebenarnya menyusut (mesin berhenti gagal membuka), dan permintaan pertama memicu pengunduhan model ke `${DATA_DIR}/models/llmlingua`. Gerbang dengan sengaja hanya menyelidiki `@atjsh/llmlingua-2` — rekan-rekan lainnya hanya untuk ESM dan `require.resolve` melemparkannya bahkan ketika ada — sehingga pekerja masih gagal membuka jika ada rekan yang benar-benar hilang pada waktu `import()`.
 
-## Pipeline Bertumpuk
+## Pipa Bertumpuk
 
-Mode bertumpuk menjalankan langkah-langkah pipeline secara berurutan. Urutan default-nya adalah:
+Mode bertumpuk menjalankan langkah-langkah alur secara berurutan. Standarnya adalah:
 
 ```txt
 rtk -> caveman
 ```
 
-Gunakan ini untuk sesi agen pengodean ketika prompt menggabungkan output perintah dengan prosa dari manusia atau asisten. RTK terlebih dahulu mengurangi log alat yang berisik, lalu Caveman memampatkan bahasa alami yang tersisa.
+Gunakan ini untuk sesi agen pengkodean di mana prompt menggabungkan output perintah dengan prosa manusia atau asisten. RTK mengurangi log alat yang berisik terlebih dahulu, lalu Caveman mengompresi bahasa alami yang tersisa.
 
-Langkah-langkah pipeline dikonfigurasi dengan `stackedPipeline` dalam pengaturan kompresi atau melalui kombinasi kompresi.
+Langkah-langkah pipeline dikonfigurasikan dengan `stackedPipeline` dalam pengaturan kompresi atau melalui kombo kompresi.
 
-Ketika kedua mesin mengurangi payload sama yang memenuhi syarat, penghematannya terakumulasi:
+Ketika kedua mesin mengurangi muatan yang memenuhi syarat yang sama, penghematan bertambah:
 
 ```txt
-gabungan = 1 - (1 - penghematan RTK) * (1 - penghematan input Caveman)
-rata-rata = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
-rentang   = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
+combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
+average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
+range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## Filter Pohon Aksesibilitas MCP
+## MCP Filter Pohon Aksesibilitas
 
-Filter cerdas pohon aksesibilitas MCP adalah lapisan kompresi pascaeksekusi yang berjalan pada **hasil alat** MCP, bukan pada prompt atau konteks. Filter ini menyasar payload pohon aksesibilitas dan snapshot browser yang panjang, yang dikembalikan oleh alat seperti Playwright, computer-use, dan server MCP otomatisasi browser.
+Filter pintar pohon aksesibilitas MCP adalah lapisan kompresi pasca-eksekusi yang berjalan di MCP** hasil alat** , bukan berdasarkan perintah atau konteks. Ini menargetkan pohon aksesibilitas verbose dan payload snapshot browser yang dikembalikan oleh alat seperti Playwright, penggunaan komputer, dan server MCP otomatisasi browser.
 
-### Fungsinya
+### Apa fungsinya
 
-1. **Penghapusan derau** — menghapus entri generik/teks kosong (`- generic:`, `- text: ""`)
-2. **Penciutan saudara** — ketika ≥ `collapseThreshold` (default 30) baris berurutan merupakan pengulangan struktural, baris-baris tersebut diciutkan menjadi `collapseKeepHead` (default 10) baris pertama + ringkasan jumlah + `collapseKeepTail` (default 5) baris terakhir
-3. **Pelestarian ref** — jangkar `[ref=eXX]` yang diperlukan oleh Playwright/computer-use tidak pernah diubah
-4. **Pemotongan tegas** — jika teks setelah penciutan masih melebihi `maxTextChars` (default 50.000), teks dipotong dengan petunjuk navigasi agar agen dapat melanjutkan pekerjaan
+1. **Penghilangan kebisingan** — menghapus entri generic/text yang kosong (`- generic:`, `- text: ""`)
+2. **Keruntuhan saudara kandung** — ketika ≥ `collapseThreshold` (default 30) baris berturut-turut adalah pengulangan struktural, gabungkan menjadi baris `collapseKeepHead` (default 10) pertama + ringkasan hitungan + baris `collapseKeepTail` terakhir (default 5)
+3. **Pelestarian referensi** — `[ref=eXX]` jangkar yang dibutuhkan oleh Playwright/computer-use tidak pernah disentuh
+4. **Pemotongan yang sulit** — jika teks setelah diciutkan masih melebihi `maxTextChars` (default 50.000), terpotong dengan petunjuk navigasi sehingga agen dapat terus bekerja
 
 ### Lokasi mesin
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← titik masuk smartFilterText()
-  collapseRepeated.ts ← algoritma penciutan saudara
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Konfigurasi
 
-Dikendalikan oleh `compression.mcpAccessibility` dalam pengaturan global (migrasi 056). Konfigurasi default:
+Dikendalikan oleh `compression.mcpAccessibility` dalam pengaturan global (migrasi 056). Konfigurasi bawaan:
 
 ```json
 {
@@ -277,114 +198,170 @@ Dikendalikan oleh `compression.mcpAccessibility` dalam pengaturan global (migras
 }
 ```
 
-Filter hanya diterapkan pada payload hasil alat yang `type`-nya adalah `"text"` dan panjangnya melebihi `minLengthToProcess`. Filter ini tidak memengaruhi kompresi prompt atau payload permintaan.
+Filter ini hanya diterapkan pada muatan hasil pahat yang `type` adalah `"text"` dan panjangnya melebihi `minLengthToProcess`. Ini tidak mempengaruhi kompresi cepat atau muatan permintaan.
 
 ### Penghematan yang diharapkan
 
-60–80% pada hasil alat snapshot browser, bergantung pada kompleksitas halaman. Algoritma penciutan memiliki kompleksitas O(n) berdasarkan jumlah baris dan menambahkan latensi yang dapat diabaikan.
+60–80% pada hasil alat snapshot browser, bergantung pada kompleksitas halaman. Algoritme penciutan adalah O(n) dalam jumlah baris dan menambahkan latensi yang dapat diabaikan.
 
-### Perbandingan filter ini dengan mesin kompresi di atas
+### Filter ini vs mesin kompresi di atas
 
-| Aspek       | Caveman / RTK / Bertumpuk   | Filter aksesibilitas MCP               |
-| ----------- | --------------------------- | -------------------------------------- |
-| Sasaran     | Prompt / konteks permintaan | Hasil alat MCP                         |
-| Pemicu      | Pengaturan mode kompresi    | `compression.mcpAccessibility.enabled` |
-| Cakupan     | Semua pesan SSE             | Hanya hasil alat                       |
-| Jangkar ref | Tidak berlaku               | Selalu dipertahankan                   |
+| Aspek             | Manusia gua / RTK / Ditumpuk | filter aksesibilitas MCP               |
+| ----------------- | ---------------------------- | -------------------------------------- |
+| Target            | Permintaan petunjuk/konteks  | hasil alat MCP                         |
+| Pemicu            | Pengaturan mode kompresi     | `compression.mcpAccessibility.enabled` |
+| Cakupan           | Semua pesan SSE              | Hasil alat saja                        |
+| Jangkar referensi | N/A                          | Diawetkan tanpa syarat                 |
 
 ---
 
-## Kombinasi Kompresi
+## Kombo Kompresi
 
-Kombinasi kompresi adalah profil kompresi bernama yang dapat ditetapkan ke kombinasi perutean:
+Kombo kompresi diberi nama profil kompresi yang dapat ditetapkan ke kombo perutean:
 
 - `compression_combos`: menyimpan mode, pipeline, konfigurasi RTK, konfigurasi bahasa, dan penanda default
-- `compression_combo_assignments`: memetakan kombinasi kompresi ke kombinasi perutean
-- integrasi runtime menyelesaikan kombinasi kompresi yang ditetapkan sebelum penggantian kombinasi generik
-- analitik mencakup `compression_combo_id` dan `engine`
+- `compression_combo_assignments`: memetakan kombo kompresi ke kombo perutean
+- integrasi runtime menyelesaikan kombo kompresi yang ditetapkan sebelum kombo umum diganti
+- analitik termasuk `compression_combo_id` dan `engine`
 
-Lokasi di dasbor: `Dashboard -> Context & Cache -> Compression Combos`.
+Permukaan dasbor: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## Permukaan API
+## Prasyarat / panduan operator (CCR & sesi-dedup)
 
-| Rute                                   | Tujuan                                                               |
-| -------------------------------------- | -------------------------------------------------------------------- |
-| `/api/settings/compression`            | Pengaturan kompresi global (mencakup konfigurasi `mcpAccessibility`) |
-| `/api/compression/preview`             | Pratinjau mode kompresi apa pun                                      |
-| `/api/compression/language-packs`      | Mencantumkan paket bahasa Caveman yang tersedia                      |
-| `/api/context/caveman/config`          | Alias pengaturan Caveman                                             |
-| `/api/context/rtk/config`              | Default dan pengaturan RTK                                           |
-| `/api/context/rtk/filters`             | Katalog filter RTK                                                   |
-| `/api/context/rtk/test`                | Endpoint pratinjau/pengujian RTK                                     |
-| `/api/context/rtk/raw-output/[id]`     | Pemulihan output mentah tersensor yang diautentikasi                 |
-| `/api/context/combos`                  | CRUD kombinasi kompresi                                              |
-| `/api/context/combos/[id]/assignments` | CRUD penetapan kombinasi perutean                                    |
-| `/api/context/analytics`               | Alias analitik kompresi                                              |
+CCR (`ccr`) dan `session-dedup` ganti atau hilangkan teks dan tinggalkan a** penanda** di belakang. Bagian ini adalah referensi operator untuk menghubungkan klien, membaca dua penanda, dan mengambil atau mendiagnosis konten yang dihilangkan. Mekanika masing-masing mesin dibahas di atas; ini adalah lapisan "bagaimana cara menjalankannya".
 
-Rute pengelolaan memerlukan autentikasi pengelolaan atau pemeriksaan kebijakan kunci API.
+### Transportasi & titik akhir
 
-## Alat MCP
+Server MCP yang mengekspos alat CCR dapat dijangkau dengan tiga cara. Basis default URL adalah `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
 
-Kompresi menyediakan lima alat MCP:
+| Mengangkut                                          | URL / perintah                          | Catatan                                                                                                                                                    |
+| --------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP yang dapat dialirkan (klien, direkomendasikan) | `http://localhost:20128/api/mcp/stream` | Titik akhir yang diajak bicara oleh klien MCP saat ini.                                                                                                    |
+| SSE singleton lawas                                 | `http://localhost:20128/api/mcp/sse`    | Transportasi tunggal yang lebih tua. Dia** menutup** sesi yang dapat dialirkan; gunakan klien `streamable-http` melawan `/api/mcp/stream`, bukan yang ini. |
+| stdio                                               | `omniroute --mcp`                       | Untuk konfigurasi IDE MCP yang memunculkan proses. Tidak ada bendera `--dev` ; `omniroute --mcp` adalah titik masuk stdio.                                 |
+
+### Tingkat penyimpanan (yang bertahan jika dimulai ulang)
+
+CCR adalah a** dua tingkat** simpan, bukan hanya di memori:
+
+- **Tingkat dalam memori yang panas** — per blok tutup 2 MiB, per kepala sekolah 16 MiB, global 64 MiB. Entri default ke TTL 24 jam (maksimum 7 hari). Pengambilan MCP penuh dari memori dibatasi pada 256 KiB; apa pun yang lebih besar masih dapat dijangkau melalui mode jarak jauh/grep.
+- **Tingkat SQLite yang tahan lama** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, aktif secara default) — mendukung tingkat dalam memori sehingga sebuah blok bertahan dari penggusuran LRU, restart, atau pengambilan kembali di instance lain. Baris tersebut mempertahankan TTL blok, sehingga blok yang melewati TTL hilang dari kedua tingkatan.
+
+Tiga penjaga menjaga tingkat tahan lama yang dibatasi — sebuah blok tetap hanya untuk memori ketika:
+
+1. blok sudah berakhir** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. runtime adalah runtime cloud (tidak ada disk lokal);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Jadi "blok menghilang" bukanlah cerita restart menyeluruh: blok sub-512 KB pada runtime non-cloud lokal akan bertahan jika restart melalui tingkat tahan lama sampai TTL -nya habis. Lihat [Referensi lingkungan](../reference/ENVIRONMENT.md) untuk variabel.
+
+### Kedua penanda itu
+
+| Penanda                               | Arti                                                                                                                                                                                     | Apa yang harus dilakukan oleh model tersebut                                                                                                                                                                                                         |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Sebuah blok besar disimpan dengan alamat konten.                                                                                                                                         | Hubungi `omniroute_ccr_retrieve` dengan** Hash 24-hex disalin kata demi kata** untuk mendapatkan teks aslinya kembali.                                                                                                                               |
+| `[dedup:ref sha=…]`                   | `session-dedup` teks yang dihilangkan sudah dikirim pada giliran sebelumnya di sesi yang sama. Ini adalah sebuah** melihat ke belakang dengan sengaja** , bukan kerugian atau kesalahan. | Melakukan** bukan** panggil alat apa pun dan lakukan** bukan** cobalah untuk "merekonstruksinya". Kemunculan pertama teks tersebut adalah salinan kanonik; giliran saat ini tidak pernah ditulis ulang, melainkan dikurangi pada giliran berikutnya. |
+
+`[dedup:ref]` melihat kembali adalah keputusan protokol yang disengaja — tidak ada rekonstruksi sebelum pengiriman. Anggap saja sebagai "teks persis seperti ini sudah disampaikan pada awal sesi ini."
+
+### Prasyarat klien
+
+- **Kunci (stdio):** penelepon stdio tidak membawa identitas per permintaan, sehingga diautentikasi dengan `OMNIROUTE_API_KEY` (diatur dalam `env` server MCP ). Tanpanya, penelepon bersifat anonim dan alat yang memerlukan prinsipal dapat menurun.
+- **`tools[]` adalah prasyarat injeksi.** Instruksi protokol pengambilan CCR (#8033) disuntikkan** hanya** ketika permintaan yang diiklankan `tools[]` membuktikan bahwa klien benar-benar dapat mencapai `omniroute_ccr_retrieve`. Pencocokannya adalah pencocokan segmen tambahan yang dibatasi oleh pemisah (`__`, `.`, `/`, `:`) — tidak pernah berupa substring kosong — sehingga nama dengan namespace seperti `mcp__gateway__omniroute_ccr_retrieve` tetap dihitung. `tools[]` yang tidak ada atau tidak cocok berarti instruksinya _tidak_ disuntikkan, sesuai desain.
+- **`codemode:false` (klien OpenCode ).** OpenCode defaultnya adalah Mode Kode, yang hanya mengiklankan alat aslinya ke model dan** tidak** letakkan alat MCP di daftar `tools[]` asli. Setel `codemode: false` pada entri server MCP sehingga alat `omniroute_ccr_*` diiklankan. Ini adalah sebuah** klien** pengaturan, bukan yang OmniRoute. Itu belum memasukkan instruksi CCR : OpenCode memberi nama alat `<server>_<tool>`, sehingga server bernama `omniroute` mengekspos `omniroute_omniroute_ccr_retrieve`, dan `_` bukan salah satu pemisah yang cocok.
+- **Kepala Sekolah.** Penyimpanan dan pengambilan diisolasi per prinsipal yang diautentikasi (per kunci API ). Sebuah kunci hanya melihat bloknya sendiri.
+
+### Cakupan per alat
+
+Penegakan cakupan selalu aktif untuk penelepon HTTP/SSE dengan cakupan sempit. Alat `omniroute_` CCR memerlukan:
+
+| Alat                     | Cakupan             |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Cakupan yang hilang mengembalikan sebuah** hasil kesalahan alat MCP** (`isError: true`, bukan HTTP 403 — `403 LOCAL_ONLY` adalah auth penjaga rute loopback yang terpisah): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Kunci jarak jauh minimal dapat menampung `mcp:connect` (mengotorisasi `/api/mcp/` ukiran lokal saja) ditambah cakupan read/write spesifik yang dibutuhkannya.
+
+### Matriks klien
+
+| Klien                    | Mengangkut                                                | Konfigurasi yang akan digunakan                                                                                                                                                                                                                           | `tools[]` diiklankan? (instruksi → CCR disuntikkan)                                                                                                                                                 |
+| ------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kode Claude              | dapat dialirkan-http                                      | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                         | Ya — berkemampuan MCP; disuntikkan.                                                                                                                                                                 |
+| Cursor / Cline           | `stdio`** atau** `streamable-http`                        | stdio: `omniroute --mcp` dengan `OMNIROUTE_API_KEY` di `env`; atau entri MCP jarak jauh yang menunjuk ke `http://localhost:20128/api/mcp/stream` (lihat [Panduan Pengaturan → MCP Konfigurasi Klien](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Ya — mengiklankan alat `omniroute_ccr_*`.                                                                                                                                                           |
+| OpenCode                 | dapat dialirkan-http                                      | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, ditambah `codemode: false`                                                                                                                                                      | Alat yang diiklankan hanya dengan `codemode: false`; instruksinya masih belum disuntikkan, karena `omniroute_omniroute_ccr_retrieve` tidak cocok (lihat [Prasyarat klien](#client-prerequisites) ). |
+| Kompatibel dengan OpenAI | HTTP yang kompatibel dengan OpenAI (penyelesaian obrolan) | klien penyelesaian obrolan standar terhadap titik akhir yang kompatibel dengan OpenAI                                                                                                                                                                     | **Tidak pernah** — penelepon biasa yang kompatibel dengan OpenAI tidak pernah diminta untuk memanggil alat tersebut, dan instruksinya tidak dimasukkan.                                             |
+
+### Batas pengambilan & penomoran halaman
+
+hasil teks alat MCP terpotong di sekitar `mcpAccessibility.maxTextChars` (default `50000`). Pengambilan `full` suatu blok dibatasi pada 256 KiB —** tidak ada pengambilan penuh tanpa batas** . Ketika `chars=N` suatu blok besar, halamankanlah blok tersebut alih-alih menarik semuanya:
+
+- Aturan praktisnya:**`chars > 40000` → gunakan `mode`** , tidak pernah penuh.
+- `mode:"grep"` — regex `pattern` mencocokkan baris demi baris, hingga 1.000 baris yang cocok (`unique: true` tetes berulang), termurah untuk "temukan satu baris yang saya perlukan."
+- `mode:"lines"` — rentang garis 1 yang diindeks; membutuhkan `start` dan `end`.
+- garis `mode:"head"` / `mode:"tail"` — first/last `n`.
+- `mode:"stats"` — jumlah baris, karakter, dan byte tanpa isi.
+
+Gunakan `mode:"lines"` dengan `start`/`end` untuk berjalan dalam satu blok panjang di halaman daripada meminta semuanya sekaligus.
+
+### Penamaan alat
+
+Alat pengambilan saat ini bernama `omniroute_ccr_retrieve` (awalan `omniroute_` adalah solusi tertanggal untuk tabrakan nama lintas server). Nama alat akhiran terbatas yang lebih bersih dan perbaikan untuk hasil MCP JSON terpotong di tengah string dilacak sebagai tindak lanjut hulu; halaman ini hanya mendokumentasikan perilaku yang dikirimkan saat ini.
+
+### Siklus hidup sesi
+
+Sesi HTTP yang dapat dialirkan tidak aktif dan server mengambilnya; jendela idle adalah konstanta `MCP_SESSION_IDLE_MS` (direferensikan berdasarkan nama, bukan nilai hardcode, sehingga halaman ini tidak melayang saat diubah). Gejala sesi yang menganggur adalah HTTP 404 dengan `Unknown Mcp-Session-Id` — solusinya adalah menyambungkan kembali atau memulai kembali sesi,** bukan** untuk memutar kunci, mengubah cakupan, atau mengganti nama alat.
+
+## API Permukaan
+
+| Rute                                   | Tujuan                                                                |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| `/api/settings/compression`            | Pengaturan kompresi global (termasuk konfigurasi `mcpAccessibility` ) |
+| `/api/compression/preview`             | Pratinjau mode kompresi apa pun                                       |
+| `/api/compression/language-packs`      | Daftar paket bahasa Caveman yang tersedia                             |
+| `/api/context/caveman/config`          | Alias pengaturan manusia gua                                          |
+| `/api/context/rtk/config`              | RTK default dan pengaturan                                            |
+| `/api/context/rtk/filters`             | katalog filter RTK                                                    |
+| `/api/context/rtk/test`                | titik akhir RTK preview/test                                          |
+| `/api/context/rtk/raw-output/[id]`     | Pemulihan keluaran mentah yang diautentikasi dan disunting            |
+| `/api/context/combos`                  | Kombo kompresi CRUD                                                   |
+| `/api/context/combos/[id]/assignments` | Penugasan kombo perutean CRUD                                         |
+| `/api/context/analytics`               | Alias analitik kompresi                                               |
+
+Rute manajemen memerlukan autentikasi manajemen atau pemeriksaan kebijakan kunci API.
+
+## alat MCP
+
+Kompresi memperlihatkan lima alat MCP :
 
 | Alat                                | Cakupan             | Tujuan                                |
 | ----------------------------------- | ------------------- | ------------------------------------- |
 | `omniroute_compression_status`      | `read:compression`  | Pengaturan, analitik, statistik cache |
-| `omniroute_compression_configure`   | `write:compression` | Memperbarui pengaturan global         |
-| `omniroute_set_compression_engine`  | `write:compression` | Menetapkan mode dan pipeline opsional |
-| `omniroute_list_compression_combos` | `read:compression`  | Mencantumkan kombinasi kompresi       |
-| `omniroute_compression_combo_stats` | `read:compression`  | Membaca analitik kombinasi/mesin      |
+| `omniroute_compression_configure`   | `write:compression` | Perbarui pengaturan global            |
+| `omniroute_set_compression_engine`  | `write:compression` | Atur mode dan alur opsional           |
+| `omniroute_list_compression_combos` | `read:compression`  | Daftar kombo kompresi                 |
+| `omniroute_compression_combo_stats` | `read:compression`  | Baca analitik combo/engine            |
 
 ## Cakupan & pengecualian
 
-**Embedding tidak pernah dikompresi.** `open-sse/handlers/embeddings.ts` tidak pernah memanggil
-mesin kompresi apa pun — isi permintaan/respons diteruskan langsung ke eksekutor tanpa perubahan.
-Saat ini hal ini bersifat struktural (embedding dan penyelesaian chat memiliki handler yang terpisah), bukan
-pemeriksaan runtime, tetapi ini berarti kekhawatiran distorsi vektor dalam #8034 tidak memiliki permukaan paparan
-pada jalur embedding.
+**Embeddings tidak pernah dikompresi.** `open-sse/handlers/embeddings.ts` tidak pernah memanggil mesin kompresi apa pun — badan request/response meneruskan langsung ke pelaksana tanpa disentuh. Ini bersifat struktural saat ini (penyelesaian penyematan dan penyelesaian obrolan adalah penangan terpisah), bukan pemeriksaan waktu proses, namun ini berarti masalah distorsi vektor di #8034 tidak memiliki permukaan paparan di jalur penyematan.
 
-**Filter pengecualian per model/endpoint (#8034).** Untuk penyelesaian chat, operator dapat menentukan
-ID model / target `provider/model` yang tidak boleh dikompresi — pengaman yang berguna jika
-kompresi nantinya dihubungkan lebih dekat ke jalur yang berdekatan dengan embedding, dan secara umum berguna
-untuk model apa pun yang memerlukan prompt yang sama persis byte demi byte (evaluasi deterministik, prefiks
-yang sensitif terhadap cache, dan sebagainya).
+**filter pengecualian Per-model/endpoint (#8034).** Untuk penyelesaian obrolan, operator dapat memberi nama id model / target `provider/model` yang tidak boleh dikompresi — pagar pembatas yang berguna jika kompresi dihubungkan lebih dekat ke jalur yang berdekatan dengan penyematan nanti, dan umumnya berguna untuk model apa pun yang prompt byte-untuk-byte yang tepat penting (eval deterministik, awalan sensitif cache, dll.).
 
-- Kolom pengaturan: `exclusions?: string[]` pada konfigurasi kompresi global
-  (`GET`/`PUT /api/settings/compression`), dipersistenkan melalui namespace kompresi `key_value` yang sudah ada
-  (`src/lib/db/compression.ts`) — tanpa tabel baru.
-- Tab dasbor: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Sintaks pola: `*` adalah satu-satunya wildcard. Setiap metakarakter regex lain dalam pola
-  di-escape sebelum pencocokan, sehingga `gpt-5.6` hanya cocok dengan string literal tersebut, tidak pernah dengan `gpt-5x6`
-  (aman dari ReDoS, terbatas, tanpa kuantifier bersarang). Pola dicocokkan tanpa membedakan huruf besar-kecil terhadap
-  ID model saja maupun gabungan `provider/model` — `gpt-5-6`, `openai/gpt-5-6`,
-  dan `openai/*` semuanya berfungsi, dan `*` saja mengecualikan setiap model.
-- Pencocokan: `isCompressionExcluded()` / `normalizeCompressionExclusions()` dalam
-  `open-sse/services/compression/exclusions.ts`. `chatCore.ts` memeriksa target yang dikecualikan
-  tepat setelah menyelesaikan pengaturan kompresi, **sebelum mesin apa pun dijalankan**, dan memperlakukan kecocokan
-  sama persis seperti saat kompresi dinonaktifkan secara global — isi permintaan terbukti
-  identik byte demi byte. Pelewatan dicatat melalui `writeCompressionSkip(..., "excluded")` agar
-  terlihat dalam analitik.
-- Default (daftar kosong/tidak ada): identik dengan perilaku sebelum #8034 — tidak ada yang dikecualikan.
+- Bidang pengaturan: `exclusions?: string[]` pada konfigurasi kompresi global (`GET`/`PUT /api/settings/compression`), dipertahankan melalui namespace kompresi `key_value` yang ada (`src/lib/db/compression.ts`) — tidak ada tabel baru.
+- Tab dasbor:** Pengecualian Dashboard → Kompresi →** (`/dashboard/compression/exclusions`).
+- Sintaks pola: `*` adalah satu-satunya karakter pengganti. Setiap metakarakter regex lainnya dalam suatu pola di-escape sebelum dicocokkan, jadi `gpt-5.6` hanya cocok dengan string literal, tidak pernah `gpt-5x6` (aman untuk ReDoS, dibatasi, tidak ada bilangan bersarang). Pola mencocokkan huruf besar-kecil dengan id model kosong dan komposit `provider/model` — `gpt-5-6`, `openai/gpt-5-6`, dan `openai/*` semuanya berfungsi, dan `*` sendiri mengecualikan setiap model.
+- Pencocokan: `isCompressionExcluded()` / `normalizeCompressionExclusions()` di `open-sse/services/compression/exclusions.ts`. `chatCore.ts` memeriksa target yang dikecualikan tepat setelah menyelesaikan pengaturan kompresi,** sebelum mesin apa pun hidup** , dan memperlakukan kecocokan persis seperti kompresi yang dinonaktifkan secara global — isi permintaan terbukti identik dengan byte. Lompatan tersebut dicatat melalui `writeCompressionSkip(..., "excluded")` untuk visibilitas analitik.
+- Default ( daftar empty/absent ): identik dengan perilaku sebelum #8034 — tidak ada yang dikecualikan.
 
 ## Keterbatasan yang diketahui
 
-- **LLMLingua-2 (SLM) memerlukan dependensi opsional yang ditempatkan bersama.** Worker hanya berjalan dalam build
-  produksi ketika `@atjsh/llmlingua-2` + peer-nya ditempatkan bersama ke dalam
-  `dist/node_modules` (lihat `scripts/build/colocateOptionals.mjs`, #4286). Tanpa dependensi tersebut,
-  engine akan mengalami fail-open (mengembalikan teks asli). Resolusi worker tidak lagi bergantung pada
-  `import.meta.url` (yang gagal dalam bundle mandiri) — resolusi tersebut berpatokan pada
-  cwd runtime / `argv[1]`.
-- **Paket bahasa Caveman `de` / `fr` / `ja` masih parsial.** Paket tersebut menyertakan aturan `context` +
-  `filler` + `structural`, tetapi tidak memiliki paket `dedup` / `ultra`, sehingga intensitas `ultra`
-  tidak lebih kuat daripada `full` untuk bahasa-bahasa tersebut (paket ini hanya menggunakan aturannya sendiri — tidak ada
-  fallback diam-diam ke aturan `dedup`/`ultra` bahasa Inggris, yang dapat merusak teks berbahasa asing).
-  `en` / `es` / `id` / `pt-BR` sudah lengkap. Kontribusi `dedup.json` + `ultra.json`
-  untuk paket parsial sangat diharapkan.
-- **Telemetri bertumpuk hanya mencantumkan engine yang melakukan kompresi.** Langkah pipeline bertumpuk yang
-  engine-nya berjalan tetapi menghasilkan penghematan 0 % akan mengembalikan `stats:null`, sehingga tidak muncul dalam
-  `engineBreakdown` — tidak dapat dibedakan dari langkah yang dilewati. Membedakan antara
-  "berjalan, 0 %" dan "dilewati" akan memerlukan perubahan model breakdown dan ditangguhkan.
+- **LLMLingua-2 (SLM) memerlukan deps opsional yang berlokasi bersama.** Pekerja hanya berjalan di build produksi ketika rekan `@atjsh/llmlingua-2` + ditempatkan bersama di `dist/node_modules` (lihat `scripts/build/colocateOptionals.mjs`, #4286). Tanpa mereka, mesin akan gagal terbuka (mengembalikan teks asli). Resolusi pekerja tidak lagi bergantung pada `import.meta.url` (ia mati dalam bundel mandiri) — ia berlabuh pada runtime cwd / `argv[1]`.
+- **Paket bahasa manusia gua `de` / `fr` / `ja` bersifat parsial.** Mereka mengirimkan aturan `context` + `filler` + `structural` tetapi tidak ada paket `dedup` / `ultra`, jadi intensitas `ultra` tidak lebih kuat dari `full` untuk bahasa-bahasa tersebut (mereka hanya menggunakan aturan mereka sendiri — tidak ada kemunduran diam-diam ke aturan `dedup`/`ultra` bahasa Inggris, yang akan memotong teks asing). `en` / `es` / `id` / `pt-BR` selesai. Kontribusi `dedup.json` + `ultra.json` untuk sebagian paket dipersilakan.
+- **Telemetri bertumpuk hanya mencantumkan mesin yang dikompresi.** Langkah pipa bertumpuk yang mesinnya berjalan tetapi menghasilkan penghematan 0 % menghasilkan `stats:null` sehingga tidak muncul di `engineBreakdown` — dan tidak dapat dibedakan dari langkah yang dilewati. Membedakan "berjalan, 0%" dari "dilewati" memerlukan perubahan model perincian dan ditunda.
 
 ## Validasi
 

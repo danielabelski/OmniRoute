@@ -4,208 +4,158 @@
 
 ---
 
-Khả năng nén của OmniRoute được xây dựng dựa trên các hợp đồng engine. Một chế độ có thể chạy trực tiếp một engine
-(`caveman` hoặc `rtk`) hoặc một pipeline xếp chồng có tính xác định, thực thi nhiều engine theo thứ tự.
+nén OmniRoute được xây dựng dựa trên hợp đồng động cơ. Một chế độ có thể chạy trực tiếp một công cụ (`caveman` hoặc `rtk`) hoặc một đường ống xếp chồng xác định thực thi nhiều công cụ theo thứ tự.
 
 ## Chế độ
 
-| Chế độ       | Đường dẫn công cụ                                                                    | Đầu vào dự kiến                                             |
-| ------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| `off`        | không có                                                                             | Bảo toàn lời nhắc chính xác                                 |
-| `lite`       | Các trình trợ giúp Caveman lite                                                      | Dọn dẹp luôn bật, rủi ro thấp                               |
-| `standard`   | Caveman                                                                              | Cô đọng lời nhắc ngôn ngữ tự nhiên                          |
-| `aggressive` | Caveman + bộ tóm tắt lịch sử/công cụ                                                 | Các phiên trò chuyện dài                                    |
-| `ultra`      | Caveman + các trình trợ giúp cắt tỉa                                                 | Phục hồi giới hạn ngữ cảnh                                  |
-| `rtk`        | RTK                                                                                  | Đầu ra của Terminal, shell, build, test và git              |
-| `omniglyph`  | OmniGlyph                                                                            | Ngữ cảnh dưới dạng hình ảnh trên đường dây nhà cung cấp gốc |
-| `stacked`    | Pipeline. Mặc định yêu cầu là `session-dedup -> lite`. `rtk -> caveman` là tùy chọn. | Nhật ký công cụ và văn xuôi hỗn hợp, tiết kiệm tối đa       |
+| Cách thức    | Đường dẫn động cơ                                                                            | Đầu vào dự kiến                                           |
+| ------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `off`        | không có                                                                                     | Bảo quản kịp thời chính xác                               |
+| `lite`       | Người trợ giúp nhẹ nhàng của Caveman                                                         | Dọn dẹp luôn có rủi ro thấp                               |
+| `standard`   | người thượng cổ                                                                              | Ngưng tụ nhanh chóng bằng ngôn ngữ tự nhiên               |
+| `aggressive` | Caveman + history/tool tắt                                                                   | Những buổi trò chuyện dài                                 |
+| `ultra`      | Người trợ giúp cắt tỉa Caveman +                                                             | Phục hồi giới hạn ngữ cảnh                                |
+| `rtk`        | RTK                                                                                          | Đầu ra terminal, shell, build, test và git                |
+| `omniglyph`  | OmniGlyph                                                                                    | Ngữ cảnh dưới dạng hình ảnh trên dây của nhà cung cấp gốc |
+| `stacked`    | Đường ống. Yêu cầu mặc định là `session-dedup -> lite`. `rtk -> caveman` được chọn tham gia. | Nhật ký công cụ hỗn hợp và văn xuôi, tiết kiệm tối đa     |
 
-### Hồ sơ nén OmniGlyph
+### hồ sơ nén OmniGlyph
 
-Công cụ `omniglyph` (gói `omniglyph`, 1.4.0+) chấp nhận một hồ sơ ngữ nghĩa được đặt tên, được thiết lập toàn cục thông qua `omniglyph.profile` trong cài đặt nén hoặc theo từng bước thông qua cấu hình bước của pipeline xếp chồng:
+Công cụ `omniglyph` (gói `omniglyph`, 1.4.0 +) chấp nhận cấu hình ngữ nghĩa được đặt tên, được đặt trên toàn cầu thông qua `omniglyph.profile` trong cài đặt nén hoặc mỗi bước thông qua cấu hình bước của đường ống xếp chồng:
 
-| Hồ sơ         | Ranh giới                                                                                                         |
-| ------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Mặc định. Chính sách mà các biên lai đã công bố đo lường — hệ thống hình ảnh, tài liệu công cụ và lịch sử dày đặc |
-| `balanced`    | Giữ trạng thái trực tiếp nguyên bản, bảo vệ 8 lượt cuối cùng, thu gọn lịch sử đã đóng cũ hơn                      |
-| `coding-safe` | Giữ quyền hạn, lược đồ công cụ và đầu ra công cụ trực tiếp nguyên bản, bảo vệ 12 lượt cuối cùng                   |
-| `passthrough` | Định tuyến mà không biến đổi; công cụ bị bỏ qua                                                                   |
+| Hồ sơ         | ranh giới                                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Mặc định. Chính sách biên lai được công bố đã đo lường hệ thống hình ảnh —, tài liệu công cụ và lịch sử dày đặc |
+| `balanced`    | Giữ nguyên trạng thái trực tiếp, bảo vệ 8 lượt cuối cùng, thu gọn lịch sử đóng cũ hơn                           |
+| `coding-safe` | Giữ nguyên quyền, lược đồ công cụ và đầu ra công cụ trực tiếp, bảo vệ 12 lượt cuối cùng                         |
+| `passthrough` | Các tuyến đường không chuyển đổi; động cơ bị bỏ qua                                                             |
 
-Hồ sơ là một **ngưỡng trên, không phải ngưỡng dưới**: `mergeCompressionProfileOptions` trong gói từ chối cho phép người gọi ghi đè mở lại một kênh mất mát mà hồ sơ đã đóng, vì vậy `preserveSystemPrompt: false` theo từng bước không thể bật lại tính năng nén hệ thống dưới `coding-safe`.
+Hồ sơ là một** trần chứ không phải sàn** : `mergeCompressionProfileOptions` trong gói từ chối cho phép người gọi ghi đè mở lại làn đường bị mất mà hồ sơ đã đóng, do đó `preserveSystemPrompt: false` mỗi bước không thể kích hoạt lại tính năng nén hệ thống trong `coding-safe`.
 
-Được đo lường trên cơ sở mã này: `coding-safe` và `balanced` nâng `minCompressChars` lên mức tối đa và giữ nguyên hệ thống, lược đồ công cụ và kết quả công cụ, vì vậy một phiên chưa tích lũy lịch sử sẽ dừng lại ở `below_min_chars` và công cụ không biến đổi gì. Đó là lý do tại sao mặc định là `aggressive` thay vì hồ sơ an toàn nhất.
+Được đo lường trên cơ sở mã này: `coding-safe` và `balanced` tăng `minCompressChars` lên mức tối đa và giữ nguyên hệ thống, lược đồ công cụ và kết quả công cụ, do đó, một phiên chưa tích lũy lịch sử vẫn dừng ở `below_min_chars` và công cụ không biến đổi gì. Đó là lý do tại sao mặc định là `aggressive` chứ không phải hồ sơ an toàn nhất.
 
-Gói giải quyết phạm vi mô hình và hồ sơ của riêng nó từ cấu hình môi trường. OmniRoute không bao giờ ủy quyền quyết định: bộ điều hợp ghim cổng mô hình vào phạm vi hạn chế nhất của gói, vì vậy cài đặt môi trường máy chủ chỉ có thể thu hẹp danh sách cho phép, không bao giờ mở rộng nó vượt quá các biên lai được đo lường của OmniRoute.
+Gói này giải quyết phạm vi và hồ sơ mô hình của chính nó từ cấu hình môi trường của nó. OmniRoute không bao giờ ủy quyền quyết định: bộ điều hợp ghim cổng mô hình vào phạm vi hạn chế nhất của gói, do đó, cài đặt môi trường máy chủ chỉ có thể thu hẹp danh sách cho phép, không bao giờ mở rộng danh sách này vượt quá biên nhận đo được của OmniRoute.
 
-## Registry Engine
+## Đăng ký động cơ
 
-Registry nằm tại `open-sse/services/compression/engines/registry.ts`. Các engine cung cấp một hợp đồng dùng chung:
+Cơ quan đăng ký tồn tại ở `open-sse/services/compression/engines/registry.ts`. Động cơ đưa ra một hợp đồng chung:
 
-- `id`: id engine ổn định, chẳng hạn như `caveman` hoặc `rtk`
-- `apply(text, config)`: đường dẫn thực thi cũ được các pipeline xếp chồng sử dụng
-- `compress(input, config)`: đường dẫn thực thi chính, trả về văn bản + thống kê
-- `getConfigSchema()`: trả về cấu trúc tương tự JSON Schema của cấu hình hợp lệ
+- `id`: id động cơ ổn định như `caveman` hoặc `rtk`
+- `apply(text, config)`: đường dẫn thực thi kế thừa được sử dụng bởi các đường ống xếp chồng lên nhau
+- `compress(input, config)`: đường dẫn thực thi chính trả về số liệu thống kê + văn bản
+- `getConfigSchema()`: trả về hình dạng giống lược đồ JSON của cấu hình hợp lệ
 - `validateConfig(config)`: trả về `{ valid, errors[] }`
 
-Việc đăng ký sử dụng `registerCompressionEngine(engine)` (hoặc `registerEngine` cho các trường hợp nâng cao), hàm này gọi `assertValidEngine()` và `validateConfig(defaultConfig)` trước khi chấp nhận.
-Sử dụng `unregisterCompressionEngine(id)` để loại bỏ một engine trong thời gian chạy.
+Đăng ký sử dụng `registerCompressionEngine(engine)` (hoặc `registerEngine` cho các trường hợp nâng cao), gọi `assertValidEngine()` và `validateConfig(defaultConfig)` trước khi chấp nhận. Sử dụng `unregisterCompressionEngine(id)` để xóa công cụ khi chạy.
 
-`strategySelector.ts` đăng ký các engine tích hợp sẵn trước khi quá trình nén chạy. Điều này cho phép bản xem trước, quá trình nén khi chạy, chế độ xếp chồng, các bài kiểm thử và các engine trong tương lai sử dụng cùng một đường dẫn thực thi.
+`strategySelector.ts` đăng ký các công cụ tích hợp trước khi chạy nén. Điều này cho phép xem trước, nén thời gian chạy, chế độ xếp chồng, kiểm tra và các công cụ trong tương lai sử dụng cùng một đường dẫn thực thi.
 
-### Nén mô tả MCP (liên quan)
+### nén mô tả MCP (có liên quan)
 
-Một registry riêng biệt nén metadata mô tả công cụ MCP ở cấp registry — xem `open-sse/mcp-server/descriptionCompressor.ts` và [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Registry này tái sử dụng các quy tắc Caveman nhưng hoạt động trên metadata công cụ, không phải payload của yêu cầu.
+Một sổ đăng ký riêng biệt nén siêu dữ liệu mô tả công cụ MCP ở cấp đăng ký — xem `open-sse/mcp-server/descriptionCompressor.ts` và [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Nó sử dụng lại các quy tắc Caveman nhưng hoạt động trên siêu dữ liệu của công cụ chứ không phải tải trọng yêu cầu.
 
-### Các engine tích hợp sẵn bổ sung
+### Động cơ tích hợp bổ sung
 
-Ngoài Caveman, RTK và LLMLingua-2, registry còn cung cấp một số engine không mất dữ liệu / có cấu trúc chuyên biệt (được sử dụng bởi các pipeline xếp chồng, playground và các bài kiểm thử):
+Ngoài Caveman, RTK và LLMLingua-2, cơ quan đăng ký còn cung cấp một số động cơ kết cấu/không tổn hao chuyên dụng (được sử dụng bởi các đường ống xếp chồng lên nhau, sân chơi và các thử nghiệm):
 
-| Engine        | Id              | Chức năng                                                                                                                                                                                              |
-| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): thay thế các khối văn bản liền kề lớn bằng các tham chiếu được định địa chỉ theo nội dung, nhờ đó các khối lặp lại/lớn chỉ được gửi một lần và được tham chiếu về sau. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): nén dạng bảng không mất dữ liệu cho các payload mảng JSON đồng nhất thành dạng cột `[N rows]`.                                                                                 |
-| ionizer       | `ionizer`       | Lấy mẫu các hàng đầu/giữa/cuối cho các khối đồng nhất rất lớn, đồng thời lưu phần giữa bị lược bỏ dưới dạng tham chiếu CCR được định địa chỉ theo nội dung.                                            |
-| session-dedup | `session-dedup` | Khử trùng lặp giữa các lượt dựa trên địa chỉ nội dung (lấy cảm hứng từ TokenMizer): lược bỏ văn bản đã xuất hiện trong các lượt trước của cùng một phiên.                                              |
+| Động cơ               | Nhận dạng       | Nó làm gì                                                                                                                                                                             |
+| --------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR                   | `ccr`           | Nội dung-Nén-Truy xuất (H4): thay thế các khối văn bản liền kề lớn bằng các tham chiếu có địa chỉ nội dung, do đó các khối repeated/large được gửi một lần và được tham chiếu sau đó. |
+| khoảng không trên đầu | `headroom`      | SmartCrusher (H3 + N5): nén dạng bảng không mất dữ liệu của các tải trọng mảng JSON đồng nhất thành dạng `[N rows]` cột.                                                              |
+| chất ion hóa          | `ionizer`       | lấy mẫu hàng Head/middle/tail cho các khối đồng nhất rất lớn, lưu trữ phần giữa được tách ra dưới dạng tham chiếu có địa chỉ nội dung CCR.                                            |
+| phiên bản bị loại bỏ  | `session-dedup` | Sao chép chéo theo địa chỉ nội dung (lấy cảm hứng từ TokenMizer): bỏ qua văn bản đã thấy trong các phiên trước đó của cùng một phiên.                                                 |
 
-**Chỉ dẫn giao thức truy xuất CCR (#8033):** lần đầu tiên CCR thay thế ≥1 khối trong một yêu cầu, engine sẽ thêm vào đầu một thông điệp `system` duy nhất, có tính lũy đẳng (bắt đầu bằng sentinel `[CCR protocol]`) để hướng dẫn bên gọi về hợp đồng marker → công cụ: marker `[CCR retrieve hash=<24hex> chars=N]` có ý nghĩa gì, rằng hash phải được sao chép nguyên văn (đủ cả 24 ký tự hex — hash bị sao chép sai có khả năng là nguyên nhân gây ra lỗi "không tìm thấy khối"), và rằng marker `[dedup:ref sha=...]` có nghĩa là "xem lại lịch sử", chứ không phải "gọi công cụ". Ghi chú chỉ được chèn **khi `tools[]` do bên gọi công bố chứng minh rằng bên gọi thực sự có thể truy cập `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` trong `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — một bên gọi tương thích OpenAI thông thường không có công cụ đó sẽ không bao giờ nhận được chỉ dẫn gọi thứ mà nó không thể truy cập. Tính lũy đẳng được đảm bảo bằng cách quét lịch sử thông điệp để tìm sentinel trước khi chèn, do đó các yêu cầu nhiều lượt (phát lại các thông điệp trước đó) sẽ không chồng thêm ghi chú sau mỗi lượt.
+**lệnh truy xuất giao thức CCR (#8033):** Lần đầu tiên CCR thay thế khối ≥ 1 trong một yêu cầu, công cụ sẽ thêm vào trước một thông báo `system` bình thường (dẫn đầu với `[CCR protocol]` trọng điểm) dạy cho người gọi hợp đồng công cụ đánh dấu → : điểm đánh dấu `[CCR retrieve hash=<24hex> chars=N]` nghĩa là gì, hàm băm phải được sao chép nguyên văn (tất cả 24 ký tự hex mà các giá trị băm — sao chép sai có thể là nguyên nhân dẫn đến lỗi "không tìm thấy khối") và điểm đánh dấu `[dedup:ref sha=...]` có nghĩa là "nhìn lại history", chứ không phải "gọi công cụ". Ghi chú được tiêm** chỉ khi `tools[]` được quảng cáo của người gọi chứng minh rằng nó thực sự có thể đạt tới `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` trong `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — một trình gọi đơn giản tương thích với OpenAI mà không có công cụ đó sẽ không bao giờ nhận được hướng dẫn gọi thứ gì đó mà nó không thể tiếp cận được. Tính bình thường được thực thi bằng cách quét lịch sử tin nhắn để tìm trọng điểm trước khi đưa vào, do đó, các yêu cầu nhiều lượt (phát lại các tin nhắn trước đó) không xếp chồng ghi chú một lần mỗi lượt.
 
-## Caveman
+## người thượng cổ
 
-Chế độ Caveman tập trung vào việc cô đọng ngữ nghĩa của văn xuôi thông thường:
+Chế độ thượng cổ tập trung vào việc cô đọng ngữ nghĩa của văn xuôi thông thường:
 
-- giữ nguyên các khối mã, URL, JSON, đường dẫn và dữ liệu có cấu trúc
-- loại bỏ nội dung đệm, cách diễn đạt dè dặt, ngữ cảnh lặp lại và các cụm từ liên kết dài dòng
-- hỗ trợ các bộ quy tắc tệp theo từng ngôn ngữ trong `open-sse/services/compression/rules/`
-- vẫn khả dụng thông qua các chế độ cũ `standard`, `aggressive` và `ultra`
+- bảo toàn các khối mã, URLs, JSON, đường dẫn và dữ liệu có cấu trúc
+- loại bỏ phần bổ sung, phòng ngừa rủi ro, bối cảnh lặp lại và cụm từ liên kết dài dòng
+- hỗ trợ các gói quy tắc tệp nhận biết ngôn ngữ trong `open-sse/services/compression/rules/`
+- vẫn có sẵn thông qua các chế độ `standard`, `aggressive` và `ultra` cũ
 
-Giao diện trên bảng điều khiển nằm tại `Dashboard -> Context & Cache -> Caveman`.
+Bề mặt bảng điều khiển là `Dashboard -> Context & Cache -> Caveman`.
 
-Dự án Caveman thượng nguồn báo cáo số token đầu ra giảm `~75%`, mức tiết kiệm đầu ra trung bình `65%` trong các bài benchmark
-với phạm vi `22-87%`, cùng một công cụ nén đầu vào `~46%`. OmniRoute sử dụng số liệu phía đầu vào của Caveman
-khi mô tả mức tiết kiệm prompt/ngữ cảnh xếp chồng; chế độ đầu ra của Caveman vẫn là một
-tính năng hành vi phản hồi riêng biệt.
+Thượng nguồn Caveman báo cáo `~75%` ít mã thông báo đầu ra hơn, mức tiết kiệm đầu ra trung bình `65%` trong các điểm chuẩn với phạm vi `22-87%` và công cụ nén đầu vào `~46%`. OmniRoute sử dụng số phía đầu vào Caveman khi ghi lại các khoản tiết kiệm prompt/context xếp chồng; Chế độ đầu ra Caveman vẫn là một tính năng hành vi phản hồi riêng biệt.
 
 ## RTK
 
-Chế độ RTK tập trung vào đầu ra của lệnh và công cụ:
+chế độ RTK tập trung vào đầu ra lệnh và công cụ:
 
-- phát hiện các lớp đầu ra như `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  kiểm thử Cargo/Go, bản dựng TypeScript/Vite/Webpack, ESLint, kiểm tra/cài đặt npm, nhật ký Docker,
-  `find`/`grep` trong shell, stack trace và nhật ký chung
+- phát hiện các lớp đầu ra như `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go test, TypeScript/Vite/Webpack build, ESLint, npm audit/installs, Docker logs, shell `find`/`grep`, dấu vết ngăn xếp và nhật ký chung
 - áp dụng 49 bộ lọc JSON từ `open-sse/services/compression/engines/rtk/filters/`
-- hỗ trợ pipeline khai báo kiểu RTK: loại bỏ ANSI, thay thế, dừng sớm khi đầu ra khớp,
-  loại bỏ/giữ lại dòng, cắt ngắn theo từng dòng, cắt ngắn theo phần đầu/phần cuối/số dòng tối đa và phương án dự phòng khi trống
-- hỗ trợ các bộ lọc dự án có kiểm soát độ tin cậy trong `.rtk/filters.json` và các bộ lọc toàn cục trong
-  `DATA_DIR/rtk/filters.json`
-- loại bỏ chuỗi ANSI, nhiễu tiến trình, các dòng lặp lại và nội dung khuôn mẫu không hữu ích
-- giữ lại các lỗi có thể xử lý, cảnh báo, bản tóm tắt, tệp đã thay đổi và ngữ cảnh ở phần cuối
-- có thể tùy chọn giữ lại đầu ra thô đã che dữ liệu nhạy cảm để khôi phục/gỡ lỗi thông qua các tuyến quản lý đã xác thực
+- hỗ trợ đường dẫn khai báo kiểu RTK: tước ANSI, thay thế, đoản mạch đầu ra khớp, dòng strip/keep, cắt ngắn trên mỗi dòng, cắt ngắn head/tail/max-line và dự phòng khi trống
+- hỗ trợ các bộ lọc dự án được kiểm soát tin cậy trong `.rtk/filters.json` và các bộ lọc toàn cầu trong `DATA_DIR/rtk/filters.json`
+- loại bỏ các chuỗi ANSI, nhiễu tiến trình, các dòng lặp lại và bản soạn sẵn không hữu ích
+- lưu giữ các lỗi có thể xử lý, cảnh báo, tóm tắt, tệp đã thay đổi và ngữ cảnh đuôi
+- có thể tùy chọn giữ lại đầu ra thô đã được xử lý lại cho recovery/debugging thông qua các tuyến quản lý được xác thực
 
-Giao diện trên bảng điều khiển nằm tại `Dashboard -> Context & Cache -> RTK`.
+Bề mặt bảng điều khiển là `Dashboard -> Context & Cache -> RTK`.
 
-Chi tiết vận hành về bộ lọc tùy chỉnh, độ tin cậy, xác minh và khôi phục đầu ra thô có trong
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Chi tiết hoạt động cho các bộ lọc tùy chỉnh, tin cậy, xác minh và khôi phục đầu ra thô có trong [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-Dự án RTK thượng nguồn báo cáo mức tiết kiệm `60-90%` khi nén đầu ra lệnh. Ví dụ trong README cho thấy một
-phiên Claude Code kéo dài 30 phút giảm từ `~118,000` token xuống còn `~23,900`, tương đương tiết kiệm `79.7%`.
+RTK ngược dòng báo cáo mức tiết kiệm `60-90%` để nén đầu ra lệnh. Ví dụ README của nó hiển thị phiên Mã Claude dài 30 phút chuyển từ mã thông báo `~118,000` sang `~23,900` hoặc `79.7%` được lưu.
 
-## LLMLingua-2 (Lược bỏ theo ngữ nghĩa)
+## LLMLingua-2 (Cắt tỉa ngữ nghĩa)
 
-Chế độ LLMLingua-2 thực hiện **lược bỏ token theo ngữ nghĩa** trên văn xuôi bằng một bộ
-phân loại token ONNX nhỏ, bổ trợ cho các engine Caveman và RTK dựa trên quy tắc:
+chế độ LLMLingua-2 thực hiện** cắt tỉa mã thông báo ngữ nghĩa** về văn xuôi sử dụng bộ phân loại mã thông báo ONNX nhỏ, bổ sung cho các công cụ Caveman và RTK dựa trên quy tắc:
 
-- chỉ nén văn xuôi trong các thông điệp không thuộc hệ thống; các khối mã có hàng rào và những
-  cấu trúc được giữ nguyên khác không bao giờ bị thay đổi
-- chạy backend `@atjsh/llmlingua-2` (ONNX thông qua `@huggingface/transformers`) trong một
-  worker thread, vì vậy quá trình suy luận mô hình không bao giờ chặn vòng lặp sự kiện của yêu cầu
-- có thể **xếp chồng** (`stackPriority` 35): trong một pipeline xếp chồng, nó chạy sau các
-  engine cấu trúc (CCR, session-dedup, headroom, Caveman) nhưng trước `ultra`, vì
-  việc lược bỏ theo ngữ nghĩa hiệu quả nhất trên văn bản đã được nén về mặt cấu trúc — ví dụ:
-  `rtk -> caveman -> llmlingua`
-- **chuyển sang chế độ cho qua khi có bất kỳ lỗi nào** (thiếu dependency tùy chọn, khởi tạo worker, tải mô hình, suy luận
-  hoặc hết thời gian chờ) → văn bản gốc được trả về mà không thay đổi, không bao giờ trả về lỗi
+- chỉ nén văn xuôi trong các tin nhắn không thuộc hệ thống; khối mã có rào chắn và các cấu trúc được bảo tồn khác không bao giờ bị thay đổi
+- chạy phần phụ trợ `@atjsh/llmlingua-2` (ONNX qua `@huggingface/transformers`) trong một luồng công việc, do đó suy luận mô hình không bao giờ chặn vòng lặp sự kiện yêu cầu
+- là** có thể xếp chồng lên nhau** (`stackPriority` 35): trong một đường dẫn xếp chồng, nó chạy sau các công cụ cấu trúc (CCR, session-dedup, headroom, Caveman) nhưng trước `ultra`, vì việc cắt tỉa ngữ nghĩa có hiệu quả nhất trên văn bản đã được nén về mặt cấu trúc — ví dụ `rtk -> caveman -> llmlingua`
+- **không mở được khi có bất kỳ lỗi nào** (thiếu deps tùy chọn, sinh sản của nhân viên, tải mô hình, suy luận hoặc hết thời gian chờ) → văn bản gốc được trả về không thay đổi, không bao giờ có lỗi
 
-Vị trí engine: `open-sse/services/compression/engines/llmlingua/`. Giao diện trên bảng điều khiển
-nằm tại `Dashboard -> Context & Cache -> LLMLingua`.
+Vị trí động cơ: `open-sse/services/compression/engines/llmlingua/`. Bề mặt bảng điều khiển là `Dashboard -> Context & Cache -> LLMLingua`.
 
-### Mô hình
+### Người mẫu
 
-Mô hình mặc định là **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-nhanh). Một mô hình **BERT-base** có độ chính xác cao hơn (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) khả dụng thông qua trường `model` trong cấu hình engine. `@huggingface/transformers`
-tải mô hình được chọn theo cơ chế lazy từ HuggingFace Hub vào
-`${DATA_DIR}/models/llmlingua` trong lần gọi đầu tiên (`modelStore.ts`); tùy chọn ghi đè cấu hình `modelPath`
-sẽ trỏ đến một bản sao cục bộ thay thế (dành cho cài đặt ngoại tuyến / cách ly mạng).
+Mô hình mặc định là**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, nhanh). Độ chính xác cao hơn** Cơ sở BERT** mô hình (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) có sẵn thông qua trường `model` cấu hình động cơ. `@huggingface/transformers` tải xuống mô hình đã chọn một cách lười biếng từ HuggingFace Hub vào `${DATA_DIR}/models/llmlingua` trong cuộc gọi đầu tiên (`modelStore.ts`); Thay vào đó, ghi đè cấu hình `modelPath` sẽ trỏ nó vào một bản sao cục bộ (cài đặt ngoại tuyến/không bị chặn).
 
-### Dependency tùy chọn và cài đặt theo nhu cầu
+### Phụ thuộc tùy chọn & cài đặt theo yêu cầu
 
-Ngăn xếp peer runtime LLMLingua có thể loại bỏ là **tùy chọn**. Hai package được khai báo dưới dạng
-`optionalDependencies` trong `package.json` và được giữ ở trạng thái **external** trong bản dựng production
-(`scripts/build/prepublish.ts` không đóng gói chúng):
+Ngăn xếp ngang hàng thời gian chạy LLMLingua có thể cắt bớt là** không bắt buộc** . Hai gói được khai báo là `optionalDependencies` trong `package.json` và được giữ** bên ngoài** bởi bản dựng sản xuất (`scripts/build/prepublish.ts` không gói chúng):
 
-| Package              | Phiên bản (được ghim) | Ghi chú                                            |
-| -------------------- | --------------------- | -------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`               | Package đầu vào; khai báo các package khác là peer |
-| `js-tiktoken`        | `^1.0.20`             | Bộ tách token                                      |
+| Bưu kiện             | Phiên bản (pin) | Ghi chú                                               |
+| -------------------- | --------------- | ----------------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`         | Gói đầu vào; tuyên bố những người khác là đồng nghiệp |
+| `js-tiktoken`        | `^1.0.20`       | Mã thông báo                                          |
 
-`@huggingface/transformers` được ghim ở `^4.2.0` (dùng chung với đường dẫn embedding cục bộ và
-cũng được truy vết vào bundle độc lập); `@atjsh/llmlingua-2@2.0.5` khai báo peer dependency với
-`"^3.5.2 || ^4.0.0"`, vì vậy cả Transformers.js v3 và v4 đều được hỗ trợ. Kể từ 2.0.4,
-`@atjsh/llmlingua-2` không còn yêu cầu `@tensorflow/tfjs`, qua đó loại bỏ thành phần riêng lẻ lớn nhất
-(TensorFlow.js) khỏi ngăn xếp SLM. Chỉ hai package ở trên là các peer SLM có thể loại bỏ.
-Một lệnh `npm install` tiêu chuẩn (dev) sẽ tự động cài đặt ngăn xếp tùy chọn, trừ khi các dependency tùy chọn
-bị bỏ qua.
+`@huggingface/transformers` được ghim tại `^4.2.0` (được chia sẻ với đường dẫn nhúng cục bộ và cũng được truy tìm vào gói độc lập); `@atjsh/llmlingua-2@2.0.5` ngang hàng với nó với `"^3.5.2 || ^4.0.0"`, vì vậy cả Transformers.js v3 và v4 đều được hỗ trợ. Kể từ phiên bản 2.0.4, `@atjsh/llmlingua-2` không còn yêu cầu `@tensorflow/tfjs` nữa, điều này đã loại bỏ thành phần đóng góp lớn nhất (TensorFlow.js) khỏi ngăn xếp SLM. Chỉ có hai gói ở trên là các gói SLM có thể cắt tỉa được. `npm install` (dev) tiêu chuẩn sẽ tự động cài đặt ngăn xếp tùy chọn trừ khi bỏ qua các phần phụ thuộc tùy chọn.
 
-**Lý do cài đặt theo nhu cầu:** package được phát hành trên npm, bundle độc lập và image Docker
-được phân phối **không kèm** các dependency này để duy trì kích thước nhỏ gọn. Khi chúng không tồn tại, bước
-kiểm tra dependency của worker (một phép thử phân giải `@atjsh/llmlingua-2` trong `worker.ts`) sẽ thất bại và engine
-**âm thầm chuyển sang chế độ cho qua** — việc chọn LLMLingua sẽ không tạo ra tác động nào (văn bản được trả về không thay đổi,
-không ghi nhật ký lỗi). Để kích hoạt nó trong một môi trường đã được tinh giản, hãy cài đặt ngăn xếp tùy chọn:
+**Tại sao theo yêu cầu:** gói được xuất bản npm, gói độc lập và tàu hình ảnh Docker** không có** những thứ này để giữ dáng thon gọn. Khi chúng vắng mặt, cổng phụ thuộc của công nhân (đầu dò giải quyết `@atjsh/llmlingua-2` trong `worker.ts`) không thành công và động cơ** không mở được âm thầm** — việc chọn LLMLingua sẽ trở thành không hoạt động (văn bản được trả về không thay đổi, không có lỗi được ghi lại). Để kích hoạt nó trong môi trường được cắt bớt, hãy cài đặt ngăn xếp tùy chọn:
 
 ```bash
-# ghim theo các phiên bản được khai báo trong optionalDependencies của package.json
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Việc loại bỏ `@tensorflow/tfjs` (2.0.4+) giúp loại trừ thành phần ~800 MB từng chiếm dung lượng lớn nhất
-trước đây — phần dung lượng còn lại gồm các runtime transformers.js + onnxruntime-node,
-cùng với mô hình TinyBERT (~57 MB) được tải xuống trong lần sử dụng đầu tiên (không thông qua npm).
+Việc loại bỏ `@tensorflow/tfjs` (2.0.4 +) sẽ loại bỏ — đóng góp ~ 800 MB chiếm ưu thế trước đó, dấu chân còn lại là thời gian chạy nút transformers.js + onnxruntime, cộng với mô hình TinyBERT (~ 57 MB) được tải xuống ở lần sử dụng đầu tiên (không qua npm).
 
-Theo từng môi trường:
+Mỗi môi trường:
 
-- **Môi trường phát triển / `npm install`** — được cài đặt tự động trừ khi bạn đã truyền `--omit=optional`
-  (hoặc `--no-optional`). Không cần thực hiện thêm thao tác nào.
-- **npm toàn cục (`npm i -g omniroute`) / bản độc lập** — chạy lệnh cài đặt ở trên bên trong
-  thư mục gói đã cài đặt, hoặc cài đặt lại mà không bỏ qua các dependency tùy chọn.
-- **Docker** — thêm lệnh cài đặt vào một lớp image dẫn xuất; image được phát hành
-  được thiết kế theo hướng tinh gọn.
-- **VPS (PM2)** — cài đặt vào `node_modules` của ứng dụng, sau đó khởi động lại tiến trình để
-  worker kiểm tra lại cổng.
-- **Next độc lập nguyên bản (`npm run build` → `.build/next/standalone/server.js`)** — bản
-  trace độc lập KHÔNG chứa worker lẫn các dependency tùy chọn, vì vậy engine âm thầm
-  chuyển sang trạng thái cho phép khi lỗi. `scripts/build/colocate-standalone.mjs` áp dụng lại cả hai (esbuild worker +
-  tập hợp đầy đủ dependency tùy chọn vào cây độc lập); tập lệnh này tự động chạy thông qua hook npm
-  `postbuild` sau mỗi lần build. Có tính lũy đẳng và tiếp tục an toàn khi thiếu dependency.
+- **Dev / `npm install`** — được cài đặt tự động trừ khi bạn vượt qua `--omit=optional` (hoặc `--no-optional`). Không cần hành động.
+- **Npm toàn cầu (`npm i -g omniroute`) / độc lập** — chạy lệnh cài đặt ở trên bên trong thư mục gói đã cài đặt hoặc cài đặt lại mà không bỏ qua các phần tùy chọn.
+- **Docker** — thêm lệnh cài đặt vào lớp hình ảnh dẫn xuất; hình ảnh được công bố có thiết kế mỏng.
+- **VPS (PM2)** cài đặt — vào `node_modules` của ứng dụng, sau đó khởi động lại quy trình để nhân viên thăm dò lại cổng.
+- **Raw Tiếp theo độc lập (`npm run build` → `.build/next/standalone/server.js`)** — dấu vết độc lập vận chuyển NEITHER công nhân cũng như các bộ phận tùy chọn, do đó động cơ không mở được trong âm thầm. `scripts/build/colocate-standalone.mjs` áp dụng lại cả hai (worker esbuild + đóng tùy chọn-dep vào cây độc lập); nó chạy tự động thông qua hook `postbuild` npm sau mỗi lần xây dựng. Bình thường, thất bại khi không có dep.
 
-**Xác minh tính năng đang hoạt động:** khi chọn LLMLingua, văn bản thực tế sẽ được rút gọn (engine
-không còn chuyển sang trạng thái cho phép khi lỗi), và yêu cầu đầu tiên sẽ kích hoạt việc tải model xuống
-`${DATA_DIR}/models/llmlingua`. Cổng chủ ý chỉ kiểm tra `@atjsh/llmlingua-2` —
-các peer khác chỉ hỗ trợ ESM và `require.resolve` sẽ ném lỗi đối với chúng ngay cả khi chúng hiện diện — vì vậy
-worker vẫn chuyển sang trạng thái cho phép khi lỗi nếu thực sự thiếu bất kỳ peer nào tại thời điểm `import()`.
+**Xác minh nó đang hoạt động:** với LLMLingua được chọn, văn xuôi thực sự thực sự co lại (động cơ dừng mở không thành công) và yêu cầu đầu tiên kích hoạt tải xuống mô hình vào `${DATA_DIR}/models/llmlingua`. Cổng cố tình chỉ thăm dò `@atjsh/llmlingua-2` — các đồng nghiệp khác chỉ có ESM và `require.resolve` ném vào chúng ngay cả khi có —, vì vậy nhân viên vẫn không mở được nếu bất kỳ đồng nghiệp nào thực sự bị thiếu tại thời điểm `import()`.
 
-## Pipeline Xếp chồng
+## Đường ống xếp chồng lên nhau
 
-Chế độ xếp chồng chạy các bước pipeline theo thứ tự. Mặc định là:
+Chế độ xếp chồng chạy các bước quy trình theo thứ tự. Mặc định là:
 
 ```txt
 rtk -> caveman
 ```
 
-Sử dụng chế độ này cho các phiên coding-agent mà prompt kết hợp đầu ra lệnh với văn bản do người dùng hoặc trợ lý tạo ra. RTK giảm các nhật ký công cụ nhiều nhiễu trước, sau đó Caveman nén phần ngôn ngữ tự nhiên còn lại.
+Sử dụng tính năng này cho các phiên tác nhân mã hóa trong đó lời nhắc kết hợp đầu ra lệnh với văn xuôi của con người hoặc trợ lý. RTK trước tiên giảm tiếng ồn của nhật ký công cụ, sau đó Caveman nén ngôn ngữ tự nhiên còn lại.
 
-Các bước pipeline được cấu hình bằng `stackedPipeline` trong cài đặt nén hoặc thông qua các tổ hợp nén.
+Các bước quy trình được định cấu hình bằng `stackedPipeline` trong cài đặt nén hoặc thông qua các tổ hợp nén.
 
-Khi cả hai engine cùng giảm một payload đủ điều kiện, mức tiết kiệm sẽ được cộng dồn:
+Khi cả hai động cơ đều giảm tải trọng đủ điều kiện như nhau, mức tiết kiệm sẽ tăng lên:
 
 ```txt
 combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
@@ -213,29 +163,29 @@ average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
 range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## Bộ lọc Cây Trợ năng MCP
+## Bộ lọc cây trợ năng MCP
 
-Bộ lọc thông minh cây trợ năng MCP là một lớp nén sau thực thi, chạy trên **kết quả công cụ** MCP, không chạy trên prompt hoặc ngữ cảnh. Bộ lọc này nhắm đến các payload cây trợ năng và ảnh chụp nhanh trình duyệt dài dòng do các công cụ như Playwright, computer-use và các máy chủ MCP tự động hóa trình duyệt trả về.
+Bộ lọc thông minh cây trợ năng MCP là lớp nén sau thực thi chạy trên MCP** kết quả công cụ** , không phải trên lời nhắc hoặc ngữ cảnh. Nó nhắm đến các tải trọng chi tiết về cây trợ năng và ảnh chụp nhanh của trình duyệt được trả về bởi các công cụ như Playwright, máy chủ sử dụng máy tính và máy chủ MCP tự động hóa trình duyệt.
 
-### Chức năng
+### Nó làm gì
 
-1. **Loại bỏ nhiễu** — loại bỏ các mục generic/text trống (`- generic:`, `- text: ""`)
-2. **Thu gọn mục cùng cấp** — khi có ≥ `collapseThreshold` (mặc định là 30) dòng liên tiếp lặp lại về cấu trúc, thu gọn chúng thành `collapseKeepHead` dòng đầu tiên (mặc định là 10) + phần tóm tắt số lượng + `collapseKeepTail` dòng cuối cùng (mặc định là 5)
-3. **Bảo toàn ref** — các điểm neo `[ref=eXX]` mà Playwright/computer-use yêu cầu sẽ không bao giờ bị thay đổi
-4. **Cắt bớt cứng** — nếu văn bản sau khi thu gọn vẫn vượt quá `maxTextChars` (mặc định là 50.000), cắt bớt kèm theo gợi ý điều hướng để agent có thể tiếp tục làm việc
+1. **Loại bỏ tiếng ồn** — xóa các mục generic/text trống (`- generic:`, `- text: ""`)
+2. **Anh chị em suy sụp** — khi ≥ `collapseThreshold` (mặc định 30) các dòng liên tiếp lặp lại cấu trúc, thu gọn chúng thành các dòng `collapseKeepHead` (mặc định 10) đầu tiên + một bản tóm tắt đếm + các dòng `collapseKeepTail` (mặc định 5) cuối cùng
+3. **Bảo quản tham chiếu** neo — `[ref=eXX]` theo yêu cầu của Playwright/computer-use không bao giờ được chạm vào
+4. **Cắt ngắn cứng** — nếu văn bản sau khi thu gọn vẫn vượt quá `maxTextChars` (mặc định 50.000), hãy cắt bớt bằng gợi ý điều hướng để tổng đài viên có thể tiếp tục làm việc
 
-### Vị trí engine
+### Vị trí động cơ
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← điểm vào smartFilterText()
-  collapseRepeated.ts ← thuật toán thu gọn mục cùng cấp
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Cấu hình
 
-Được kiểm soát bởi `compression.mcpAccessibility` trong cài đặt toàn cục (migration 056). Cấu hình mặc định:
+Được kiểm soát bởi `compression.mcpAccessibility` trong cài đặt chung (di chuyển 056). Cấu hình mặc định:
 
 ```json
 {
@@ -248,114 +198,170 @@ open-sse/services/compression/engines/mcpAccessibility/
 }
 ```
 
-Bộ lọc chỉ được áp dụng cho các payload kết quả công cụ có `type` là `"text"` và có độ dài vượt quá `minLengthToProcess`. Bộ lọc không ảnh hưởng đến việc nén prompt hoặc các payload yêu cầu.
+Bộ lọc chỉ được áp dụng cho tải trọng kết quả công cụ có `type` là `"text"` và có độ dài vượt quá `minLengthToProcess`. Nó không ảnh hưởng đến việc nén nhanh chóng hoặc yêu cầu tải trọng.
 
-### Mức tiết kiệm dự kiến
+### Tiết kiệm dự kiến
 
-60–80% đối với các kết quả công cụ ảnh chụp nhanh trình duyệt, tùy thuộc vào độ phức tạp của trang. Thuật toán thu gọn có độ phức tạp O(n) theo số dòng và làm tăng độ trễ không đáng kể.
+60–80% kết quả của công cụ chụp nhanh trình duyệt, tùy thuộc vào độ phức tạp của trang. Thuật toán thu gọn có số lượng dòng là O(n) và thêm độ trễ không đáng kể.
 
-### So sánh bộ lọc này với các engine nén ở trên
+### Bộ lọc này so với các công cụ nén ở trên
 
-| Khía cạnh    | Caveman / RTK / Xếp chồng | Bộ lọc trợ năng MCP                    |
-| ------------ | ------------------------- | -------------------------------------- |
-| Đối tượng    | Prompt / ngữ cảnh yêu cầu | Kết quả công cụ MCP                    |
-| Kích hoạt    | Cài đặt chế độ nén        | `compression.mcpAccessibility.enabled` |
-| Phạm vi      | Tất cả thông báo SSE      | Chỉ kết quả công cụ                    |
-| Điểm neo ref | Không áp dụng             | Luôn được bảo toàn                     |
+| Diện mạo       | Thượng cổ / RTK / Xếp chồng lên nhau | bộ lọc khả năng truy cập MCP           |
+| -------------- | ------------------------------------ | -------------------------------------- |
+| Mục tiêu       | Yêu cầu lời nhắc/ngữ cảnh            | kết quả của công cụ MCP                |
+| Cò súng        | Cài đặt chế độ nén                   | `compression.mcpAccessibility.enabled` |
+| Phạm vi        | Tất cả tin nhắn SSE                  | Chỉ kết quả công cụ                    |
+| Neo giới thiệu | N/A                                  | Bảo quản vô điều kiện                  |
 
 ---
 
-## Tổ hợp nén
+## Combo nén
 
-Tổ hợp nén là các cấu hình nén có tên có thể được gán cho các tổ hợp định tuyến:
+Tổ hợp nén được đặt tên là cấu hình nén có thể được gán cho tổ hợp định tuyến:
 
-- `compression_combos`: lưu trữ chế độ, pipeline, cấu hình RTK, cấu hình ngôn ngữ và dấu đánh dấu mặc định
-- `compression_combo_assignments`: ánh xạ một tổ hợp nén tới một tổ hợp định tuyến
-- tích hợp runtime phân giải tổ hợp nén được gán trước các ghi đè tổ hợp chung
-- dữ liệu phân tích bao gồm `compression_combo_id` và `engine`
+- `compression_combos`: lưu trữ chế độ, đường ống, cấu hình RTK, cấu hình ngôn ngữ và điểm đánh dấu mặc định
+- `compression_combo_assignments`: ánh xạ tổ hợp nén thành tổ hợp định tuyến
+- Tích hợp thời gian chạy giải quyết tổ hợp nén được chỉ định trước khi ghi đè tổ hợp chung
+- phân tích bao gồm `compression_combo_id` và `engine`
 
-Vị trí trên Dashboard: `Dashboard -> Context & Cache -> Compression Combos`.
+Bề mặt bảng điều khiển: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## Bề mặt API
+## Điều kiện tiên quyết/hướng dẫn vận hành (CCR & session-dedup)
 
-| Tuyến                                  | Mục đích                                                   |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `/api/settings/compression`            | Cài đặt nén toàn cục (bao gồm cấu hình `mcpAccessibility`) |
-| `/api/compression/preview`             | Xem trước bất kỳ chế độ nén nào                            |
-| `/api/compression/language-packs`      | Liệt kê các gói ngôn ngữ Caveman có sẵn                    |
-| `/api/context/caveman/config`          | Bí danh cài đặt Caveman                                    |
-| `/api/context/rtk/config`              | Các giá trị mặc định và cài đặt RTK                        |
-| `/api/context/rtk/filters`             | Danh mục bộ lọc RTK                                        |
-| `/api/context/rtk/test`                | Điểm cuối xem trước/kiểm thử RTK                           |
-| `/api/context/rtk/raw-output/[id]`     | Khôi phục đầu ra thô đã ẩn thông tin và được xác thực      |
-| `/api/context/combos`                  | CRUD tổ hợp nén                                            |
-| `/api/context/combos/[id]/assignments` | CRUD phép gán tổ hợp định tuyến                            |
-| `/api/context/analytics`               | Bí danh phân tích nén                                      |
+CCR (`ccr`) và `session-dedup` thay thế hoặc loại bỏ văn bản và để lại một** điểm đánh dấu** phía sau. Phần này là tài liệu tham khảo của nhà điều hành để kết nối máy khách, đọc hai điểm đánh dấu và truy xuất hoặc chẩn đoán nội dung được chọn lọc. Cơ học của từng động cơ được đề cập ở trên; đây là lớp "làm cách nào để chạy nó".
+
+### Vận chuyển & điểm cuối
+
+Có thể truy cập máy chủ MCP hiển thị các công cụ CCR theo ba cách. URL cơ sở mặc định là `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
+
+| Chuyên chở                                                 | URL /lệnh                               | Ghi chú                                                                                                                                                           |
+| ---------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP có thể phát trực tuyến (khách hàng, được khuyến nghị) | `http://localhost:20128/api/mcp/stream` | Điểm cuối mà khách hàng MCP hiện tại nói chuyện.                                                                                                                  |
+| Di sản SSE singleton                                       | `http://localhost:20128/api/mcp/sse`    | Vận chuyển đơn lẻ cũ hơn. Nó** đóng cửa** phiên có thể phát trực tuyến; sử dụng ứng dụng khách `streamable-http` chống lại `/api/mcp/stream`, không phải cái này. |
+| phòng thu âm                                               | `omniroute --mcp`                       | Đối với cấu hình IDE MCP sẽ tạo ra quy trình. Không có cờ `--dev` ; `omniroute --mcp` là điểm vào stdio.                                                          |
+
+### Các tầng lưu trữ (những gì còn sót lại sau khi khởi động lại)
+
+CCR là một** hai tầng** lưu trữ, không chỉ trong bộ nhớ:
+
+- **Cấp nóng trong bộ nhớ** — giới hạn mỗi khối 2 MiB, mỗi gốc 16 MiB, 64 MiB toàn cầu. Các mục nhập mặc định là 24 giờ TTL (tối đa 7 ngày). Việc truy xuất MCP đầy đủ từ bộ nhớ bị giới hạn ở mức 256 KiB; mọi thứ lớn hơn vẫn có thể truy cập được thông qua chế độ ranged/grep.
+- **Cấp SQLite bền bỉ** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, bật theo mặc định) — sao lưu tầng trong bộ nhớ để một khối tồn tại sau khi bị trục xuất LRU, khởi động lại hoặc truy xuất trên một phiên bản khác. Hàng giữ TTL của khối, do đó, một khối vượt qua TTL của nó sẽ bị loại khỏi cả hai tầng.
+
+Ba người bảo vệ giữ cho lớp — được giới hạn bền vững một khối chỉ tồn tại trong bộ nhớ khi:
+
+1. khối đã kết thúc** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. thời gian chạy là thời gian chạy trên đám mây (không có đĩa cục bộ);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Vì vậy, "khối biến mất" không phải là một câu chuyện khởi động lại toàn diện: khối sub-512 KB trên thời gian chạy cục bộ, không có đám mây sẽ tồn tại sau khi khởi động lại thông qua cấp độ bền cho đến khi hết TTL. Xem [Tài liệu tham khảo môi trường](../reference/ENVIRONMENT.md) để biết biến.
+
+### Hai điểm đánh dấu
+
+| Điểm đánh dấu                         | Nghĩa                                                                                                                                                | Người mẫu nên làm gì                                                                                                                                                                                 |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Một khối lớn được lưu trữ theo địa chỉ nội dung.                                                                                                     | Gọi `omniroute_ccr_retrieve` bằng** Băm 24-hex được sao chép nguyên văn** để lấy lại văn bản gốc.                                                                                                    |
+| `[dedup:ref sha=…]`                   | văn bản `session-dedup` elided đã được gửi trong lượt trước đó của cùng một phiên. Đây là một** cố ý nhìn lại** , không phải là mất mát hay sai sót. | LÀM** không** gọi bất kỳ công cụ nào và làm** không** cố gắng "tái tạo" nó. Lần xuất hiện đầu tiên của văn bản là bản kinh điển; lượt hiện tại không bao giờ được viết lại, nó sẽ bị trừ ở lượt sau. |
+
+Việc xem lại `[dedup:ref]` là một quyết định giao thức có chủ ý — không có sự tái cấu trúc trước khi gửi. Hãy coi nó như "văn bản chính xác này đã có trên mạng trước đó trong phiên này."
+
+### Điều kiện tiên quyết của khách hàng
+
+- **Chìa khóa (stdio):** người gọi stdio không mang danh tính theo yêu cầu, do đó, nó xác thực bằng `OMNIROUTE_API_KEY` (được đặt trong `env` của máy chủ MCP ). Nếu không có nó, người gọi sẽ ẩn danh và các công cụ yêu cầu hiệu trưởng có thể bị suy giảm.
+- **`tools[]` là điều kiện tiên quyết để tiêm.** Lệnh truy xuất giao thức CCR (#8033) được đưa vào** chỉ một** khi `tools[]` được quảng cáo của yêu cầu chứng minh rằng khách hàng thực sự có thể tiếp cận `omniroute_ccr_retrieve`. Trận đấu là một trận đấu phân đoạn cuối được giới hạn bởi một dấu phân cách (`__`, `.`, `/`, `:`) — không bao giờ là một chuỗi con trần — nên một tên được đặt tên như `mcp__gateway__omniroute_ccr_retrieve` vẫn được tính. `tools[]` vắng mặt hoặc không khớp có nghĩa là lệnh không được đưa vào theo thiết kế.
+- **`codemode:false` (máy khách OpenCode ).** OpenCode mặc định ở Chế độ mã, chế độ này chỉ quảng cáo các công cụ gốc của nó cho mô hình và** không** đưa các công cụ MCP vào danh sách `tools[]` gốc. Đặt `codemode: false` trên mục nhập máy chủ MCP để các công cụ `omniroute_ccr_*` được quảng cáo. Đây là một** khách hàng** cài đặt, không phải là OmniRoute. Nó chưa nhận được hướng dẫn CCR : OpenCode đặt tên cho một công cụ `<server>_<tool>`, do đó, một máy chủ có tên `omniroute` hiển thị `omniroute_omniroute_ccr_retrieve` và `_` không phải là một trong những dấu phân cách phù hợp.
+- **Hiệu trưởng.** Việc lưu trữ và truy xuất được cách ly theo từng hiệu trưởng được xác thực (mỗi khóa API ). Một khóa chỉ nhìn thấy các khối của chính nó.
+
+### Phạm vi cho mỗi công cụ
+
+Việc thực thi phạm vi luôn được áp dụng đối với người gọi HTTP/SSE ở phạm vi hẹp. Các công cụ `omniroute_` CCR yêu cầu:
+
+| Dụng cụ                  | Phạm vi             |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Một phạm vi bị thiếu sẽ trả về một** kết quả lỗi công cụ MCP** (`isError: true`, không phải HTTP 403 — `403 LOCAL_ONLY` là xác thực bảo vệ tuyến đường vòng lặp riêng biệt): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Một khóa từ xa tối thiểu có thể giữ `mcp:connect` (cho phép khắc `/api/mcp/` chỉ cục bộ) cộng với phạm vi read/write cụ thể mà nó cần.
+
+### Ma trận khách hàng
+
+| Khách hàng         | Chuyên chở                                          | Cấu hình để sử dụng                                                                                                                                                                                                                             | `tools[]` được quảng cáo? ( lệnh → CCR được chèn)                                                                                                                                                        |
+| ------------------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude             | có thể phát trực tuyến-http                         | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                               | Có — MCP có khả năng; được tiêm.                                                                                                                                                                         |
+| Cursor / Cline     | `stdio`** hoặc** `streamable-http`                  | stdio: `omniroute --mcp` với `OMNIROUTE_API_KEY` trong `env`; hoặc một mục MCP từ xa trỏ vào `http://localhost:20128/api/mcp/stream` (xem [Hướng dẫn thiết lập → MCP Client Configuration](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Có — quảng cáo các công cụ `omniroute_ccr_*`.                                                                                                                                                            |
+| OpenCode           | có thể phát trực tuyến-http                         | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, cộng với `codemode: false`                                                                                                                                            | Công cụ chỉ được quảng cáo với `codemode: false`; hướng dẫn vẫn chưa được đưa vào, vì `omniroute_omniroute_ccr_retrieve` không khớp (xem [Điều kiện tiên quyết của khách hàng](#client-prerequisites) ). |
+| Tương thích OpenAI | HTTP tương thích với OpenAI (hoàn thành trò chuyện) | ứng dụng khách hoàn thành trò chuyện tiêu chuẩn dựa trên điểm cuối tương thích với OpenAI                                                                                                                                                       | **Không bao giờ** — người gọi tương thích với OpenAI đơn giản không bao giờ được yêu cầu gọi công cụ và hướng dẫn không được đưa vào.                                                                    |
+
+### Giới hạn truy xuất và phân trang
+
+kết quả văn bản của công cụ MCP được cắt bớt xung quanh `mcpAccessibility.maxTextChars` ( `50000` mặc định). Truy xuất `full` của một khối được giới hạn ở 256 KiB —** không có truy xuất đầy đủ không giới hạn** . Khi `chars=N` của một khối lớn, hãy phân trang nó thay vì kéo toàn bộ nội dung:
+
+- Quy tắc ngón tay cái:**`chars > 40000` → sử dụng `mode`** , không bao giờ đầy đủ.
+- `mode:"grep"` — Regex `pattern` khớp từng dòng, tối đa 1.000 dòng khớp (`unique: true` giảm lặp lại), rẻ nhất để "tìm một dòng tôi cần".
+- `mode:"lines"` — một phạm vi dòng có 1 chỉ mục; cần cả `start` và `end`.
+- `mode:"head"` / `mode:"tail"` — first/last `n`.
+- số dòng, ký tự và byte `mode:"stats"` — không có phần thân.
+
+Sử dụng `mode:"lines"` với `start`/`end` để đi qua một khối dài trong các trang thay vì yêu cầu toàn bộ nội dung cùng một lúc.
+
+### Đặt tên công cụ
+
+Công cụ truy xuất hiện được đặt tên là `omniroute_ccr_retrieve` (tiền tố `omniroute_` là giải pháp thay thế lỗi thời cho xung đột tên giữa các máy chủ). Tên công cụ có hậu tố giới hạn rõ ràng hơn và bản sửa lỗi cho các kết quả MCP JSON bị cắt ở giữa chuỗi được theo dõi dưới dạng phần tiếp theo ngược dòng; trang này chỉ ghi lại hành vi hiện tại, được vận chuyển.
+
+### Vòng đời phiên
+
+Các phiên HTTP có thể phát trực tuyến không hoạt động và máy chủ sẽ thu thập chúng; cửa sổ nhàn rỗi là hằng số `MCP_SESSION_IDLE_MS` (được tham chiếu theo tên, không phải giá trị được mã hóa cứng, vì vậy trang này không bị trôi khi thay đổi). Triệu chứng của phiên không hoạt động là HTTP 404 với `Unknown Mcp-Session-Id` — biện pháp khắc phục là kết nối lại hoặc khởi động lại phiên,** không** để xoay một phím, thay đổi phạm vi hoặc đổi tên một công cụ.
+
+## bề mặt API
+
+| Tuyến đường                            | Mục đích                                                 |
+| -------------------------------------- | -------------------------------------------------------- |
+| `/api/settings/compression`            | Cài đặt nén chung (bao gồm cấu hình `mcpAccessibility` ) |
+| `/api/compression/preview`             | Xem trước mọi chế độ nén                                 |
+| `/api/compression/language-packs`      | Liệt kê các gói ngôn ngữ Caveman có sẵn                  |
+| `/api/context/caveman/config`          | Bí danh cài đặt Caveman                                  |
+| `/api/context/rtk/config`              | mặc định và cài đặt RTK                                  |
+| `/api/context/rtk/filters`             | danh mục bộ lọc RTK                                      |
+| `/api/context/rtk/test`                | điểm cuối RTK preview/test                               |
+| `/api/context/rtk/raw-output/[id]`     | Phục hồi đầu ra thô đã được xác thực lại                 |
+| `/api/context/combos`                  | Combo nén CRUD                                           |
+| `/api/context/combos/[id]/assignments` | Phân công tổ hợp định tuyến CRUD                         |
+| `/api/context/analytics`               | Bí danh phân tích nén                                    |
 
 Các tuyến quản lý yêu cầu xác thực quản lý hoặc kiểm tra chính sách khóa API.
 
 ## Công cụ MCP
 
-Tính năng nén cung cấp năm công cụ MCP:
+Nén hiển thị năm công cụ MCP :
 
-| Công cụ                             | Phạm vi             | Mục đích                                |
-| ----------------------------------- | ------------------- | --------------------------------------- |
-| `omniroute_compression_status`      | `read:compression`  | Cài đặt, phân tích, thống kê bộ nhớ đệm |
-| `omniroute_compression_configure`   | `write:compression` | Cập nhật cài đặt toàn cục               |
-| `omniroute_set_compression_engine`  | `write:compression` | Đặt chế độ và pipeline tùy chọn         |
-| `omniroute_list_compression_combos` | `read:compression`  | Liệt kê các tổ hợp nén                  |
-| `omniroute_compression_combo_stats` | `read:compression`  | Đọc dữ liệu phân tích tổ hợp/engine     |
+| Dụng cụ                             | Phạm vi             | Mục đích                            |
+| ----------------------------------- | ------------------- | ----------------------------------- |
+| `omniroute_compression_status`      | `read:compression`  | Cài đặt, phân tích, thống kê bộ đệm |
+| `omniroute_compression_configure`   | `write:compression` | Cập nhật cài đặt chung              |
+| `omniroute_set_compression_engine`  | `write:compression` | Đặt chế độ và đường dẫn tùy chọn    |
+| `omniroute_list_compression_combos` | `read:compression`  | Liệt kê các tổ hợp nén              |
+| `omniroute_compression_combo_stats` | `read:compression`  | Đọc phân tích combo/engine          |
 
-## Phạm vi & các trường hợp loại trừ
+## Phạm vi & loại trừ
 
-**Embedding không bao giờ bị nén.** `open-sse/handlers/embeddings.ts` không bao giờ gọi bất kỳ
-engine nén nào — phần thân yêu cầu/phản hồi được chuyển thẳng tới executor mà không bị thay đổi.
-Hiện tại, đây là đặc điểm mang tính cấu trúc (embedding và chat completion được xử lý bởi các handler
-tách biệt), không phải là bước kiểm tra runtime, nhưng điều đó có nghĩa là mối lo ngại về biến dạng
-vector trong #8034 không có bề mặt ảnh hưởng trong luồng embedding.
+**Nhúng không bao giờ được nén.** `open-sse/handlers/embeddings.ts` không bao giờ gọi bất kỳ công cụ nén nào — phần thân request/response chuyển thẳng đến người thực thi mà không bị ảnh hưởng. Ngày nay, đây là cấu trúc (các phần nhúng và hoàn thành trò chuyện là các trình xử lý rời rạc), không phải là kiểm tra thời gian chạy, nhưng điều đó có nghĩa là mối lo ngại về biến dạng vectơ trong #8034 không có bề mặt hiển thị trong đường dẫn nhúng.
 
-**Bộ lọc loại trừ theo model/điểm cuối (#8034).** Đối với chat completion, operator có thể chỉ định
-các model id / đích `provider/model` không bao giờ được phép nén — một cơ chế bảo vệ hữu ích nếu
-sau này tính năng nén được kết nối gần hơn với một luồng liền kề embedding, đồng thời cũng hữu ích
-nói chung cho bất kỳ model nào cần prompt chính xác đến từng byte (đánh giá tất định, tiền tố nhạy
-với bộ nhớ đệm, v.v.).
+**bộ lọc loại trừ Per-model/endpoint (#8034).** Để hoàn thành trò chuyện, người vận hành có thể đặt tên cho các id mô hình / mục tiêu `provider/model` không bao giờ được nén — một lan can hữu ích nếu quá trình nén được nối gần hơn với đường dẫn liền kề với phần nhúng sau này và thường hữu ích cho bất kỳ mô hình nào có lời nhắc chính xác về từng byte (evals xác định, tiền tố nhạy cảm với bộ đệm, v.v.).
 
-- Trường cài đặt: `exclusions?: string[]` trong cấu hình nén toàn cục
-  (`GET`/`PUT /api/settings/compression`), được duy trì thông qua namespace nén `key_value` hiện có
-  (`src/lib/db/compression.ts`) — không cần bảng mới.
-- Tab Dashboard: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Cú pháp mẫu: `*` là ký tự đại diện duy nhất. Mọi siêu ký tự biểu thức chính quy khác trong mẫu đều
-  được thoát trước khi đối sánh, vì vậy `gpt-5.6` chỉ khớp với chuỗi ký tự đó, không bao giờ khớp với
-  `gpt-5x6` (an toàn trước ReDoS, có giới hạn, không có bộ định lượng lồng nhau). Các mẫu được đối sánh
-  không phân biệt chữ hoa chữ thường với cả model id thuần và chuỗi kết hợp `provider/model` —
-  `gpt-5-6`, `openai/gpt-5-6` và `openai/*` đều hoạt động, còn riêng `*` sẽ loại trừ mọi model.
-- Đối sánh: `isCompressionExcluded()` / `normalizeCompressionExclusions()` trong
-  `open-sse/services/compression/exclusions.ts`. `chatCore.ts` kiểm tra đích bị loại trừ
-  ngay sau khi phân giải cài đặt nén, **trước khi bất kỳ engine nào chạy**, và xử lý trường hợp khớp
-  hoàn toàn giống như khi tính năng nén bị vô hiệu hóa toàn cục — phần thân yêu cầu được đảm bảo
-  giống hệt từng byte. Lần bỏ qua này được ghi lại thông qua `writeCompressionSkip(..., "excluded")`
-  để có thể quan sát trong dữ liệu phân tích.
-- Mặc định (danh sách trống/không có): giống hệt hành vi trước #8034 — không có gì bị loại trừ.
+- Trường cài đặt: `exclusions?: string[]` trên cấu hình nén chung (`GET`/`PUT /api/settings/compression`), tồn tại thông qua không gian tên nén `key_value` hiện có (`src/lib/db/compression.ts`) — không có bảng mới.
+- Tab bảng điều khiển:** Bảng điều khiển → → Loại trừ** (`/dashboard/compression/exclusions`).
+- Cú pháp mẫu: `*` là ký tự đại diện duy nhất. Mọi siêu ký tự biểu thức chính quy khác trong một mẫu đều được thoát trước khi khớp, vì vậy `gpt-5.6` chỉ khớp với chuỗi ký tự, không bao giờ khớp `gpt-5x6` (ReDoS-safe, giới hạn, không có bộ định lượng lồng nhau). Các mẫu khớp không phân biệt chữ hoa chữ thường với cả id mô hình trần và hỗn hợp `provider/model` — `gpt-5-6`, `openai/gpt-5-6` và `openai/*` đều hoạt động và chỉ riêng `*` sẽ loại trừ mọi mô hình.
+- So khớp: `isCompressionExcluded()` / `normalizeCompressionExclusions()` trong `open-sse/services/compression/exclusions.ts`. `chatCore.ts` kiểm tra mục tiêu bị loại trừ ngay sau khi giải quyết cài đặt nén,** trước khi bất kỳ động cơ nào chạy** và xử lý kết quả khớp giống hệt như tính năng nén bị vô hiệu hóa trên toàn cầu — nội dung yêu cầu có thể được chứng minh là giống hệt byte. Việc bỏ qua được ghi lại qua `writeCompressionSkip(..., "excluded")` để hiển thị phân tích.
+- Mặc định (danh sách empty/absent ): giống hệt với hành vi trước #8034 — không có gì bị loại trừ.
 
-## Các hạn chế đã biết
+## Những hạn chế đã biết
 
-- **LLMLingua-2 (SLM) yêu cầu các dependency tùy chọn được đặt cùng vị trí.** Worker chỉ chạy trong
-  bản dựng production khi `@atjsh/llmlingua-2` + các peer dependency được đặt cùng vị trí trong
-  `dist/node_modules` (xem `scripts/build/colocateOptionals.mjs`, #4286). Nếu không có chúng,
-  engine sẽ chuyển sang chế độ bỏ qua lỗi (trả về văn bản gốc). Việc phân giải worker không còn phụ thuộc vào
-  `import.meta.url` (cơ chế này không hoạt động trong bundle độc lập) — thay vào đó, nó neo vào
-  cwd / `argv[1]` lúc runtime.
-- **Các gói ngôn ngữ Caveman `de` / `fr` / `ja` chưa hoàn chỉnh.** Chúng cung cấp các quy tắc `context` +
-  `filler` + `structural` nhưng không có các gói `dedup` / `ultra`, vì vậy mức cường độ `ultra`
-  không mạnh hơn `full` đối với các ngôn ngữ này (chúng chỉ sử dụng các quy tắc riêng — không có
-  cơ chế ngầm chuyển về các quy tắc `dedup`/`ultra` tiếng Anh, vốn sẽ làm hỏng văn bản tiếng nước ngoài).
-  `en` / `es` / `id` / `pt-BR` đã hoàn chỉnh. Chúng tôi hoan nghênh các đóng góp `dedup.json` + `ultra.json`
-  cho những gói chưa hoàn chỉnh.
-- **Telemetry xếp chồng chỉ liệt kê các engine đã thực hiện nén.** Một bước trong pipeline xếp chồng có
-  engine đã chạy nhưng đạt mức tiết kiệm 0 % sẽ trả về `stats:null`, do đó không xuất hiện trong
-  `engineBreakdown` — không thể phân biệt với một bước đã bị bỏ qua. Việc phân biệt
-  "đã chạy, 0 %" với "đã bỏ qua" sẽ yêu cầu thay đổi mô hình breakdown và được hoãn lại.
+- **LLMLingua-2 (SLM) yêu cầu các deps tùy chọn cùng vị trí.** Công nhân chỉ chạy trong bản dựng sản xuất khi các đồng nghiệp `@atjsh/llmlingua-2` + được đặt cùng vị trí trong `dist/node_modules` (xem `scripts/build/colocateOptionals.mjs`, #4286). Không có chúng, động cơ sẽ không mở được (trả về văn bản gốc). Độ phân giải của công nhân không còn phụ thuộc vào `import.meta.url` (nó chết trong gói độc lập) — nó neo trong thời gian chạy cwd / `argv[1]`.
+- **Gói ngôn ngữ Caveman `de` / `fr` / `ja` là một phần.** Họ gửi các quy tắc `context` + `filler` + `structural` nhưng không có gói `dedup` / `ultra`, vì vậy cường độ `ultra` không mạnh hơn `full` đối với các ngôn ngữ đó (họ chỉ sử dụng quy tắc riêng của họ — không có sự chuyển đổi im lặng sang quy tắc `dedup`/`ultra` tiếng Anh, điều này sẽ đọc sai văn bản nước ngoài). `en` / `es` / `id` / `pt-BR` đã hoàn tất. Những đóng góp của `dedup.json` + `ultra.json` cho các gói một phần đều được hoan nghênh.
+- **Phương pháp đo từ xa xếp chồng chỉ liệt kê các động cơ đã nén.** Một bước trong đường ống xếp chồng có động cơ chạy nhưng tạo ra mức tiết kiệm 0 % trả về `stats:null` và do đó không xuất hiện trong `engineBreakdown` — và không thể phân biệt được với một bước đã bị bỏ qua. Việc phân biệt "đã chạy, 0 %" với "bị bỏ qua" sẽ yêu cầu thay đổi mô hình phân tích và bị trì hoãn.
 
 ## Xác thực
 

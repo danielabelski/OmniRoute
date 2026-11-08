@@ -4,240 +4,158 @@
 
 ---
 
-Kompresija u OmniRouteu temelji se na ugovorima mehanizama. Način rada može izravno pokretati jedan mehanizam
-(`caveman` ili `rtk`) ili deterministički složeni cjevovod koji redom izvršava više mehanizama.
+OmniRoute kompresija je izgrađena oko ugovora motora. Način može pokrenuti jedan motor izravno (`caveman` ili `rtk`) ili deterministički naslagani cjevovod koji izvršava više motora redom.
 
 ## Načini rada
 
-| Način rada   | Putanja mehanizma                                                                              | Namijenjeni unos                                  |
-| ------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `off`        | nema                                                                                           | Točno očuvanje upita                              |
-| `lite`       | Caveman lite pomoćnici                                                                         | Niskorizično uvijek uključeno čišćenje            |
-| `standard`   | Caveman                                                                                        | Kondenzacija upita prirodnog jezika               |
-| `aggressive` | Caveman + sažimači povijesti/alata                                                             | Duge sesije chata                                 |
-| `ultra`      | Caveman + pomoćnici za obrezivanje                                                             | Oporavak ograničenja konteksta                    |
-| `rtk`        | RTK                                                                                            | Izlaz terminala, shella, builda, testa i gita     |
-| `omniglyph`  | OmniGlyph                                                                                      | Kontekst kao slika na izvornoj žici pružatelja    |
-| `stacked`    | Cjevovod. Zadana postavka zahtjeva je `session-dedup -> lite`. `rtk -> caveman` je opcionalno. | Mješoviti zapisi alata i proza, maksimalna ušteda |
+| Način rada   | Put motora                                                                       | Predviđeni unos                                      |
+| ------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `off`        | nikakav                                                                          | Točno brzo očuvanje                                  |
+| `lite`       | Caveman lite pomoćnici                                                           | Čišćenje s niskim rizikom koje je uvijek uključeno   |
+| `standard`   | Pećinski čovjek                                                                  | Brza kondenzacija prirodnog jezika                   |
+| `aggressive` | Caveman + history/tool sažetci                                                   | Duge sesije razgovora                                |
+| `ultra`      | Caveman + pomoćnici u rezidbi                                                    | Oporavak ograničenja konteksta                       |
+| `rtk`        | RTK                                                                              | Terminal, shell, build, test i git izlaz             |
+| `omniglyph`  | OmniGlyph                                                                        | Kontekst kao slika na žici izvornog davatelja usluga |
+| `stacked`    | Cjevovod. Zadani zahtjev je `session-dedup -> lite`. `rtk -> caveman` je opt-in. | Mješoviti zapisi alata i proza, maksimalne uštede    |
 
 ### OmniGlyph profili kompresije
 
-`omniglyph` mehanizam (paket `omniglyph`, 1.4.0+) prihvaća imenovani semantički profil, postavljen
-globalno putem `omniglyph.profile` u postavkama kompresije ili po koraku putem
-konfiguracije koraka složenog cjevovoda:
+`omniglyph` motor (paket `omniglyph`, 1.4.0 +) prihvaća imenovani semantički profil, postavljen globalno kroz `omniglyph.profile` u postavkama kompresije ili po koraku kroz konfiguraciju koraka naslaganog cjevovoda:
 
-| Profil        | Granica                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Zadano. Politika koju su mjerili objavljeni računi — sustav slika, dokumentacija alata i gusta povijest |
-| `balanced`    | Zadržava živo stanje izvornim, štiti zadnjih 8 poteza, sažima stariju zatvorenu povijest                |
-| `coding-safe` | Zadržava autoritet, sheme alata i izlaz alata uživo izvornim, štiti zadnjih 12 poteza                   |
-| `passthrough` | Ruta bez transformacije; mehanizam se preskače                                                          |
+| Profil        | Granica                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `aggressive`  | Zadano. Politika objavljenih računa mjeri — sustav slika, dokumentaciju alata i gustu povijest |
+| `balanced`    | Održava izvorno stanje uživo, štiti zadnjih 8 poteza, urušava stariju zatvorenu povijest       |
+| `coding-safe` | Održava autoritet, sheme alata i izlaz alata uživo, štiti zadnjih 12 okretaja                  |
+| `passthrough` | Rute bez transformacije; motor je preskočen                                                    |
 
-Profil je **gornja granica, a ne donja**: `mergeCompressionProfileOptions` u paketu
-odbija dopustiti pozivatelju da premosti ponovno otvaranje gubitničke trake koju je profil zatvorio,
-tako da `preserveSystemPrompt: false` po koraku ne može ponovno omogućiti kompresiju sustava pod `coding-safe`.
+Profil je a** strop, a ne pod** : `mergeCompressionProfileOptions` u paketu odbija dopustiti pozivatelju da premosti ponovno otvaranje trake s gubicima profil zatvoren, tako da `preserveSystemPrompt: false` po koraku ne može ponovno omogućiti kompresiju sustava pod `coding-safe`.
 
-Mjereno na ovoj bazi koda: `coding-safe` i `balanced` podižu `minCompressChars` na svoj
-maksimum i zadržavaju sustav, sheme alata i rezultate alata izvornim, tako da sesija koja još
-nije akumulirala povijest staje na `below_min_chars` i mehanizam ne transformira ništa.
-Zato je zadana postavka `aggressive`, a ne najsigurniji profil.
+Mjereno na ovoj bazi kodova: `coding-safe` i `balanced` podižu `minCompressChars` do svog maksimuma i zadržavaju izvorne sustav, sheme alata i rezultate alata, tako da sesija koja još nije akumulirala povijest zaustavlja na `below_min_chars` i motor ne transformira ništa. Zato je zadana vrijednost `aggressive`, a ne najsigurniji profil.
 
-Paket rješava vlastiti opseg modela i profil iz svoje konfiguracije okruženja.
-OmniRoute nikada ne delegira odluku: adapter fiksira pristup modelu na najrestriktivniji
-opseg paketa, tako da postavke host okruženja mogu samo suziti dopuštenu listu, nikada je
-proširiti izvan OmniRouteovih izmjerenih računa.
+Paket rješava vlastiti opseg modela i profil iz svoje konfiguracije okruženja. OmniRoute nikada ne delegira odluku: adapter pričvršćuje vrata modela na najrestriktivniji opseg paketa, tako da postavke okruženja glavnog računala mogu samo suziti popis dopuštenih, nikad ga proširiti izvan OmniRoute-ovih izmjerenih primitaka.
 
-## Registar mehanizama
+## Registar motora
 
-Registar se nalazi u `open-sse/services/compression/engines/registry.ts`. Mehanizmi izlažu zajednički
-ugovor:
+Registar živi u `open-sse/services/compression/engines/registry.ts`. Motori izlažu zajednički ugovor:
 
-- `id`: stabilni ID mehanizma, kao što je `caveman` ili `rtk`
-- `apply(text, config)`: zastarjeli put izvršavanja koji upotrebljavaju složeni cjevovodi
-- `compress(input, config)`: primarni put izvršavanja koji vraća tekst i statistiku
-- `getConfigSchema()`: vraća strukturu valjane konfiguracije nalik JSON shemi
+- `id`: ID stabilnog motora kao što je `caveman` ili `rtk`
+- `apply(text, config)`: naslijeđeni put izvršenja koji koriste naslagani cjevovodi
+- `compress(input, config)`: primarni put izvršavanja koji vraća tekst + statistike
+- `getConfigSchema()`: vraća oblik valjane konfiguracije sličan JSON-shemi
 - `validateConfig(config)`: vraća `{ valid, errors[] }`
 
-Registracija se izvodi pomoću `registerCompressionEngine(engine)` (ili `registerEngine` za napredne slučajeve),
-koji prije prihvaćanja poziva `assertValidEngine()` i `validateConfig(defaultConfig)`.
-Upotrijebite `unregisterCompressionEngine(id)` za uklanjanje mehanizma tijekom izvođenja.
+Registracija koristi `registerCompressionEngine(engine)` (ili `registerEngine` za napredne slučajeve), koji poziva `assertValidEngine()` i `validateConfig(defaultConfig)` prije prihvaćanja. Koristite `unregisterCompressionEngine(id)` za uklanjanje motora tijekom izvođenja.
 
-`strategySelector.ts` registrira ugrađene mehanizme prije pokretanja kompresije. To omogućuje pretpregledu,
-kompresiji tijekom izvođenja, složenom načinu rada, testovima i budućim mehanizmima da upotrebljavaju isti put izvršavanja.
+`strategySelector.ts` registrira ugrađene motore prije pokretanja kompresije. To omogućuje pregled, kompresiju vremena izvođenja, složeni način rada, testove i buduće motore koji koriste isti put izvršenja.
 
-### Kompresija MCP opisa (povezano)
+### MCP kompresija opisa (povezano)
 
-Zaseban registar komprimira metapodatke opisa MCP alata na razini registra — pogledajte
-`open-sse/mcp-server/descriptionCompressor.ts` i [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Ponovno upotrebljava
-pravila Cavemana, ali djeluje na metapodacima alata, a ne na sadržaju zahtjeva.
+Odvojeni registar sažima metapodatke opisa MCP alata na razini registra — pogledajte `open-sse/mcp-server/descriptionCompressor.ts` i [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Ponovno koristi pravila Cavemana, ali radi na metapodacima alata, a ne na zahtjevima.
 
-### Dodatni ugrađeni mehanizmi
+### Dodatni ugrađeni motori
 
-Uz Caveman, RTK i LLMLingua-2, registar uključuje nekoliko specijaliziranih mehanizama bez gubitaka /
-strukturnih mehanizama (koje upotrebljavaju složeni cjevovodi, razvojno okruženje i testovi):
+Osim Cavemana, RTK i LLMLingua-2, registar isporučuje nekoliko specijaliziranih bez gubitaka / strukturnih motora (koje koriste naslagani cjevovodi, igralište i testovi):
 
-| Mehanizam     | Id              | Što radi                                                                                                                                                                                |
-| ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): zamjenjuje velike susjedne blokove teksta referencama adresiranima sadržajem, tako da se ponovljeni/veliki blokovi šalju jednom, a zatim referenciraju. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): tablična kompakcija bez gubitaka homogenih sadržaja JSON polja u stupčani oblik `[N rows]`.                                                                     |
-| ionizer       | `ionizer`       | Uzorkovanje redaka s početka/sredine/kraja za vrlo velike homogene blokove, uz pohranu izostavljene sredine kao CCR reference adresirane sadržajem.                                     |
-| session-dedup | `session-dedup` | Deduplikacija između interakcija adresirana sadržajem (nadahnuta TokenMizerom): izostavlja tekst koji se već pojavio u ranijim interakcijama iste sesije.                               |
+| Motor            | Id              | Što radi                                                                                                                                                                                         |
+| ---------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CCR              | `ccr`           | Content-Compress-Retrieve (H4): zamjenjuje velike kontinuirane tekstualne blokove referencama adresiranim na sadržaj, tako da se repeated/large blokovi šalju jednom i referenciraju nakon toga. |
+| prostor za glavu | `headroom`      | SmartCrusher (H3 + N5): tablično sažimanje bez gubitaka korisnih opterećenja homogenog JSON polja u stupčasti `[N rows]` oblik.                                                                  |
+| ionizator        | `ionizer`       | Head/middle/tail uzorkovanje redaka za vrlo velike homogene blokove, pohranjivanje elidirane sredine kao CCR reference adresirane na sadržaj.                                                    |
+| sesija-dedup     | `session-dedup` | Deduplikacija unakrsnog zaokreta usmjerena na sadržaj (nadahnuto TokenMizerom): uklanja tekst koji je već viđen u ranijim zaokretima iste sesije.                                                |
 
-**Uputa protokola dohvaćanja CCR-a (#8033):** kada CCR prvi put zamijeni ≥1 blok u
-zahtjevu, mehanizam dodaje na početak jednu idempotentnu poruku `system` (koja počinje
-sentinelom `[CCR protocol]`) i poučava pozivatelja ugovoru oznaka → alat: što znači
-oznaka `[CCR retrieve hash=<24hex> chars=N]`, da se hash mora kopirati doslovno
-(svih 24 heksadecimalnih znakova — pogrešno kopirani hashovi vjerojatan su uzrok pogrešaka
-"block not found") te da oznaka `[dedup:ref sha=...]` znači "pogledaj unatrag u povijest", a ne "pozovi
-alat". Napomena se umeće **samo kada oglašeni `tools[]` pozivatelja dokazuje da on doista može
-pristupiti `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` u
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — običan
-pozivatelj kompatibilan s OpenAI-jem bez tog alata nikada ne prima uputu da pozove nešto
-čemu ne može pristupiti. Idempotentnost se osigurava pretraživanjem povijesti poruka u potrazi za sentinelom
-prije umetanja, tako da zahtjevi s više interakcija (koji ponovno reproduciraju prethodne poruke) ne gomilaju
-napomenu jednom po interakciji.
+**CCR instrukcija protokola dohvaćanja (#8033):** prvi put kada CCR zamijeni ≥ 1 blok u zahtjevu, motor ispred jedne, idempotentne `system` poruke (na čelu sa `[CCR protocol]` sentinelom) poučava pozivatelja markeru ugovor → alata: što `[CCR retrieve hash=<24hex> chars=N]` marker znači, da se hash mora kopirati doslovce (sva 24 heksadecimalna znaka — krivo kopirani hashovi su vjerojatni uzrok promašaja "blok nije pronađen"), i da oznaka `[dedup:ref sha=...]` znači "pogledaj u prošlost", a ne "pozovi alat". Bilješka je ubrizgana** samo kada oglašeni `tools[]` pozivatelja dokaže da zapravo može doseći `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` u `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — običan OpenAI-kompatibilan pozivatelj bez tog alata nikada ne prima instrukcije da pozove nešto što ne može dosegnuti. Idempotencija se provodi skeniranjem povijesti poruka za stražara prije ubacivanja, tako da višestruki zahtjevi (koji ponavljaju prethodne poruke) ne slažu bilješku jednom po potezu.
 
-## Caveman
+## Pećinski čovjek
 
-Način rada Caveman usmjeren je na semantičko sažimanje obične proze:
+Način Caveman fokusiran je na semantičku kondenzaciju normalne proze:
 
-- čuva blokove koda, URL-ove, JSON, putanje i strukturirane podatke
-- uklanja poštapalice, ublažavajuće izraze, ponovljeni kontekst i opširne povezne formulacije
-- podržava jezično prilagođene pakete pravila za datoteke u `open-sse/services/compression/rules/`
+- čuva blokove koda, URLs, JSON, staze i strukturirane podatke
+- uklanja dopunu, zaštitu, ponovljeni kontekst i opširno vezivno fraziranje
+- podržava pakete pravila za datoteke s obzirom na jezik u `open-sse/services/compression/rules/`
 - ostaje dostupan putem naslijeđenih načina rada `standard`, `aggressive` i `ultra`
 
-Površina nadzorne ploče nalazi se na `Dashboard -> Context & Cache -> Caveman`.
+Površina armaturne ploče je `Dashboard -> Context & Cache -> Caveman`.
 
-Izvorni Caveman navodi `~75%` manje izlaznih tokena, prosječnu uštedu izlaza od `65%` u referentnim testovima
-s rasponom od `22-87%` te alat za kompresiju ulaza od `~46%`. OmniRoute upotrebljava broj
-za ulaznu kompresiju Cavemana pri dokumentiranju kombiniranih ušteda na upitima/kontekstu; izlazni način
-Cavemana ostaje zasebna značajka ponašanja odgovora.
+Caveman uzvodno izvještava `~75%` manje izlaznih tokena, `65%` prosječnim uštedama izlaza u referentnim vrijednostima sa `22-87%` rasponom i `~46%` alatom za kompresiju unosa. OmniRoute koristi Caveman broj ulazne strane kada dokumentira naslagane prompt/context uštede; Način izlaza Caveman ostaje zasebna značajka ponašanja odgovora.
 
 ## RTK
 
-Način rada RTK usmjeren je na izlaz naredbi i alata:
+RTK način rada fokusiran je na izlaz naredbi i alata:
 
-- otkriva klase izlaza kao što su `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  Cargo/Go testovi, TypeScript/Vite/Webpack međuverzije, ESLint, npm provjere/instalacije, Docker zapisnici,
-  `find`/`grep` ljuske, tragovi stoga i generički zapisnici
-- primjenjuje 49 JSON filtara iz `open-sse/services/compression/engines/rtk/filters/`
-- podržava deklarativni cjevovod u stilu RTK-a: uklanjanje ANSI-ja, zamjenu, prečac za podudaranje izlaza,
-  uklanjanje/zadržavanje redaka, skraćivanje po retku, skraćivanje početka/kraja/maksimalnog broja redaka i pričuvni sadržaj za prazan rezultat
-- podržava projektne filtre uvjetovane povjerenjem u `.rtk/filters.json` i globalne filtre u
-  `DATA_DIR/rtk/filters.json`
-- uklanja ANSI sekvence, šum pokazatelja napretka, ponovljene retke i nekorisni tipski tekst
-- čuva pogreške na temelju kojih se može djelovati, upozorenja, sažetke, promijenjene datoteke i završni kontekst
-- po želji može zadržati redigirani neobrađeni izlaz za oporavak/otklanjanje pogrešaka putem autentificiranih
-  ruta za upravljanje
+- otkriva izlazne klase kao što su `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go testovi, TypeScript/Vite/Webpack builds, ESLint, npm audit/installs, Docker zapisnici, shell `find`/`grep`, tragovi steka i generički zapisnici
+- primjenjuje 49 JSON filtera iz `open-sse/services/compression/engines/rtk/filters/`
+- podržava deklarativni cjevovod u stilu RTK-a: skidanje ANSI, zamjena, kratki spoj podudaranja izlaza, strip/keep linije, skraćivanje po retku, skraćivanje head/tail/max-line i povrat na prazno
+- podržava projektne filtre zaštićene povjerenjem u `.rtk/filters.json` i globalne filtre u `DATA_DIR/rtk/filters.json`
+- uklanja ANSI sekvence, šum napretka, ponovljene retke i beskorisnu šablonu
+- čuva djelotvorne pogreške, upozorenja, sažetke, promijenjene datoteke i zadnji kontekst
+- može izborno zadržati redigirani neobrađeni izlaz za recovery/debugging kroz provjerene rute upravljanja
 
-Površina nadzorne ploče nalazi se na `Dashboard -> Context & Cache -> RTK`.
+Površina armaturne ploče je `Dashboard -> Context & Cache -> RTK`.
 
-Operativne pojedinosti o prilagođenim filtrima, povjerenju, provjeri i oporavku neobrađenog izlaza nalaze se u
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Operativni detalji za prilagođene filtre, pouzdanost, provjeru i oporavak neobrađenog izlaza uživo u [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-Izvorni RTK navodi uštedu od `60-90%` pri kompresiji izlaza naredbi. Primjer u njegovoj datoteci README prikazuje
-kako se 30-minutna sesija Claude Codea smanjuje s `~118,000` tokena na `~23,900`, odnosno uštedu od `79.7%`.
+RTK uzvodno izvještava o uštedama `60-90%` za kompresiju naredbenog izlaza. Njegov README primjer prikazuje 30-minutnu sesiju Claude koda koja ide od `~118,000` tokena do `~23,900` ili `79.7%` saved.
 
 ## LLMLingua-2 (semantičko obrezivanje)
 
-Način rada LLMLingua-2 provodi **semantičko obrezivanje tokena** u prozi pomoću malog ONNX klasifikatora
-tokena, nadopunjujući Caveman i RTK pogone temeljene na pravilima:
+LLMLingua-2 način rada** semantički leksem podrezivanje** na prozi koristeći mali ONNX klasifikator tokena, nadopunjujući Caveman i RTK motore temeljene na pravilima:
 
-- komprimira prozu samo u porukama koje nisu sistemske; ograđeni blokovi koda i druge sačuvane
-  konstrukcije nikad se ne mijenjaju
-- pokreće pozadinski sustav `@atjsh/llmlingua-2` (ONNX putem `@huggingface/transformers`) u
-  radnoj niti, tako da zaključivanje modela nikad ne blokira petlju događaja zahtjeva
-- može se **slagati** (`stackPriority` 35): u složenom cjevovodu pokreće se nakon
-  strukturnih pogona (CCR, uklanjanje duplikata sesije, rezerva prostora, Caveman), ali prije `ultra`, jer je
-  semantičko obrezivanje najučinkovitije na već strukturno komprimiranom tekstu — npr.
-  `rtk -> caveman -> llmlingua`
-- **u slučaju bilo koje pogreške nastavlja s izvornim sadržajem** (nedostajuće neobavezne ovisnosti, pokretanje radnika, učitavanje modela, zaključivanje
-  ili istek vremena) → izvorni tekst vraća se nepromijenjen, nikad kao pogreška
+- sažima prozu samo u nesustavnim porukama; ograđeni kodni blokovi i drugi sačuvani konstrukti nikad se ne mijenjaju
+- pokreće `@atjsh/llmlingua-2` pozadinu (ONNX preko `@huggingface/transformers`) u radnoj niti, tako da zaključivanje modela nikada ne blokira petlju događaja zahtjeva
+- je** koji se može složiti** (`stackPriority` 35): u naslaganom cjevovodu pokreće se nakon strukturnih motora (CCR, session-dedup, headroom, Caveman ), ali prije `ultra`, budući da je semantičko obrezivanje najučinkovitije na već strukturalno komprimiranom tekstu — npr. `rtk -> caveman -> llmlingua`
+- **fail-otvara se pri bilo kojoj pogrešci** (nedostaju izborni deps, worker spawn, model load, inference ili timeout) → originalni tekst se vraća nepromijenjen, nikada greška
 
-Lokacija pogona: `open-sse/services/compression/engines/llmlingua/`. Površina nadzorne ploče
-nalazi se na `Dashboard -> Context & Cache -> LLMLingua`.
+Položaj motora: `open-sse/services/compression/engines/llmlingua/`. Površina armaturne ploče je `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modeli
 
-Zadani model je **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-brz). Precizniji model **BERT-base** (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) dostupan je putem polja `model` u konfiguraciji pogona. `@huggingface/transformers`
-lijeno preuzima odabrani model s HuggingFace Huba u
-`${DATA_DIR}/models/llmlingua` pri prvom pozivu (`modelStore.ts`); konfiguracijska opcija
-`modelPath` umjesto toga usmjerava na lokalnu kopiju (izvanmrežne / mrežno izolirane instalacije).
+Zadani model je**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, brzo). Veća točnost** BERT-baza** model (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) dostupan je preko polja konfiguracije motora `model`. `@huggingface/transformers` lijeno preuzima odabrani model iz HuggingFace Huba u `${DATA_DIR}/models/llmlingua` pri prvom pozivu (`modelStore.ts`); nadjačavanje `modelPath` konfiguracije usmjerava ga na lokalnu kopiju umjesto toga (izvanmrežne / zračne instalacije).
 
-### Neobavezne ovisnosti i instalacija na zahtjev
+### Izborne ovisnosti i instalacija na zahtjev
 
-Obrezivi stog istovjetnih ovisnosti izvršnog okruženja LLMLingua **nije obavezan**. Dva su paketa deklarirana kao
-`optionalDependencies` u `package.json` i ostaju **vanjski** u produkcijskoj međuverziji
-(`scripts/build/prepublish.ts` ih ne uključuje):
+LLMLingua runtime peer stack koji se može rezati je** neobavezan** . Dva paketa su deklarirana kao `optionalDependencies` u `package.json` i zadržana** vanjski** prema proizvodnoj izradi (`scripts/build/prepublish.ts` ih ne spaja):
 
-| Paket                | Verzija (fiksirana) | Napomene                                                |
-| -------------------- | ------------------- | ------------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`             | Ulazni paket; ostale deklarira kao istovjetne ovisnosti |
-| `js-tiktoken`        | `^1.0.20`           | Tokenizator                                             |
+| Paket                | Verzija (pin) | Bilješke                                   |
+| -------------------- | ------------- | ------------------------------------------ |
+| `@atjsh/llmlingua-2` | `2.0.5`       | Ulazni paket; ostale proglašava vršnjacima |
+| `js-tiktoken`        | `^1.0.20`     | Tokenizator                                |
 
-`@huggingface/transformers` fiksiran je na `^4.2.0` (dijeli se s putanjom lokalnih ugradnji i
-također se prati u samostalnom paketu); `@atjsh/llmlingua-2@2.0.5` oslanja se na njega uz
-`"^3.5.2 || ^4.0.0"`, pa su podržani i Transformers.js v3 i v4. Od verzije 2.0.4,
-`@atjsh/llmlingua-2` više ne zahtijeva `@tensorflow/tfjs`, čime je iz SLM stoga uklonjen najveći
-pojedinačni doprinositelj (TensorFlow.js). Samo su prethodno navedena dva paketa obrezive SLM
-istovjetne ovisnosti. Standardni `npm install` (razvoj) automatski instalira neobavezni stog osim ako su neobavezne
-ovisnosti izostavljene.
+`@huggingface/transformers` je prikvačen na `^4.2.0` (dijeli se s lokalnom stazom ugrađivanja i također se prati u samostalni paket); `@atjsh/llmlingua-2@2.0.5` je jednak njemu sa `"^3.5.2 || ^4.0.0"`, tako da su podržani i Transformers.js v3 i v4. Od 2.0.4, `@atjsh/llmlingua-2` više ne zahtijeva `@tensorflow/tfjs`, koji je uklonio najvećeg pojedinačnog doprinositelja (TensorFlow.js) sa SLM stoga. Samo dva gornja paketa su ravnopravni SLM koji se mogu rezati. Standardni `npm install` (dev) automatski instalira dodatni stog osim ako su izostavljene neobavezne ovisnosti.
 
-**Zašto na zahtjev:** paket objavljen na npm-u, samostalni paket i Docker slika
-isporučuju se **bez** tih ovisnosti kako bi ostali maleni. Kada ih nema, provjera ovisnosti
-radnika (probno razrješavanje `@atjsh/llmlingua-2` u `worker.ts`) ne uspijeva i pogon
-**tiho nastavlja s izvornim sadržajem** — odabir LLMLingue ne obavlja nikakvu radnju (tekst se vraća nepromijenjen, bez
-zabilježene pogreške). Da biste ga aktivirali u obrezanom okruženju, instalirajte neobavezni stog:
+**Zašto na zahtjev:** paket koji je objavio npm, samostalni paket i otprema Docker slike** bez** ove deps ostati vitak. Kada su odsutni, radnička vrata ovisnosti (proba za rješavanje `@atjsh/llmlingua-2` u `worker.ts`) otkazuju i motor** fail-otvara tiho** — odabir LLMLingua postaje no-op (tekst se vraća nepromijenjen, greška nije zabilježena). Da biste ga aktivirali u smanjenom okruženju, instalirajte dodatni skup:
 
 ```bash
-# fiksirajte na verzije deklarirane u package.json optionalDependencies
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Uklanjanje paketa `@tensorflow/tfjs` (2.0.4+) eliminira prethodno dominantan doprinos od ~800 MB
-— preostali otisak čine izvršna okruženja transformers.js + onnxruntime-node
-te model TinyBERT (~57 MB) koji se preuzima pri prvoj uporabi (ne putem npm-a).
+Uklanjanje `@tensorflow/tfjs` (2.0.4 +) eliminira prethodno dominantnog ~ 800 MB doprinositelja — preostali otisak je transformers.js + onnxruntime-node runtimes, plus TinyBERT model (~ 57 MB) preuzet pri prvoj upotrebi (ne putem npm-a).
 
-Za svako okruženje:
+Po okruženju:
 
-- **Razvoj / `npm install`** — instalira se automatski, osim ako ste proslijedili `--omit=optional`
-  (ili `--no-optional`). Nije potrebna nikakva radnja.
-- **Globalni npm (`npm i -g omniroute`) / samostalna instalacija** — pokrenite gornju naredbu za instalaciju unutar
-  direktorija instaliranog paketa ili ponovno instalirajte bez izostavljanja neobaveznih ovisnosti.
-- **Docker** — dodajte naredbu za instalaciju u sloj izvedene slike; objavljena slika
-  namjerno je minimalna.
-- **VPS (PM2)** — instalirajte u `node_modules` aplikacije, a zatim ponovno pokrenite proces kako bi
-  radnik ponovno provjerio kontrolni mehanizam.
-- **Izvorni samostalni Next (`npm run build` → `.build/next/standalone/server.js`)** — samostalni
-  trag NE sadrži ni radnika ni neobavezne ovisnosti, pa mehanizam neprimjetno nastavlja rad bez njih.
-  `scripts/build/colocate-standalone.mjs` ponovno dodaje oboje (radnika izgrađenog pomoću esbuilda +
-  zatvoren skup neobaveznih ovisnosti u samostalno stablo); automatski se pokreće putem npm kuke
-  `postbuild` nakon svake izgradnje. Idempotentan je i nastavlja bez prekida kada ovisnosti nedostaju.
+- **Dev / `npm install`** — instaliran automatski osim ako ste prošli `--omit=optional` (ili `--no-optional`). Nikakva radnja nije potrebna.
+- **Globalni npm (`npm i -g omniroute`) / samostalan** — pokrenite gornju instalacijsku naredbu unutar direktorija instaliranog paketa ili ponovno instalirajte bez izostavljanja opcijskih deps.
+- **Docker** — dodajte instalacijsku naredbu u izvedeni sloj slike; objavljena slika isporučuje se tanka po dizajnu.
+- **VPS (PM2)** — instalirajte u `node_modules` aplikacije, zatim ponovno pokrenite proces kako bi radnik ponovno ispitao vrata.
+- **Raw Next samostalno (`npm run build` → `.build/next/standalone/server.js`)** — samostalni trace brodovi NEITHER radnik niti opcijski deps, tako da se motor tiho otvara. `scripts/build/colocate-standalone.mjs` ponovno primjenjuje oboje (worker esbuild + optional-dep closure u samostalno stablo); pokreće se automatski preko `postbuild` npm kuke nakon svake izgradnje. Idempotentan, fail-soft kada su deps odsutni.
 
-**Provjerite je li aktivan:** kada je odabran LLMLingua, stvarni se prozni tekst doista skraćuje (mehanizam
-više ne nastavlja rad bez ovisnosti), a prvi zahtjev pokreće preuzimanje modela u
-`${DATA_DIR}/models/llmlingua`. Kontrolni mehanizam namjerno provjerava samo `@atjsh/llmlingua-2` —
-ostali ravnopravni paketi podržavaju samo ESM, a `require.resolve` za njih izbacuje pogrešku čak i kada su prisutni — pa
-radnik i dalje nastavlja rad bez njih ako bilo koji ravnopravni paket doista nedostaje tijekom poziva `import()`.
+**Provjerite je li aktivan:** s odabranim LLMLingua, stvarna proza se zapravo smanjuje (motor prestaje s otvaranjem), a prvi zahtjev pokreće preuzimanje modela u `${DATA_DIR}/models/llmlingua`. Vrata namjerno ispituju samo `@atjsh/llmlingua-2` — ostali peeri su samo ESM i `require.resolve` im baca čak i kada je prisutan —, tako da se radnik i dalje neuspješno otvara ako bilo koji peer stvarno nedostaje u `import()` vremenu.
 
 ## Složeni cjevovodi
 
-Složeni način rada izvršava korake cjevovoda redom. Zadani redoslijed je:
+Složeni način rada izvodi korake cjevovoda redom. Zadano je:
 
 ```txt
 rtk -> caveman
 ```
 
-Upotrijebite ovo za sesije agenata za programiranje u kojima upit kombinira izlaz naredbi s tekstom
-koji je napisao korisnik ili asistent. RTK najprije smanjuje opširne zapisnike alata, a zatim Caveman
-sažima preostali prirodni jezik.
+Upotrijebite ovo za sesije agenta za kodiranje gdje prompt kombinira izlaz naredbe s prozom ljudi ili pomoćnika. RTK prvo smanjuje bučne zapise alata, a zatim Caveman sažima preostali prirodni jezik.
 
-Koraci cjevovoda konfiguriraju se putem opcije `stackedPipeline` u postavkama sažimanja ili kroz
-kombinacije sažimanja.
+Koraci cjevovoda konfiguriraju se pomoću `stackedPipeline` u postavkama kompresije ili kroz kombinacije kompresije.
 
-Kada oba mehanizma smanjuju isti prihvatljivi sadržaj, uštede se multipliciraju:
+Kada oba motora smanje isti prihvatljivi nosivost, ušteda se spaja:
 
 ```txt
 combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
@@ -247,35 +165,27 @@ range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 
 ## MCP filtar stabla pristupačnosti
 
-Pametni MCP filtar stabla pristupačnosti sloj je sažimanja nakon izvršavanja koji se primjenjuje na
-**rezultate alata**, a ne na upite ili kontekst. Namijenjen je opširnim sadržajima stabla
-pristupačnosti i snimki preglednika koje vraćaju alati kao što su Playwright, computer-use i MCP
-poslužitelji za automatizaciju preglednika.
+Pametni filtar stabla pristupačnosti MCP sloj je kompresije nakon izvršenja koji radi na MCP** rezultati alata** , a ne na upite ili kontekst. Usmjeren je na opširno stablo pristupačnosti i korisničke snimke preglednika koje vraćaju alati kao što su Playwright, MCP poslužitelji za korištenje računala i automatizaciju preglednika.
 
 ### Što radi
 
-1. **Uklanjanje šuma** — uklanja prazne generičke/tekstne unose (`- generic:`, `- text: ""`)
-2. **Sažimanje susjednih elemenata** — kada je ≥ `collapseThreshold` (zadano 30) uzastopnih redaka
-   strukturno ponovljeno, sažima ih na prvih `collapseKeepHead` (zadano 10) redaka + sažetak broja +
-   posljednjih `collapseKeepTail` (zadano 5) redaka
-3. **Očuvanje referenci** — sidra `[ref=eXX]` koja zahtijevaju Playwright/computer-use nikada se ne
-   mijenjaju
-4. **Strogo skraćivanje** — ako tekst nakon sažimanja i dalje premašuje `maxTextChars` (zadano
-   50.000), skraćuje ga uz navigacijsku uputu kako bi agent mogao nastaviti s radom
+1. **Skidanje buke** — uklanja prazne generic/text unose (`- generic:`, `- text: ""`)
+2. **Kolaps brata i sestre** — kada ≥ `collapseThreshold` (zadano 30) uzastopnih redaka strukturno ponavlja, sažima ih u prve `collapseKeepHead` (zadano 10) retke + sažetak broja + zadnjih `collapseKeepTail` (zadano 5) redaka
+3. **Ref očuvanje** — `[ref=eXX]` sidra koja zahtijeva Playwright/computer-use nikada se ne dodiruju
+4. **Tvrdo skraćivanje** — ako tekst nakon sažimanja i dalje premašuje `maxTextChars` (zadano 50 000), skraćuje se navigacijskim savjetom tako da agent može nastaviti s radom
 
-### Lokacija mehanizma
+### Položaj motora
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← ulazna točka smartFilterText()
-  collapseRepeated.ts ← algoritam sažimanja susjednih elemenata
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Konfiguracija
 
-Upravlja se putem `compression.mcpAccessibility` u globalnim postavkama (migracija 056). Zadana
-konfiguracija:
+Upravlja `compression.mcpAccessibility` u globalnim postavkama (migracija 056). Zadana konfiguracija:
 
 ```json
 {
@@ -288,120 +198,174 @@ konfiguracija:
 }
 ```
 
-Filtar se primjenjuje samo na sadržaje rezultata alata čiji je `type` `"text"` i čija duljina
-premašuje `minLengthToProcess`. Ne utječe na sažimanje upita ni na sadržaje zahtjeva.
+Filtar se primjenjuje samo na rezultate alata čiji je `type` `"text"` i čija duljina premašuje `minLengthToProcess`. Ne utječe na brzu kompresiju ili korisni teret zahtjeva.
 
-### Očekivane uštede
+### Očekivana ušteda
 
-60–80% na rezultatima alata za snimke preglednika, ovisno o složenosti stranice. Algoritam sažimanja
-ima složenost O(n) prema broju redaka i dodaje zanemarivo kašnjenje.
+60–80% na rezultate alata za pregled preglednika, ovisno o složenosti stranice. Algoritam sažimanja je O(n) u broju redaka i dodaje zanemarivu latenciju.
 
-### Ovaj filtar u usporedbi s prethodno navedenim mehanizmima sažimanja
+### Ovaj filter u odnosu na gornje kompresijske motore
 
-| Aspekt           | Caveman / RTK / Stacked   | MCP filtar pristupačnosti              |
-| ---------------- | ------------------------- | -------------------------------------- |
-| Cilj             | Upiti zahtjeva / kontekst | Rezultati MCP alata                    |
-| Okidač           | Postavka načina sažimanja | `compression.mcpAccessibility.enabled` |
-| Opseg            | Sve SSE poruke            | Samo rezultati alata                   |
-| Referentna sidra | Nije primjenjivo          | Bezuvjetno se čuvaju                   |
+| Aspekt    | Pećinski čovjek / RTK / naslagani | MCP filtar pristupačnosti              |
+| --------- | --------------------------------- | -------------------------------------- |
+| Cilj      | Zatražite upite / kontekst        | rezultati MCP                          |
+| Okidač    | Postavka načina kompresije        | `compression.mcpAccessibility.enabled` |
+| Opseg     | Sve SSE poruke                    | Samo rezultati alata                   |
+| Ref sidra | N/A                               | Bezuvjetno očuvana                     |
 
 ---
 
-## Kombinacije kompresije
+## Kompresijske kombinacije
 
-Kombinacije kompresije imenovani su profili kompresije koji se mogu dodijeliti kombinacijama usmjeravanja:
+Kombinacije kompresije nazivaju se profili kompresije koji se mogu dodijeliti kombinacijama usmjeravanja:
 
-- `compression_combos`: pohranjuje način rada, cjevovod, RTK konfiguraciju, jezičnu konfiguraciju i oznaku zadanog profila
-- `compression_combo_assignments`: mapira kombinaciju kompresije na kombinaciju usmjeravanja
-- integracija tijekom izvođenja razrješava dodijeljenu kombinaciju kompresije prije generičkih nadjačavanja kombinacije
+- `compression_combos`: pohranjuje način rada, cjevovod, RTK konfiguraciju, jezičnu konfiguraciju i zadani marker
+- `compression_combo_assignments`: preslikava kombinaciju kompresije u kombinaciju usmjeravanja
+- integracija vremena izvođenja rješava dodijeljenu kombinaciju kompresije prije nadjačavanja generičke kombinacije
 - analitika uključuje `compression_combo_id` i `engine`
 
-Lokacija na nadzornoj ploči: `Dashboard -> Context & Cache -> Compression Combos`.
+Površina armaturne ploče: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## API sučelje
+## Preduvjeti / vodič za operatera (CCR & session-dedup)
+
+CCR (`ccr`) i `session-dedup` zamjenjuju ili brišu tekst i ostavljaju a** marker** iza. Ovaj odjeljak je referenca operatera za spajanje klijenta, čitanje dva markera i dohvaćanje ili dijagnosticiranje izbrisanog sadržaja. Mehanika svakog motora opisana je gore; ovo je sloj "kako to pokrenuti".
+
+### Prijevozi i krajnje točke
+
+Do MCP poslužitelja koji izlaže CCR alate može se doći na tri načina. Zadana baza URL je `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
+
+| Prijevoz                               | URL / naredba                           | Bilješke                                                                                                                              |
+| -------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Streamable HTTP (klijent, preporučeno) | `http://localhost:20128/api/mcp/stream` | Krajnja točka s kojom trenutačni MCP klijenti razgovaraju.                                                                            |
+| Legacy SSE singleton                   | `http://localhost:20128/api/mcp/sse`    | Stariji singleton prijevoz. To** zatvara** streamable sesije; koristite `streamable-http` klijente protiv `/api/mcp/stream`, ne ovaj. |
+| stdio                                  | `omniroute --mcp`                       | Za IDE MCP konfiguraciju koja pokreće proces. Ne postoji `--dev` zastavica; `omniroute --mcp` je stdio ulazna točka.                  |
+
+### Razine pohrane (ono što preživi ponovno pokretanje)
+
+CCR je a** dvoslojni** pohrana, ne samo u memoriji:
+
+- **Vruća razina u memoriji** — po bloku cap 2 MiB, po principalu 16 MiB, globalno 64 MiB. Unosi su zadani na 24 sata TTL (maksimalno 7 dana). Potpuno MCP dohvaćanje iz memorije ograničeno je na 256 KiB; sve što je veće i dalje je dostupno kroz ranged/grep modove.
+- **Izdržljiva SQLite razina** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, uključeno prema zadanim postavkama) — podupire sloj u memoriji tako da blok preživi LRU izbacivanje, ponovno pokretanje ili povratno slijetanje na drugu instancu. Red zadržava TTL bloka, tako da blok nakon svog TTL nestaje s obje razine.
+
+Tri čuvara drže izdržljivu razinu ograničenu — blok ostaje samo memorija kada:
+
+1. blok je gotov** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. runtime je runtime u oblaku (bez lokalnog diska);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Dakle, "blok je nestao" nije sveobuhvatna priča o ponovnom pokretanju: blok sub-512 KB u lokalnom vremenu izvođenja koje nije u oblaku preživljava ponovno pokretanje putem trajnog sloja dok se njegov TTL ne potroši. Pogledajte [referencu okruženja](../reference/ENVIRONMENT.md) za varijablu.
+
+### Dva markera
+
+| Marker                                | Značenje                                                                                                                              | Što model treba učiniti                                                                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `[CCR retrieve hash=<24hex> chars=N]` | Veliki blok je pohranjen sa sadržajnom adresom.                                                                                       | Nazovite `omniroute_ccr_retrieve` s** 24-hex hash kopirano doslovno** da biste dobili izvorni tekst natrag.                                                                                                  |
+| `[dedup:ref sha=…]`                   | `session-dedup` elidirani tekst već poslan u ranijem krugu iste sesije. Ovo je** namjerni pogled unatrag** , a ne gubitak ili greška. | učiniti** ne** nazovite bilo koji alat i učinite** ne** pokušati ga "rekonstruirati". Prvo pojavljivanje teksta je kanonski prijepis; trenutni potez se nikada ne prepisuje, dedupira se na kasnijem potezu. |
+
+`[dedup:ref]` pregled unatrag je namjerna protokolarna odluka — nema rekonstrukcije prije slanja. Tretirajte to kao "točno ovaj tekst je već bio emitiran ranije u ovoj sesiji."
+
+### Preduvjeti klijenta
+
+- **Ključ (stdio):** stdio pozivatelj ne nosi identitet po zahtjevu, pa se autentificira sa `OMNIROUTE_API_KEY` (postavljenim u `env` poslužitelja MCP ). Bez njega pozivatelj je anoniman i alati koji zahtijevaju principala mogu se pogoršati.
+- **`tools[]` je preduvjet za ubrizgavanje.** Umetnuta je instrukcija protokola za dohvaćanje CCR (#8033).** samo** kada oglašeni `tools[]` zahtjeva dokaže da klijent zapravo može doseći `omniroute_ccr_retrieve`. Podudaranje je podudaranje zadnjeg segmenta omeđeno separatorom (`__`, `.`, `/`, `:`) — nikad goli podniz — tako da se ime u prostoru imena kao što je `mcp__gateway__omniroute_ccr_retrieve` i dalje računa. Odsutan ili nepodudarni `tools[]` znači da instrukcija _nije_ ubačena, prema dizajnu.
+- **`codemode:false` (OpenCode klijenti).** OpenCode prema zadanim postavkama koristi Code Mode, koji oglašava samo svoje izvorne alate modelu i** ne radi** stavite MCP alate na izvorni `tools[]` popis. Postavite `codemode: false` na unos MCP poslužitelja tako da se reklamiraju `omniroute_ccr_*` alati. Ovo je a** klijent** postavka, a ne OmniRoute. Još se ne ubacuje CCR instrukcija: OpenCode imenuje alat `<server>_<tool>`, tako da poslužitelj koji se zove `omniroute` izlaže `omniroute_omniroute_ccr_retrieve`, a `_` nije jedan od odgovarajućih separatora.
+- **ravnatelji.** Pohranjivanje i dohvaćanje su izolirani po autenticiranom principalu (po API ključu). Ključ vidi samo svoje blokove.
+
+### Opseg po alatu
+
+Provedba opsega uvijek je uključena za HTTP/SSE pozivatelje uskog opsega. Alati `omniroute_` CCR zahtijevaju:
+
+| Alat                     | Opseg               |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Opseg koji nedostaje vraća an**MCP rezultat pogreške alata** (`isError: true`, ne HTTP 403 — `403 LOCAL_ONLY` je zasebna autentifikacija čuvara rute povratne petlje): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Minimalni daljinski ključ može držati `mcp:connect` (ovlašćuje `/api/mcp/` samo lokalno izdvajanje) plus specifični read/write opseg koji mu je potreban.
+
+### Matrica klijenata
+
+| Klijent             | Prijevoz                                        | Konfiguracija za korištenje                                                                                                                                                                                                                                   | `tools[]` reklamirao? (umetnuta instrukcija → CCR )                                                                                                                                               |
+| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude kod          | streamable-http                                 | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                             | Da — MCP-sposoban; ubrizgan.                                                                                                                                                                      |
+| Cursor / Cline      | `stdio`** ili** `streamable-http`               | stdio: `omniroute --mcp` sa `OMNIROUTE_API_KEY` u `env`; ili udaljeni MCP unos koji pokazuje na `http://localhost:20128/api/mcp/stream` (pogledajte [Vodič za postavljanje → MCP konfiguracije klijenta](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Da — reklamira `omniroute_ccr_*` alate.                                                                                                                                                           |
+| OpenCode            | streamable-http                                 | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, plus `codemode: false`                                                                                                                                                              | Alati reklamirani samo sa `codemode: false`; instrukcija još uvijek nije ubrizgana jer `omniroute_omniroute_ccr_retrieve` ne odgovara (pogledajte [Preduvjete klijenta](#client-prerequisites) ). |
+| OpenAI-kompatibilan | HTTP kompatibilan s OpenAI-jem (završeci chata) | standardni klijent za završetak chata protiv OpenAI-kompatibilne krajnje točke                                                                                                                                                                                | **Nikada** — jednostavnom OpenAI-kompatibilnom pozivatelju nikada se ne kaže da pozove alat, a instrukcija se ne ubacuje.                                                                         |
+
+### Ograničenja dohvaćanja i označavanje stranica
+
+rezultati teksta alata MCP su ošišani oko `mcpAccessibility.maxTextChars` (zadano `50000`). `full` dohvat bloka ograničen je na 256 KiB —** ne postoji neograničeno potpuno dohvaćanje** . Kada je `chars=N` bloka velik, prelistajte ga umjesto da povlačite cijelu stvar:
+
+- Osnovno pravilo:**`chars > 40000` → koristi `mode`** , nikad goli pun.
+- `mode:"grep"` — regex `pattern` podudara red po red, do 1000 odgovarajućih redaka (`unique: true` ispušta ponavljanja), najjeftinije za "pronađi jedan redak koji mi treba."
+- `mode:"lines"` — raspon linija s indeksom 1; treba i `start` i `end`.
+- `mode:"head"` / `mode:"tail"` — first/last `n` linije.
+- `mode:"stats"` — broj linija, znakova i bajtova bez tijela.
+
+Upotrijebite `mode:"lines"` sa `start`/`end` da hodate po dugačkom bloku stranica umjesto da tražite cijelu stvar odjednom.
+
+### Imenovanje alata
+
+Alat za dohvaćanje trenutačno se zove `omniroute_ccr_retrieve` (prefiks `omniroute_` zastarjelo je rješenje za sukobe imena između poslužitelja). Čišći naziv alata s ograničenim sufiksom i popravak za MCP JSON rezultate skraćeni srednji niz prate se kao uzvodni nastavak; ova stranica dokumentira samo trenutno, isporučeno ponašanje.
+
+### Životni ciklus sesije
+
+Streamable-HTTP sesije su u stanju mirovanja i poslužitelj ih žanje; prozor mirovanja je `MCP_SESSION_IDLE_MS` konstanta (referencirana imenom, a ne čvrsto kodiranom vrijednošću, tako da se ova stranica ne pomiče kada se mijenja). Simptom idle-reaped sesije je HTTP 404 sa `Unknown Mcp-Session-Id` — lijek je ponovno povezivanje ili ponovno pokretanje sesije,** ne** za rotiranje ključa, promjenu opsega ili preimenovanje alata.
+
+## API Površina
 
 | Ruta                                   | Svrha                                                                     |
 | -------------------------------------- | ------------------------------------------------------------------------- |
-| `/api/settings/compression`            | Globalne postavke kompresije (uključuju konfiguraciju `mcpAccessibility`) |
-| `/api/compression/preview`             | Pretpregled bilo kojeg načina kompresije                                  |
+| `/api/settings/compression`            | Globalne postavke kompresije (uključuje `mcpAccessibility` konfiguraciju) |
+| `/api/compression/preview`             | Pregledajte bilo koji način kompresije                                    |
 | `/api/compression/language-packs`      | Popis dostupnih jezičnih paketa Caveman                                   |
-| `/api/context/caveman/config`          | Pseudonim za postavke Caveman                                             |
-| `/api/context/rtk/config`              | Zadane vrijednosti i postavke RTK-a                                       |
-| `/api/context/rtk/filters`             | Katalog RTK filtara                                                       |
-| `/api/context/rtk/test`                | Krajnja točka za pretpregled/testiranje RTK-a                             |
-| `/api/context/rtk/raw-output/[id]`     | Autentificirani oporavak redigiranog neobrađenog izlaza                   |
-| `/api/context/combos`                  | CRUD za kombinacije kompresije                                            |
-| `/api/context/combos/[id]/assignments` | CRUD za dodjelu kombinacija usmjeravanja                                  |
-| `/api/context/analytics`               | Pseudonim za analitiku kompresije                                         |
+| `/api/context/caveman/config`          | Alias postavki Cavemana                                                   |
+| `/api/context/rtk/config`              | RTK zadane postavke i postavke                                            |
+| `/api/context/rtk/filters`             | RTK filter katalog                                                        |
+| `/api/context/rtk/test`                | RTK preview/test krajnja točka                                            |
+| `/api/context/rtk/raw-output/[id]`     | Oporavak autentificiranog redigiranog sirovog izlaza                      |
+| `/api/context/combos`                  | Kombinacija kompresije CRUD                                               |
+| `/api/context/combos/[id]/assignments` | Routing-combo dodjela CRUD                                                |
+| `/api/context/analytics`               | Alias analitike kompresije                                                |
 
-Rute za upravljanje zahtijevaju autentifikaciju za upravljanje ili provjere pravila API ključa.
+Rute upravljanja zahtijevaju provjeru autentičnosti upravljanja ili provjere pravila API ključa.
 
-## MCP alati
+## MCP
 
 Kompresija izlaže pet MCP alata:
 
-| Alat                                | Opseg               | Svrha                                         |
-| ----------------------------------- | ------------------- | --------------------------------------------- |
-| `omniroute_compression_status`      | `read:compression`  | Postavke, analitika i statistika predmemorije |
-| `omniroute_compression_configure`   | `write:compression` | Ažuriranje globalnih postavki                 |
-| `omniroute_set_compression_engine`  | `write:compression` | Postavljanje načina rada i izbornog cjevovoda |
-| `omniroute_list_compression_combos` | `read:compression`  | Popis kombinacija kompresije                  |
-| `omniroute_compression_combo_stats` | `read:compression`  | Čitanje analitike kombinacija/mehanizama      |
+| Alat                                | Opseg               | Svrha                                        |
+| ----------------------------------- | ------------------- | -------------------------------------------- |
+| `omniroute_compression_status`      | `read:compression`  | Postavke, analitika, statistika predmemorije |
+| `omniroute_compression_configure`   | `write:compression` | Ažurirajte globalne postavke                 |
+| `omniroute_set_compression_engine`  | `write:compression` | Postavite način rada i dodatni cjevovod      |
+| `omniroute_list_compression_combos` | `read:compression`  | Navedite kombinacije kompresije              |
+| `omniroute_compression_combo_stats` | `read:compression`  | Pročitajte combo/engine analitiku            |
 
 ## Opseg i izuzeci
 
-**Ugradnje se nikada ne komprimiraju.** `open-sse/handlers/embeddings.ts` nikada ne poziva nijedan
-mehanizam kompresije — tijela zahtjeva/odgovora prolaze izravno do izvršitelja bez izmjena.
-To je trenutačno strukturno svojstvo (ugradnje i dovršavanja razgovora imaju odvojene rukovatelje), a ne
-provjera tijekom izvođenja, no to znači da problem izobličenja vektora iz #8034 nema površinu izloženosti
-u putanji ugradnji.
+**Ugradnje se nikada ne komprimiraju.** `open-sse/handlers/embeddings.ts` nikada ne poziva nijedan kompresijski motor — request/response tijela prolaze ravno do izvršitelja netaknuta. To je danas strukturno (ugrađivanja i dovršavanja chata su nepovezani rukovatelji), a ne provjera vremena izvođenja, ali znači da problem vektorske distorzije u #8034 nema površinu izloženosti na putu ugrađivanja.
 
-**Filtar izuzimanja po modelu/krajnjoj točki (#8034).** Za dovršavanja razgovora operator može navesti
-ID-jeve modela / ciljeve `provider/model` koji se nikada ne smiju komprimirati — zaštitna mjera korisna ako
-se kompresija kasnije poveže bliže putanji povezanoj s ugradnjama, a općenito je korisna
-za svaki model kod kojeg je važan potpuno identičan upit na razini bajtova (determinističke evaluacije, prefiksi
-osjetljivi na predmemoriju itd.).
+**Per-model/endpoint filtar za isključivanje (#8034).** Za dovršetke chata, operater može imenovati ID-ove modela / ciljeve `provider/model` koji se nikada ne smiju komprimirati — zaštitnu ogradu koja je korisna ako se kompresija ikada kasnije spoji bliže stazi koja je susjedna ugrađivanju i općenito je korisna za bilo koji model čiji je točan upit bajt za bajt važan (determinističke procjene, prefiksi osjetljivi na predmemoriju, itd.).
 
-- Polje postavki: `exclusions?: string[]` u globalnoj konfiguraciji kompresije
-  (`GET`/`PUT /api/settings/compression`), trajno pohranjeno putem postojećeg prostora naziva `key_value` za kompresiju
-  (`src/lib/db/compression.ts`) — bez nove tablice.
-- Kartica nadzorne ploče: **Nadzorna ploča → Kompresija → Izuzeci**
-  (`/dashboard/compression/exclusions`).
-- Sintaksa uzorka: `*` je jedini zamjenski znak. Svaki drugi metaznak regularnog izraza u uzorku
-  escapira se prije podudaranja, pa se `gpt-5.6` podudara samo s doslovnim nizom, a nikada s `gpt-5x6`
-  (sigurno od ReDoS-a, ograničeno, bez ugniježđenih kvantifikatora). Uzorci se podudaraju bez obzira na veličinu slova
-  i sa samostalnim ID-jem modela i s kompozitom `provider/model` — `gpt-5-6`, `openai/gpt-5-6`
-  i `openai/*` svi funkcioniraju, a sam `*` izuzima svaki model.
-- Podudaranje: `isCompressionExcluded()` / `normalizeCompressionExclusions()` u
-  `open-sse/services/compression/exclusions.ts`. `chatCore.ts` provjerava izuzeti cilj
-  odmah nakon razrješavanja postavki kompresije, **prije pokretanja bilo kojeg mehanizma**, i podudaranje tretira
-  potpuno jednako kao da je kompresija globalno onemogućena — tijelo zahtjeva dokazivo je
-  identično na razini bajtova. Preskakanje se bilježi putem `writeCompressionSkip(..., "excluded")` radi
-  vidljivosti u analitici.
-- Zadana vrijednost (prazan/nepostojeći popis): identično ponašanju prije #8034 — ništa nije izuzeto.
+- Polje postavki: `exclusions?: string[]` na konfiguraciji globalne kompresije (`GET`/`PUT /api/settings/compression`), postojano putem postojećeg prostora imena kompresije `key_value` (`src/lib/db/compression.ts`) — nema nove tablice.
+- Kartica nadzorne ploče:** Nadzorna ploča → Kompresija → Izuzeci** (`/dashboard/compression/exclusions`).
+- Sintaksa uzorka: `*` je jedini zamjenski znak. Svaki drugi metakarakter regularnog izraza u uzorku se izbjegava prije podudaranja, tako da `gpt-5.6` odgovara samo literalnom nizu, nikada `gpt-5x6` (ReDoS-siguran, ograničen, bez ugniježđenih kvantifikatora). Uzorci se usklađuju bez obzira na velika i mala slova s ID-om golog modela i složenim `provider/model` — `gpt-5-6`, `openai/gpt-5-6` i `openai/*`, svi rade, a sam `*` isključuje svaki model.
+- Podudaranje: `isCompressionExcluded()` / `normalizeCompressionExclusions()` u `open-sse/services/compression/exclusions.ts`. `chatCore.ts` provjerava izuzeti cilj odmah nakon rješavanja postavki kompresije,** prije nego bilo koji motor radi** , i tretira podudaranje točno kao da je kompresija globalno onemogućena — tijelo zahtjeva je dokazano identično u bajtu. Preskakanje se bilježi putem `writeCompressionSkip(..., "excluded")` radi vidljivosti analitike.
+- Zadano (empty/absent popis): identično ponašanju prije #8034 — ništa nije isključeno.
 
 ## Poznata ograničenja
 
-- **LLMLingua-2 (SLM) zahtijeva da neobavezne ovisnosti budu smještene zajedno.** Radni proces pokreće se u
-  produkcijskoj međuverziji samo kada su `@atjsh/llmlingua-2` i povezane ovisnosti smještene zajedno u
-  `dist/node_modules` (pogledajte `scripts/build/colocateOptionals.mjs`, #4286). Bez njih
-  mehanizam nastavlja rad bez obrade (vraća izvorni tekst). Razrješavanje radnog procesa više ne ovisi o
-  `import.meta.url` (koji ne radi u samostalnom paketu) — kao osnovu koristi izvršni
-  cwd / `argv[1]`.
-- **Jezični paketi Caveman `de` / `fr` / `ja` djelomični su.** Isporučuju pravila `context` +
-  `filler` + `structural`, ali ne i pakete `dedup` / `ultra`, pa intenzitet `ultra` nije
-  snažniji od intenziteta `full` za te jezike (koriste samo vlastita pravila — nema
-  prešutnog povratka na engleska pravila `dedup`/`ultra`, koja bi izobličila strani tekst).
-  Paketi `en` / `es` / `id` / `pt-BR` potpuni su. Doprinosi datoteka `dedup.json` + `ultra.json`
-  za djelomične pakete dobrodošli su.
-- **Složena telemetrija navodi samo mehanizme koji su izvršili kompresiju.** Korak složenog kanala obrade čiji
-  se mehanizam pokrenuo, ali je ostvario uštedu od 0 %, vraća `stats:null` i zato se ne prikazuje u
-  `engineBreakdown` — nije ga moguće razlikovati od preskočenog koraka. Razlikovanje stanja
-  „pokrenuto, 0 %” od „preskočeno” zahtijevalo bi promjenu modela raščlambe te je odgođeno.
+- **LLMLingua-2 (SLM) zahtijeva opcijske deps.** Radnik radi samo u proizvodnoj verziji kada su ravnopravni `@atjsh/llmlingua-2` + ko-locirani u `dist/node_modules` (pogledajte `scripts/build/colocateOptionals.mjs`, #4286). Bez njih motor se otvara (vraća izvorni tekst). Radna rezolucija više ne ovisi o `import.meta.url` (umire u samostalnom paketu) — ona se usidri na vrijeme izvođenja cwd / `argv[1]`.
+- **Jezični paketi Caveman `de` / `fr` / `ja` su djelomični.** Šalju `context` + `filler` + `structural` pravila, ali ne i `dedup` / `ultra` pakete, tako da `ultra` intenzitet nije jači od `full` za te jezike (oni koriste samo vlastita pravila — nema tihog vraćanja na engleska `dedup`/`ultra` pravila, koja bi kvarila strani tekst). `en` / `es` / `id` / `pt-BR` su dovršeni. Doprinosi `dedup.json` + `ultra.json` za djelomične pakete su dobrodošli.
+- **Složena telemetrija navodi samo motore koji su komprimirani.** Korak naslaganog cjevovoda čiji je motor radio, ali je proizveo 0 % uštede vraća `stats:null` i stoga se ne pojavljuje u `engineBreakdown` — nerazlučivo od koraka koji je preskočen. Razlikovanje "izvršeno, 0 %" od "preskočeno" zahtijevalo bi promjenu modela kvara i odgađa se.
 
-## Provjera valjanosti
+## Validacija
 
-Ciljane provjere za ovo područje su:
+Fokusirana vrata za ovo područje su:
 
 ```bash
 node --import tsx/esm --test tests/unit/compression/rtk-*.test.ts tests/unit/compression/pipeline-integration.test.ts tests/unit/compression/context-compression-api.test.ts

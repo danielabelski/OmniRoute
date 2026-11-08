@@ -21,19 +21,19 @@
 
 <div align="center">
 
-## 💰 ~1.62B ថូខឹន / ខែ ពីកម្រិតឥតគិតថ្លៃរបស់អ្នកផ្តល់សេវាភាគីទីបី
+## 💰 ~ 1.62B Tokens / ខែឆ្លងកាត់ថ្នាក់ឥតគិតថ្លៃរបស់ភាគីទីបី
 
 </div>
 
-> **ប្រើគណនីអ្នកផ្តល់សេវារបស់អ្នកផ្ទាល់។** នេះគឺជាការប៉ាន់ស្មានសរុបពីកម្រិតឥតគិតថ្លៃរបស់អ្នកផ្តល់សេវាភាគីទីបីដែលមានលក្ខខណ្ឌអាចប្រើបានដាច់ដោយឡែក មិនមែនជាការផ្តល់ថូខឹនពី OmniRoute ទេ។ ចុះឈ្មោះ ទទួលព័ត៌មានសម្ងាត់ប្រសិនបើត្រូវការ ហើយភ្ជាប់អ្នកផ្តល់សេវាដែលអ្នកអាចប្រើបាន; អ្នកផ្តល់សេវានីមួយៗជាអ្នកកំណត់ដែនកំណត់ ភាពអាចប្រើបាន និងលក្ខខណ្ឌរបស់ខ្លួន។
+> **នាំយកគណនីអ្នកផ្តល់សេវាផ្ទាល់ខ្លួនរបស់អ្នក។** នេះជាការប៉ាន់ប្រមាណសរុបនៅទូទាំងលំដាប់ដោយឥតគិតថ្លៃភាគីទីបីដែលមានសិទ្ធិដោយឡែកពីគ្នា មិនមែនជាការផ្តល់សញ្ញាសម្ងាត់ពី OmniRoute ទេ។ ចុះឈ្មោះ ទទួលបានព័ត៌មានសម្ងាត់តាមតម្រូវការ និងភ្ជាប់អ្នកផ្តល់សេវាដែលអ្នកអាចប្រើ។ អ្នកផ្តល់សេវានីមួយៗគ្រប់គ្រងដែនកំណត់ ភាពអាចរកបាន និងលក្ខខណ្ឌរបស់វា។
 >
-> ការបូកបញ្ចូលកម្រិតឥតគិតថ្លៃដោយដៃគឺជារឿងលំបាក — SDK ជាច្រើន ដែនកំណត់អត្រាជាច្រើន ហើយមិនដឹងថាអ្នកពិតជាមានប៉ុន្មានទេ។ OmniRoute រៀបចំកាតាឡុក **ធាតុកម្រិតឥតគិតថ្លៃចំនួន 485 ពីសោ pool ដែលកើតឡើងដដែលៗចំនួន 34** ហើយគណនាចំនួនថូខឹនសរុបពី **pool ចំនួន 17 ដែលមានថវិកាប្រចាំខែវិជ្ជមានដែលបានបោះពុម្ពផ្សាយ បូកនឹងដែនកំណត់ Groq ចំនួនប្រាំតាមម៉ូដែល** ដោយលុបការរាប់ស្ទួនតាម pool ដែលចែករំលែក។ កូតាដែលបើកប្រើបានតែបន្ទាប់ពីការត្រួតពិនិត្យអត្តសញ្ញាណតាមតំបន់ (បច្ចុប្បន្ន៖ ModelScope) ត្រូវបានបង្ហាញដោយឡែក +~6M បន្ទាប់ពីការផ្ទៀងផ្ទាត់អត្តសញ្ញាណតាមតំបន់ ហើយមិនដែលត្រូវបានបូកចូលក្នុងចំនួនសរុបទេ។ លទ្ធផលនៅតែអាចមើលឃើញនៅលើផ្ទាំងគ្រប់គ្រង (`/dashboard/free-tiers`)។
+> ការដាក់ជង់ដោយឥតគិតថ្លៃដោយដៃគឺឈឺចាប់ — រាប់សិប SDKs ដែនកំណត់អត្រារាប់សិបហើយមិនដឹងថាតើអ្នកពិតជាមានប៉ុន្មានទេ។ កាតាឡុក OmniRoute** ធាតុឥតគិតថ្លៃចំនួន 465 លើ 34 កូនសោរដែលកើតឡើងដដែលៗ** ហើយគណនាចំណងជើងសញ្ញាសម្ងាត់ពី** អាងចំនួន 17 ដែលមានថវិកាប្រចាំខែវិជ្ជមានដែលបានបោះពុម្ព បូកនឹងមួក Groq ចំនួនប្រាំក្នុងមួយម៉ូដែល** ចម្លងដោយក្រុមរួមគ្នា។ កូតាដែលបើកបន្ទាប់ពីការត្រួតពិនិត្យអត្តសញ្ញាណក្នុងតំបន់ (ថ្ងៃនេះ៖ ModelScope) ត្រូវបានបង្ហាញដាច់ពីគ្នា +~ 6M នៅពីក្រោយការផ្ទៀងផ្ទាត់អត្តសញ្ញាណក្នុងតំបន់ ហើយមិនដែលបូកបញ្ចូលទៅក្នុងចំណងជើងឡើយ។ លទ្ធផលនៅតែអាចមើលឃើញនៅលើផ្ទាំងគ្រប់គ្រង (`/dashboard/free-tiers`) ។
 
-<img src="./docs/diagrams/free-tier-budget.svg" width="100%" alt="កាតថវិកាកម្រិតឥតគិតថ្លៃរបស់ OmniRoute៖ ~1.62B ថូខឹនឥតគិតថ្លៃក្នុងមួយខែជាប្រចាំ រហូតដល់ ~2.22B ក្នុងខែដំបូងជាមួយឥណទានចុះឈ្មោះ ពីសោ pool ដែលកើតឡើងដដែលៗចំនួន 34 ដែលបានកត់ត្រា គ្របដណ្តប់ធាតុកម្រិតឥតគិតថ្លៃចំនួន 485 នៅពីក្រោយ endpoint តែមួយ។ ការគណនាដែលស្មោះត្រង់ និងលុបការរាប់ស្ទួនតាម pool — pool ដែលចែករំលែកនីមួយៗត្រូវបានរាប់តែម្តង រួមទាំង pool កើតឡើងដដែលៗចំនួន 17 ដែលមានថវិកាថូខឹនប្រចាំខែវិជ្ជមានដែលបានបោះពុម្ពផ្សាយ បូកនឹងដែនកំណត់ Groq ចំនួនប្រាំតាមម៉ូដែល; អ្នកផ្តល់សេវាចំនួន 12 ត្រូវបានសម្គាល់ថាគួរជៀសវាងនៅក្នុងកាតាឡុកហានិភ័យលក្ខខណ្ឌ ដើម្បីឱ្យអ្នកជាអ្នកសម្រេចចិត្ត។ របារថវិការួមមាន Mistral 1B, Nara 210M, LLM7 150M, xKiro 150M, Groq 30M (ដែនកំណត់ចំនួនប្រាំតាមម៉ូដែល) និង pool តូចៗផ្សេងទៀត បូកនឹងឥណទានចុះឈ្មោះសម្រាប់ខែដំបូង និងអ្នកផ្តល់សេវាដែលឥតគិតថ្លៃជាអចិន្ត្រៃយ៍ដោយគ្មានដែនកំណត់ថូខឹន ដែលត្រូវបានបង្ហាញដោយឡែក ដូច្នេះវាមិនធ្វើឱ្យចំនួនសរុបកើនឡើងឡើយ។ ចំនួនបានប្រើប្រាស់/នៅសល់បន្តផ្ទាល់នៅ /dashboard/free-tiers។"/>
+<img src="./docs/diagrams/free-tier-budget.svg" width="100%" alt="OmniRoute free-tier budget card: ~1.62B free tokens per month steady, up to ~2.22B in the first month with signup credits, from 34 documented recurring pool keys covering 465 cataloged free-tier entries behind one endpoint. Honest pool-deduped math — each shared pool counted once, including 17 recurring pools with a published positive monthly token budget plus five per-model Groq caps; 12 providers are marked avoid in the terms-risk catalog so you decide. Budget bar includes Mistral 1B, Nara 210M, LLM7 150M, xKiro 150M, Groq 30M (five per-model caps) and smaller pools, plus first-month signup credits and permanently-free no-token-cap providers surfaced separately so they never inflate the headline. Live used/remaining on /dashboard/free-tiers."/>
 
-> សេចក្តីសង្ខេបមានចលនានៃទំព័រ `/dashboard/free-tiers` បន្តផ្ទាល់។ វិធីសាស្ត្រពេញលេញ (ការលុបការរាប់ស្ទួនតាម pool កម្រិតឥណទាន លក្ខខណ្ឌអ្នកផ្តល់សេវា)៖ **[docs/reference/FREE_TIERS.md](docs/reference/FREE_TIERS.md)**។
+> សេចក្តីសង្ខេបដែលមានចលនានៃទំព័រ `/dashboard/free-tiers` បន្តផ្ទាល់។ វិធីសាស្រ្តពេញលេញ (អាង dedupe កម្រិតឥណទាន លក្ខខណ្ឌអ្នកផ្តល់សេវា)៖** [docs/reference/FREE_TIERS.md](docs/reference/FREE_TIERS.md)** .
 >
-> <sub>តួលេខទាំងនេះត្រូវបានធ្វើសវនកម្មឡើងវិញរៀងរាល់ពីរសប្តាហ៍ ដោយផ្ទៀងផ្ទាត់នឹងកាតាឡុកបន្តផ្ទាល់ ហើយ **អាចប្រែប្រួលឡើងឬចុះ** — អ្នកផ្តល់សេវាបញ្ចប់កម្រិតឥតគិតថ្លៃ ហើយចំនួននឹងថយចុះ; អ្នកផ្តល់សេវាថ្មីចូលមក ហើយវានឹងកើនឡើង។ យើងផ្សព្វផ្សាយអ្វីដែលកាតាឡុកគណនាបានពិតប្រាកដ មិនដែលបង្គត់ឡើងដោយផ្អែកលើករណីល្អបំផុតឡើយ។</sub>
+> <sub> តួលេខទាំងនេះត្រូវបានធ្វើសវនកម្មឡើងវិញរៀងរាល់ពីរសប្តាហ៍ម្តងប្រឆាំងនឹងកាតាឡុកបន្តផ្ទាល់ និង** ផ្លាស់ទីទាំងពីរវិធី** — អ្នកផ្តល់សេវាបញ្ចប់ថ្នាក់ឥតគិតថ្លៃ ហើយចំនួនធ្លាក់ចុះ។ ដីថ្មីមួយហើយវាឡើង។ យើងបោះពុម្ពផ្សាយនូវអ្វីដែលកាតាឡុកគណនាយ៉ាងពិតប្រាកដ មិនដែលករណីល្អបំផុតដែលបង្រួបបង្រួមទេ។</sub>
 
 <br/>
 
@@ -41,49 +41,43 @@
 
 <h3>
 
-⭐ ដាក់ផ្កាយឱ្យឃ្លាំងកូដ ប្រសិនបើ OMNIROUTE បានជួយអ្នកសន្សំប្រាក់ និងធ្វើឱ្យការងាររបស់អ្នកកាន់តែងាយស្រួល។
+⭐ Star the repo ប្រសិនបើ OMNIROUTE ជួយអ្នកសន្សំប្រាក់ និងធ្វើឱ្យការងាររបស់អ្នកកាន់តែងាយស្រួល។
 
 </h3>
 
-[![ផ្កាយ](https://img.shields.io/github/stars/diegosouzapw/OmniRoute?style=social)](https://github.com/diegosouzapw/OmniRoute)
+[![តារា](https://img.shields.io/github/stars/diegosouzapw/OmniRoute?style=social) ](https://github.com/diegosouzapw/OmniRoute)
 <a href="https://trendshift.io/repositories/23589" target="_blank"><img src="https://trendshift.io/api/badge/repositories/23589" alt="diegosouzapw%2FOmniRoute | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-[![ចំណាត់ថ្នាក់ប្រវត្តិផ្កាយ](https://api.star-history.com/badge?repo=diegosouzapw/OmniRoute&theme=dark)](https://www.star-history.com/diegosouzapw/omniroute)
-[![olud.ai](https://olud.ai/badge.php?tool=diegosouzapw-omniroute)](https://olud.ai/project/diegosouzapw-omniroute.html)
+[![ចំណាត់ថ្នាក់ប្រវត្តិសាស្រ្តតារា](https://api.star-history.com/badge?repo=diegosouzapw/OmniRoute&theme=dark) ](https://www.star-history.com/diegosouzapw/omniroute) [![olud.ai](https://olud.ai/badge.php?tool=diegosouzapw-omniroute) ](https://olud.ai/project/diegosouzapw-omniroute.html)
 
 ### 💬 ចូលរួមសហគមន៍
 
-**👋 តាមដានអ្នកថែទាំគម្រោង — ទទួលបានព័ត៌មានអំពីអ្នកផ្តល់សេវាថ្មី កំណែចេញផ្សាយ និងគន្លឹះផ្សេងៗមុនគេ៖**
+**👋 អនុវត្តតាមអ្នកថែទាំ — ទទួលបានអ្នកផ្តល់សេវាថ្មី ការចេញផ្សាយ និងការណែនាំជាមុនសិន៖**
 
-[![តាមដាន Diego នៅលើ LinkedIn](https://img.shields.io/badge/Follow_Diego_on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/diegosouzapw/)
-[![តាមដាន @diegosouzapw នៅលើ GitHub](https://img.shields.io/github/followers/diegosouzapw?style=for-the-badge&logo=github&logoColor=white&label=Follow%20on%20GitHub&color=181717)](https://github.com/diegosouzapw)
+[![Follow Diego on LinkedIn](https://img.shields.io/badge/Follow_Diego_on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white) ](https://www.linkedin.com/in/diegosouzapw/) [![Follow @diegosouzapw on GitHub](https://img.shields.io/github/followers/diegosouzapw?style=for-the-badge&logo=github&logoColor=white&label=Follow%20on%20GitHub&color=181717) ](https://github.com/diegosouzapw)
 
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/U47eFqAXCn)
-[![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/omnirouteOficial)
-[![WhatsApp សកល](https://img.shields.io/badge/WhatsApp_Global-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4)
-[![WhatsApp ប្រេស៊ីល](https://img.shields.io/badge/WhatsApp_Brasil-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4)
-[![គេហទំព័រ](https://img.shields.io/badge/Website-omniroute.online-blue?logo=google-chrome&logoColor=white)](https://omniroute.online)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white) ](https://discord.gg/U47eFqAXCn) [![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) ](https://t.me/omnirouteOficial) [![WhatsApp Global](https://img.shields.io/badge/WhatsApp_Global-25D366?style=for-the-badge&logo=whatsapp&logoColor=white) ](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4) [![WhatsApp Brasil](https://img.shields.io/badge/WhatsApp_Brasil-25D366?style=for-the-badge&logo=whatsapp&logoColor=white) ](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4) [![គេហទំព័រ](https://img.shields.io/badge/Website-omniroute.online-blue?logo=google-chrome&logoColor=white) ](https://omniroute.online)
 
-**សំណួរ គន្លឹះអំពីអ្នកផ្តល់សេវា ផែនទីអភិវឌ្ឍន៍ និងការគាំទ្រ → [Discord](https://discord.gg/U47eFqAXCn) · [Telegram](https://t.me/omnirouteOficial) · WhatsApp [🌍 សកល](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4) / [🇧🇷 ប្រេស៊ីល](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4) / [ផតថល](https://portal.sthub.com.br/communities/groups/st-hub/channels/Omniroute-World-8kRjmK)**
+**សំណួរ គន្លឹះអ្នកផ្តល់សេវា ផែនទីបង្ហាញផ្លូវ និងការគាំទ្រ → [Discord](https://discord.gg/U47eFqAXCn) · [Telegram](https://t.me/omnirouteOficial) · WhatsApp [🌍 Global](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4) / [🇧🇷 Brasil](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4) / [Portal](https://portal.sthub.com.br/communities/groups/st-hub/channels/Omniroute-World-8kRjmK)**
 
 <br/>
 
-## 📈 Gateway បន្តរីកចម្រើន
+## 📈 The Gateway បន្តរីកចម្រើន
 
 <div align="center">
 
-|                                 |            v3.8.50             | **v3.8.51** |      `v3.8.54+`       |
-| ------------------------------- | :----------------------------: | :---------: | :-------------------: |
-| 🌐 អ្នកផ្តល់សេវា                |              352               |   **358**   |          380          |
-| 🧠 លេខសម្គាល់ម៉ូដែលជជែកតែមួយគត់ |              1320              |  **1374**   |         1491          |
-| 🖼️ ស្ពានម៉ូឌាល់                 | 🆕 ចក្ខុវិស័យ + សំឡេង + វីដេអូ |      ✓      |           ✓           |
-| 📡 កាតាឡុកឥតគិតថ្លៃរបស់ Radar   |       🆕 ជ្រើសរើសចូលរួម        |      ✓      |           ✓           |
-| ⚖️ ការកំណត់កាលវិភាគដែលដឹងពីកូតា |         🆕 Quota-Share         |      ✓      |           ✓           |
-| 📊 ទិន្នន័យតេឡេមេទ្រីកូតា       |         🆕 បន្តផ្ទាល់          |      ✓      |           ✓           |
-| 🧰 របៀបគ្មានចំណុចប្រទាក់        |               —                |      —      | 🆕 `serve --headless` |
-| 🛤️ ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវ LTS  |               —                |      —      |   🆕 បណ្តាញចេញផ្សាយ   |
-| 🔎 API ស្វែងរកម៉ូដែល            |               —                |      —      | 🆕 `/v1/models/query` |
+|                               |             v3.8.50              | **v3.8.51** |      `v3.8.54+`       |
+| ----------------------------- | :------------------------------: | :---------: | :-------------------: |
+| អ្នកផ្តល់សេវា🌐               |               352                |   **358**   |          380          |
+| 🧠 គំរូជជែកតែមួយគត់ IDs       |               1320               |  **1374**   |         1491          |
+| 🖼️ ស្ពាន Modality             | 🆕 ចក្ខុវិស័យ + អូឌីយ៉ូ + វីដេអូ |      ✓      |           ✓           |
+| 📡 រ៉ាដាកាតាឡុកឥតគិតថ្លៃ      |          🆕 ជ្រើសរើសចូល          |      ✓      |           ✓           |
+| ⚖️ ការកំណត់កាលវិភាគយល់ដឹងកូតា |         🆕 កូតា-ចែករំលែក         |      ✓      |           ✓           |
+| 📊 Quota telemetry            |      🆕 បានផ្សាយបន្តផ្ទាល់       |      ✓      |           ✓           |
+| 🧰 របៀបគ្មានក្បាល             |                —                 |      —      | 🆕 `serve --headless` |
+| 🛤️ LTS ផ្លូវដែកអ៊ីនហ្វ្រា     |                —                 |      —      |   🆕 ឆានែលចេញផ្សាយ    |
+| ការរកឃើញគំរូ🔎 API            |                —                 |      —      | 🆕 `/v1/models/query` |
 
-**→ [ផែនទីផ្លូវ](ROADMAP.md) — ធ្វើដំណើរតាមផ្លូវឆ្ពោះទៅ `v3.9.0 LTS`**
+**→ [ផែនទីផ្លូវ](ROADMAP.md) — ជិះផ្លូវដែកទៅ `v3.9.0 LTS`**
 
 </div>
 
@@ -223,23 +217,23 @@
 
 <a id="first-run"></a>
 
-## 🆓 ដំឡើង ភ្ជាប់អ្នកផ្តល់សេវា បន្ទាប់មកបញ្ជូនតាមចំណុចបញ្ចប់តែមួយ
+## 🆓 ដំឡើង, ភ្ជាប់អ្នកផ្តល់សេវា, បន្ទាប់មកធ្វើដំណើរតាមរយៈចំណុចបញ្ចប់មួយ។
 
 </div>
 
-<img src="./docs/diagrams/works-zero-config.svg" width="100%" alt="ជំហានបី៖ ដំឡើង និងចាប់ផ្តើម OmniRoute ភ្ជាប់អ្នកផ្តល់សេវាដែលមានសិទ្ធិមួយដោយប្រើគណនី ឬ API key ផ្ទាល់ខ្លួនរបស់អ្នក បន្ទាប់មកកំណត់ឧបករណ៍របស់អ្នកឱ្យចង្អុលទៅ localhost:20128/v1 ដោយប្រើ OmniRoute API key និង model auto។ ការបញ្ជូនអាស្រ័យលើការតភ្ជាប់ដែលមានសិទ្ធិ និងដែនកំណត់របស់អ្នកផ្តល់សេវា។"/>
+<img src="./docs/diagrams/works-zero-config.svg" width="100%" alt="Three steps: install and start OmniRoute, connect an eligible provider with your own account or API key, then point your tool at localhost:20128/v1 using an OmniRoute API key and model auto. Routing depends on available eligible connections and provider limits."/>
 
 ```bash
-# បន្ទាប់ពីភ្ជាប់អ្នកផ្តល់សេវាមួយ សូមចម្លង OmniRoute key របស់អ្នកពី ផ្ទាំងគ្រប់គ្រង → ចំណុចបញ្ចប់៖
+# After connecting a provider, copy your OmniRoute key from Dashboard → Endpoints:
 curl http://localhost:20128/v1/chat/completions \
   -H "Authorization: Bearer YOUR_OMNIROUTE_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
-<sub>`auto` ត្រូវការផ្លូវដែលមានសិទ្ធិ។ ការដំឡើងថ្មីអាចមិនមានគោលដៅដែលមិនត្រូវការ key និងមានសិទ្ធិទាល់តែសោះ ហើយអ្នកផ្តល់សេវាដែលមិនត្រូវការ key អាចបដិសេធ client ពីភាគីទីបី។ អ្នកផ្តល់សេវាដែលមានស្លាក `tos: avoid` រួមទាំង Kiro ត្រូវបានដកចេញពីការបញ្ជូនដោយស្វ័យប្រវត្តិតាមលំនាំដើម។ ការភ្ជាប់គណនីមិនលុបចោលការកំណត់នោះទេ។ សូមមើល [មគ្គុទ្ទេសក៍ Free Tiers](docs/getting-started/FREE-TIERS-GUIDE.md) មុនពេលជ្រើសរើសអ្នកផ្តល់សេវា។</sub>
+<sub>`auto` ត្រូវការផ្លូវដែលមានសិទ្ធិ។ ការដំឡើងថ្មីអាចមិនមានគោលដៅគ្មានសោដែលមានសិទ្ធិទេ ហើយអ្នកផ្តល់សេវាដែលគ្មានសោអាចបដិសេធអតិថិជនភាគីទីបី។ អ្នកផ្តល់សេវាដែលបានសម្គាល់ `tos: avoid` រួមទាំង Kiro ត្រូវបានដកចេញពីការបញ្ជូនដោយស្វ័យប្រវត្តិតាមលំនាំដើម។ ការភ្ជាប់គណនីមិនបដិសេធការកំណត់នោះទេ។ សូមមើល [ការណែនាំថ្នាក់ឥតគិតថ្លៃ](docs/getting-started/FREE-TIERS-GUIDE.md) មុនពេលជ្រើសរើសអ្នកផ្តល់សេវា។</sub>
 
-<sub>📦 ស្គ្រីប quickstart សម្រាប់ចម្លងបិទភ្ជាប់ភ្លាមៗសម្រាប់ **Python, Node.js, PHP និង cURL** → [`examples/quickstart/`](examples/quickstart/)</sub>
+<sub>📦 ចម្លង-បិទភ្ជាប់ស្គ្រីបចាប់ផ្តើមរហ័សសម្រាប់** Python, Node.js, PHP, និង cURL** → [`examples/quickstart/`](examples/quickstart/)</sub>
 
 <br/>
 
@@ -249,7 +243,7 @@ curl http://localhost:20128/v1/chat/completions \
 
 </div>
 
-<img src="./docs/diagrams/promise-pillars.svg" width="100%" alt="ការសន្យា — ចំណុចបញ្ចប់តែមួយ និងអ្នកផ្តល់សេវា 380។ ការប្តូរបម្រុងដោយស្វ័យប្រវត្តិធានាឱ្យការបញ្ជូននៅតែដំណើរការ ខណៈដែលគោលដៅដែលមានសុខភាពល្អផ្សេងទៀតនៅតែមាន។ សសរស្តម្ភប្រាំមួយ៖ ការប្តូរបម្រុងដែលធន់ទ្រាំឆ្លងកាត់អ្នកផ្តល់សេវា 380 · សន្សំ token បានរហូតដល់ 95% លើ workload ដែលមានសិទ្ធិ · ចាប់ផ្តើមដោយ $0 ជាមួយ free tier ជាង 150 និងអ្នកផ្តល់សេវាឥតគិតថ្លៃជារៀងរហូតដែលកើតឡើងជាប្រចាំ/មិនត្រូវការ key ចំនួន 54 · ការរួមបញ្ចូល CLI/agent ចំនួន 39 តាមរយៈ config តែមួយ · ភាពឆបគ្នាជាមួយ OpenAI, Claude, Gemini និង Responses API នៅ /v1 · ការគ្រប់គ្រងសម្រាប់ production រួមមាន circuit breaker, TLS stealth, MCP 110 tools, A2A, memory, guardrails, evals និងការប្រកាសតេស្ត static ជាង 56,000 នៅទូទាំងឯកសារតេស្តដែលបានតាមដានជាង 7,800។"/>
+<img src="./docs/diagrams/promise-pillars.svg" width="100%" alt="The Promise — One endpoint and 380 providers. Automatic fallback keeps routing while another healthy target is available. Six pillars: resilient fallback across 380 providers · up to 95% token savings on eligible workloads · $0 to start with 150+ free tiers and 52 recurring/keyless free-forever providers · 39 CLI/agent integrations through one config · OpenAI, Claude, Gemini and Responses API compatibility at /v1 · production controls including circuit breakers, TLS stealth, MCP 110 tools, A2A, memory, guardrails, evals and 56,000+ static test declarations across 7,800+ tracked test files."/>
 
 <br/>
 <br/>
@@ -260,11 +254,11 @@ curl http://localhost:20128/v1/chat/completions \
 
 </div>
 
-<img src="./docs/diagrams/why-pain-fix.svg" width="100%" alt="ហេតុអ្វី OmniRoute — ឈប់ពិបាកគ្រប់គ្រងផ្ទាំងគ្រប់គ្រង 10 កន្លែង API key ដែលស្លាប់ និងវិក្កយបត្រដែលគួរឱ្យភ្ញាក់ផ្អើល។ បញ្ហាប្រចាំថ្ងៃ 10 យ៉ាងធៀបនឹងដំណោះស្រាយ៖ quota ផុតកំណត់ដោយមិនបានប្រើ → ប្រើប្រាស់ subscription ឱ្យបានអតិបរមា; rate limit កើតឡើងកណ្តាលពេលសរសេរកូដ → ការប្តូរបម្រុងដោយស្វ័យប្រវត្តិ 4 កម្រិត (Subscription → API → Cheap → Free); លទ្ធផលពី tool ស៊ី token → ការបង្ហាប់ RTK + Caveman (15–95%); API ថ្លៃ → ការបញ្ជូនដែលបង្កើនប្រសិទ្ធភាពថ្លៃដើម; ឧបករណ៍នីមួយៗត្រូវរៀបចំដោយឡែក → ចំណុចបញ្ចប់តែមួយ ផ្ទាំងគ្រប់គ្រងតែមួយ; AI ត្រូវបានរារាំង → proxy 3 កម្រិត + TLS stealth; key ស្លាប់ → ភាពធន់ទ្រាំ 3 ស្រទាប់ (circuit breaker, key cooldown, model lockout); ក្រុមចែករំលែក subscription មួយ → key pool ជាមួយ quota ចែកដោយយុត្តិធម៌; prompt ឆ្លងកាត់ cloud របស់អ្នកដទៃ → local-first ជាមួយ key ដែលបានអ៊ិនគ្រីបដោយ AES-256-GCM; មិនអាចមើលឃើញការចំណាយ → analytics ផ្ទាល់ (ការប្រើប្រាស់, quota, ការសន្សំ, p95 latency)។"/>
+<img src="./docs/diagrams/why-pain-fix.svg" width="100%" alt="Why OmniRoute — stop juggling 10 dashboards, dead API keys and surprise bills. Ten daily pains vs fixes: quota expiring unused → maximize subscriptions; rate limits mid-coding → 4-tier auto-fallback (Subscription → API → Cheap → Free); tool outputs burning tokens → RTK + Caveman compression (15–95%); expensive APIs → cost-optimized routing; every tool its own setup → one endpoint, one dashboard; AI blocked → 3-level proxy + TLS stealth; dead keys → 3-layer resilience (circuit breakers, key cooldown, model lockout); team sharing one subscription → key pools with fair-share quotas; prompts through someone's cloud → local-first with AES-256-GCM encrypted keys; no spend visibility → live analytics (usage, quota, savings, p95 latency)."/>
 
 <div align="center">
 
-<img src="./docs/diagrams/tier-cascade.svg" width="100%" alt="លំហូរសំណើរបស់ OmniRoute៖ IDE ឬ CLI របស់អ្នក (Claude Code, Cursor, Cline…) ហៅទៅចំណុចបញ្ចប់ក្នុងម៉ាស៊ីនតែមួយ (http://localhost:20128/v1); OmniRoute Smart Router (ការបង្ហាប់ RTK + Caveman, យុទ្ធសាស្ត្របញ្ជូន 20, circuit breaker, TLS stealth, MCP, A2A, guardrail) អាចប្តូរបម្រុងឆ្លងកាត់កម្រិតអ្នកផ្តល់សេវា 4 ខណៈដែលគោលដៅដែលមានសិទ្ធិ និងមានសុខភាពល្អនៅតែមាន — កម្រិតទី 1 Subscription, កម្រិតទី 2 API Key, កម្រិតទី 3 Cheap និងកម្រិតទី 4 Free។"/>
+<img src="./docs/diagrams/tier-cascade.svg" width="100%" alt="OmniRoute request flow: your IDE or CLI (Claude Code, Cursor, Cline…) calls one local endpoint (http://localhost:20128/v1); the OmniRoute Smart Router (RTK + Caveman compression, 20 routing strategies, circuit breakers, TLS stealth, MCP, A2A, guardrails) can fall back across 4 provider tiers while an eligible healthy target remains — Tier 1 Subscription, Tier 2 API Key, Tier 3 Cheap and Tier 4 Free."/>
 
 </div>
 
@@ -575,39 +569,39 @@ Radar គឺជាមុខងារដែលត្រូវជ្រើសរ�
 
 <div align="center">
 
-## ✨ អ្វីថ្មី
+## ✨ តើមានអ្វីថ្មី។
 
 </div>
 
-> សេចក្តីពិសេសថ្មីៗពី **v3.8.20 → v3.8.54**។ ប្រវត្តិពេញលេញសូមមើលក្នុង [`CHANGELOG.md`](CHANGELOG.md)។
+> គំនួសពណ៌ថ្មីៗពី** v3.8.20 → v3.8.54** . ប្រវត្តិសាស្រ្តពេញលេញនៅក្នុង [`CHANGELOG.md`](CHANGELOG.md) ។
 
-- **⚖️ `quota-weighted` routing** — យុទ្ធសាស្ត្ររួមលេខ ២០ នេះរំលងគណនីដែលបានប្រើអស់ហើយ បន្ទាប់មកជ្រើសរើសចេញពីគណនីនៅសល់ដោយសមាមាត្រទៅនឹង quota នៅសល់ ÷ បន្ទុកកំពុងដំណើរការ ដើម្បីរក្សា threads ការសន្ទនាដែលមានស្រាប់ឲ្យនៅដដែល។ → [Auto-Combo](docs/routing/AUTO-COMBO.md)
-- **🧰 របៀប Headless** — `omniroute serve --headless` (ឬ `OMNIROUTE_HEADLESS=1`) ដំណើរការតែម៉ាស៊ីនភ្លើង proxy `/v1/*` ប៉ុណ្ណោះ ដោយ dashboard និងប្រព័ន្ធដែលមានតែ dashboard ត្រូវបានបិទ។ → [Headless Mode](docs/guides/HEADLESS.md)
-- **🔎 ការរកឃើញម៉ូដែល** — `/v1/models` អាចត្រងតាមសមត្ថភាព បរិបទ ប្រភេទ និងអត្ថបទ ហើយ `POST /v1/models/query` ផ្តល់បញ្ជីខ្លីកំណត់ដោយកំណត់ជាមួយភាពមើលឃើញតាម key ដូចគ្នា។ → [API Reference](docs/reference/API_REFERENCE.md)
-- **🔑 ការត្រួតពិនិត្យការរុញតាម key** — បិទ API key មួយទៅម៉ូដែលឬ combo មួយជាមួយ `forcedModel` ហើយបន្ថែម ឬដកម៉ូដែល និង combos របស់ key មួយដោយ atomic (`/api/keys/{id}/access`)។ → [API Reference](docs/reference/API_REFERENCE.md) · [OpenAPI](docs/openapi.yaml)
-- **🛡️ ការត្រួតពិនិត្យ PII លម្អិត** — ជ្រើសរើសតាមប្រភេទ រហូតដល់ ២០ លំនាំ masking ផ្ទាល់ខ្លួនដែលបានផ្ទៀងផ្ទាត់ និងកុងទ័ររកឃើញតាមប្រភេទ; ការបិទមុខមាត់ masking នៅតែជាជម្រើស។ → [Guardrails](docs/security/GUARDRAILS.md)
-- **🌍 ៦៧ ភាសា** — dashboard, ការបញ្ចាំងឯកសារ និង CLI ជាមួយ `npm run i18n:add-locale` បន្ថែមភាសាទាំងអស់ក្នុងពេលតែមួយ។ → [i18n Guide](docs/guides/I18N.md)
-- **🎛️ OmniConductor** — ការចែកចាយ inbound A2A ទៅកាន់ក្រុម agent របស់អ្នក, ជំនាញ Conductor នៅលើ Agent Card, និងផ្ទាំង dashboard ជាមួយសេវាកម្មសម្លេង Faro push-to-talk។ → [A2A Server](docs/frameworks/A2A-SERVER.md)
-- **🛂 ការទទួលចូល និងការការពារបន្ទុកលើសដែលអាចបត់បែនបាន** — សំណើសន្ទនាដែលមានទម្ងន់ធ្ងន់ត្រូវបានដាក់ជាជួររង់ចាំជំនួស 503 ដោយមានការបែងចែក RPM rolling leases តាមការតភ្ជាប់។ → [Resilience Guide](docs/architecture/RESILIENCE_GUIDE.md)
-- **🗂️ ការរៀបចំ `/v1/models` តាមលំដាប់ស្តង់ដារ** — ប្លុក provider-grouped តែមួយសម្រាប់ provider នីមួយៗ (combos ត្រូវបានបិទជាមុន) មានស្ថិរភាពគ្រប់ប្រភព catalog។ → [API Reference](docs/reference/API_REFERENCE.md)
-- **🗜️ ការពង្រឹងការបង្ហាប់** — ការការពារការបង្ហាប់បើកដោយលំនាំដើម Caveman packs សម្រាប់ DE / FR / JA + ចិន (wényán), តម្រង RTK សម្រាប់ Gradle & .NET។ → [Compression](docs/compression/COMPRESSION_ENGINES.md)
-- **💸 តម្លៃថេរដោយស្មោះត្រង់** — subscription / coding-plan providers បង្ហាញថ្លៃដើម **$0** ក្នុង cost analytics; ថវិកា quota និងការរុញបន្តការប៉ាន់ស្មាន។ → [API Reference](docs/reference/API_REFERENCE.md)
-- **⚖️ Quota-Share routing** — ចែក quota របស់គណនីរួមឲ្យសមសឹងគ្នាទៅកាន់ key ដែលបាន pool ដោយធានាឲ្យសមស្រប slice ទំនេរត្រូវបានខ្ចី។ → [Resilience Guide](docs/architecture/RESILIENCE_GUIDE.md)
-- **🤖 ការរៀបចំ CLI/agent ដោយពាក្យបញ្ជា១** — ១៥ ពាក្យបញ្ជា `setup-*` ដែលបានចុះបញ្ជី; `omniroute run` ចាប់ផ្តើម ៧ CLI (Claude Code, Codex, Aider, Goose, OpenCode, Qwen Code, Gemini CLI); `omniroute configure` គាំទ្រ ១១ គោលដៅជាមួយអ្នកជ្រើស provider+model អន្តរកម្ម និងជម្រើសសំណព្វតាម context។ → [CLI Integrations](docs/guides/CLI-INTEGRATIONS.md)
-- **🛰️ របៀបឆ្ងាយ** — បញ្ជារបៀប OmniRoute ឆ្ងាយជាមួយ token ដែលមានវិសាលភាព (`connect` / `contexts` / `tokens`) + អ្នកជួយ OAuth `antigravity` សម្រាប់ការតំឡើង VPS។ → [Remote Mode](docs/guides/REMOTE-MODE.md)
-- **🧭 ការរុញស្វ័យប្រវត្តិឆ្លាតវៃជាងមុន** — `auto/<category>:<tier>` combos, **Fusion** (ផ្ទាំងម៉ូដែល + កម្មវិធីវាយតម្លៃ), ការរុញដឹងភារកិច្ច, ការបដិសេធម៉ូដែល / របៀប / ថវិកា USD តាមសំណើ។ → [Auto-Combo](docs/routing/AUTO-COMBO.md)
-- **🗜️ ការបង្ហាប់ដែលអាចដាក់បន្ថែមបាន** — ម៉ាស៊ីន ១២ ប្រើរួមបាន + Compression Studios: LLMLingua-2, Ultra ពីរជាន់, omniglyph, per-step fidelity gate, GCF v3.2, drag-reorder editor។ → [Compression](docs/compression/COMPRESSION_ENGINES.md)
-- **🕵️ ការដោះសោ MITM ដោយច្បាស់លាស់ (TPROXY)** — ចាប់ CLI ដែលមិនអើពើ proxy env vars ជាមួយ CA តាម SNI និងកម្មវិធីដំឡើង trust-store។ → [MITM/TPROXY](docs/security/MITM-TPROXY-DECRYPT.md)
-- **💸 ទិន្នន័យថ្លៃដើមគ្រប់ទីកន្លែង** — header `X-OmniRoute-*` cost/usage នៅគ្រប់ endpoint, header សន្សំ cache-HIT, ថវិកា USD តាម key។ → [API Reference](docs/reference/API_REFERENCE.md)
-- **🧠 អនុស្សាវរីយ៍ដែលអ្នកគ្រប់គ្រងបាន** — បិទដោយលំនាំដើម ជ្រើសរើស int8 vector quantization + typed decay, `x-omniroute-no-memory` តាមសំណើ។ → [Memory](docs/frameworks/MEMORY.md)
-- **🛡️ សុវត្ថិភាព** — ការការពារការបញ្ចូល prompt-injection នៅគ្រប់ LLM route (red-team suite), ជម្រើសការការពារបិទមុខមាត់ credential (លាក់ API keys/secrets ដែលលេចធ្លោទាំងពីរទិស), សេវាស្វែងរកបណ្តាញ DuckDuckGo ដោយឥតគិតថ្លៃ, និងច្រកចូល OIDC ជាជម្រើសសម្រាប់ dashboard (ការចូលដោយពាក្យសម្ងាត់នៅតែមាន)។ → [Guardrails](docs/security/GUARDRAILS.md)
-- **🖼️ ចំណុច tail ใหม่** — `/v1/ocr` (Mistral OCR) និង `/v1/audio/translations` (Whisper-style) បំពេញផ្ទៃមេឌៀ។ → [API Reference](docs/reference/API_REFERENCE.md)
-- **🎨 បង្កើតរូបភាព / វីដេអូ / សម្លេង** — API មួយសម្រាប់មេឌៀ: xAI Grok Imagine & Novita AI video, ComfyUI, Magnific, Adobe Firefly, Segmind, និងអ្នកផ្តល់សម្លេងដូចជា ElevenLabs។ → [API Reference](docs/reference/API_REFERENCE.md)
-- **🌍 ការតំឡើង និងប្រតិបត្តិការ** — reverse-proxy `basePath`, ការរកឃើញភាសាកម្មវិធី browser ដោយស្វ័យប្រវត្តិ, ការតាមដានឧបករណ៍តាម key, MITM trust ដោយគ្មាន root, zh-TW localization។ → [Environment](docs/reference/ENVIRONMENT.md)
-- **🤝 អ្នកផ្តល់សេវា និង agent ច្រើនទៀត** — cloud agents (Codex Cloud, Cursor, Devin, Jules), Grok Build (xAI) ជាមួយ browser + OAuth login, Ollama card ជាថ្នាក់ដំបូង, Claude Opus 5 & Sonnet 5, Kimi ជាដៃគូផ្លូវការណ៍ (Code/Web/Moonshot), Zed, Requesty, SenseNova, Yuanbao, Agnes AI… និងបញ្ជីអ្នកផ្តល់សេវា **៣៨០** ថ្មីៗ។ → [Providers](docs/reference/PROVIDER_REFERENCE.md)
-- **📡 ភាពច្បាស់លាស់នៃការរុញ** — គ្រប់ចម្លើយមាន header `X-OmniRoute-Decision` បង្ហាញយុទ្ធសាស្ត្រ/អ្នកផ្តល់សេវា/latency ដែលបានបម្រើ, យុទ្ធសាស្ត្រ combo `cache-optimized` ថ្មី + Auto-Combo `cacheAffinity` factor បញ្ជូនសំណើធ្វើម្តងទៀតទៅការតភ្ជាប់ដែលកាន់ cached prefix, និង endpoint `/v1/auto-combo/{channel}/candidates` (read-only) បង្ហាញ pool candidate រស់រវើករបស់ channel `auto/*`។ → [Auto-Combo](docs/routing/AUTO-COMBO.md)
-- **⚡ សមត្ថភាព និងហេដ្ឋារចនាសម្ព័ន្ធក្នុងតំបន់** — ដំឡើង Redis ក្នុងតំបន់តែមួយចុច, Cloudflare Workers / Deno Deploy relay deployers, Bifrost & Mux ជាសេវាកម្មបង្កប់ដែលមានការត្រួតពិនិត្យ។ → [សេវាកម្មបង្កប់](docs/frameworks/EMBEDDED-SERVICES.md)
-- **🧩 មានក្នុងប្រអប់ផងដែរ** — ស៊ុមកម្មវិធីជំនួយ + ផ្សារទំនិញ, ស៊ុមជំនាញ Omni/Agent/GitHub, សមាហរណកម្ម Obsidian vault (ឧបករណ៍ MCP ២២), OpenAI-compatible Batch & Files APIs, ឃ្លាំងឆ្លើយតបសេម៉ង់ទិក, ការលេងហ្គេមជាមួយតារាងពិន្ទុ, ការរកឃើញភ្នាក់ងារ ACP (ភ្នាក់ងារដែលមានក្នុងខ្លួន ១៥), ការនាំចេញកំណត់ត្រាតាមកាលវិភាគទៅ BigQuery, `auto/chaos` fan-out ពហុម៉ូដែលបន្តបន្ទាប់, ស្ពានបុត Telegram, កម្មវិធីគ្រប់គ្រងកំណែក្នុងកម្មវិធី និងចំណាត់ថ្នាក់ LMArena-ELO សម្រាប់អ្នកផ្តល់សេវាឥតគិតថ្លៃ។ → [ឯកសារ](docs/README.md)
+- **⚖️ `quota-weighted` នាំផ្លូវ** — យុទ្ធសាស្រ្តបន្សំទី 20 រំលងគណនីដែលហត់នឿយ បន្ទាប់មកទាញក្នុងចំណោមសល់ក្នុងសមាមាត្រទៅនឹងកូតា ÷ ដែលនៅសេសសល់ក្នុងយន្តហោះ ដោយរក្សាការសន្ទនាដែលមានស្រាប់ត្រូវបានខ្ទាស់។ → [បន្សំស្វ័យប្រវត្តិ](docs/routing/AUTO-COMBO.md)
+- **🧰 របៀបគ្មានក្បាល** — `omniroute serve --headless` (ឬ `OMNIROUTE_HEADLESS=1`) ដំណើរការតែម៉ាស៊ីនប្រូកស៊ី `/v1/*` ដោយបិទប្រព័ន្ធរងសម្រាប់តែផ្ទាំងគ្រប់គ្រង និងផ្ទាំងគ្រប់គ្រងប៉ុណ្ណោះ។ → [របៀបគ្មានក្បាល](docs/guides/HEADLESS.md)
+- **ការរកឃើញគំរូ🔎** — `/v1/models` ត្រងតាមសមត្ថភាព បរិបទ ប្រភេទ និងអត្ថបទ ហើយ `POST /v1/models/query` ត្រឡប់បញ្ជីសម្រាំងកំណត់ខ្លីជាមួយនឹងភាពមើលឃើញក្នុងមួយគ្រាប់ចុចដូចគ្នា។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md)
+- **🔑 Per-key routing control** — ខ្ទាស់គ្រាប់ចុច API ទៅម៉ូដែលមួយ ឬបន្សំជាមួយ `forcedModel` ហើយបន្ថែមឬយកគំរូរបស់សោ និងបន្សំអាតូម (`/api/keys/{id}/access`)។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md) · [OpenAPI](docs/openapi.yaml)
+- **🛡️ Finer PII គ្រប់គ្រង** — ក្នុងមួយប្រភេទ ការជ្រើសរើសគំរូរបាំងផ្ទាល់ខ្លួនដែលមានសុពលភាពរហូតដល់ 20 និងបញ្ជររកឃើញក្នុងមួយប្រភេទ។ របាំងខ្លួនវានៅតែជ្រើសរើស។ → [Guardrails](docs/security/GUARDRAILS.md)
+- **🌍 67 ភាសា** — dashboard, docs mirrors និង CLI ជាមួយនឹង `npm run i18n:add-locale` បន្ថែមភាសានៅគ្រប់ទីកន្លែងក្នុងពាក្យបញ្ជាមួយ។ → [i18n មគ្គុទ្ទេសក៍](docs/guides/I18N.md)
+- **🎛️ OmniConductor** — inbound A2A delegation to your agent fleet, Conductor skills on the Agent Card, and a dashboard panel with Faro push-to-talk voice chat. → [A2A Server](docs/frameworks/A2A-SERVER.md)
+- **🛂 Adaptive admission & ការការពារលើសទម្ងន់** — heavyweight chat ស្នើសុំជួរជំនួសឱ្យ 503ing ជាមួយនឹងការជួលអាតូម RPM វិលក្នុងមួយការតភ្ជាប់។ → [មគ្គុទ្ទេសក៍ភាពធន់](docs/architecture/RESILIENCE_GUIDE.md)
+- **ការបញ្ជាទិញ 🗂️ Canonical `/v1/models`** — ប្លុកដែលដាក់ជាក្រុមអ្នកផ្តល់សេវាជាប់គ្នាមួយក្នុងមួយអ្នកផ្តល់សេវា (បន្សំដែលបានខ្ទាស់ជាមុន) មានស្ថេរភាពនៅគ្រប់ប្រភពកាតាឡុក។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md)
+- **🗜️ ការបង្ហាប់រឹង** — default-on inflation guard, Caveman packs for DE / FR / JA + Chinese (wényán), RTK filters for Gradle & .NET។ → [ការបង្ហាប់](docs/compression/COMPRESSION_ENGINES.md)
+- **💸 តម្លៃផ្ទះល្វែងស្មោះត្រង់** — subscription / coding-plan អ្នកផ្តល់សេវាអាន** $0** នៅក្នុងការវិភាគតម្លៃ; ថវិកា កូតា និងផ្លូវបន្តការប៉ាន់ប្រមាណ។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md)
+- **⚖️ Quota-Share នាំផ្លូវ** — បំបែកកូតានៃគណនីចែករំលែកដោយស្មើភាពនៅទូទាំងកូនសោរួមបញ្ចូលគ្នា រក្សាទុកការងារ ដូច្នេះចំណែកដែលទំនេរត្រូវបានខ្ចី។ → [ការណែនាំអំពីភាពធន់](docs/architecture/RESILIENCE_GUIDE.md)
+- **🤖 ការដំឡើង CLI/agent ពាក្យបញ្ជាតែមួយ** — 15 បានចុះឈ្មោះពាក្យបញ្ជា `setup-*` ; `omniroute run` បើកដំណើរការ 7 CLIs (Claude Code, Codex, Aider, Goose, OpenCode, Qwen Code, Gemini CLI); `omniroute configure` គាំទ្រ 11 គោលដៅជាមួយនឹងអ្នកផ្តល់សេវាអន្តរកម្មអ្នកជ្រើសរើសម៉ូដែល + និងចំណូលចិត្តក្នុងមួយបរិបទ។ → [CLI សមាហរណកម្ម](docs/guides/CLI-INTEGRATIONS.md)
+- **🛰️ របៀបពីចម្ងាយ** — ជំរុញ OmniRoute ពីចម្ងាយដែលមានសញ្ញាសម្គាល់វិសាលភាព (`connect` / `contexts` / `tokens`) + ជំនួយ `antigravity` OAuth សម្រាប់ការដំឡើង VPS ។ → [របៀបពីចម្ងាយ](docs/guides/REMOTE-MODE.md)
+- **🧭 Smarter កំណត់ផ្លូវដោយស្វ័យប្រវត្តិ** — `auto/<category>:<tier>`,** លាយ** (គំរូបន្ទះ + ចៅក្រម) ការកំណត់ផ្លូវដែលដឹងអំពីកិច្ចការ គំរូ/របៀបតាមសំណើ/ការបដិសេធថវិកា USD ។ → [បន្សំស្វ័យប្រវត្តិ](docs/routing/AUTO-COMBO.md)
+- **🗜️ ការបង្ហាប់ដែលអាចដោតបាន។** — 12 composable engines + Compression Studios: LLMLingua-2, two-tier Ultra, omniglyph, per-step fidelity gate, GCF v3.2, drag-reorder editor. → [ការបង្ហាប់](docs/compression/COMPRESSION_ENGINES.md)
+- **🕵️ តម្លាភាព MITM ឌិគ្រីប (TPROXY)** — ចាប់យក CLIs ដែលមិនអើពើប្រូកស៊ី env vars ជាមួយនឹងកម្មវិធីដំឡើងហាងជឿទុកចិត្តក្នុងមួយ SNI CA + ។ → [MITM/TPROXY](docs/security/MITM-TPROXY-DECRYPT.md)
+- **💸 តម្លៃ telemetry នៅគ្រប់ទីកន្លែង** បឋមកថា — `X-OmniRoute-*` cost/usage នៅគ្រប់ចំណុចបញ្ចប់ បឋមកថាសន្សំឃ្លាំងសម្ងាត់ HIT កូតាចំណាយ USD ក្នុងមួយគ្រាប់ចុច។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md)
+- **🧠 ចងចាំដែលអ្នកគ្រប់គ្រង** — បិទតាមលំនាំដើម ជ្រើសរើសក្នុង int8 vector quantization + typed decay, per-request `x-omniroute-no-memory`។ → [អង្គចងចាំ](docs/frameworks/MEMORY.md)
+- **🛡️ សន្តិសុខ** — prompt-injection guard នៅគ្រប់ផ្លូវ LLM (ឈុតក្រុមក្រហម) ជ្រើសរើសចូល credential-masking guardrail ( redacts លេចធ្លាយ API keys/secrets ក្នុងទិសដៅទាំងពីរ) ការស្វែងរកគេហទំព័រចុងក្រោយ DuckDuckGo ឥតគិតថ្លៃ និងច្រកចូល OIDC ជាជម្រើសសម្រាប់ផ្ទាំងគ្រប់គ្រង (ការចូលពាក្យសម្ងាត់តែងតែមាន)។ → [Guardrails](docs/security/GUARDRAILS.md)
+- **🖼️ ចំណុចបញ្ចប់ថ្មី។** — `/v1/ocr` (Mistral OCR) និង `/v1/audio/translations` (Whisper-style) ជុំវិញផ្ទៃប្រព័ន្ធផ្សព្វផ្សាយ។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md)
+- **🎨 រូបភាព / វីដេអូ / ជំនាន់អូឌីយ៉ូ** — one API សម្រាប់ប្រព័ន្ធផ្សព្វផ្សាយ៖ xAI Grok Imagine & Novita AI video, ComfyUI, Magnific, Adobe Firefly, Segmind និងអ្នកផ្តល់ការនិយាយដូចជា ElevenLabs។ → [API ឯកសារយោង](docs/reference/API_REFERENCE.md)
+- **🌍 ការដាក់ពង្រាយ & ops** — reverse-proxy `basePath`, browser-language auto-detect, per-key device tracking, root-less MITM trust, zh-TW localization ។ → [បរិស្ថាន](docs/reference/ENVIRONMENT.md)
+- **🤝 អ្នកផ្តល់សេវា និងភ្នាក់ងារច្រើនទៀត** — cloud agents (Codex Cloud, Cursor, Devin, Jules), Grok Build (xAI) ជាមួយនឹង browser + OAuth login, Ollama first-class card, Claude Opus 5 & Sonnet 5, Kimi official partnership (Code/Web/Moonshot), Zed, Requesty, SenseNovaAI, Yunes refresh** 380- កាតាឡុកអ្នកផ្តល់សេវា** . [អ្នកផ្តល់សេវា](docs/reference/PROVIDER_REFERENCE.md) →
+- **📡 តម្លាភាពផ្លូវ** — រាល់ការឆ្លើយតបមានបឋមកថា `X-OmniRoute-Decision` ដែលដាក់ឈ្មោះ strategy/provider/latency ដែលបានបម្រើវា យុទ្ធសាស្រ្ត `cache-optimized` បន្សំថ្មី + ផ្លូវកត្តាកត្តា `cacheAffinity` ស្វ័យប្រវត្តិ ស្នើសុំម្តងទៀតត្រឡប់ទៅការតភ្ជាប់ដែលកាន់បុព្វបទដែលបានដាក់ក្នុងឃ្លាំងសម្ងាត់ ហើយចំណុចបញ្ចប់ `/v1/auto-combo/{channel}/candidates` បានតែអានបង្ហាញពីក្រុមបេក្ខជនបន្តផ្ទាល់របស់ប៉ុស្តិ៍ `auto/*` ។ → [បន្សំស្វ័យប្រវត្តិ](docs/routing/AUTO-COMBO.md)
+- **⚡ ការអនុវត្តក្នុងស្រុក & អ៊ីនហ្វ្រា** — one-click local Redis, Cloudflare Workers / Deno Deploy relay deployers, Bifrost & Mux ជាសេវាកម្មបង្កប់ក្រោមការគ្រប់គ្រង។ → [សេវាបង្កប់](docs/frameworks/EMBEDDED-SERVICES.md)
+- **🧩 ផងដែរនៅក្នុងប្រអប់** — plugin framework + marketplace, Omni/Agent/GitHub Skills frameworks, Obsidian vault integration (22 MCP tools), OpenAI-compatible Batch & Files APIs, semantic response cache, gamification with leaderboards, ACP agent discovery (15 built-in agents), កំណត់ពេលនាំចេញកំណត់ហេតុទៅកាន់ BigQuery, `auto/chaos` fanqk-up parallel កំណែ Telegram អ្នកគ្រប់គ្រងនិងចំណាត់ថ្នាក់អ្នកផ្តល់សេវាឥតគិតថ្លៃ LMArena-ELO ។ → [ឯកសារ](docs/README.md)
 
 <br/>
 
@@ -687,15 +681,15 @@ omniroute configure codex          # ក៏ដូចជា: claude opencode qwen
 
 <div align="center">
 
-## 🌐 អ្នកផ្តល់សេវា AI ចំនួន 380 — 153 ត្រូវបានសម្គាល់ថាឥតគិតថ្លៃក្នុងកាតាឡុក
+## 🌐 380 AI អ្នកផ្តល់ — 153 កាតាឡុក-សម្គាល់ដោយឥតគិតថ្លៃ
 
 </div>
 
-> **អ្នកផ្តល់សេវាចំនួន 380 ដែលបានចុះបញ្ជី** នៅក្នុងសំណុំ canonical សម្រាប់ការជជែក មេឌៀ ការស្វែងរក ប្រព័ន្ធក្នុងម៉ាស៊ីន ភ្នាក់ងារក្លោដ និងប្រព័ន្ធ រួមទាំង **អ្នកផ្តល់សេវាចំនួន 153 ដែលមានទិន្នន័យមេតាសម្រាប់ការស្វែងរក `hasFree: true`**។ បញ្ជីឈ្មោះម៉ូដែលជជែកគ្របដណ្តប់ **អ្នកផ្តល់សេវាចំនួន 239 / គូអ្នកផ្តល់សេវា-ម៉ូដែលចំនួន 3,059 ដែលខុសគ្នា / លេខសម្គាល់ម៉ូដែលដើមចំនួន 1,475**; កាតាឡុកថវិកាឥតគិតថ្លៃដាច់ដោយឡែកមាន **ជួរតាមម៉ូដែលចំនួន 471**, **ក្រុមកើតឡើងជាប្រចាំចំនួន 34** និង **អ្នកផ្តល់សេវាឥតគិតថ្លៃជារៀងរហូតចំនួន 54 ដែលកើតឡើងជាប្រចាំ/មិនត្រូវការសោ**។ ទាំងនេះជាភាគបែងផ្សេងគ្នាតាមការរចនា; និយមន័យ និងការគណនាដែលបានដកស្ទួនតាមក្រុមមាននៅក្នុង [ឯកសារយោងអ្នកផ្តល់សេវា](docs/reference/PROVIDER_REFERENCE.md) និង [កម្រិតឥតគិតថ្លៃ](docs/reference/FREE_TIERS.md)។
+> **អ្នកផ្តល់សេវាចុះបញ្ជីចំនួន 380** ឆ្លងកាត់ការជជែកតាម Canonical ប្រព័ន្ធផ្សព្វផ្សាយ ការស្វែងរក មូលដ្ឋាន ភ្នាក់ងារពពក និងការប្រមូលប្រព័ន្ធ រួមទាំង** 153 ផ្ទុកទិន្នន័យមេតានៃការរកឃើញ `hasFree: true`** . ការចុះឈ្មោះម៉ូដែលជជែកគ្របដណ្តប់** 239 អ្នកផ្តល់សេវា / 3,059 គូគំរូអ្នកផ្តល់សេវាផ្សេងគ្នា / 1,475 គំរូដើម IDs** ; កាតាឡុកថវិកាឥតគិតថ្លៃដាច់ដោយឡែកមាន** 471 ក្នុងមួយជួរគំរូ** ,** 34 អាងដែលកើតឡើងដដែលៗ** និង** អ្នកផ្តល់សេវាឥតគិតថ្លៃ 52 recurring/keyless ជារៀងរហូត** . ទាំងនេះគឺជាភាគបែងផ្សេងគ្នាដោយការរចនា; និយមន័យ និងការគណនាដោយបូកបញ្ចូលគ្នា រស់នៅក្នុង [សេចក្តីយោងអ្នកផ្តល់សេវា](docs/reference/PROVIDER_REFERENCE.md) និង [ថ្នាក់ឥតគិតថ្លៃ](docs/reference/FREE_TIERS.md) ។
 
 <div align="center">
 
-### 🏢 មន្ទីរពិសោធន៍ធំៗទាំងអស់ — តាមរយៈចំណុចបញ្ចប់តែមួយ
+### 🏢 រាល់មន្ទីរពិសោធន៍ធំ — តាមរយៈចំណុចបញ្ចប់មួយ។
 
 <table>
   <tr>
@@ -708,14 +702,14 @@ omniroute configure codex          # ក៏ដូចជា: claude opencode qwen
   </tr>
   <tr>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/qwen-color.svg" width="40" alt="Qwen"/><br/><sub>Qwen</sub><br/><sub>                           </sub></td>
-    <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/meta-color.svg" width="40" alt="Meta Llama"/><br/><sub>Meta Llama</sub><br/><sub>                           </sub></td>
+    <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/meta-color.svg" width="40" alt="Meta Llama"/><br/><sub>មេតា Llama</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><picture><source media="(prefers-color-scheme:dark)" srcset="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-png@1.91.0/dark/groq.png"/><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/groq.svg" width="40" alt="Groq"/></picture><br/><sub>Groq</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/nvidia-color.svg" width="40" alt="NVIDIA"/><br/><sub>NVIDIA</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/minimax-color.svg" width="40" alt="MiniMax"/><br/><sub>MiniMax</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/cohere-color.svg" width="40" alt="Cohere"/><br/><sub>Cohere</sub><br/><sub>                           </sub></td>
   </tr>
   <tr>
-    <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/perplexity-color.svg" width="40" alt="Perplexity"/><br/><sub>Perplexity</sub><br/><sub>                           </sub></td>
+    <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/perplexity-color.svg" width="40" alt="Perplexity"/><br/><sub>ភាពច្របូកច្របល់</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/huggingface-color.svg" width="40" alt="Hugging Face"/><br/><sub>HuggingFace</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/together-color.svg" width="40" alt="Together"/><br/><sub>Together</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/fireworks-color.svg" width="40" alt="Fireworks"/><br/><sub>Fireworks</sub><br/><sub>                           </sub></td>
@@ -724,32 +718,32 @@ omniroute configure codex          # ក៏ដូចជា: claude opencode qwen
   </tr>
 </table>
 
-<sub>…និងជាង 350 ទៀត — រូបតំណាងនីមួយៗត្រូវបានភ្ជាប់ផ្ទាល់ពីកាតាឡុកអ្នកផ្តល់សេវារបស់ផ្ទាំងគ្រប់គ្រង។ 📖 [ឯកសារយោងអ្នកផ្តល់សេវា](docs/reference/PROVIDER_REFERENCE.md)</sub>
+<sub>…និង 350 + ច្រើនទៀត — រាល់រូបតំណាងដោះស្រាយផ្ទាល់ពីកាតាឡុកអ្នកផ្តល់សេវារបស់ផ្ទាំងគ្រប់គ្រង។ 📖 [ឯកសារយោងអ្នកផ្តល់សេវា](docs/reference/PROVIDER_REFERENCE.md)</sub>
 
 <br/>
 
-### 🆓 ឥតគិតថ្លៃជារៀងរហូត — $0 មិនត្រូវការកាតអ្វីឡើយ។
+### 🆓 ឥតគិតថ្លៃជារៀងរហូត — $0 គ្មានកាត
 
 <table>
   <tr>
-    <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="OpenCode Zen"/><br/><b>OpenCode Zen</b><br/><sub>DeepSeek V4, Nemotron 3<br/>គ្មានកំណត់ចំនួន token</sub></td>
-    <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="Kilo Code"/><br/><b>Kilo Code</b><br/><sub>រ៉ោតទ័រស្វ័យប្រវត្តិ, Tencent Hy3<br/>ឥតគិតថ្លៃជារៀងរហូត</sub></td>
-    <td align="center" width="150"><img src="./public/providers/requesty.svg" width="42" alt="Requesty"/><br/><b>Requesty</b><br/><sub>GPT-OSS 120B, Nemotron<br/>ឥតគិតថ្លៃជារៀងរហូត</sub></td>
-    <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/siliconcloud-color.svg" width="42" alt="SiliconFlow"/><br/><b>SiliconFlow</b><br/><sub>DeepSeek V3.2 / R1<br/>កម្រិតឥតគិតថ្លៃ</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="OpenCode Zen"/><br/><b>OpenCode Zen</b><br/><sub>DeepSeek V4, Nemotron ៣<br/>គ្មានគម្របនិមិត្តសញ្ញា</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="Kilo Code"/><br/><b>លេខកូដគីឡូ</b><br/><sub>រ៉ោតទ័រស្វ័យប្រវត្តិ, Tencent Hy3<br/>ឥតគិតថ្លៃជារៀងរហូត</sub></td>
+    <td align="center" width="150"><img src="./public/providers/requesty.svg" width="42" alt="Requesty"/><br/><b>ការស្នើសុំ</b><br/><sub>GPT-OSS 120B, Nemotron<br/>ឥតគិតថ្លៃជារៀងរហូត</sub></td>
+    <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/siliconcloud-color.svg" width="42" alt="SiliconFlow"/><br/><b>SiliconFlow</b><br/><sub>DeepSeek V3.2 / R1<br/>ថ្នាក់ឥតគិតថ្លៃ</sub></td>
     <td align="center" width="150"><img src="./public/providers/zhipu.svg" width="42" alt="Z.AI GLM"/><br/><b>Z.AI GLM</b><br/><sub>GLM-4.7 / 4.5-Flash<br/>ឥតគិតថ្លៃជារៀងរហូត</sub></td>
     <td align="center" width="150"><img src="./public/providers/baidu.svg" width="42" alt="Baidu ERNIE"/><br/><b>Baidu ERNIE</b><br/><sub>ERNIE 4.0<br/>ឥតគិតថ្លៃជារៀងរហូត</sub></td>
   </tr>
   <tr>
-    <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/qoder-color.svg" width="42" alt="Qoder AI"/><br/><b>Qoder AI</b><br/><sub>Qwen3-Max, Kimi-K2<br/>ឥតគិតថ្លៃគ្មានកំណត់</sub></td>
-    <td align="center" width="150"><img src="./public/providers/pollinations.svg" width="42" alt="Pollinations"/><br/><b>Pollinations</b><br/><sub>GPT, Llama, Claude<br/>មិនត្រូវការកូនសោ</sub></td>
-    <td align="center" width="150"><img src="./public/providers/cloudflare.svg" width="42" alt="Cloudflare AI"/><br/><b>Cloudflare AI</b><br/><sub>ម៉ូដែលជាង 50<br/>10K neurons/ថ្ងៃ</sub></td>
-    <td align="center" width="150"><img src="./public/providers/nvidia.svg" width="42" alt="NVIDIA NIM"/><br/><b>NVIDIA NIM</b><br/><sub>GLM, MiniMax<br/>ប្រហែល 40 RPM ឥតគិតថ្លៃ</sub></td>
-    <td align="center" width="150"><img src="./public/providers/cerebras.svg" width="42" alt="Cerebras"/><br/><b>Cerebras</b><br/><sub>GLM 4.7, GPT-OSS<br/>ឥណទាន $5 ប្រើបានតែម្តង; ត្រូវការកាត</sub></td>
-    <td align="center" width="150"><img src="./public/providers/openrouter.svg" width="42" alt="OpenRouter"/><br/><b>OpenRouter</b><br/><sub>ម៉ូដែល :free<br/>+$10 → RPM ខ្ពស់ជាងមុន</sub></td>
+    <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/qoder-color.svg" width="42" alt="Qoder AI"/><br/><b>Qoder AI</b><br/><sub>Qwen3-Max, Kimi-K2<br/>FREE គ្មានដែនកំណត់</sub></td>
+    <td align="center" width="150"><img src="./public/providers/pollinations.svg" width="42" alt="Pollinations"/><br/><b>លំអង</b><br/><sub>GPT, Llama, Claude<br/>មិនត្រូវការសោ</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cloudflare.svg" width="42" alt="Cloudflare AI"/><br/><b>Cloudflare AI</b><br/><sub>ម៉ូដែល 50 +<br/>10K neurons/day</sub></td>
+    <td align="center" width="150"><img src="./public/providers/nvidia.svg" width="42" alt="NVIDIA NIM"/><br/><b>NVIDIA NIM</b><br/><sub>GLM, MiniMax<br/>~ 40 RPM ឥតគិតថ្លៃ</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cerebras.svg" width="42" alt="Cerebras"/><br/><b>Cerebras</b><br/><sub>GLM 4.7, GPT-OSS<br/>ឥណទាន 5 ដុល្លារ មួយដង; ត្រូវការកាត</sub></td>
+    <td align="center" width="150"><img src="./public/providers/openrouter.svg" width="42" alt="OpenRouter"/><br/><b>OpenRouter</b><br/><sub>: ម៉ូដែលឥតគិតថ្លៃ<br/>+$10 → ខ្ពស់ជាង RPM</sub></td>
   </tr>
 </table>
 
-📖 កាតាឡុកពេញលេញដែលម៉ាស៊ីនអាចអានបាន → [`docs/reference/PROVIDER_REFERENCE.md`](docs/reference/PROVIDER_REFERENCE.md)
+📖 កាតាឡុកម៉ាស៊ីនដែលអាចអានបានពេញលេញ → [`docs/reference/PROVIDER_REFERENCE.md`](docs/reference/PROVIDER_REFERENCE.md)
 
 <br/>
 </div>
@@ -910,15 +904,15 @@ claude mcp add-server omniroute --type http --url http://localhost:20128/api/mcp
 
 <div align="center">
 
-## 🗜️ សន្សំ token 15–95% — ដោយស្វ័យប្រវត្តិ
+## 🗜️ រក្សាទុក 15–95% Tokens — ដោយស្វ័យប្រវត្តិ
 
 </div>
 
-### 📖 របៀបដំណើរការ — pipeline, ស្ថាបត្យកម្ម និងគណនាការសន្សំ
+### 📖 របៀបដែលវាដំណើរការបំពង់ — ស្ថាបត្យកម្ម និងគណិតវិទ្យាសន្សំ
 
-<img src="./docs/diagrams/compression-pipeline.svg" width="100%" alt="pipeline បង្ហាប់របស់ OmniRoute៖ សំណើ client គំរូចំនួន 10,000 token ឆ្លងកាត់ម៉ាស៊ីន composable ចំនួន 12 — Session-Dedup, CCR, Lite, RTK, Responses Tool Output, Headroom, Relevance, Caveman, Aggressive, LLMLingua-2, Ultra និង OmniGlyph — ហើយអាចទៅដល់អ្នកផ្តល់សេវានៅប្រហែល 1,080 token ក្នុងឧទាហរណ៍ stacked ដែលបានកត់ត្រាទុក។ មាតិកាដែលមានរចនាសម្ព័ន្ធត្រូវបានការពារដោយសន្ធឹកការពារ និងទ្វារ fidelity តាមជំហាននីមួយៗ; របៀប lossy ឬពិសោធន៍ច្បាស់លាស់អាចផ្លាស់ប្តូរមាតិកាដែលមានសិទ្ធិ។"/>
+<img src="./docs/diagrams/compression-pipeline.svg" width="100%" alt="OmniRoute compression pipeline: an illustrative 10,000-token client request passes through 12 composable engines — Session-Dedup, CCR, Lite, RTK, Responses Tool Output, Headroom, Relevance, Caveman, Aggressive, LLMLingua-2, Ultra and OmniGlyph — and can reach the provider at about 1,080 tokens in the documented stacked example. Structured content is protected by preservation guards and per-step fidelity gates; explicit lossy or experimental modes may transform eligible content."/>
 
-combo stacked លំនាំដើមដំណើរការ `RTK → Caveman`។ នៅពេលទាំងពីរប្រត្តិបត្តិលើ payload ឧបករណ៍/បរិបទដូចគ្នា ការសន្សំកើនឡើងជាជំហាន៖
+បន្សំជង់លំនាំដើមដំណើរការ `RTK → Caveman`។ នៅពេលដែលទាំងពីរធ្វើសកម្មភាពលើបន្ទុក tool/context ដូចគ្នា សមាសធាតុសន្សំ៖
 
 ```txt
 combined = 1 − (1 − RTK) × (1 − Caveman_input)
@@ -926,74 +920,74 @@ average  = 1 − (1 − 0.80) × (1 − 0.46) = 89.2%
 range    = 78.4 – 94.6%
 ```
 
-ប្លុកកូដ, URL, JSON និងទិន្នន័យដែលមានរចនាសម្ព័ន្ធ ត្រូវបាន**ការពារជានិច្ច**ដោយម៉ាស៊ីនការពារ។
+ប្លុកកូដ, URLs, JSON និងទិន្នន័យដែលមានរចនាសម្ព័ន្ធ** តែងតែការពារ** ដោយម៉ាស៊ីនអភិរក្ស។
 
-> **ហេតុអ្វីប្រើ token ច្រើន ខណៈដែល token តិចក៏គ្រប់គ្រាន់ដែរ?** រាល់សំណើទាំងអស់ឆ្លងកាត់ pipeline បង្ហាប់របស់ OmniRoute ដោយ**តម្លាភាព** — គ្មានការផ្លាស់ប្តូរ client ទេ។ ឥឡូវវាជា**ជង់ម៉ាស៊ីន composable ចំនួន 12** ដែលដំណើរការតាមលំដាប់ ហើយលាយបញ្ចូលគ្នាតាម combo នីមួយៗ — សាងសង់លើគំនិតពី [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/JuliusBrussee/caveman) (⭐ 90K+), [LLMLingua-2](https://github.com/microsoft/LLMLingua), និង [Troglodita](https://github.com/leninejunior/troglodita) (PT-BR)។
+> **ហេតុអ្វីត្រូវប្រើថូខឹនច្រើន នៅពេលដែលថូខឹនតិចតួចធ្វើល្បិច?** រាល់សំណើឆ្លងកាត់តាមបំពង់បង្ហាប់របស់ OmniRoute** ប្រកបដោយតម្លាភាព** — មិនមានការផ្លាស់ប្តូរអតិថិជនទេ។ ពេលនេះ ក** ជង់នៃម៉ាស៊ីនផ្សំចំនួន 12** ដែលដំណើរការតាមលំដាប់លំដោយ និងលាយ & ផ្គូផ្គងក្នុងមួយ routing combo build — លើគំនិតពី [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/JuliusBrussee/caveman) (⭐ 90K +), [LLMLingua-2](https://github.com/microsoft/LLMLingua), និង [Troglodita](https://github.com/leninejunior/troglodita) (PT-BR)។
 
 ### 🧱 ជង់ម៉ាស៊ីន 12
 
-ម៉ាស៊ីនដំណើរការតាមលំដាប់ pipeline; ម៉ាស៊ីននីមួយៗអាចបិទបើកដោយឯករាជ្យ និងកំណត់រចនាសម្ព័ន្ធបានតាម combo៖
+ម៉ាស៊ីនដំណើរការតាមលំដាប់បំពង់; នីមួយៗអាចបិទបើកបានដោយឯករាជ្យ និងអាចកំណត់រចនាសម្ព័ន្ធបានក្នុងមួយបន្សំ៖
 
 <table>
   <tr><th align="center">#</th><th align="left">ម៉ាស៊ីន</th><th align="left">អ្វីដែលវាធ្វើ</th></tr>
-  <tr><td align="center" nowrap>1</td><td align="left" nowrap><b>Session-Dedup</b></td><td align="left">លុបចោលមាតិកាដែលធ្វើម្តងទៀតនៅទូទាំងជុំ (content-addressed, cross-turn)</td></tr>
-  <tr><td align="center" nowrap>2</td><td align="left" nowrap><b>CCR</b></td><td align="left">រក្សាទុកប្លុកធំៗនៅពីក្រោយសញ្ញាសម្គាល់ retrieve ដែលអាចទាញយកតាមតម្រូវការ</td></tr>
-  <tr><td align="center" nowrap>3</td><td align="left" nowrap><b>Lite</b></td><td align="left">ការកាត់បន្ថយ whitespace + image-URL (មូលដ្ឋាន latency ស្រាល)</td></tr>
-  <tr><td align="center" nowrap>4</td><td align="left" nowrap><b>RTK</b></td><td align="left">ការតម្រងលទ្ធផលឧបករណ៍ឆ្លាតវៃ dedup និងការកាត់ចុង (ដឹងពី command)</td></tr>
-  <tr><td align="center" nowrap>5</td><td align="left" nowrap><b>Responses Tool Output</b></td><td align="left">JSON ដែលផ្តោតលើ lossless ជាមុន + ការបង្ហាប់ diagnostic ដែលមានដែនកំណត់ សម្រាប់លទ្ធផល shell/patch/search/build (Responses API)</td></tr>
-  <tr><td align="center" nowrap>6</td><td align="left" nowrap><b>Headroom</b></td><td align="left">ការបង្ហាប់តារាងបែប lossless នៃ JSON array (~30%) តាមរយៈ codec <b>GCF</b> ដែល vendored</td></tr>
-  <tr><td align="center" nowrap>7</td><td align="left" nowrap><b>Relevance</b></td><td align="left">ការដាក់ពិន្ទុប្រយោគបែបស្រង់ចេញ ប្រៀបធៀបនឹងសំណួរចុងក្រោយរបស់អ្នកប្រើ</td></tr>
-  <tr><td align="center" nowrap>8</td><td align="left" nowrap><b>Caveman</b></td><td align="left">ការបង្ហាប់អត្ថបទផ្អែកលើច្បាប់ (~65–75% លើលទ្ធផល)</td></tr>
-  <tr><td align="center" nowrap>9</td><td align="left" nowrap><b>Aggressive</b></td><td align="left">ការសង្ខេប + ការធ្វើឱ្យចាស់បន្តិចម្តងៗនៃជុំចាស់ៗ</td></tr>
-  <tr><td align="center" nowrap>10</td><td align="left" nowrap><b>LLMLingua-2</b></td><td align="left">ការកាត់ចោល semantic ដោយ ML តាមរយៈ MobileBERT ONNX — សុវត្ថិភាពសម្រាប់កូដ, async</td></tr>
-  <tr><td align="center" nowrap>11</td><td align="left" nowrap><b>Ultra</b></td><td align="left">ការកាត់ចោល token បែប heuristic ជាមួយកម្រិតម៉ូដែលតូច (SLM) ជាជម្រើស</td></tr>
-  <tr><td align="center" nowrap>12</td><td align="left" nowrap><b>OmniGlyph</b></td><td align="left">ការអ៊ិនកូដបរិបទជារូបភាពបែបពិសោធន៍ សម្រាប់ Claude Fable 5 ដែលបានវាស់វែងលើខ្សែ Anthropic ដោយផ្ទាល់; GPT 5.6 transformers នៅតែ fail-closed រង់ចាំបង្កាន់ដៃពីអ្នកផ្តល់សេវា។ ទម្រង់បង្ហាប់បួន (aggressive ជាលំនាំដើម, balanced, coding-safe, passthrough) (aggressive បំផុត; ត្រូវ opt-in)</td></tr>
+  <tr><td align="center" nowrap>1</td><td align="left" nowrap><b>Session-Dedup</b></td><td align="left">ទម្លាក់មាតិកាម្តងហើយម្តងទៀតនៅទូទាំងវេន (មាតិកាដែលបានដោះស្រាយ, ឆ្លងវេន)</td></tr>
+  <tr><td align="center" nowrap>2</td><td align="left" nowrap><b>CCR</b></td><td align="left">រក្សាទុកប្លុកធំ ៗ នៅពីក្រោយការទាញយកសញ្ញាសម្គាល់ ទាញយកតាមតម្រូវការ</td></tr>
+  <tr><td align="center" nowrap>3</td><td align="left" nowrap><b>តូច</b></td><td align="left">ការកាត់តម្រឹម URL រូបភាព-ដកឃ្លា + (បន្ទាត់មូលដ្ឋានភាពយឺតយ៉ាវ)</td></tr>
+  <tr><td align="center" nowrap>4</td><td align="left" nowrap><b>RTK</b></td><td align="left">ការត្រងលទ្ធផលឧបករណ៍ឆ្លាតវៃ ការដក និងកាត់ចេញ (ការដឹងអំពីពាក្យបញ្ជា)</td></tr>
+  <tr><td align="center" nowrap>5</td><td align="left" nowrap><b>លទ្ធផលឧបករណ៍ឆ្លើយតប</b></td><td align="left">JSON + ដំបូងដែលគ្មានការបាត់បង់ការបង្ហាប់វិនិច្ឆ័យដែលកំណត់សម្រាប់លទ្ធផល shell/patch/search/build (ការឆ្លើយតប API)</td></tr>
+  <tr><td align="center" nowrap>6</td><td align="left" nowrap><b>បន្ទប់ដេក</b></td><td align="left">ការបង្រួមតារាងដោយមិនបាត់បង់នៃអារេ JSON (~ 30%) តាមរយៈអ្នកលក់ <b>GCF</b> កូឌិក</td></tr>
+  <tr><td align="center" nowrap>7</td><td align="left" nowrap><b>ភាពពាក់ព័ន្ធ</b></td><td align="left">ការដាក់ពិន្ទុប្រយោគដកស្រង់ប្រឆាំងនឹងសំណួរអ្នកប្រើប្រាស់ចុងក្រោយ</td></tr>
+  <tr><td align="center" nowrap>8</td><td align="left" nowrap><b>មនុស្សល្អាង</b></td><td align="left">ការបង្ហាប់ពាក្យសំដីផ្អែកលើច្បាប់ (~ 65-75% នៅលើទិន្នផល)</td></tr>
+  <tr><td align="center" nowrap>9</td><td align="left" nowrap><b>ឈ្លានពាន</b></td><td align="left">សេចក្តីសង្ខេប + វឌ្ឍនភាពនៃភាពចាស់នៃវេនចាស់</td></tr>
+  <tr><td align="center" nowrap>10</td><td align="left" nowrap><b>LLMLingua-2</b></td><td align="left">ML semantic pruning តាមរយៈ MobileBERT ONNX — code-safe, async</td></tr>
+  <tr><td align="center" nowrap>11</td><td align="left" nowrap><b>ជ្រុល</b></td><td align="left">ការកាត់ចេញនិមិត្តសញ្ញា Heuristic ជាមួយនឹងថ្នាក់តូចគំរូ (SLM) ស្រេចចិត្ត</td></tr>
+  <tr><td align="center" nowrap>12</td><td align="left" nowrap><b>OmniGlyph</b></td><td align="left">ការបំប្លែងបរិបទដូចរូបភាពសម្រាប់ការវាស់វែង Claude Fable 5 នៅលើខ្សែ Anthropic ផ្ទាល់; GPT 5.6 transformers នៅតែបរាជ័យ-បិទបង្កាន់ដៃអ្នកផ្តល់សេវាដែលកំពុងរង់ចាំ។ ទម្រង់បង្ហាប់ចំនួនបួន (លំនាំដើមឈ្លានពាន តុល្យភាព សុវត្ថិភាពសរសេរកូដ ឆ្លងកាត់) (ឈ្លានពានបំផុត ជ្រើសរើសចូល)</td></tr>
 </table>
 
-ប្លុកកូដ, URL និងទិន្នន័យដែលមានរចនាសម្ព័ន្ធ ត្រូវបាន**រក្សាទុកជានិច្ច**ដោយត្រឹមត្រូវគ្រប់ byte។ **preset ចុចតែម្តង** បញ្ចូលម៉ាស៊ីនទាំងនេះ៖
+ប្លុកកូដ URLs និងទិន្នន័យរចនាសម្ព័ន្ធគឺ** រក្សាទុកជានិច្ច** បៃ - ល្អឥតខ្ចោះ។** ការកំណត់ជាមុនដោយចុចតែម្តង** ផ្សំម៉ាស៊ីន៖
 
 <table>
   <tr><th align="left">របៀប</th><th align="left">ការសន្សំ</th><th align="left">ល្អបំផុតសម្រាប់</th></tr>
-  <tr><td align="left" nowrap>🪶 <b>Lite</b></td><td align="left" nowrap>~15%</td><td align="left">លំនាំដើមសុវត្ថិភាពដែលបើកជានិច្ច</td></tr>
-  <tr><td align="left" nowrap>🪨 <b>Standard (Caveman)</b></td><td align="left" nowrap>~30%</td><td align="left">ការសរសេរកូដប្រចាំថ្ងៃ</td></tr>
-  <tr><td align="left" nowrap>⚡ <b>Aggressive</b></td><td align="left" nowrap>~50%</td><td align="left">សម័យវែងដែលមានឧបករណ៍ច្រើន</td></tr>
-  <tr><td align="left" nowrap>🔥 <b>Ultra</b></td><td align="left" nowrap>~75%</td><td align="left">ការសន្សំអតិបរមា</td></tr>
-  <tr><td align="left" nowrap>🧰 <b>RTK</b></td><td align="left" nowrap>60–90%</td><td align="left">លទ្ធផល shell/test/build/git</td></tr>
-  <tr><td align="left" nowrap>🔗 <b>Stacked (RTK → Caveman)</b></td><td align="left" nowrap><b>78–95%</b></td><td align="left">prompt ចម្រុះ + កំណត់ហេតុឧបករណ៍</td></tr>
+  <tr><td align="left" nowrap>🪶 <b>តូច</b></td><td align="left" nowrap>~15%</td><td align="left">លំនាំដើមសុវត្ថិភាពបើកជានិច្ច</td></tr>
+  <tr><td align="left" nowrap>🪨 <b>ស្តង់ដារ (Caveman)</b></td><td align="left" nowrap>~30%</td><td align="left">ការសរសេរកូដប្រចាំថ្ងៃ</td></tr>
+  <tr><td align="left" nowrap>⚡ <b>ឈ្លានពាន</b></td><td align="left" nowrap>~50%</td><td align="left">វគ្គឧបករណ៍វែង-ធ្ងន់</td></tr>
+  <tr><td align="left" nowrap>🔥 <b>ជ្រុល</b></td><td align="left" nowrap>~75%</td><td align="left">ការសន្សំអតិបរមា</td></tr>
+  <tr><td align="left" nowrap>🧰 <b>RTK</b></td><td align="left" nowrap>60–90%</td><td align="left">ទិន្នផល Shell/test/build/git</td></tr>
+  <tr><td align="left" nowrap>🔗 <b>ជង់ (RTK → Caveman)</b></td><td align="left" nowrap><b>78–95%</b></td><td align="left">លាយបញ្ចូលកំណត់ហេតុឧបករណ៍ +</td></tr>
 </table>
 
-**ឧទាហរណ៍ពិតប្រាកដ — របៀប Standard:**
+**ឧទាហរណ៍ជាក់ស្តែង — របៀបស្តង់ដារ៖**
 
-> **មុន (69 token):** _"មូលហេតុដែល component React របស់អ្នកកំពុង re-render ទំនងជាដោយសារអ្នកកំពុងបង្កើត object reference ថ្មីនៅក្នុងវដ្ត render នីមួយៗ។ នៅពេលអ្នកបញ្ជូន inline object ជា prop ការប្រៀបធៀប shallow របស់ React មើលឃើញវាជា object ផ្សេងគ្នារាល់ពេល ដែលបណ្តាលឱ្យមានការ re-render។ ខ្ញុំសូមណែនាំឱ្យប្រើ useMemo ដើម្បី memoize object នោះ។"_
+> **មុន (69 ថូខឹន)៖** _"មូលហេតុដែលសមាសធាតុ React របស់អ្នកកំពុងបង្ហាញឡើងវិញគឺទំនងជាដោយសារតែអ្នកកំពុងបង្កើតឯកសារយោងវត្ថុថ្មីនៅលើវដ្តនៃការបង្ហាញនីមួយៗ។ នៅពេលអ្នកឆ្លងកាត់វត្ថុក្នុងជួរជា prop ការប្រៀបធៀបរាក់ៗរបស់ React មើលឃើញថាវាជាវត្ថុផ្សេងគ្នារាល់ពេល ដែលបង្កឱ្យមានការ render ឡើងវិញ។ ខ្ញុំសូមណែនាំឱ្យប្រើ useMemo ដើម្បីទន្ទេញចាំវត្ថុ។"
 >
-> **ក្រោយ (19 token):** _"object ref ថ្មីរាល់ render។ inline object prop = ref ថ្មី = re-render។ រុំក្នុង useMemo។"_
+> **បន្ទាប់ពី (19 និមិត្តសញ្ញា):** _"វត្ថុថ្មី ref នីមួយៗ render ។ វត្ថុក្នុងជួរ prop = ថ្មី ref = បង្ហាញឡើងវិញ។ រុំក្នុង useMemo។ "_
 >
-> **ចម្លើយដដែល។ token តិចជាង 72%។ គ្មានការបាត់បង់ភាពត្រឹមត្រូវសោះ។** ✅
+> **ចម្លើយដូចគ្នា។ សញ្ញាសម្ងាត់តិចជាង 72% ។ ការបាត់បង់ភាពត្រឹមត្រូវសូន្យ។** ✅
 
-**ឧទាហរណ៍ PT-BR — របៀប [Troglodita](https://github.com/leninejunior/troglodita):**
+**ឧទាហរណ៍ PT-BR — របៀប [Troglodita](https://github.com/leninejunior/troglodita) ៖**
 
-> **មុន (42 tokens):** _"បញ្ហាគឺថា component កំពុង re-render ពីព្រោះ object reference ថ្មីមួយត្រូវបានបង្កើតឡើងនៅរាល់វដ្ត render។ ខ្ញុំសូមណែនាំឱ្យប្រើ useMemo។"_
+> **Antes (42 tokens):** _"O problema é que o componente está re-renderizando porque uma nova referência de objeto está sendo criada em cada ciclo de renderização. Eu recomendaria usar useMemo."_
 >
-> **ក្រោយ (12 tokens):** _"Re-render: ref ថ្មីរាល់វដ្ត (object inline ត្រូវបានបង្កើតឡើងវិញ)។ ប្រើ `useMemo`។"_
+> **Depois (ថូខឹន ១២)៖** _"បង្ហាញឡើងវិញ៖ ref nova cada ciclo (objeto inline recriado) ។ Usar `useMemo`។ "_
 >
-> **ចម្លើយដដែល។ តិចជាង ~70% tokens។ ភាពជាក់លាក់បច្ចេកទេសនៅពេញលេញ។** ✅
+> **Mesma resposta ។ ~ 70% និមិត្តសញ្ញា menos ។ Precisão tecnica intacta ។** ✅
 
 <br/>
 
-### 🎚️ លើសពី engine ទៅទៀត — output style ប៊្លុយបន្សំ adaptive & ការគ្រប់គ្រងតាមសំណើនីមួយៗ
+### 🎚️ លើសពីស្ទីលទិន្នផល — របស់ម៉ាស៊ីន, ការហៅតាមអាដាប់ធ័រ និងការគ្រប់គ្រងតាមសំណើ
 
-Engine ទាំង 12 ខាងលើបង្រួមអ្វីដែលចូល **ទៅ**។ ស្រទាប់បីទៀតកំណត់ថា **របៀបណា**, **ពេលណា**, និងអ្វីដែលចេញ **មក**៖
+ម៉ាស៊ីនទាំង 12 ខាងលើបង្រួមអ្វីដែលដំណើរការ** នៅក្នុង** . រូបរាងបីស្រទាប់ទៀត។** របៀប** ,** ពេលណា** និងអ្វីដែលមក** ចេញ** :
 
-- **🪄 Output Style** _(ការបញ្ជាអ័ក្ស output)_ — ចាក់បញ្ចូល instruction រាងច្បាស់ response ដែល deterministic និងមានសុវត្ថិភាព cache; អាចផ្សំគ្នាបាន នីមួយៗមានកម្រិត `lite` / `full` / `ultra`។ ការបន្ថែម style គឺជា entry មួយបន្ទាត់ក្នុង registry៖
-  - **Terse prose** — ដកចេញ filler / article / hedging; រក្សាខ្លឹមសារបច្ចេកទេសឱ្យពិតប្រាកដ។
-  - **Less code** — YAGNI របៀប "lazy senior dev": ការផ្លាស់ប្តូរតូចបំផុតដែលដំណើរការបាន គ្មាន scaffolding ដែលមិនបានស្នើ។
-  - **Ponytail (lazy senior dev)** — ឡើងជណ្តើរ YAGNI ជួសជុលមូលហេតុផ្ទាល់ diff តូចបំផុតដែលដំណើរការបាន។
-  - **I have ADHD (សកម្មភាពមុន)** — សកម្មភាពបន្ទាប់ដឹកនាំ ជំហានមានលេខរៀង ជំហានបន្ទាប់ក់ត់មួយ គ្មានសេចក្តីផ្តើម។
-  - **Terse CJK (文言)** — រចនាប័ទ្មចិនបុរាណ ultra-terse (កំណត់ចំពោះ locale `zh`)។
-- **🎯 Adaptive context-budget** _(ប៊្លុយបន្សំ)_ — ជំនួសឱ្យ threshold token បើក/បិទតែមួយ បង្កើនកម្រិត engine ដែលថោកបំផុត និង lossless បំផុត តែត្រឹមកម្រិតដែលចាំបាច់ដើម្បី **ឱ្យសមនឹង context window របស់ model**។ Policy: `reserve-output` (លំនាំដើម យោងតាម model) · `percentage` · `absolute`។ Mode: `floor` (ធានាឱ្យសម) · `replace-autotrigger` (ការជ្រើសរើសច្បាស់របស់អ្នកឈ្នះ) · `off` (threshold ចាស់)។
-- **🎛️ កន្លែងដែល compression ត្រូវបានសម្រេច** _(អាទិភាព ខ្ពស់ → ទាប)_ — header `x-omniroute-compression` តាមសំណើនីមួយៗ › routing-combo override › named profile ដែលសកម្ម › adaptive / auto-trigger › panel default › បិទ។ ផែនការដែលបានអនុវត្តត្រឡប់មកវិញក្នុង header response `X-OmniRoute-Compression: <mode>; source=<source>`។
+- **🪄 រចនាប័ទ្មលទ្ធផល** _(ដៃចង្កូតអ័ក្សទិន្នផល) _ — ចាក់ deterministic, cache-safe response-shaping សេចក្តីណែនាំ; អាចផ្សំបាន នីមួយៗនៅអាំងតង់ស៊ីតេ `lite` / `full` / `ultra` ។ ការបន្ថែមរចនាប័ទ្មគឺជាធាតុបញ្ជីឈ្មោះមួយជួរ៖
+  - **សូរសព្ទ Terse** — drop filler / articles / hedging; រក្សាសារធាតុបច្ចេកទេសឱ្យច្បាស់លាស់។
+  - **លេខកូដតិច** — "lazy senior dev" YAGNI: ការផ្លាស់ប្តូរការងារតូចបំផុត មិនមានរន្ទាដែលមិនបានស្នើសុំ។
+  - **Ponytail (អ្នកវិវចាស់ខ្ជិល)** — ឡើងជណ្ដើរ YAGNI ជួសជុលមូលហេតុដើម ភាពខុសគ្នាការងារតូចបំផុត។
+  - **ខ្ញុំមាន ADHD (សកម្មភាពដំបូង)** — សកម្មភាពបន្ទាប់នាំមុខ, ជំហានដែលមានលេខ, ជំហានបន្ទាប់ជាក់លាក់មួយ, គ្មានបុព្វបទ។
+  - **Terse CJK (文言)** — រចនាប័ទ្មបែបបុរាណ-ចិនជ្រុល (កំណត់តាមមូលដ្ឋានទៅ `zh`) ។
+- **🎯 អាដាប់ធ័របរិបទ-ថវិកា** _(ការហៅទូរសព្ទ)_ — ជំនួសឱ្យកម្រិតសញ្ញាសម្គាល់ on/off មួយ បង្កើនម៉ាស៊ីនដែលមានតម្លៃថោកបំផុត និងគ្មានការខាតបង់ច្រើនបំផុតតាមដែលចាំបាច់ដើម្បី** សមនឹងបង្អួចបរិបទរបស់ម៉ូដែល** . គោលការណ៍៖ `reserve-output` (លំនាំដើម គំរូ-ដឹង) · `percentage` · `absolute`. របៀប៖ `floor` (ធានាសម) · `replace-autotrigger` (ជម្រើសច្បាស់លាស់របស់អ្នកឈ្នះ) · `off` (កម្រិតនៃកេរ្តិ៍ដំណែល)។
+- **🎛️ កន្លែងដែលការបង្ហាប់ត្រូវបានសម្រេច** _(អាទិភាព ខ្ពស់ → ទាប)_ — ក្នុងមួយសំណើ `x-omniroute-compression` បឋមកថា › កំណត់ផ្លូវ - បន្សំជំនួស › ទម្រង់ឈ្មោះសកម្ម › អាដាប់ធ័រ / កេះដោយស្វ័យប្រវត្តិ › លំនាំដើមបន្ទះ › បិទ។ ផែនការដែលបានអនុវត្តបានបន្ទរត្រឡប់មកវិញនៅក្នុងក្បាលការឆ្លើយតប `X-OmniRoute-Compression: <mode>; source=<source>` ។
 
-Auto-trigger តាម threshold token បើកប៊្លុយបន្សំ adaptive pin named profile កំណត់ម្តងតាមសំណើ ឬចាត់ចែង pipeline តាម routing combo — អ្វីក៏ដោយដែលសមនឹង workload។ **eval harness** ក្រៅបណ្តាញដែល opt-in (`npm run eval:compression`) ឱ្យពិន្ទុ fidelity ធៀបនឹងការសន្សំ លើ corpus ដែល pinned មុនពេលអ្នកដាក់ប្រើការផ្លាស់ប្តូរ។
+ចាប់ផ្តើមដោយស្វ័យប្រវត្តតាមកម្រិតសញ្ញាសម្ងាត់ ត្រឡប់លើការហៅទូរសព្ទដែលអាចកែសម្រួលបាន ខ្ទាស់ទម្រង់ដែលមានឈ្មោះ កំណត់ការបិទមួយក្នុងមួយសំណើ ឬកំណត់បំពង់បង្ហូរប្រេងក្នុងមួយបន្សំផ្លូវ — ណាមួយដែលសមនឹងបន្ទុកការងារ។ ការជ្រើសរើសក្រៅបណ្តាញ** ខ្សែ eval** (`npm run eval:compression`) ពិន្ទុភាពស្មោះត្រង់ធៀបនឹងការសន្សំលើសាកសពដែលបានខ្ទាស់ មុនពេលអ្នកផ្សព្វផ្សាយការផ្លាស់ប្តូរ។
 
 📖 [`COMPRESSION_GUIDE.md`](docs/compression/COMPRESSION_GUIDE.md) · [`RTK_COMPRESSION.md`](docs/compression/RTK_COMPRESSION.md) · [`COMPRESSION_ENGINES.md`](docs/compression/COMPRESSION_ENGINES.md)
 
@@ -1001,44 +995,34 @@ Auto-trigger តាម threshold token បើកប៊្លុយបន្ស�
 
 <div align="center">
 
-# ⚡ ចាប់ផ្តើមរហ័ស
+# ⚡ ការចាប់ផ្តើមរហ័ស
 
 </div>
 
-**1) ដំឡើង & ដំណើរការ**
+**1) ដំឡើងនិងដំណើរការ**
 
 ```bash
 npm install -g omniroute
 omniroute
 ```
 
-> 💡 ឃើញ `npm warn ERESOLVE` ឬការព្រមាន peer-dep? [ពួកវាគ្មានគ្រោះថ្នាក់ទេ](docs/guides/TROUBLESHOOTING.md#npm-install-warnings-eresolve--peer--deprecated)។
-> **ប្រើ npm 11 ឬថ្មីជាងនេះ?** npm អាចរាំងខ្ទប់ script វដ្តជីវិតរបស់ package លើកលែងតែពួកវាត្រូវបានអនុញ្ញាត។ `postinstall` របស់ OmniRoute (`node scripts/build/postinstall.mjs`) ចាំបាច់ដើម្បីរៀបចំឯកសារ runtime ដើមរបស់វា។ អនុញ្ញាត package ដែលមានឈ្មោះក្នុងការព្រមានរបស់ npm នៅពេលដំឡើងជាសកល។ សម្រាប់សំណុំ package ដែលបានរាយការណ៍ដោយ OmniRoute 3.8.54៖
+> 💡 មើល `npm warn ERESOLVE` ឬ peer-dep ព្រមាន? [ពួកវាគ្មានគ្រោះថ្នាក់ទេ](docs/guides/TROUBLESHOOTING.md#npm-install-warnings-eresolve--peer--deprecated) ។** ប្រើ npm 11 ឬក្រោយ?** npm អាចរារាំងស្គ្រីបវដ្តជីវិតកញ្ចប់ លុះត្រាតែពួកគេត្រូវបានអនុញ្ញាត។ `postinstall` របស់ OmniRoute(`node scripts/build/postinstall.mjs`) តម្រូវឱ្យរៀបចំឯកសារពេលដំណើរការដើមរបស់វា។ អនុញ្ញាតឱ្យកញ្ចប់ដែលមានឈ្មោះនៅក្នុងការព្រមានរបស់ npm នៅពេលដំឡើងជាសកល។ សម្រាប់កញ្ចប់ដែលបានរាយការណ៍ដោយ OmniRoute 3.8.54៖
 >
-> ```bash
-> npm install -g --allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild omniroute
-> ```
+> `bash npm install -g --allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild omniroute `
 >
-> ដើម្បីប្រើ allowlist នេះឡើងវិញសម្រាប់ការដំឡើងសកលនាពេលអនាគត កំណត់រចនាសម្ព័ន្ធវាម្តង បន្ទាប់មកដំឡើងដោយធម្មតា៖
+> ដើម្បីប្រើបញ្ជីអនុញ្ញាតនេះឡើងវិញសម្រាប់ការដំឡើងសកលនាពេលអនាគត កំណត់រចនាសម្ព័ន្ធវាម្តង បន្ទាប់មកដំឡើងជាធម្មតា៖
 >
-> ```bash
-> npm config set allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild --location=user
-> npm install -g omniroute
-> ```
+> `bash npm config set allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild --location=user npm install -g omniroute `
 >
-> បញ្ជី dependency អាចផ្លាស់ប្តូររវាងការចេញផ្សាយនីមួយៗ; ប្រសិនបើ npm រាយការណ៍បញ្ជីផ្សេង សូមប្រើឈ្មោះ package ពីការព្រមាននោះ។ ការអនុញ្ញាត package មួយ អនុញ្ញាតឱ្យ script ដំឡើងរបស់វាដំណើរការ។
-> **ប្រើ Gemini Web ឬ provider ដែលផ្អែកលើ web-cookie ផ្សេងទៀត?** package npm រួមបញ្ចូល
-> Playwright ប៉ុន្តែមិនមាន binary Chromium របស់វាទេ។ សូមមើលកំណត់ចំណាំ
-> [ការដំឡើង Playwright Chromium](docs/guides/TROUBLESHOOTING.md#gemini-web-and-playwright-chromium)
-> មុនពេលធ្វើសំណើ web-provider ដំបូង។
+> បញ្ជីភាពអាស្រ័យអាចផ្លាស់ប្តូររវាងការចេញផ្សាយ។ ប្រសិនបើ npm រាយការណ៍បញ្ជីផ្សេង សូមប្រើឈ្មោះកញ្ចប់ពីការព្រមាននោះ។ ការអនុញ្ញាតឱ្យកញ្ចប់អនុញ្ញាតឱ្យដំឡើងស្គ្រីបរបស់វាដំណើរការ។** ការប្រើប្រាស់ Gemini Web ឬអ្នកផ្តល់ខូឃីគេហទំព័រផ្សេងទៀត?** កញ្ចប់ npm រួមបញ្ចូល Playwright ប៉ុន្តែមិនមែន Chromium binary របស់វាទេ។ សូមមើលកំណត់ចំណាំ [ការដំឡើង Playwright Chromium](docs/guides/TROUBLESHOOTING.md#gemini-web-and-playwright-chromium) មុនពេលធ្វើការស្នើសុំអ្នកផ្តល់គេហទំព័រដំបូង។
 
-Dashboard នៅ `http://localhost:20128` · API នៅ `http://localhost:20128/v1`។
+ផ្ទាំងគ្រប់គ្រងនៅ `http://localhost:20128` · API និង `http://localhost:20128/v1`។
 
-**2) ភ្ជាប់ provider ដែលមានសិទ្ធិ ដោយប្រើគណនីផ្ទាល់ខ្លួនរបស់អ្នក**
+**2) ភ្ជាប់អ្នកផ្តល់សេវាដែលមានសិទ្ធិប្រើប្រាស់គណនីផ្ទាល់ខ្លួនរបស់អ្នក។**
 
-Dashboard → **Providers** → ជ្រើសរើស provider ដែលលក្ខខណ្ឌ និងកូតាបច្ចុប្បន្នសមនឹងករណីប្រើប្រាស់របស់អ្នក → បន្ថែម API key របស់វា ឬបញ្ចប់ដំណើរការគណនីរបស់វា។ Free tier អាចត្រូវការការចុះឈ្មោះ ការអនុម័ត ឬវិធីសាស្ត្រទូទាត់។ ពិនិត្យ [មគ្គុទ្ទេសក៍ Free Tier](docs/getting-started/FREE-TIERS-GUIDE.md); ភាពអាចប្រើបានដោយគ្មាន key មិនត្រូវបានធានាទេ ហើយ provider ដែលមានស្លាក `tos: avoid` ត្រូវបានដកចេញពី `auto` តាមលំនាំដើម។
+ផ្ទាំងគ្រប់គ្រង →** អ្នកផ្តល់សេវា** → ជ្រើសរើសអ្នកផ្តល់សេវាដែលលក្ខខណ្ឌបច្ចុប្បន្ន និងកូតាសមនឹងករណីប្រើប្រាស់របស់អ្នក → បន្ថែមគ្រាប់ចុច API របស់វា ឬបំពេញលំហូរគណនីរបស់វា។ ថ្នាក់ឥតគិតថ្លៃអាចតម្រូវឱ្យមានការចុះឈ្មោះ ការយល់ព្រម ឬវិធីបង់ប្រាក់។ ពិនិត្យមើល [ការណែនាំថ្នាក់ឥតគិតថ្លៃ](docs/getting-started/FREE-TIERS-GUIDE.md) ; ភាពអាចរកបានដោយគ្មានគ្រាប់ចុចមិនត្រូវបានធានាទេ ហើយអ្នកផ្តល់សេវាដែលបានសម្គាល់ `tos: avoid` ត្រូវបានដកចេញពី `auto` តាមលំនាំដើម។
 
-**3) ចង្អុលឧបករណ៍ coding របស់អ្នក**
+**3) ចង្អុលឧបករណ៍សរសេរកូដរបស់អ្នក។**
 
 ```txt
 Base URL: http://localhost:20128/v1
@@ -1046,15 +1030,15 @@ API Key:  [copy from Dashboard → Endpoints]
 Model:    auto            (routes among eligible connections — or choose provider/model)
 ```
 
-**4) ផ្ទៀងផ្ទាត់ថាវាដំណើរការ**
+**4) ផ្ទៀងផ្ទាត់វាដំណើរការ**
 
 ```bash
 curl http://localhost:20128/v1/models -H "Authorization: Bearer YOUR_KEY"
 ```
 
-អ្នកគួរតែឃើញ model ដែលបានភ្ជាប់របស់អ្នកត្រូវបានរាយ។ 🎉 ចប់ហើយ — ចាប់ផ្តើម coding ហើយ OmniRoute នឹង auto-route & fallback ជំនួសអ្នក។
+អ្នកគួរតែឃើញម៉ូដែលដែលបានភ្ជាប់របស់អ្នកក្នុងបញ្ជី។ 🎉 នោះហើយជាវា — ចាប់ផ្តើមសរសេរកូដ ហើយ OmniRoute ផ្លូវស្វ័យប្រវត្តិ & ត្រលប់មកវិញសម្រាប់អ្នក។
 
-ប្រសិនបើ client របស់អ្នកមិនអាចផ្ញើ header ផ្ទាល់ខ្លួនបាន OmniRoute ក៏បង្ហាញ alias ភាពឆបគ្នាដែលមាន token ផងដែរ៖
+ប្រសិនបើអតិថិជនរបស់អ្នកមិនអាចផ្ញើបឋមកថាផ្ទាល់ខ្លួនបានទេ OmniRoute ក៏លាតត្រដាងឈ្មោះក្លែងក្លាយនៃភាពឆបគ្នានៃនិមិត្តសញ្ញាផងដែរ៖
 
 ```txt
 OpenAI catalog:   http://localhost:20128/vscode/YOUR_KEY/
@@ -1065,7 +1049,7 @@ Ollama chat:      http://localhost:20128/vscode/YOUR_KEY/api/chat
 Ollama tags:      http://localhost:20128/vscode/YOUR_KEY/api/tags
 ```
 
-ប្រើទាំងនេះតែសម្រាប់ client ដែលមិនអាចភ្ជាប់ `Authorization: Bearer ...` បានប៉ុណ្ណោះ។ Header auth នៅតែជារបៀបដែលណែនាំ។
+ប្រើវាសម្រាប់តែអតិថិជនដែលមិនអាចភ្ជាប់ `Authorization: Bearer ...` បាន។ ការផ្ទៀងផ្ទាត់បឋមកថានៅតែជាទម្រង់ដែលពេញចិត្ត។
 
 <br/>
 
@@ -1284,28 +1268,28 @@ process ដូចគ្នានៅលើ port តែមួយ ដូច្ន�
 <br/>
 <div align="center">
 
-## 🛠️ បច្ចេកវិទ្យាដែលប្រើប្រាស់
+## 🛠️ Tech Stack
 
 </div>
 
 <table>
   <tr><th align="left">ស្រទាប់</th><th align="left">បច្ចេកវិទ្យា</th></tr>
-  <tr><td nowrap><b>បរិស្ថានដំណើរការ</b></td><td>Node.js 22.x / 24.x LTS — <code>&gt;=22.22.2 &lt;23 || &gt;=24.0.0 &lt;27</code></td></tr>
-  <tr><td nowrap><b>ភាសា</b></td><td>TypeScript 6.0 — <b>TypeScript 100%</b> នៅទូទាំង <code>src/</code> និង <code>open-sse/</code> (គ្មាន <code>any</code> នៅក្នុងស្នូល ចាប់ពី v2.0)</td></tr>
-  <tr><td nowrap><b>Framework</b></td><td>Next.js 16 + React 19 + Tailwind CSS 4</td></tr>
-  <tr><td nowrap><b>មូលដ្ឋានទិន្នន័យ</b></td><td>better-sqlite3 (SQLite, កំណត់ហេតុ WAL) + LowDB (JSON ចាស់) — ម៉ូឌុលដែន 147, migration 224</td></tr>
-  <tr><td nowrap><b>អង្គចងចាំ</b></td><td>អត្ថបទពេញ SQLite FTS5 + vector embeddings ដែលបាន quantize ជា int8, ការថយចុះតាមប្រភេទ</td></tr>
-  <tr><td nowrap><b>គ្រោងទិន្នន័យ</b></td><td>Zod 4 — ការផ្ទៀងផ្ទាត់ I/O របស់ឧបករណ៍ MCP + កិច្ចសន្យា API</td></tr>
+  <tr><td nowrap><b>ពេលដំណើរការ</b></td><td>Node.js 22.x / 24.x LTS — <code>&gt;=22.22.2 &lt;23 || &gt;=24.0.0 &lt;27</code></td></tr>
+  <tr><td nowrap><b>ភាសា</b></td><td>TypeScript 6.0 — <b>100% TypeScript</b> ឆ្លងកាត់ <code>src/</code> និង <code>open-sse/</code> (សូន្យ <code>any</code> នៅក្នុងស្នូលចាប់តាំងពី v2.0)</td></tr>
+  <tr><td nowrap><b>ក្របខ័ណ្ឌ</b></td><td>Next.js 16 + React 19 + Tailwind CSS 4</td></tr>
+  <tr><td nowrap><b>មូលដ្ឋានទិន្នន័យ</b></td><td>better-sqlite3 (SQLite, WAL journaling) + LowDB (JSON legacy) — 147 domain modules, 224 migrations</td></tr>
+  <tr><td nowrap><b>ការចងចាំ</b></td><td>SQLite FTS5 អត្ថបទពេញលេញ + int8-quantized ការបង្កប់វ៉ិចទ័រ វាយបំបែក</td></tr>
+  <tr><td nowrap><b>គ្រោងការណ៍</b></td><td>Zod 4 — MCP ឧបករណ៍ I/O សុពលភាព + API កិច្ចសន្យា</td></tr>
   <tr><td nowrap><b>ពិធីការ</b></td><td>MCP (stdio / HTTP / SSE) + A2A v0.3 (JSON-RPC 2.0 + SSE)</td></tr>
-  <tr><td nowrap><b>ការផ្សាយទិន្នន័យ</b></td><td>Server-Sent Events (SSE) + ស្ពាន WebSocket (<code>/v1/ws</code>)</td></tr>
-  <tr><td nowrap><b>ការបង្ហាប់</b></td><td>បំពង់ដំណើរការ 12 ម៉ាស៊ីន — RTK, Caveman, LLMLingua-2 (MobileBERT ONNX), GCF, OmniGlyph</td></tr>
-  <tr><td nowrap><b>ការផ្ទៀងផ្ទាត់អត្តសញ្ញាណ និងសុវត្ថិភាព</b></td><td>OAuth 2.0 (PKCE) + JWT + API Keys + MCP scoped auth · AES-256-GCM ពេលរក្សាទុក · DOMPurify</td></tr>
-  <tr><td nowrap><b>ការលាក់អត្តសញ្ញាណ</b></td><td>wreq-js — ការក្លែងធ្វើស្នាមម្រាមដៃ JA3 / JA4 TLS, proxy 3 កម្រិត</td></tr>
-  <tr><td nowrap><b>ភាពធន់</b></td><td>ឧបករណ៍បំបែកសៀគ្វី, exponential backoff, ការប្រឆាំងនឹង thundering herd, ការជួសជុលដោយខ្លួនឯង auto-combo</td></tr>
-  <tr><td nowrap><b>ការកត់ត្រា</b></td><td>pino — កំណត់ហេតុ JSON មានរចនាសម្ព័ន្ធ ជាមួយបរិបទសំណើ</td></tr>
-  <tr><td nowrap><b>ការធ្វើតេស្ត</b></td><td>Node.js test runner + Vitest — <b>ការប្រកាសតេស្តឋិតិវន្តជាង 60,000</b> នៅទូទាំងឯកសារតេស្តដែលបានតាមដានជាង 8,400 (unit, integration, E2E, សុវត្ថិភាព, ecosystem)</td></tr>
-  <tr><td nowrap><b>វេទិកា</b></td><td>កុំព្យូទ័រលើតុ (Electron) · Android (Termux) · PWA (កម្មវិធីរុករកណាមួយ)</td></tr>
-  <tr><td nowrap><b>CI/CD</b></td><td>GitHub Actions — បោះពុម្ព npm ដោយស្វ័យប្រវត្តិ + Docker Hub នៅពេលចេញផ្សាយ</td></tr>
+  <tr><td nowrap><b>ស្ទ្រីម</b></td><td>ព្រឹត្តិការណ៍ដែលផ្ញើដោយម៉ាស៊ីនមេ (SSE) + WebSocket Bridge (<code>/v1/ws</code>)</td></tr>
+  <tr><td nowrap><b>ការបង្ហាប់</b></td><td>12- បំពង់បង្ហូរម៉ាស៊ីន — RTK, Caveman , LLMLingua-2 (MobileBERT ONNX), GCF, OmniGlyph</td></tr>
+  <tr><td nowrap><b>Auth &amp; សុវត្ថិភាព</b></td><td>OAuth 2.0 (PKCE) + JWT + API Keys + MCP scoped auth · AES-256-GCM at rest · DOMPurify</td></tr>
+  <tr><td nowrap><b>បំបាំងកាយ</b></td><td>wreq-js — JA3 / JA4 TLS ការក្លែងបន្លំស្នាមម្រាមដៃ ប្រូកស៊ី 3 កម្រិត</td></tr>
+  <tr><td nowrap><b>ភាពធន់</b></td><td>ឧបករណ៍បំលែងសៀគ្វី, ការបិទឡើងវិញអិចស្ប៉ូណង់ស្យែល, ប្រឆាំងនឹងផ្គរលាន់ - ហ្វូង, បន្សំដោយស្វ័យប្រវត្តិ ការព្យាបាលដោយខ្លួនឯង</td></tr>
+  <tr><td nowrap><b>ការកាប់ឈើ</b></td><td>pino — កំណត់រចនាសម្ព័ន្ធ JSON ជាមួយនឹងបរិបទសំណើ</td></tr>
+  <tr><td nowrap><b>ការធ្វើតេស្ត</b></td><td>Node.js អ្នករត់ការសាកល្បង + Vitest — <b>ការប្រកាសតេស្តឋិតិវន្ត 60,000 +</b> នៅទូទាំង 8,400 + ឯកសារសាកល្បងដែលបានតាមដាន (ឯកតា ការរួមបញ្ចូល E2E សន្តិសុខ ប្រព័ន្ធអេកូ)</td></tr>
+  <tr><td nowrap><b>វេទិកា</b></td><td>ផ្ទៃតុ (Electron) · Android (Termux) · PWA (កម្មវិធីរុករកណាមួយ)</td></tr>
+  <tr><td nowrap><b>CI/CD</b></td><td>GitHub សកម្មភាព — ស្វ័យប្រវត្តិ npm បោះផ្សាយ + Docker Hub នៅលើការចេញផ្សាយ</td></tr>
   <tr><td nowrap><b>តំណភ្ជាប់</b></td><td><a href="https://omniroute.online">គេហទំព័រ</a> · <a href="https://www.npmjs.com/package/omniroute">npm</a> · <a href="https://hub.docker.com/r/diegosouzapw/omniroute">Docker Hub</a></td></tr>
 </table>
 
@@ -1317,207 +1301,207 @@ process ដូចគ្នានៅលើ port តែមួយ ដូច្ន�
 
 </div>
 
-### 📘 ចាប់ផ្តើមប្រើប្រាស់
+### 📘 ការចាប់ផ្តើម
 
 <table>
   <tr><th align="left">ឯកសារ</th><th align="left">ការពិពណ៌នា</th></tr>
-  <tr><td nowrap><b><a href="docs/guides/USER_GUIDE.md">មគ្គុទ្ទេសក៍អ្នកប្រើប្រាស់</a></b></td><td>អ្នកផ្តល់សេវា, បន្សំ, ការរួមបញ្ចូល CLI, ការដាក់ឱ្យដំណើរការ</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/SETUP_GUIDE.md">មគ្គុទ្ទេសក៍ដំឡើង</a></b></td><td>វិធីសាស្ត្រដំឡើងពេញលេញ, ការកំណត់រចនាសម្ព័ន្ធឧបករណ៍ CLI, ការរៀបចំពិធីការ, ការកែតម្រូវពេលអស់កំណត់</td></tr>
-  <tr><td nowrap><b><a href="docs/reference/CLI-TOOLS.md">មគ្គុទ្ទេសក៍ឧបករណ៍ CLI</a></b></td><td>ការរៀបចំតាមឧបករណ៍សម្រាប់ Claude Code, Codex, Cursor, Cline, OpenClaw, Kilo, Copilot</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/REMOTE-MODE.md">របៀបពីចម្ងាយ</a></b></td><td>គ្រប់គ្រង OmniRoute ពីចម្ងាយ (VPS) ពី CLI លើកុំព្យូទ័រយួរដៃរបស់អ្នក តាមរយៈសញ្ញាសម្ងាត់ចូលប្រើដែលមានកំណត់វិសាលភាព</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/CLAUDE-CODE-CONFIGURATION.md">ការកំណត់រចនាសម្ព័ន្ធ Claude Code</a></b></td><td>ភ្ជាប់ Claude Code ទៅ OmniRoute (មូលដ្ឋាន/ពីចម្ងាយ) ដោយប្រើ <code>launch</code> + ទម្រង់តាមម៉ូដែល</td></tr>
-  <tr><td nowrap><b><a href="README.md#-quick-start">ចាប់ផ្តើមរហ័ស</a></b></td><td>ដំឡើង → ភ្ជាប់ → កំណត់រចនាសម្ព័ន្ធ ក្នុង 3 ជំហាន</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/USER_GUIDE.md">ការណែនាំអ្នកប្រើប្រាស់</a></b></td><td>អ្នកផ្តល់សេវា បន្សំ ការរួមបញ្ចូល CLI ការដាក់ពង្រាយ</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/SETUP_GUIDE.md">ការណែនាំអំពីការដំឡើង</a></b></td><td>វិធីសាស្រ្តដំឡើងពេញលេញ ការកំណត់ឧបករណ៍ CLI ការដំឡើងពិធីការ ការលៃតម្រូវពេលវេលាអស់ពេល</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/CLI-TOOLS.md">CLI ឧបករណ៍ណែនាំ</a></b></td><td>ការដំឡើងឧបករណ៍នីមួយៗសម្រាប់ Claude Code, Codex, Cursor, Cline, OpenClaw, Kilo, Copilot</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/REMOTE-MODE.md">របៀបពីចម្ងាយ</a></b></td><td>ជំរុញ OmniRoute ពីចម្ងាយ (VPS) ពី CLI កុំព្យូទ័រយួរដៃរបស់អ្នកតាមរយៈសញ្ញាសម្ងាត់ចូលប្រើដែលមានវិសាលភាព</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/CLAUDE-CODE-CONFIGURATION.md">Claude កំណត់រចនាសម្ព័ន្ធកូដ</a></b></td><td>ចង្អុលកូដ Claude នៅ OmniRoute (local/remote) ជាមួយនឹងទម្រង់ <code>launch</code> + ក្នុងមួយម៉ូដែល</td></tr>
+  <tr><td nowrap><b><a href="README.md#-quick-start">ចាប់ផ្តើមរហ័ស</a></b></td><td>ដំឡើង 3 ជំហាន → ភ្ជាប់ → កំណត់រចនាសម្ព័ន្ធ</td></tr>
 </table>
 
-### 🔧 ប្រតិបត្តិការ និងការដាក់ឱ្យដំណើរការ
+### ប្រតិបត្តិការ និងការដាក់ពង្រាយ 🔧
 
 <table>
   <tr><th align="left">ឯកសារ</th><th align="left">ការពិពណ៌នា</th></tr>
-  <tr><td nowrap><b><a href="docs/guides/DOCKER_GUIDE.md">មគ្គុទ្ទេសក៍ Docker</a></b></td><td>ការដំណើរការ Docker, ទម្រង់ Compose, HTTPS ជាមួយ Caddy, tunnel, ស្លាក image</td></tr>
-  <tr><td nowrap><b><a href="contrib/podman/README.md">មគ្គុទ្ទេសក៍ Podman</a></b></td><td>ការរួមបញ្ចូល Quadlet ជាមួយ systemd, podman-compose, SELinux</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/VM_DEPLOYMENT_GUIDE.md">ការដាក់ឱ្យដំណើរការលើ VM</a></b></td><td>មគ្គុទ្ទេសក៍ពេញលេញ៖ ការរៀបចំ VM + nginx + Cloudflare</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/FLY_IO_DEPLOYMENT_GUIDE.md">ការដាក់ឱ្យដំណើរការលើ Fly.io</a></b></td><td>ដាក់ឱ្យដំណើរការលើ Fly.io ជាមួយការផ្ទុកទិន្នន័យអចិន្ត្រៃយ៍</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/TERMUX_GUIDE.md">មគ្គុទ្ទេសក៍ Termux</a></b></td><td>ដំណើរការ OmniRoute លើ Android តាមរយៈ Termux</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/PWA_GUIDE.md">មគ្គុទ្ទេសក៍ PWA</a></b></td><td>ការដំឡើង Progressive Web App, ការរក្សាទុកក្នុងឃ្លាំងសម្ងាត់, ស្ថាបត្យកម្ម</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/UNINSTALL.md">មគ្គុទ្ទេសក៍លុបការដំឡើង</a></b></td><td>ការលុបចេញយ៉ាងស្អាតសម្រាប់វិធីដំឡើងទាំងអស់</td></tr>
-  <tr><td nowrap><b><a href="docs/reference/ENVIRONMENT.md">ការកំណត់រចនាសម្ព័ន្ធបរិស្ថាន</a></b></td><td>អថេរ និងឯកសារយោង <code>.env</code> ពេញលេញ</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/DOCKER_GUIDE.md">Docker មគ្គុទ្ទេសក៍</a></b></td><td>Docker រត់, តែងទម្រង់, Caddy HTTPS, ផ្លូវរូងក្រោមដី, ស្លាករូបភាព</td></tr>
+  <tr><td nowrap><b><a href="contrib/podman/README.md">មគ្គុទ្ទេសក៍ Podman</a></b></td><td>ការរួមបញ្ចូលប្រព័ន្ធ Quadlet, podman-compose, SELinux</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/VM_DEPLOYMENT_GUIDE.md">ការដាក់ពង្រាយ VM</a></b></td><td>ការណែនាំពេញលេញ៖ ការដំឡើង VM + nginx + Cloudflare</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/FLY_IO_DEPLOYMENT_GUIDE.md">ការដាក់ពង្រាយ Fly.io</a></b></td><td>ដាក់ពង្រាយទៅ Fly.io ជាមួយនឹងការផ្ទុកជាប់លាប់</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/TERMUX_GUIDE.md">មគ្គុទ្ទេសក៍ Termux</a></b></td><td>ដំណើរការ OmniRoute នៅលើ Android តាមរយៈ Termux</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/PWA_GUIDE.md">PWA មគ្គុទ្ទេសក៍</a></b></td><td>Progressive Web App ដំឡើង ឃ្លាំងសម្ងាត់ ស្ថាបត្យកម្ម</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/UNINSTALL.md">លុបការណែនាំ</a></b></td><td>ការដកយកចេញស្អាតសម្រាប់វិធីសាស្រ្តដំឡើងទាំងអស់។</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/ENVIRONMENT.md">ការកំណត់រចនាសម្ព័ន្ធបរិស្ថាន</a></b></td><td>បំពេញអថេរ <code>.env</code> និងឯកសារយោង</td></tr>
 </table>
 
-### 🧠 មុខងារ និងស្ថាបត្យកម្ម
+### 🧠 លក្ខណៈពិសេស & ស្ថាបត្យកម្ម
 
 <table>
   <tr><th align="left">ឯកសារ</th><th align="left">ការពិពណ៌នា</th></tr>
-  <tr><td nowrap><b><a href="docs/architecture/ARCHITECTURE.md">ស្ថាបត្យកម្ម</a></b></td><td>ស្ថាបត្យកម្មប្រព័ន្ធ, លំហូរទិន្នន័យ និងផ្នែកខាងក្នុង</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_GUIDE.md">មគ្គុទ្ទេសក៍បង្រួម</a></b></td><td>បំពង់ដំណើរការ 7 ជម្រើស៖ off / lite / standard / aggressive / ultra / RTK / stacked</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/RTK_COMPRESSION.md">ការបង្រួម RTK</a></b></td><td>ការបង្រួមលទ្ធផលពាក្យបញ្ជា, តម្រង, ភាពជឿទុកចិត្ត, ការផ្ទៀងផ្ទាត់, ការស្ដារលទ្ធផលដើម</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_ENGINES.md">ម៉ាស៊ីនបង្រួម</a></b></td><td>Caveman, RTK, បំពង់ដំណើរការជង់, ផ្នែកប្រើប្រាស់ dashboard/API/MCP</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_RULES_FORMAT.md">ទម្រង់ច្បាប់បង្រួម</a></b></td><td>ស្គីម៉ា JSON សម្រាប់កញ្ចប់ច្បាប់ Caveman និងតម្រង RTK</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_LANGUAGE_PACKS.md">កញ្ចប់ភាសាសម្រាប់ការបង្រួម</a></b></td><td>ការរកឃើញភាសា និងការបង្កើតកញ្ចប់ច្បាប់ Caveman</td></tr>
-  <tr><td nowrap><b><a href="docs/architecture/RESILIENCE_GUIDE.md">មគ្គុទ្ទេសក៍ភាពធន់</a></b></td><td>ឧបករណ៍បំបែកសៀគ្វី, រយៈពេលរង់ចាំ, ជួរ, ការទប់ស្កាត់ហ្វូងសំណើកើនឡើងភ្លាមៗ, ការក្លែងបន្លំ TLS</td></tr>
-  <tr><td nowrap><b><a href="docs/routing/AUTO-COMBO.md">ម៉ាស៊ីន Auto-Combo</a></b></td><td>ការដាក់ពិន្ទុ 16 កត្តា, កញ្ចប់របៀប, ការជួសជុលដោយខ្លួនឯង</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/PROXY_GUIDE.md">មគ្គុទ្ទេសក៍ Proxy</a></b></td><td>ប្រព័ន្ធ proxy 3 កម្រិត, ទីផ្សារ 1proxy, CRUD បញ្ជីចុះឈ្មោះ</td></tr>
-  <tr><td nowrap><b><a href="docs/reference/FREE_TIERS.md">កម្រិតឥតគិតថ្លៃ</a></b></td><td>បញ្ជីរួម៖ pools ដែលមានឯកសារកត់ត្រា និងកើតឡើងជាប្រចាំចំនួន 34 / ធាតុកម្រិតឥតគិតថ្លៃក្នុងកាតាឡុកចំនួន 485</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/FEATURES.md">វិចិត្រសាលមុខងារ</a></b></td><td>ទស្សនកិច្ច dashboard ជារូបភាពជាមួយរូបថតអេក្រង់</td></tr>
-  <tr><td nowrap><b><a href="docs/architecture/CODEBASE_DOCUMENTATION.md">ឯកសារកូដបេស</a></b></td><td>ការណែនាំអំពីកូដបេសដែលងាយស្រួលសម្រាប់អ្នកចាប់ផ្តើម</td></tr>
+  <tr><td nowrap><b><a href="docs/architecture/ARCHITECTURE.md">ស្ថាបត្យកម្ម</a></b></td><td>ស្ថាបត្យកម្មប្រព័ន្ធ លំហូរទិន្នន័យ និងផ្នែកខាងក្នុង</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_GUIDE.md">ការណែនាំអំពីការបង្ហាប់</a></b></td><td>7-option pipeline: off / lite / standard / aggressive / ultra / RTK / stacked</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/RTK_COMPRESSION.md">RTK ការបង្ហាប់</a></b></td><td>ការបង្ហាប់លទ្ធផលពាក្យបញ្ជា តម្រង ទុកចិត្ត ផ្ទៀងផ្ទាត់ ការងើបឡើងវិញលទ្ធផលឆៅ</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_ENGINES.md">ម៉ាស៊ីនបង្ហាប់</a></b></td><td>Caveman, RTK, បំពង់បង្ហូរជង់, ផ្ទៃ dashboard/API/MCP</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_RULES_FORMAT.md">ទម្រង់ច្បាប់បង្ហាប់</a></b></td><td>JSON rule-pack schemas សម្រាប់ Caveman និង RTK filters</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_LANGUAGE_PACKS.md">កញ្ចប់ភាសាបង្ហាប់</a></b></td><td>ការរកឃើញភាសា និងការសរសេរកញ្ចប់ច្បាប់ Caveman</td></tr>
+  <tr><td nowrap><b><a href="docs/architecture/RESILIENCE_GUIDE.md">ការណែនាំអំពីភាពធន់</a></b></td><td>ឧបករណ៍បំបែកសៀគ្វី, ត្រជាក់, ជួរ, ហ្វូងប្រឆាំងនឹងផ្គរលាន់, ការក្លែងបន្លំ TLS</td></tr>
+  <tr><td nowrap><b><a href="docs/routing/AUTO-COMBO.md">ម៉ាស៊ីនបន្សំស្វ័យប្រវត្តិ</a></b></td><td>ពិន្ទុ 16 កត្តា កញ្ចប់របៀប ការព្យាបាលដោយខ្លួនឯង។</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/PROXY_GUIDE.md">មគ្គុទ្ទេសក៍ប្រូកស៊ី</a></b></td><td>ប្រព័ន្ធប្រូកស៊ី 3 កម្រិត, ទីផ្សារប្រូកស៊ី 1, បញ្ជីឈ្មោះ CRUD</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/FREE_TIERS.md">ថ្នាក់ឥតគិតថ្លៃ</a></b></td><td>បញ្ជីរួម៖ អាងទឹកដែលកើតឡើងដដែលៗដែលបានចងក្រងជាឯកសារចំនួន 34 / 465 ធាតុថ្នាក់ឥតគិតថ្លៃដែលបានធ្វើកាតាឡុក</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/FEATURES.md">លក្ខណៈពិសេសវិចិត្រសាល</a></b></td><td>ដំណើរកម្សាន្តផ្ទាំងគ្រប់គ្រងដែលមើលឃើញជាមួយនឹងរូបថតអេក្រង់</td></tr>
+  <tr><td nowrap><b><a href="docs/architecture/CODEBASE_DOCUMENTATION.md">ឯកសារកូដមូលដ្ឋាន</a></b></td><td>ការណែនាំអំពីមូលដ្ឋានកូដដែលងាយស្រួលសម្រាប់អ្នកចាប់ផ្តើមដំបូង</td></tr>
 </table>
 
-### 🤖 ពិធីការ និង APIs
+### 🤖 Protocols & APIs
 
 <table>
   <tr><th align="left">ឯកសារ</th><th align="left">ការពិពណ៌នា</th></tr>
-  <tr><td nowrap><b><a href="docs/reference/API_REFERENCE.md">ឯកសារយោង API</a></b></td><td>ចំណុចបញ្ចប់ទាំងអស់ជាមួយឧទាហរណ៍</td></tr>
-  <tr><td nowrap><b><a href="docs/openapi.yaml">លក្ខណៈបច្ចេកទេស OpenAPI</a></b></td><td>លក្ខណៈបច្ចេកទេស OpenAPI 3.0</td></tr>
-  <tr><td nowrap><b><a href="open-sse/mcp-server/README.md">ម៉ាស៊ីនមេ MCP</a></b></td><td>ឧបករណ៍ MCP ចំនួន 110, ការកំណត់រចនាសម្ព័ន្ធ IDE, client Python/TS/Go</td></tr>
-  <tr><td nowrap><b><a href="docs/frameworks/MCP-SERVER.md">មគ្គុទ្ទេសក៍ម៉ាស៊ីនមេ MCP</a></b></td><td>ការដំឡើង MCP, មធ្យោបាយបញ្ជូន និងឯកសារយោងឧបករណ៍</td></tr>
-  <tr><td nowrap><b><a href="src/lib/a2a/README.md">ម៉ាស៊ីនមេ A2A</a></b></td><td>ពិធីការ JSON-RPC 2.0, ជំនាញ, ការបញ្ជូនជាបន្ត, ការគ្រប់គ្រងភារកិច្ច</td></tr>
-  <tr><td nowrap><b><a href="docs/frameworks/A2A-SERVER.md">មគ្គុទ្ទេសក៍ម៉ាស៊ីនមេ A2A</a></b></td><td>កាតភ្នាក់ងារ A2A, ភារកិច្ច, ជំនាញ និងការបញ្ជូនជាបន្ត</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/API_REFERENCE.md">API ឯកសារយោង</a></b></td><td>ចំណុចបញ្ចប់ទាំងអស់ជាមួយឧទាហរណ៍</td></tr>
+  <tr><td nowrap><b><a href="docs/openapi.yaml">OpenAPI Spec</a></b></td><td>ការបញ្ជាក់OpenAPI 3.0</td></tr>
+  <tr><td nowrap><b><a href="open-sse/mcp-server/README.md">ម៉ាស៊ីនមេMCP</a></b></td><td>ឧបករណ៍ MCP 110, ការកំណត់រចនាសម្ព័ន្ធ IDE, ម៉ាស៊ីនភ្ញៀវ Python/TS/Go</td></tr>
+  <tr><td nowrap><b><a href="docs/frameworks/MCP-SERVER.md">មគ្គុទ្ទេសក៍ម៉ាស៊ីនមេMCP</a></b></td><td>ការដំឡើង MCP ការដឹកជញ្ជូន និងឯកសារយោងឧបករណ៍</td></tr>
+  <tr><td nowrap><b><a href="src/lib/a2a/README.md">ម៉ាស៊ីនមេA2A</a></b></td><td>ពិធីការ JSON-RPC 2.0, ជំនាញ, ការផ្សាយ, កិច្ចការ mgmt</td></tr>
+  <tr><td nowrap><b><a href="docs/frameworks/A2A-SERVER.md">មគ្គុទ្ទេសក៍ម៉ាស៊ីនមេA2A</a></b></td><td>កាតភ្នាក់ងារ A2A ភារកិច្ច ជំនាញ និងការផ្សាយ</td></tr>
 </table>
 
-### 📋 គម្រោង និងគុណភាព
+### 📋 គម្រោង & គុណភាព
 
 <table>
-  <tr><th align="left">ឯកសារ</th><th align="left">សេចក្ដីពិពណ៌នា</th></tr>
-  <tr><td nowrap><b><a href="CONTRIBUTING.md">ការចូលរួមចំណែក</a></b></td><td>ការរៀបចំបរិស្ថានអភិវឌ្ឍន៍ និងគោលការណ៍ណែនាំ</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/BRANCHING_MODEL.md">ម៉ូដែលសាខា និងការចេញផ្សាយ</a></b></td><td>PRs ត្រូវដាក់គោលដៅនៅទីណា (<code>release/*</code>) និងអត្ថន័យរបស់ <code>main</code> និង tags</td></tr>
-  <tr><td nowrap><b><a href="CHANGELOG.md">កំណត់ហេតុការផ្លាស់ប្តូរ</a></b></td><td>ប្រវត្តិការចេញផ្សាយពេញលេញតាមកំណែ</td></tr>
-  <tr><td nowrap><b><a href="SECURITY.md">គោលការណ៍សុវត្ថិភាព</a></b></td><td>ការរាយការណ៍អំពីភាពងាយរងគ្រោះ និងការអនុវត្តសុវត្ថិភាព</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/I18N.md">មគ្គុទ្ទេសក៍ i18n</a></b></td><td>ការគាំទ្រ 67 ភាសា លំហូរការងារបកប្រែ និង RTL</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/RELEASE_CHECKLIST.md">បញ្ជីត្រួតពិនិត្យការចេញផ្សាយ</a></b></td><td>ជំហានផ្ទៀងផ្ទាត់មុនពេលចេញផ្សាយ</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/COVERAGE_PLAN.md">ផែនការគ្របដណ្តប់</a></b></td><td>យុទ្ធសាស្ត្រគ្របដណ្តប់តេស្តសម្រាប់ការប្រកាសតេស្តឋិតិវន្តជាង 60,000 និងឯកសារតេស្តដែលបានតាមដានជាង 8,400</td></tr>
+  <tr><th align="left">ឯកសារ</th><th align="left">ការពិពណ៌នា</th></tr>
+  <tr><td nowrap><b><a href="CONTRIBUTING.md">ការរួមចំណែក</a></b></td><td>ការរៀបចំ និងការណែនាំអំពីការអភិវឌ្ឍន៍</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/BRANCHING_MODEL.md">គំរូសាខា និងការចេញផ្សាយ</a></b></td><td>កន្លែងដែល PRs គោលដៅ (<code>release/*</code>) អ្វីដែល <code>main</code> និងស្លាកមានន័យ</td></tr>
+  <tr><td nowrap><b><a href="CHANGELOG.md">កំណត់ហេតុផ្លាស់ប្តូរ</a></b></td><td>ប្រវត្តិនៃការចេញផ្សាយពេញមួយកំណែ</td></tr>
+  <tr><td nowrap><b><a href="SECURITY.md">គោលនយោបាយសន្តិសុខ</a></b></td><td>ការរាយការណ៍អំពីភាពងាយរងគ្រោះ និងការអនុវត្តសុវត្ថិភាព</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/I18N.md">មគ្គុទ្ទេសក៍ i18n</a></b></td><td>ការគាំទ្រ 67 ភាសា លំហូរការងារបកប្រែ RTL</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/RELEASE_CHECKLIST.md">ចេញបញ្ជីត្រួតពិនិត្យ</a></b></td><td>ជំហានផ្ទៀងផ្ទាត់មុនការចេញផ្សាយ</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/COVERAGE_PLAN.md">ផែនការគ្របដណ្តប់</a></b></td><td>សាកល្បងយុទ្ធសាស្រ្តគ្របដណ្តប់សម្រាប់ការប្រកាសការធ្វើតេស្តឋិតិវន្ត 60,000 + នៅទូទាំង 8,400 + ឯកសារសាកល្បងដែលបានតាមដាន</td></tr>
 </table>
 
 <br/>
 
 <div align="center">
 
-# ⭐ អ្នកចូលរួមចំណែកកំពូល
+# ⭐ អ្នករួមចំណែកកំពូល
 
-> OmniRoute ត្រូវបានបង្កើតឡើងដោយសហគមន៍ប្រភពបើកចំហដ៏សកម្ម និងមានចំណង់ចំណូលចិត្ត។ បុគ្គលទាំងនេះបានចូលរួមចំណែកយ៉ាងពិសេស ដែលជះឥទ្ធិពលដោយផ្ទាល់ដល់គុណភាព ស្ថិរភាព និងការឈានទៅដល់របស់គម្រោង។ **សូមអរគុណ។**
+> OmniRoute ត្រូវបានបង្កើតឡើងដោយសហគមន៍ប្រភពបើកចំហដែលងប់ងល់។ បុគ្គលទាំងនេះបានធ្វើការរួមចំណែកយ៉ាងពិសេស ដែលជះឥទ្ធិពលដោយផ្ទាល់ទៅលើគុណភាព ស្ថិរភាព និងការឈានដល់គម្រោង។** សូមអរគុណ។**
 
-### អ្នកចូលរួមចំណែកខាងក្រៅតាម pull requests ដែលបានបញ្ចូលចូល
+### អ្នករួមចំណែកខាងក្រៅដោយសំណើទាញបញ្ចូលគ្នា
 
 <table>
-  <tr><th align="center">ចំណាត់ថ្នាក់</th><th align="left">អ្នកចូលរួមចំណែក</th><th align="center">PRs ដែលបានបញ្ចូលចូល</th><th align="right">~បន្ទាត់ដែលបានផ្លាស់ប្តូរ</th></tr>
+  <tr><th align="center">ចំណាត់ថ្នាក់</th><th align="left">អ្នករួមចំណែក</th><th align="center">រួមបញ្ចូលគ្នា PRs</th><th align="right">~ បានផ្លាស់ប្តូរបន្ទាត់</th></tr>
   <tr><td align="center">1</td><td align="left"><a href="https://github.com/maxmad64bis"><b>maxmad64bis</b></a></td><td align="center">418</td><td align="right">25,367,739</td></tr>
   <tr><td align="center">2</td><td align="left"><a href="https://github.com/HouMinXi"><b>HouMinXi</b></a></td><td align="center">295</td><td align="right">13,557,796</td></tr>
   <tr><td align="center">3</td><td align="left"><a href="https://github.com/pacocartones"><b>pacocartones</b></a></td><td align="center">222</td><td align="right">81,551</td></tr>
   <tr><td align="center">4</td><td align="left"><a href="https://github.com/backryun"><b>backryun</b></a></td><td align="center">210</td><td align="right">270,562</td></tr>
   <tr><td align="center">5</td><td align="left"><a href="https://github.com/JxnLexn"><b>JxnLexn</b></a></td><td align="center">198</td><td align="right">3,570,623</td></tr>
-  <tr><td align="center">6</td><td align="left"><a href="https://github.com/oyi77"><b>oyi77</b></a></td><td align="center">190</td><td align="right">411,243</td></tr>
+  <tr><td align="center">6</td><td align="left"><a href="https://github.com/oyi77"><b>អូអ៊ី ៧៧</b></a></td><td align="center">190</td><td align="right">411,243</td></tr>
   <tr><td align="center">7</td><td align="left"><a href="https://github.com/KooshaPari"><b>KooshaPari</b></a></td><td align="center">151</td><td align="right">5,972,314</td></tr>
-  <tr><td align="center">8</td><td align="left"><a href="https://github.com/rdself"><b>rdself</b></a></td><td align="center">145</td><td align="right">80,663</td></tr>
+  <tr><td align="center">8</td><td align="left"><a href="https://github.com/rdself"><b>rdខ្លួនឯង</b></a></td><td align="center">145</td><td align="right">80,663</td></tr>
   <tr><td align="center">9</td><td align="left"><a href="https://github.com/RaviTharuma"><b>RaviTharuma</b></a></td><td align="center">123</td><td align="right">500,065</td></tr>
-  <tr><td align="center">10</td><td align="left"><a href="https://github.com/herjarsa"><b>herjarsa</b></a></td><td align="center">88</td><td align="right">230,872</td></tr>
-  <tr><td align="center">11</td><td align="left"><a href="https://github.com/hartmark"><b>hartmark</b></a></td><td align="center">85</td><td align="right">2,849,623</td></tr>
+  <tr><td align="center">10</td><td align="left"><a href="https://github.com/herjarsa"><b>ហឺចាសា</b></a></td><td align="center">88</td><td align="right">230,872</td></tr>
+  <tr><td align="center">11</td><td align="left"><a href="https://github.com/hartmark"><b>សញ្ញាសម្គាល់</b></a></td><td align="center">85</td><td align="right">2,849,623</td></tr>
   <tr><td align="center">12</td><td align="left"><a href="https://github.com/jonlwheat2-gif"><b>jonlwheat2-gif</b></a></td><td align="center">68</td><td align="right">69,097</td></tr>
   <tr><td align="center">13</td><td align="left"><a href="https://github.com/artickc"><b>artickc</b></a></td><td align="center">62</td><td align="right">43,502</td></tr>
   <tr><td align="center">14</td><td align="left"><a href="https://github.com/xiaoyaner0201"><b>xiaoyaner0201</b></a></td><td align="center">59</td><td align="right">126,220</td></tr>
-  <tr><td align="center">15</td><td align="left"><a href="https://github.com/chirag127"><b>chirag127</b></a></td><td align="center">52</td><td align="right">6,661</td></tr>
+  <tr><td align="center">15</td><td align="left"><a href="https://github.com/chirag127"><b>ជីរ៉ាក់ ១២៧</b></a></td><td align="center">52</td><td align="right">6,661</td></tr>
   <tr><td align="center">16</td><td align="left"><a href="https://github.com/xz-dev"><b>xz-dev</b></a></td><td align="center">50</td><td align="right">245,976</td></tr>
-  <tr><td align="center">17</td><td align="left"><a href="https://github.com/woodsonl"><b>woodsonl</b></a></td><td align="center">48</td><td align="right">811,771</td></tr>
+  <tr><td align="center">17</td><td align="left"><a href="https://github.com/woodsonl"><b>ឈើសុន</b></a></td><td align="center">48</td><td align="right">811,771</td></tr>
   <tr><td align="center">18</td><td align="left"><a href="https://github.com/rqzbeh"><b>rqzbeh</b></a></td><td align="center">46</td><td align="right">151,229</td></tr>
   <tr><td align="center">19</td><td align="left"><a href="https://github.com/MumuTW"><b>MumuTW</b></a></td><td align="center">43</td><td align="right">28,166</td></tr>
   <tr><td align="center">19</td><td align="left"><a href="https://github.com/QuangBlue"><b>QuangBlue</b></a></td><td align="center">43</td><td align="right">13,112</td></tr>
 </table>
 
-<sub>ការរាប់ស្ថិតិត្រូវបានធ្វើឡើងនៅ 2026-11-03 03:01:19 UTC ជាមួយក្បាលបច្ចុប្បន្នរបស់ <code>release/v3.8.53</code> គឺ <code>05bc048d6c</code>។ ការរាប់ស្ថិតិ GitHub GraphQL ដែលបែងចែកជាទំព័រ មាន PRs ដែលបានបញ្ចូលចូលសរុប 9,947៖ 4,130 ដោយម្ចាស់ឃ្លាំង, 240 ដោយ Dependabot, 6 ដោយ bots/apps ផ្សេងទៀត និង <b>5,571 PRs ខាងក្រៅពីអ្នកចូលរួមចំណែកខុសៗគ្នា 883 នាក់</b>។ “បន្ទាត់ដែលបានផ្លាស់ប្តូរ” គឺជាចំនួនបន្ទាត់ដែល GitHub បន្ថែម + លុប ហើយរួមបញ្ចូលឯកសារដែលបានបង្កើតដោយស្វ័យប្រវត្តិ ឯកសារចាក់សោ កាតាឡុក ការបកប្រែ និងឯកសារណែនាំ។ វាជាបរិមាណការផ្លាស់ប្តូរ មិនមែន LOC ដែលបានសរសេរដោយអ្នកនិពន្ធទេ។ PRs ចំនួន 53 រាយការណ៍ថា GitHub diffs មានច្រើនជាង 500,000 បន្ទាត់ (ឧទាហរណ៍ #13399 ដែលជាការបន្ថែម provider តែមួយ រាយការណ៍ថាមានឯកសារដែលបានផ្លាស់ប្តូរ 2,347) ដែលធ្វើឱ្យចំនួនសរុបមួយចំនួនខាងលើកើនឡើង។ ករណីមានពិន្ទុស្មើ ត្រូវបានដាក់ចំណាត់ថ្នាក់រួមគ្នា។</sub>
+<sub>ជំរឿនបានយក 2026-11-03 03:01:19 UTC ជាមួយនឹងព័ត៌មានជំនួយ <code>release/v3.8.53</code> <code>05bc048d6c</code> ផ្ទាល់។ ជំរឿន GitHub GraphQL ដែលមានលេខទំព័រមាន 9,947 រួមបញ្ចូលគ្នា PRs: 4,130 ដោយម្ចាស់ឃ្លាំង, 240 ដោយ Dependabot, 6 ដោយ bots/apps ផ្សេងទៀត និង <b>5,571 PRs ខាងក្រៅពីអ្នករួមចំណែក 883 ផ្សេងគ្នា</b>. "បន្ទាត់ដែលបានផ្លាស់ប្តូរ" គឺជាការបន្ថែម GitHub ការលុប + និងរួមបញ្ចូលឯកសារដែលបានបង្កើត ឯកសារចាក់សោ កាតាឡុក ការបកប្រែ និងឯកសារ។ វាគឺជាការកូរមិនបាននិពន្ធ LOC។ 53 PRs របាយការណ៍ GitHub ខុសគ្នាលើសពី 500,000 បន្ទាត់ (ឧទាហរណ៍ #13399 ដែលជាការបន្ថែមអ្នកផ្តល់សេវាតែមួយ រាយបញ្ជីឯកសារដែលបានផ្លាស់ប្តូរចំនួន 2,347) ដែលបំប៉ោងចំនួនសរុបជាច្រើនខាងលើ។ ចំណងត្រូវបានចាត់ថ្នាក់ជាមួយគ្នា។</sub>
 
-### Commits ដែលបានកំណត់ប្រភពដោយ GitHub
+### GitHub-កំណត់គុណលក្ខណៈ commits
 
 <table>
   <tr>
     <td align="center" width="160">
       <a href="https://github.com/maxmad64bis">
         <img src="https://github.com/maxmad64bis.png" width="40" style="border-radius:50%" alt="Dizzle"/><br/>
-        <b>Dizzle</b>
+        <b>វិលមុខ</b>
       </a><br/>
-      <sub>🥇 418 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🥇 418 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/HouMinXi">
         <img src="https://github.com/HouMinXi.png" width="40" style="border-radius:50%" alt="Bob.Hou"/><br/>
-        <b>Bob.Hou</b>
+        <b>លោក Bob.Hou</b>
       </a><br/>
-      <sub>🥈 294 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🥈 294 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/oyi77">
         <img src="https://github.com/oyi77.png" width="40" style="border-radius:50%" alt="Paijo"/><br/>
-        <b>Paijo</b>
+        <b>ប៉ាយជូ</b>
       </a><br/>
-      <sub>🥉 229 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🥉 229 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/pacocartones">
         <img src="https://github.com/pacocartones.png" width="40" style="border-radius:50%" alt="Paco Cartones"/><br/>
         <b>Paco Cartones</b>
       </a><br/>
-      <sub>🏅 222 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 222 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/backryun">
         <img src="https://github.com/backryun.png" width="40" style="border-radius:50%" alt="backryun"/><br/>
         <b>backryun</b>
       </a><br/>
-      <sub>🏅 202 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 202 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/JxnLexn">
         <img src="https://github.com/JxnLexn.png" width="40" style="border-radius:50%" alt="Jan Leon"/><br/>
-        <b>Jan Leon</b>
+        <b>មករា ឡេអូន</b>
       </a><br/>
-      <sub>🏅 134 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 134 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="160">
       <a href="https://github.com/RaviTharuma">
         <img src="https://github.com/RaviTharuma.png" width="40" style="border-radius:50%" alt="Ravi Tharuma"/><br/>
-        <b>Ravi Tharuma</b>
+        <b>រ៉ាវី ថារូម៉ា</b>
       </a><br/>
-      <sub>🏅 126 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 126 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/hartmark">
         <img src="https://github.com/hartmark.png" width="40" style="border-radius:50%" alt="Markus Hartung"/><br/>
         <b>Markus Hartung</b>
       </a><br/>
-      <sub>🏅 115 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 115 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/rdself">
         <img src="https://github.com/rdself.png" width="40" style="border-radius:50%" alt="Randi"/><br/>
-        <b>Randi</b>
+        <b>រ៉ាឌី</b>
       </a><br/>
-      <sub>🏅 108 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 108 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/christopher-s">
         <img src="https://github.com/christopher-s.png" width="40" style="border-radius:50%" alt="Chris"/><br/>
-        <b>Chris</b>
+        <b>គ្រីស</b>
       </a><br/>
-      <sub>🏅 70 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 70 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/jonlwheat2-gif">
         <img src="https://github.com/jonlwheat2-gif.png" width="40" style="border-radius:50%" alt="WebPerson"/><br/>
         <b>WebPerson</b>
       </a><br/>
-      <sub>🏅 68 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 68 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/KooshaPari">
         <img src="https://github.com/KooshaPari.png" width="40" style="border-radius:50%" alt="Koosha Paridehpour"/><br/>
         <b>Koosha Paridehpour</b>
       </a><br/>
-      <sub>🏅 68 ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub</sub>
+      <sub>🏅 68 GitHub-កំណត់គុណលក្ខណៈ commits</sub>
     </td>
   </tr>
 </table>
 
-<sub>បានត្រួតពិនិត្យឡើងវិញនៅ 2026-11-03 02:09:16 UTC៖ ការបញ្ជូនកូដដែលកំណត់ដោយ GitHub ដែលបានរាយការណ៍ដោយ Contributors API របស់ឃ្លាំង សម្រាប់សាខាលំនាំដើម <code>release/v3.8.53</code>។ API បានបញ្ជូនអត្តសញ្ញាណចំនួន 903 (អ្នកប្រើប្រាស់ 429 នាក់, បូត 2 និងអនាមិក 472); តារាងនេះមិនរាប់បញ្ចូលអ្នកថែទាំ បូត និងអត្តសញ្ញាណអនាមិកទេ ហើយរក្សាទុកចំណាត់ថ្នាក់ដែលមានពិន្ទុស្មើគ្នា។ វាខុសពីទាំងចំណាត់ថ្នាក់ PR ដែលបានបញ្ចូលខាងលើ និងការធ្វើជំរឿនទិន្នន័យមេតារបស់ Git ខាងក្រោម។</sub>
+<sub>បានពិនិត្យឡើងវិញនៅ 2026-11-03 02:09:16 UTC: ការប្រព្រឹត្តិដោយគុណលក្ខណៈ GitHub បានរាយការណ៍ដោយអ្នកចែកចាយឃ្លាំង API សម្រាប់សាខាលំនាំដើម <code>release/v3.8.53</code> ។ API បានត្រឡប់អត្តសញ្ញាណចំនួន 903 (អ្នកប្រើប្រាស់ 429 នាក់, 2 រូបយន្ត, 472 អនាមិក); តារាងនេះមិនរាប់បញ្ចូលអ្នកថែទាំ រូបយន្ត និងអត្តសញ្ញាណអនាមិក និងរក្សាទំនាក់ទំនងប្រកួតប្រជែង។ វាខុសគ្នាពីចំណាត់ថ្នាក់រួមបញ្ចូលគ្នា-PR ខាងលើ និងជំរឿន Git-metadata ខាងក្រោម។</sub>
 
-> 🙏 មុខងារ ការកែបញ្ហា និងការកែលម្អហេដ្ឋារចនាសម្ព័ន្ធរបស់អ្នកចូលរួមទាំងនេះ គឺជា **ផ្នែកស្នូល** នៃអ្វីដែលធ្វើឱ្យ OmniRoute មានភាពអាចទុកចិត្តបាន និងសម្បូរមុខងារ។ រាល់ pull request រាល់ករណីសាកល្បង និងរាល់ឯកសារបកប្រែ i18n សុទ្ធតែមានសារៈសំខាន់។ ប្រភពបើកចំហត្រូវបានកសាងឡើងដោយមនុស្សដូចពួកគេ។
+> 🙏 លក្ខណៈពិសេសរបស់អ្នកចូលរួមទាំងនេះ ការជួសជុលកំហុស និងការធ្វើឱ្យប្រសើរឡើងនូវហេដ្ឋារចនាសម្ព័ន្ធគឺជាក** ផ្នែកស្នូល** នៃអ្វីដែលធ្វើឱ្យ OmniRoute គួរឱ្យទុកចិត្ត និងសម្បូរបែប។ រាល់សំណើរទាញ រាល់ករណីសាកល្បង និងរាល់ឯកសារបកប្រែ i18n មានសារៈសំខាន់។ ប្រភពបើកចំហត្រូវបានបង្កើតឡើងដោយមនុស្សដូចពួកគេ។
 
 </div>
 
@@ -1798,15 +1782,15 @@ OmniRoute ឈរលើស្នាដៃរបស់អ្នកជំនាន�
 
 ## 📄 អាជ្ញាប័ណ្ណ
 
-អាជ្ញាប័ណ្ណ MIT - សូមមើល [LICENSE](LICENSE) សម្រាប់ព័ត៌មានលម្អិត។
+MIT License - សូមមើល [LICENSE](LICENSE) សម្រាប់ព័ត៌មានលម្អិត។
 
 ---
 
 <div align="center">
 
-**[⬆ ត្រឡប់ទៅកំពូល](#-omniroute)** · បង្កើតដោយ ❤️ សម្រាប់សហគមន៍ AI ប្រភពបើកចំហ។
+**[⬆ ត្រឡប់ទៅខាងលើ](#-omniroute)** · បង្កើតឡើងដោយ ❤️ សម្រាប់សហគមន៍ AI ប្រភពបើកចំហ។
 
-<sub>បង្កើតដោយ <a href="https://github.com/diegosouzapw">Diego Souza</a> · OmniRoute v3.8.54 · Node ≥22.22.2 · អាជ្ញាប័ណ្ណ MIT · <a href="https://omniroute.online">omniroute.online</a></sub>
+<sub>បង្កើតឡើងដោយ <a href="https://github.com/diegosouzapw">Diego Souza</a> · OmniRoute v3.8.54 · Node ≥ 22.22.2 · MIT License · <a href="https://omniroute.online">omniroute.online</a></sub>
 
 </div>
-<!-- បានបើក GitHub Discussions សម្រាប់ការសួរ-ឆ្លើយរបស់សហគមន៍ -->
+<!-- GitHub Discussions enabled for community Q&A -->

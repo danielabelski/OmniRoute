@@ -4,24 +4,24 @@
 
 ---
 
-> **Vượt qua các hạn chế địa lý, bảo vệ danh tính và định tuyến lưu lượng AI qua bất kỳ proxy nào — mà không gặp sự phức tạp trong cấu hình.**
+> **Bỏ qua các khối địa lý, bảo vệ danh tính của bạn và định tuyến lưu lượng truy cập AI thông qua bất kỳ — proxy nào mà không có độ phức tạp về cấu hình.**
 
-OmniRoute bao gồm một hệ thống quản lý proxy đầy đủ tính năng, cho phép bạn định tuyến lưu lượng đến các nhà cung cấp AI thượng nguồn qua proxy HTTP, HTTPS hoặc SOCKS5. Dù bạn đang ở khu vực bị chặn, cần xoay vòng IP hay muốn che giấu dấu vân tay — hướng dẫn này sẽ trình bày mọi nội dung cần thiết.
+OmniRoute bao gồm một hệ thống quản lý proxy đầy đủ tính năng cho phép bạn định tuyến lưu lượng truy cập của nhà cung cấp AI ngược dòng thông qua các proxy HTTP, HTTPS hoặc SOCKS5. Cho dù bạn đang ở trong khu vực bị chặn, cần xoay IP hay muốn lấy dấu vân tay ẩn — hướng dẫn này sẽ bao gồm mọi thứ.
 
 ---
 
 ## Mục lục
 
 - [Tại sao nên sử dụng proxy?](#why-use-proxies)
-- [Tổng quan kiến trúc](#architecture-overview)
+- [Tổng quan về kiến trúc](#architecture-overview)
 - [Hệ thống proxy 4 cấp](#4-level-proxy-system)
-- [Sổ đăng ký proxy (CRUD)](#proxy-registry-crud)
-- [Kho proxy miễn phí 1proxy](#1proxy-free-proxy-marketplace)
+- [Đăng ký proxy (CRUD)](#proxy-registry-crud)
+- [Thị trường miễn phí 1proxy](#1proxy-free-proxy-marketplace)
 - [Xoay vòng proxy](#proxy-rotation)
-- [Chống phát hiện & ẩn danh](#anti-detection--stealth)
-- [Các chế độ proxy thượng nguồn](#upstream-proxy-modes)
-- [Giao diện bảng điều khiển](#dashboard-ui)
-- [Tài liệu tham khảo API](#api-reference)
+- [Chống phát hiện & tàng hình](#anti-detection--stealth)
+- [Chế độ proxy ngược dòng](#upstream-proxy-modes)
+- [Trang tổng quan UI](#dashboard-ui)
+- [tham khảo API](#api-reference)
 - [Biến môi trường](#environment-variables)
 - [Khắc phục sự cố](#troubleshooting)
 
@@ -29,125 +29,136 @@ OmniRoute bao gồm một hệ thống quản lý proxy đầy đủ tính năng
 
 ## Tại sao nên sử dụng proxy?
 
-Nhiều nhà cung cấp AI hạn chế quyền truy cập theo khu vực địa lý. Các nhà phát triển tại **Nga, Trung Quốc, Iran, Cuba, Thổ Nhĩ Kỳ** và những quốc gia khác có thể gặp các lỗi như:
+Nhiều nhà cung cấp AI hạn chế quyền truy cập theo khu vực địa lý. Nhà phát triển ở** Nga, Trung Quốc, Iran, Cuba, Thổ Nhĩ Kỳ** , và các nước khác gặp lỗi như:
 
 ```
 unsupported_country_region_territory
 ```
 
-Ngay cả khi ở ngoài các khu vực bị chặn, proxy vẫn hữu ích cho các mục đích sau:
+Ngay cả bên ngoài các khu vực bị chặn, proxy vẫn hữu ích cho:
 
-| Trường hợp sử dụng      | Mô tả                                                              |
-| ----------------------- | ------------------------------------------------------------------ |
-| **Vượt hạn chế địa lý** | Truy cập OpenAI, Anthropic, Codex, Copilot từ các quốc gia bị chặn |
-| **Xoay vòng IP**        | Phân phối yêu cầu trên nhiều IP để tránh bị giới hạn tốc độ        |
-| **Quyền riêng tư**      | Ẩn địa chỉ IP thực của bạn khỏi các nhà cung cấp thượng nguồn      |
-| **Tuân thủ**            | Định tuyến lưu lượng qua các khu vực tài phán cụ thể               |
-| **Kiểm thử**            | Mô phỏng các yêu cầu đến từ những khu vực khác nhau                |
+| Trường hợp sử dụng     | Sự miêu tả                                                         |
+| ---------------------- | ------------------------------------------------------------------ |
+| **Đường tránh địa lý** | Truy cập OpenAI, Anthropic, Codex, Copilot từ các quốc gia bị chặn |
+| **xoay IP**            | Phân phối yêu cầu trên nhiều IPs để tránh giới hạn tốc độ          |
+| **Sự riêng tư**        | Ẩn IP thực sự của bạn khỏi các nhà cung cấp ngược dòng             |
+| **Sự tuân thủ**        | Định tuyến lưu lượng truy cập thông qua các khu vực pháp lý cụ thể |
+| **Kiểm tra**           | Mô phỏng các yêu cầu từ các khu vực khác nhau                      |
 
 ---
 
-## Tổng quan kiến trúc
+## Tổng quan về kiến trúc
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Máy chủ OmniRoute                       │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Sổ đăng ký  │    │ Bộ điều phối │    │ Fetch (undici)   │  │
-│  │ proxy       │───▶│ proxy        │───▶│                  │  │
-│  │ (SQLite)    │    │ (được lưu đệm)│    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Đồng bộ     │                        │ API nhà cung cấp │  │
-│  │ 1proxy      │                        │ thượng nguồn     │  │
-│  │ (nhóm miễn phí)│                     │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Các thành phần chính
+### Thành phần chính
 
-| Thành phần             | Tệp                                          | Vai trò                                                                         |
-| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Sổ đăng ký proxy**   | `src/lib/db/proxies.ts`                      | Các thao tác CRUD cho mục proxy + phép gán phạm vi                              |
-| **Bộ điều phối proxy** | `open-sse/utils/proxyDispatcher.ts`          | Tạo các bộ điều phối ProxyAgent/SOCKS của `undici` có hỗ trợ lưu vào bộ nhớ đệm |
-| **Proxy Fetch**        | `open-sse/utils/proxyFetch.ts`               | Bao bọc `fetch()` và chèn bộ điều phối proxy                                    |
-| **Tuyến cài đặt**      | `src/app/api/settings/proxy/route.ts`        | API cấu hình proxy cũ (GET/PUT/DELETE)                                          |
-| **Tuyến quản lý**      | `src/app/api/v1/management/proxies/route.ts` | API CRUD cho sổ đăng ký (GET/POST/PATCH/DELETE)                                 |
-| **CSDL 1proxy**        | `src/lib/db/oneproxy.ts`                     | Lưu trữ bền vững cho kho proxy miễn phí                                         |
-
----
-
-## Hệ thống Proxy 4 cấp
-
-OmniRoute hỗ trợ cấu hình proxy ở **bốn phạm vi độc lập**, được phân giải theo thứ tự ưu tiên:
-
-```
-Thứ tự ưu tiên phân giải (cao nhất → thấp nhất):
-
-  1. 🔵 Proxy tài khoản/kết nối  →  theo từng API key / kết nối OAuth
-  2. 🟡 Proxy nhà cung cấp       →  theo từng nhà cung cấp (ví dụ: toàn bộ lưu lượng OpenAI)
-  3. 🟠 Proxy tổ hợp             →  theo từng cấu hình tổ hợp/định tuyến
-  4. 🟢 Proxy toàn cục           →  toàn bộ lưu lượng, mọi nhà cung cấp
-```
-
-### Cách thức phân giải hoạt động
-
-Khi OmniRoute gửi yêu cầu đến một nhà cung cấp thượng nguồn, hệ thống sẽ gọi `resolveProxyForConnectionFromRegistry()` để kiểm tra lần lượt từng cấp:
-
-1. **Cấp tài khoản** — Có proxy nào được gán cho ID kết nối cụ thể này không?
-2. **Cấp nhà cung cấp** — Có proxy nào được gán cho nhà cung cấp này (ví dụ: `openai`) không?
-3. **Cấp toàn cục** — Có proxy toàn cục nào được cấu hình không?
-4. **Không có proxy** — Kết nối trực tiếp đến nhà cung cấp.
-
-Kết quả khớp đầu tiên sẽ được sử dụng. Điều này có nghĩa là bạn có thể đặt một proxy toàn cục làm phương án dự phòng nhưng ghi đè proxy đó cho các nhà cung cấp hoặc kết nối cụ thể.
-
-### Những lưu lượng được chuyển qua proxy
-
-| Loại lưu lượng        | Qua proxy? | Ghi chú                                          |
-| --------------------- | ---------- | ------------------------------------------------ |
-| Hoàn thành trò chuyện | ✅         | Mọi yêu cầu `/v1/chat/completions`               |
-| Embedding             | ✅         | `/v1/embeddings`                                 |
-| Tạo hình ảnh          | ✅         | `/v1/images/generations`                         |
-| Âm thanh (TTS/STT)    | ✅         | `/v1/audio/*`                                    |
-| Trao đổi token OAuth  | ✅         | Khắc phục `unsupported_country_region_territory` |
-| Kiểm tra kết nối      | ✅         | Nút "Kiểm tra kết nối" sử dụng proxy             |
-| Làm mới token         | ✅         | Gia hạn OAuth trong nền                          |
-| Đồng bộ mô hình       | ✅         | Liệt kê và khám phá mô hình                      |
+| Thành phần                | Tài liệu                                     | Vai trò                                                   |
+| ------------------------- | -------------------------------------------- | --------------------------------------------------------- |
+| **Đăng ký proxy**         | `src/lib/db/proxies.ts`                      | CRUD cho các mục proxy phép gán phạm vi +                 |
+| **Người điều phối proxy** | `open-sse/utils/proxyDispatcher.ts`          | Tạo bộ điều phối `undici` ProxyAgent/SOCKS với bộ nhớ đệm |
+| **Tìm nạp proxy**         | `open-sse/utils/proxyFetch.ts`               | Kết thúc `fetch()` bằng cách chèn bộ điều phối proxy      |
+| **Lộ trình cài đặt**      | `src/app/api/settings/proxy/route.ts`        | Cấu hình proxy kế API (GET/PUT/DELETE)                    |
+| **Lộ trình quản lý**      | `src/app/api/v1/management/proxies/route.ts` | Đăng ký CRUD API (GET/POST/PATCH/DELETE)                  |
+| **1proxy DB**             | `src/lib/db/oneproxy.ts`                     | Sự kiên trì của thị trường proxy miễn phí                 |
 
 ---
 
-## Sổ đăng ký Proxy (CRUD)
+## Trạng thái proxy mặc định cho tài khoản mới
 
-Sổ đăng ký proxy là một bảng SQLite (`proxy_registry`) lưu trữ tất cả proxy của bạn. Mỗi proxy có:
+TRONG** Cài đặt → Proxy → Cấu hình toàn cầu** , sử dụng** Bật proxy theo mặc định cho các kết nối mới** để chọn trạng thái proxy ban đầu của tài khoản nhà cung cấp mới được thêm vào.
 
-| Trường     | Kiểu      | Mô tả                                             |
-| ---------- | --------- | ------------------------------------------------- |
-| `id`       | UUID      | Mã định danh duy nhất                             |
-| `name`     | Chuỗi     | Nhãn dễ đọc                                       |
-| `type`     | Chuỗi     | Giao thức: `http`, `https`, `socks5`              |
-| `host`     | Chuỗi     | Tên máy chủ hoặc IP của proxy                     |
-| `port`     | Số nguyên | Số cổng                                           |
-| `username` | Chuỗi     | Tên người dùng xác thực (được mã hóa khi lưu trữ) |
-| `password` | Chuỗi     | Mật khẩu xác thực (được mã hóa khi lưu trữ)       |
-| `region`   | Chuỗi     | Nhãn khu vực địa lý                               |
-| `notes`    | Chuỗi     | Ghi chú dạng văn bản tự do                        |
-| `status`   | Chuỗi     | `active` hoặc `inactive`                          |
-| `source`   | Chuỗi     | `manual` hoặc `oneproxy`                          |
+Cài đặt mới kiểm soát trạng thái proxy ban đầu của tài khoản nhà cung cấp mới được thêm vào. Nó không thay đổi các tài khoản hiện có hoặc thay thế chuyển đổi proxy toàn cầu. Giá trị ban đầu của nó duy trì hành vi trước đó. Tắt nó một lần để tạo các tài khoản trong tương lai với proxy bị tắt theo mặc định.
 
-### Tạo Proxy
+Tùy chọn được lưu trữ dưới dạng `defaultNewConnectionProxyEnabled` thông qua Cài đặt API hiện có. Nó mặc định là `true` khi không bao giờ được lưu. Việc lưu `false` có hiệu lực đối với các tài khoản mới tiếp theo mà không cần khởi động lại. `POST /api/providers` chấp nhận một boolean `proxyEnabled` nghiêm ngặt tùy chọn; `true` hoặc `false` rõ ràng được ưu tiên hơn mặc định tạo. Việc bỏ sót một tài khoản trùng lặp hoặc kết nối lại OAuth sẽ duy trì trạng thái được lưu trữ của tài khoản đó. Tài khoản cá nhân vẫn có thể được kích hoạt hoặc vô hiệu hóa sau đó.
 
-**Qua Dashboard:**
+Chuyển nhà cung cấp có chọn lọc sử dụng cài đặt mặc định của cài đặt đích cho các tài khoản mới và duy trì chính sách đích khi thay thế các tài khoản hiện có. Chuyển đổi proxy không phải là trường chuyển di động. Khôi phục sao lưu toàn bộ và di chuyển JSON/SQL lịch sử giữ lại ngữ nghĩa khôi phục hiện có của chúng, bao gồm các giá trị tài khoản đã lưu và mặc định lược đồ cũ; khôi phục cài đặt đầy đủ cũng có thể khôi phục tùy chọn này.
 
-1. Đi tới **Cài đặt → Proxy**
-2. Nhấp vào **Thêm Proxy**
-3. Điền loại, máy chủ, cổng và thông tin xác thực tùy chọn
-4. Lưu
+Tùy chọn này không chỉ định proxy hoặc xác nhận rằng proxy đó hoạt động tốt hoặc đang được sử dụng. Định tuyến thực tế vẫn phụ thuộc vào chuyển đổi proxy toàn cầu và cấu hình proxy hiện hành. Các nhà cung cấp tổng hợp không có tài khoản liên tục, lưu lượng truy cập OAuth trước khi tạo tài khoản, proxy environment/system và mạng của các chương trình phụ trợ bên ngoài đều nằm ngoài phạm vi của nó.
 
-**Qua API:**
+## Hệ thống proxy 4 cấp
+
+OmniRoute hỗ trợ cấu hình proxy tại** bốn phạm vi độc lập** , giải quyết theo thứ tự ưu tiên:
+
+```
+Priority Resolution Order (highest → lowest):
+
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
+```
+
+### Độ phân giải hoạt động như thế nào
+
+Khi OmniRoute gửi yêu cầu đến nhà cung cấp ngược dòng, nó sẽ gọi `resolveProxyForConnectionFromRegistry()` để kiểm tra từng cấp độ theo thứ tự:
+
+1. **Cấp tài khoản** — Có proxy nào được chỉ định cho kết nối ID cụ thể này không?
+2. **Cấp nhà cung cấp** — Có proxy nào được chỉ định cho nhà cung cấp này không (ví dụ: `openai`)?
+3. **Cấp độ toàn cầu** — Có proxy toàn cầu được định cấu hình không?
+4. **Không có proxy** — Kết nối trực tiếp với nhà cung cấp.
+
+Trận đầu tiên thắng. Điều này có nghĩa là bạn có thể đặt proxy chung làm dự phòng nhưng ghi đè proxy đó cho các nhà cung cấp hoặc kết nối cụ thể.
+
+### Những gì được ủy quyền
+
+| Loại lưu lượng truy cập     | Được ủy quyền? | Ghi chú                                           |
+| --------------------------- | -------------- | ------------------------------------------------- |
+| Hoàn thành trò chuyện       | ✅             | Tất cả các yêu cầu `/v1/chat/completions`         |
+| Nhúng                       | ✅             | `/v1/embeddings`                                  |
+| Tạo hình ảnh                | ✅             | `/v1/images/generations`                          |
+| Âm thanh (TTS/STT)          | ✅             | `/v1/audio/*`                                     |
+| trao đổi mã thông báo OAuth | ✅             | Giải quyết `unsupported_country_region_territory` |
+| Kiểm tra kết nối            | ✅             | Nút "Kiểm tra kết nối" sử dụng proxy              |
+| Làm mới mã thông báo        | ✅             | Gia hạn nền tảng OAuth                            |
+| Đồng bộ hóa mô hình         | ✅             | Danh sách và khám phá mô hình                     |
+
+---
+
+## Đăng ký proxy (CRUD)
+
+Sổ đăng ký proxy là một bảng SQLite (`proxy_registry`) lưu trữ tất cả các proxy của bạn. Mỗi proxy có:
+
+| Cánh đồng  | Kiểu      | Sự miêu tả                                           |
+| ---------- | --------- | ---------------------------------------------------- |
+| `id`       | UUID      | Mã định danh duy nhất                                |
+| `name`     | Sợi dây   | Nhãn có thể đọc được                                 |
+| `type`     | Sợi dây   | Giao thức: `http`, `https`, `socks5`                 |
+| `host`     | Sợi dây   | Tên máy chủ proxy hoặc IP                            |
+| `port`     | số nguyên | Số cổng                                              |
+| `username` | Sợi dây   | Tên người dùng xác thực (được mã hóa ở phần còn lại) |
+| `password` | Sợi dây   | Mật khẩu xác thực (được mã hóa ở phần còn lại)       |
+| `region`   | Sợi dây   | Nhãn khu vực địa lý                                  |
+| `notes`    | Sợi dây   | Ghi chú văn bản tự do                                |
+| `status`   | Sợi dây   | `active` hoặc `inactive`                             |
+| `source`   | Sợi dây   | `manual` hoặc `oneproxy`                             |
+
+### Tạo một proxy
+
+**Thông qua Bảng điều khiển:**
+
+1. đi đến** Cài đặt → Proxy**
+2. nhấp chuột** Thêm proxy**
+3. Điền vào loại, máy chủ, cổng và thông tin xác thực tùy chọn
+4. Cứu
+
+**Thông qua API:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -163,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Cập nhật Proxy
+### Cập nhật proxy
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -175,44 +186,44 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Lưu ý:** Thông tin xác thực được giữ nguyên trừ khi bạn gửi rõ ràng các giá trị thay thế không rỗng. Việc gửi chuỗi rỗng cho `username`/`password` sẽ giữ nguyên các giá trị đã lưu.
+> **Ghi chú:** Thông tin xác thực được giữ nguyên trừ khi bạn gửi rõ ràng các thông tin thay thế không trống. Gửi chuỗi trống cho `username`/`password` sẽ giữ các giá trị được lưu trữ.
 
-### Xóa Proxy
+### Xóa proxy
 
 ```bash
-# Thất bại nếu proxy được gán cho bất kỳ phạm vi nào
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Buộc xóa (đồng thời xóa các phép gán)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Liệt kê Proxy
+### Liệt kê proxy
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Gán Proxy cho các phạm vi
+### Gán proxy cho phạm vi
 
 ```bash
-# Gán cho phạm vi toàn cục
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Gán cho một nhà cung cấp cụ thể
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Gán cho một kết nối/khóa cụ thể
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Phân giải Proxy có hiệu lực
+### Giải quyết Proxy hiệu quả
 
 Kiểm tra proxy nào sẽ được sử dụng cho một kết nối nhất định:
 
@@ -220,11 +231,11 @@ Kiểm tra proxy nào sẽ được sử dụng cho một kết nối nhất đ�
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Trả về proxy đã phân giải cùng với cấp của proxy đó (`account`, `provider` hoặc `global`) và nguồn.
+Trả về proxy đã giải quyết với cấp độ (`account`, `provider` hoặc `global`) và nguồn của nó.
 
-### Gán hàng loạt
+### Bài tập hàng loạt
 
-Gán một proxy cho nhiều nhà cung cấp hoặc kết nối cùng lúc:
+Chỉ định một proxy cho nhiều nhà cung cấp hoặc kết nối cùng một lúc:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Nhập/Xuất
+### Import/Export
 
-Các proxy được bao gồm trong hệ thống **Sao lưu/Khôi phục**. Khi bạn xuất cấu hình OmniRoute:
+Proxy được bao gồm trong**Backup/Restore** hệ thống. Khi bạn xuất cấu hình OmniRoute của mình:
 
-1. Đi tới **Dashboard → Cài đặt → Sao lưu**
-2. Nhấp vào **Xuất** — sổ đăng ký proxy và các phép gán đều được bao gồm
-3. Để khôi phục, nhấp vào **Nhập** và tải tệp sao lưu lên
+1. đi đến** Bảng điều khiển → Cài đặt → Sao lưu**
+2. nhấp chuột** Xuất khẩu** đăng ký proxy — và các bài tập được bao gồm
+3. Để khôi phục, hãy nhấp vào** Nhập khẩu** và tải lên tập tin sao lưu
 
-Sổ đăng ký proxy cũng hỗ trợ **upsert theo host+port** — nếu bạn nhập một proxy đã tồn tại (cùng máy chủ và cổng), proxy đó sẽ được cập nhật thay vì tạo bản sao trùng lặp.
+Cơ quan đăng ký proxy cũng hỗ trợ** upsert bởi cổng + máy chủ** — nếu bạn nhập một proxy đã tồn tại (cùng máy chủ và cổng), nó sẽ cập nhật thay vì tạo một bản sao.
 
-### Di chuyển dữ liệu cũ
+### Di chuyển kế thừa
 
-Nếu bạn đã cấu hình proxy trong phiên bản cũ hơn (trước khi có registry), OmniRoute sẽ tự động di chuyển chúng:
+Nếu bạn đã định cấu hình proxy ở phiên bản cũ hơn (đăng ký trước), OmniRoute sẽ tự động di chuyển chúng:
 
 ```
-Kho key_value cũ → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Quá trình này diễn ra một lần trong lần khởi động đầu tiên sau khi nâng cấp. Sử dụng `migrateLegacyProxyConfigToRegistry({ force: true })` để chạy lại.
+Điều này xảy ra một lần trong lần khởi động đầu tiên sau khi nâng cấp. Sử dụng `migrateLegacyProxyConfigToRegistry({ force: true })` để chạy lại.
 
 ---
 
-## Chợ Proxy Miễn phí 1proxy
+## Thị trường proxy miễn phí 1proxy
 
-> 🆕 **Được đóng góp bởi [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Vấn đề [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Được đóng góp bởi [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Vấn đề [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute tích hợp với nền tảng cộng đồng **[1proxy](https://1proxy-api.aitradepulse.com)** để cung cấp quyền truy cập vào **hàng trăm proxy miễn phí đã được xác thực** từ khắp nơi trên thế giới. Đây là lựa chọn hoàn hảo cho những người dùng không có hạ tầng proxy riêng.
+OmniRoute tích hợp với** [1 người đại diện](https://1proxy-api.aitradepulse.com)** nền tảng cộng đồng để cung cấp quyền truy cập vào** hàng trăm proxy miễn phí, được xác thực** từ khắp nơi trên thế giới. Điều này hoàn hảo cho những người dùng không có cơ sở hạ tầng proxy của riêng họ.
 
-### Cách Hoạt động
+### Nó hoạt động như thế nào
 
 ```
-┌─────────────┐   Đồng bộ    ┌─────────────────┐   Luân phiên   ┌──────────────┐
-│  API 1proxy │ ────────────▶ │  proxy_registry  │ ────────────▶ │ API nhà cung │
-│  (bên ngoài)│  tối đa 500  │  source=oneproxy │  theo chất     │     cấp      │
-└─────────────┘     proxy     └─────────────────┘     lượng       └──────────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Đồng bộ** — OmniRoute lấy các proxy đã được xác thực từ API 1proxy
-2. **Lưu trữ** — Proxy được lưu vào cùng bảng `proxy_registry` với `source = 'oneproxy'`
-3. **Lọc** — Lọc theo giao thức, quốc gia và điểm chất lượng
-4. **Luân phiên** — Chọn proxy tốt nhất bằng chiến lược dựa trên chất lượng, ngẫu nhiên hoặc tuần tự
-5. **Tự động hạ cấp** — Proxy bị lỗi sẽ bị giảm điểm chất lượng; nếu thấp hơn ngưỡng → được đánh dấu là không hoạt động
+1. **Đồng bộ hóa** — OmniRoute tìm nạp các proxy đã được xác thực từ 1proxy API
+2. **Cửa hàng** Proxy — được lưu trong cùng bảng `proxy_registry` với `source = 'oneproxy'`
+3. **Lọc** — Lọc theo giao thức, quốc gia, điểm chất lượng
+4. **Quay** — Chọn proxy tốt nhất bằng cách sử dụng các chiến lược chất lượng, ngẫu nhiên hoặc tuần tự
+5. **Tự động xuống cấp** — Proxy không thành công sẽ bị giảm điểm chất lượng; dưới ngưỡng → được đánh dấu là không hoạt động
 
-### Đồng bộ Proxy
+### Đồng bộ hóa proxy
 
-**Qua Bảng điều khiển:**
+**Thông qua Bảng điều khiển:**
 
-1. Đi tới tab **Cài đặt → 1proxy**
-2. Nhấp vào **"Đồng bộ ngay"**
-3. Xem số liệu thống kê: tổng số proxy, số lượng đang hoạt động, chất lượng trung bình và phân bố theo quốc gia
+1. đi đến** Cài đặt → 1proxy** tab
+2. nhấp chuột** "Đồng bộ hóa ngay bây giờ"**
+3. Xem số liệu thống kê: tổng số proxy, số lượng hoạt động, chất lượng trung bình, phân tích theo quốc gia
 
-**Qua API:**
+**Thông qua API:**
 
 ```bash
-# Kích hoạt đồng bộ
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Phản hồi:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### Lọc Proxy
+### Lọc proxy
 
 ```bash
-# Lọc theo giao thức
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Lọc theo quốc gia
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Lọc theo điểm chất lượng tối thiểu
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Kết hợp các bộ lọc
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Điểm Chất lượng Proxy
+### Điểm chất lượng proxy
 
 Mỗi proxy 1proxy đi kèm với siêu dữ liệu:
 
-| Trường          | Mô tả                                                  |
-| --------------- | ------------------------------------------------------ |
-| `qualityScore`  | Điểm đánh giá 0-100 từ quá trình xác thực của 1proxy   |
-| `latencyMs`     | Độ trễ mạng đo được                                    |
-| `anonymity`     | `transparent`, `anonymous` hoặc `elite`                |
-| `googleAccess`  | Proxy có thể truy cập các dịch vụ của Google hay không |
-| `countryCode`   | Mã quốc gia ISO gồm hai chữ cái                        |
-| `lastValidated` | Dấu thời gian của lần xác thực gần nhất                |
+| Cánh đồng       | Sự miêu tả                                          |
+| --------------- | --------------------------------------------------- |
+| `qualityScore`  | Xếp hạng 0-100 từ xác thực 1proxy                   |
+| `latencyMs`     | Độ trễ mạng được đo                                 |
+| `anonymity`     | `transparent`, `anonymous` hoặc `elite`             |
+| `googleAccess`  | Liệu proxy có thể truy cập dịch vụ Google hay không |
+| `countryCode`   | Mã quốc gia ISO hai chữ cái                         |
+| `lastValidated` | Dấu thời gian xác thực lần cuối                     |
 
 Điểm chất lượng được điều chỉnh linh hoạt:
 
-- **Yêu cầu thất bại** làm giảm điểm 10 điểm
-- **Điểm giảm xuống ≤10** → proxy được đánh dấu là `inactive`
-- Các proxy không hoạt động sẽ bị loại khỏi quá trình luân phiên
+- **Yêu cầu không thành công** giảm điểm 10
+- **Điểm giảm xuống ≤ 10** proxy → được đánh dấu `inactive`
+- Proxy không hoạt động được loại trừ khỏi vòng quay
 
-### Chiến lược Luân phiên
+### Chiến lược luân chuyển
 
 ```bash
-# Luân phiên theo chất lượng (proxy tốt nhất trước) — mặc định
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Luân phiên ngẫu nhiên
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Tuần tự (proxy được xác thực cách đây lâu nhất trước)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Bộ ngắt Mạch
+### Bộ ngắt mạch
 
-Tính năng đồng bộ 1proxy có bộ ngắt mạch tích hợp sẵn:
+Đồng bộ hóa 1proxy có bộ ngắt mạch tích hợp:
 
-- Sau **5 lần đồng bộ thất bại liên tiếp**, các lần đồng bộ tiếp theo sẽ bị chặn
+- Sau đó** 5 lỗi đồng bộ liên tiếp** , các nỗ lực đồng bộ hóa tiếp theo sẽ bị chặn
 - Đặt lại bằng: `resetOneproxyCircuitBreaker()` hoặc khởi động lại máy chủ
-- Trạng thái đồng bộ có tại `GET /api/settings/oneproxy?action=status`
+- Trạng thái đồng bộ hóa có sẵn tại `GET /api/settings/oneproxy?action=status`
 
-### Xóa Proxy 1proxy
+### Xóa 1 proxy proxy
 
 ```bash
-# Xóa một proxy 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Xóa TẤT CẢ proxy 1proxy (các proxy thủ công không bị ảnh hưởng)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Chống Phát Hiện & Ẩn Danh
+## Chống phát hiện & tàng hình
 
-OmniRoute không chỉ định tuyến lưu lượng qua proxy — nó còn khiến lưu lượng trông hợp lệ:
+OmniRoute không chỉ định tuyến lưu lượng truy cập thông qua — proxy mà nó còn làm cho lưu lượng truy cập trông có vẻ hợp pháp:
 
-### Giả Mạo Dấu Vân Tay TLS
+### TLS mạo dấu vân tay
 
-Sử dụng `wreq-js` để tạo dấu vân tay TLS giống trình duyệt, vượt qua các hệ thống phát hiện bot vốn gắn cờ những quy trình bắt tay TLS không phải của trình duyệt.
+Sử dụng `wreq-js` để tạo dấu vân tay TLS giống trình duyệt, bỏ qua các hệ thống phát hiện bot gắn cờ các lần bắt tay TLS không phải trình duyệt.
 
-### Khớp Dấu Vân Tay CLI
+### Đối sánh dấu vân tay CLI
 
-**Nút Bật/Tắt Dấu Vân Tay CLI** (`Settings → Security`) sắp xếp lại các header HTTP và trường trong phần thân JSON để khớp với chữ ký chính xác của các tệp nhị phân CLI gốc (Claude Code, Codex, v.v.). Tính năng này hoạt động **kết hợp với** proxy:
+các** chuyển đổi vân tay CLI** (`Settings → Security`) sắp xếp lại các tiêu đề HTTP và các trường nội dung JSON để khớp với chữ ký chính xác của các tệp nhị phân CLI gốc (Claude Code, Codex, v.v.). Cái này hoạt động** trên đầu trang** người đại diện:
 
 ```
-IP của bạn (bị chặn) → IP proxy (Hoa Kỳ) → API của nhà cung cấp
-                        + giả mạo TLS
-                        + dấu vân tay CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Bạn đồng thời có được cả **khả năng che giấu IP** và **tính xác thực của yêu cầu**.
+Bạn nhận được cả hai** mặt nạ IP** Và** yêu cầu tính xác thực** đồng thời.
 
-### Bảo Toàn IP Proxy
+### Bảo quản IP proxy
 
-Các huy hiệu được mã hóa bằng màu trong bảng điều khiển cho biết cấp proxy nào đang hoạt động:
+Huy hiệu được mã hóa màu trong trang tổng quan cho biết cấp độ proxy nào đang hoạt động:
 
-| Huy hiệu | Cấp độ       | Ý nghĩa                                         |
-| -------- | ------------ | ----------------------------------------------- |
-| 🟢       | Toàn cục     | Tất cả lưu lượng đều đi qua proxy này           |
-| 🟡       | Nhà cung cấp | Chỉ lưu lượng của nhà cung cấp này đi qua proxy |
-| 🔵       | Kết nối      | Khóa/tài khoản cụ thể này sử dụng proxy này     |
+| Huy hiệu | Mức độ       | Nghĩa                                                     |
+| -------- | ------------ | --------------------------------------------------------- |
+| 🟢       | Toàn cầu     | Tất cả lưu lượng truy cập đều đi qua proxy này            |
+| 🟡       | nhà cung cấp | Chỉ lưu lượng truy cập của nhà cung cấp này được ủy quyền |
+| 🔵       | Sự liên quan | key/account cụ thể này sử dụng proxy này                  |
 
-Huy hiệu cũng hiển thị IP proxy đã được phân giải để xác minh.
+Huy hiệu cũng hiển thị IP proxy đã được giải quyết để xác minh.
 
 ---
 
-## Chế Độ Proxy Thượng Nguồn
+## Chế độ proxy ngược dòng
 
-Đối với các nhà cung cấp sử dụng mẫu CLIProxyAPI, OmniRoute hỗ trợ ba chế độ proxy thượng nguồn:
+Đối với các nhà cung cấp sử dụng mẫu CLIProxyAPI, OmniRoute hỗ trợ ba chế độ proxy ngược dòng:
 
-| Chế độ        | Mô tả                                                         |
-| ------------- | ------------------------------------------------------------- |
-| `native`      | OmniRoute trực tiếp xử lý việc định tuyến proxy (mặc định)    |
-| `cliproxyapi` | Ủy quyền cho một phiên bản CLIProxyAPI bên ngoài              |
-| `fallback`    | Thử chế độ gốc trước, sau đó chuyển sang CLIProxyAPI dự phòng |
+| Cách thức     | Sự miêu tả                                            |
+| ------------- | ----------------------------------------------------- |
+| `native`      | OmniRoute xử lý định tuyến proxy trực tiếp (mặc định) |
+| `cliproxyapi` | Đại biểu cho một cá thể CLIProxyAPI bên ngoài         |
+| `fallback`    | Thử bản địa trước, quay lại CLIProxyAPI               |
 
-Cấu hình theo từng nhà cung cấp:
+Định cấu hình cho mỗi nhà cung cấp:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,126 +436,126 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Giao Diện Bảng Điều Khiển
+## Trang tổng quan UI
 
-### Settings → Thẻ Proxy
+### Cài đặt Tab Proxy →
 
-- Cấu hình **proxy toàn cục** (thiết lập một lần cho toàn bộ lưu lượng)
-- Ghi đè **proxy theo từng nhà cung cấp**
-- Gán **proxy theo từng kết nối**
-- **Kiểm tra kết nối** thông qua proxy đã cấu hình
-- **Huy hiệu được mã hóa bằng màu** hiển thị cấp proxy đang hoạt động
+- **Proxy toàn cầu** cấu hình (đặt một lần cho tất cả lưu lượng truy cập)
+- **Proxy của mỗi nhà cung cấp** ghi đè
+- **Proxy mỗi kết nối** bài tập
+- **Kiểm tra kết nối** thông qua proxy được cấu hình
+- **Huy hiệu có mã màu** hiển thị cấp độ proxy hoạt động
 
-### Settings → Thẻ 1proxy
+### Cài đặt tab → 1proxy
 
-- Nút **Đồng Bộ Ngay** để tải các proxy miễn phí
-- **Thẻ thống kê**: Tổng số, Đang hoạt động, Chất lượng trung bình, Lần đồng bộ gần nhất
-- **Bộ lọc**: Giao thức, Mã quốc gia, Chất lượng tối thiểu
-- **Bảng proxy** chứa máy chủ, giao thức, quốc gia, điểm chất lượng, độ trễ, mức độ ẩn danh, khả năng truy cập Google
-- Bảng **trạng thái đồng bộ** có chức năng theo dõi thành công/thất bại và số lần thất bại liên tiếp
-- **Xóa Tất Cả** để xóa toàn bộ mục 1proxy
+- **Đồng bộ hóa ngay bây giờ** nút để lấy proxy miễn phí
+- **Thẻ thống kê** : Tổng cộng, Đang hoạt động, Chất lượng trung bình, Đồng bộ hóa lần cuối
+- **Bộ lọc** : Giao thức, Mã quốc gia, Chất lượng tối thiểu
+- **Bảng proxy** với máy chủ, giao thức, quốc gia, điểm chất lượng, độ trễ, ẩn danh, quyền truy cập Google
+- **Trạng thái đồng bộ hóa** bảng điều khiển với tính năng theo dõi success/failure và số lần thất bại liên tiếp
+- **Xóa tất cả** để xóa tất cả các mục 1proxy
 
 ---
 
-## Tài Liệu Tham Khảo API
+## tham khảo API
 
-### API Cài Đặt Proxy
+### Cài đặt proxy API
 
-| Phương thức | Điểm cuối                                      | Mô tả                        |
-| ----------- | ---------------------------------------------- | ---------------------------- |
-| `GET`       | `/api/settings/proxy`                          | Lấy cấu hình proxy đầy đủ    |
-| `GET`       | `/api/settings/proxy?level=global`             | Lấy proxy toàn cục           |
-| `GET`       | `/api/settings/proxy?level=provider&id=openai` | Lấy proxy của nhà cung cấp   |
-| `GET`       | `/api/settings/proxy?resolve=connectionId`     | Phân giải proxy có hiệu lực  |
-| `PUT`       | `/api/settings/proxy`                          | Cập nhật cấu hình proxy      |
-| `DELETE`    | `/api/settings/proxy?level=provider&id=openai` | Xóa proxy ở cấp độ tương ứng |
+| Phương pháp | Điểm cuối                                      | Sự miêu tả                  |
+| ----------- | ---------------------------------------------- | --------------------------- |
+| `GET`       | `/api/settings/proxy`                          | Nhận cấu hình proxy đầy đủ  |
+| `GET`       | `/api/settings/proxy?level=global`             | Nhận proxy toàn cầu         |
+| `GET`       | `/api/settings/proxy?level=provider&id=openai` | Nhận proxy của nhà cung cấp |
+| `GET`       | `/api/settings/proxy?resolve=connectionId`     | Giải quyết proxy hiệu quả   |
+| `PUT`       | `/api/settings/proxy`                          | Cập nhật cấu hình proxy     |
+| `DELETE`    | `/api/settings/proxy?level=provider&id=openai` | Xóa proxy ở cấp độ          |
 
-### API Registry Proxy
+### Đăng ký proxy API
 
-| Phương thức | Điểm cuối                                         | Mô tả                     |
-| ----------- | ------------------------------------------------- | ------------------------- |
-| `GET`       | `/api/v1/management/proxies`                      | Liệt kê tất cả proxy      |
-| `GET`       | `/api/v1/management/proxies?id=uuid`              | Lấy proxy theo ID         |
-| `GET`       | `/api/v1/management/proxies?id=uuid&where_used=1` | Lấy các phép gán proxy    |
-| `POST`      | `/api/v1/management/proxies`                      | Tạo proxy                 |
-| `PATCH`     | `/api/v1/management/proxies`                      | Cập nhật proxy            |
-| `DELETE`    | `/api/v1/management/proxies?id=uuid`              | Xóa proxy                 |
-| `DELETE`    | `/api/v1/management/proxies?id=uuid&force=1`      | Buộc xóa                  |
-| `POST`      | `/api/v1/management/proxies/bulk-assign`          | Gán hàng loạt             |
-| `GET`       | `/api/v1/management/proxies/assignments`          | Liệt kê các phép gán      |
-| `GET`       | `/api/v1/management/proxies/health`               | Thống kê tình trạng proxy |
+| Phương pháp | Điểm cuối                                         | Sự miêu tả                               |
+| ----------- | ------------------------------------------------- | ---------------------------------------- |
+| `GET`       | `/api/v1/management/proxies`                      | Liệt kê tất cả các proxy                 |
+| `GET`       | `/api/v1/management/proxies?id=uuid`              | Nhận proxy bằng ID                       |
+| `GET`       | `/api/v1/management/proxies?id=uuid&where_used=1` | Nhận nhiệm vụ proxy                      |
+| `POST`      | `/api/v1/management/proxies`                      | Tạo proxy                                |
+| `PATCH`     | `/api/v1/management/proxies`                      | Cập nhật proxy                           |
+| `DELETE`    | `/api/v1/management/proxies?id=uuid`              | Xóa proxy                                |
+| `DELETE`    | `/api/v1/management/proxies?id=uuid&force=1`      | Buộc xóa                                 |
+| `POST`      | `/api/v1/management/proxies/bulk-assign`          | Chỉ định hàng loạt                       |
+| `GET`       | `/api/v1/management/proxies/assignments`          | Liệt kê bài tập                          |
+| `GET`       | `/api/v1/management/proxies/health`               | Số liệu thống kê về tình trạng của proxy |
 
-### API Tunnel
+### Đường hầm API
 
-Để công khai phiên bản OmniRoute của bạn trên internet (Cloudflare/ngrok/Tailscale) thay vì định tuyến lưu lượng đi qua proxy, hãy xem [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). API REST của tunnel nằm dưới `/api/tunnels/{cloudflared,ngrok,tailscale}/*` và độc lập với chuỗi proxy chiều ra được mô tả ở trên.
+Để hiển thị phiên bản OmniRoute của bạn với internet công cộng (Cloudflare/ngrok/Tailscale) thay vì định tuyến ra ngoài thông qua proxy, hãy xem [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Đường hầm REST API nằm trong `/api/tunnels/{cloudflared,ngrok,tailscale}/*` và trực giao với chuỗi proxy gửi đi được ghi ở trên.
 
-### API 1proxy
+### 1proxy API
 
-| Phương thức | Điểm cuối                              | Mô tả                             |
-| ----------- | -------------------------------------- | --------------------------------- |
-| `GET`       | `/api/settings/oneproxy`               | Liệt kê các proxy 1proxy          |
-| `GET`       | `/api/settings/oneproxy?action=stats`  | Lấy thống kê + trạng thái đồng bộ |
-| `GET`       | `/api/settings/oneproxy?action=status` | Chỉ lấy trạng thái đồng bộ        |
-| `POST`      | `/api/settings/oneproxy`               | Kích hoạt đồng bộ                 |
-| `POST`      | `/api/settings/oneproxy/rotate`        | Chuyển sang proxy tiếp theo       |
-| `DELETE`    | `/api/settings/oneproxy?id=uuid`       | Xóa một proxy                     |
-| `DELETE`    | `/api/settings/oneproxy?clearAll=1`    | Xóa tất cả                        |
+| Phương pháp | Điểm cuối                              | Sự miêu tả                                     |
+| ----------- | -------------------------------------- | ---------------------------------------------- |
+| `GET`       | `/api/settings/oneproxy`               | Liệt kê 1 proxy proxy                          |
+| `GET`       | `/api/settings/oneproxy?action=stats`  | Nhận số liệu thống kê trạng thái đồng bộ hóa + |
+| `GET`       | `/api/settings/oneproxy?action=status` | Chỉ nhận trạng thái đồng bộ hóa                |
+| `POST`      | `/api/settings/oneproxy`               | Đồng bộ hóa kích hoạt                          |
+| `POST`      | `/api/settings/oneproxy/rotate`        | Xoay sang proxy tiếp theo                      |
+| `DELETE`    | `/api/settings/oneproxy?id=uuid`       | Xóa một                                        |
+| `DELETE`    | `/api/settings/oneproxy?clearAll=1`    | Xóa tất cả                                     |
 
-### API Proxy Thượng Nguồn
+### Proxy ngược dòng API
 
-| Phương thức | Điểm cuối                         | Mô tả                               |
-| ----------- | --------------------------------- | ----------------------------------- |
-| `GET`       | `/api/upstream-proxy/:providerId` | Lấy cấu hình proxy thượng nguồn     |
-| `PUT`       | `/api/upstream-proxy/:providerId` | Thiết lập chế độ proxy thượng nguồn |
-| `DELETE`    | `/api/upstream-proxy/:providerId` | Xóa cấu hình proxy thượng nguồn     |
+| Phương pháp | Điểm cuối                         | Sự miêu tả                     |
+| ----------- | --------------------------------- | ------------------------------ |
+| `GET`       | `/api/upstream-proxy/:providerId` | Nhận cấu hình proxy ngược dòng |
+| `PUT`       | `/api/upstream-proxy/:providerId` | Đặt chế độ proxy ngược dòng    |
+| `DELETE`    | `/api/upstream-proxy/:providerId` | Xóa cấu hình proxy ngược dòng  |
 
 ---
 
 ## Biến môi trường
 
-| Biến                  | Mặc định | Mô tả                                                             |
-| --------------------- | -------- | ----------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`   | Bật hỗ trợ proxy SOCKS5 (mặc định là `true` trong `.env.example`) |
+| Biến                  | Mặc định | Sự miêu tả                                                      |
+| --------------------- | -------- | --------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`   | Bật hỗ trợ proxy SOCKS5 ( `true` mặc định trong `.env.example`) |
 
 ---
 
 ## Khắc phục sự cố
 
-### "Proxy SOCKS5 đã bị vô hiệu hóa"
+### " proxy SOCKS5 bị tắt"
 
 Đặt `ENABLE_SOCKS5_PROXY=true` trong tệp `.env` của bạn và khởi động lại.
 
-### Lỗi "socket hang up" khi sử dụng proxy
+### lỗi "gác máy" thông qua proxy
 
-Điều này là bình thường với các proxy giá rẻ thường ngắt những kết nối không hoạt động. OmniRoute đã xử lý vấn đề này bằng cách:
+Điều này là bình thường với các proxy giá rẻ làm mất kết nối nhàn rỗi. OmniRoute đã xử lý việc này bằng cách:
 
-- Vô hiệu hóa keep-alive trên các kết nối proxy (`keepAliveTimeout: 1`)
-- Vô hiệu hóa pipelining (`pipelining: 0`)
-- Lưu bộ điều phối vào bộ nhớ đệm để tránh lặp lại quá trình bắt tay
+- Vô hiệu hóa tính năng duy trì kết nối proxy (`keepAliveTimeout: 1`)
+- Vô hiệu hóa đường ống (`pipelining: 0`)
+- Bộ điều phối bộ nhớ đệm để tránh bắt tay nhiều lần
 
-Nếu sự cố vẫn tiếp diễn, hãy thử một proxy khác hoặc sử dụng tính năng xoay vòng của 1proxy.
+Nếu tình trạng này vẫn tiếp diễn, hãy thử proxy khác hoặc sử dụng tính năng xoay 1proxy.
 
-### "unsupported_country_region_territory" trong quá trình OAuth
+### "unsupported_country_khu vực_lãnh thổ" trong OAuth
 
-Đảm bảo proxy được cấu hình **trước khi** bắt đầu quy trình OAuth. OmniRoute định tuyến việc trao đổi token OAuth qua proxy đã cấu hình. Trước tiên, hãy thiết lập proxy ở cấp độ toàn cục hoặc nhà cung cấp, sau đó kết nối.
+Đảm bảo proxy được định cấu hình** trước** bắt đầu dòng OAuth. OmniRoute định tuyến trao đổi mã thông báo OAuth thông qua proxy được định cấu hình. Trước tiên hãy đặt proxy toàn cầu hoặc cấp nhà cung cấp, sau đó kết nối.
 
 ### Proxy không được sử dụng
 
-Kiểm tra thứ tự phân giải:
+Kiểm tra thứ tự giải quyết:
 
 1. Xác minh bằng `GET /api/settings/proxy?resolve=your-connection-id`
-2. Kiểm tra xem `status` của proxy có phải là `active` (không phải `inactive`) hay không
-3. Đảm bảo phạm vi gán proxy khớp với kết nối của bạn
+2. Kiểm tra xem `status` proxy có phải là `active` (không phải `inactive`)
+3. Đảm bảo phạm vi gán proxy phù hợp với kết nối của bạn
 
-### Đồng bộ hóa 1proxy không thành công
+### 1đồng bộ hóa proxy không thành công
 
-Kiểm tra trạng thái đồng bộ hóa:
+Kiểm tra trạng thái đồng bộ:
 
 ```bash
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Nếu `consecutiveFailures >= 5`, bộ ngắt mạch đã được kích hoạt. Khởi động lại máy chủ để đặt lại hoặc chờ đặt lại thủ công.
+Nếu `consecutiveFailures >= 5`, cầu dao đã bị ngắt. Khởi động lại máy chủ để đặt lại hoặc đợi đặt lại thủ công.
 
 ---
 
@@ -564,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' hoặc 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (chỉ dành cho 1proxy)
-  latency_ms INTEGER,                        -- mili giây (chỉ dành cho 1proxy)
-  anonymity TEXT,                            -- trong suốt/ẩn danh/ưu tú
-  google_access INTEGER DEFAULT 0,           -- có thể truy cập Google? (1proxy)
-  last_validated TEXT,                       -- dấu thời gian ISO (1proxy)
-  country_code TEXT,                         -- mã ISO gồm 2 chữ cái (1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
+  anonymity TEXT,                            -- transparent/anonymous/elite
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -583,7 +594,7 @@ CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID nhà cung cấp, ID kết nối hoặc ID tổ hợp
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,40 +603,40 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Kiểm tra tình trạng proxy (v3.8.16+)
+## Kiểm tra tình trạng proxy (v3.8.16 +)
 
-Cơ chế **proxy fast-fail** của OmniRoute (`src/lib/proxyHealth.ts`) phát hiện các proxy không hoạt động trong <2 giây thông qua kiểm tra kết nối TCP nhanh, sau đó **lưu kết quả vào bộ nhớ đệm** để tránh phát sinh chi phí cho mỗi yêu cầu.
+của OmniRoute** proxy nhanh chóng thất bại** cơ chế (`src/lib/proxyHealth.ts`) phát hiện các proxy chết trong < 2s thông qua kiểm tra kết nối TCP nhanh, sau đó** lưu trữ kết quả** để tránh chi phí theo yêu cầu.
 
-### Cách hoạt động
+### Nó hoạt động như thế nào
 
 ```
-Yêu cầu ──▶ ProxyHealthCache.get(url)
+Request ──▶ ProxyHealthCache.get(url)
              │
-             ├─ Có trong bộ nhớ đệm + còn mới?  ──▶ trả về trạng thái đã lưu
+             ├─ Cache hit + fresh?  ──▶ return cached status
              │
-             └─ Không có / đã cũ?  ──▶ Kết nối TCP tới host:port
-                                          (thời gian chờ: FAST_FAIL_TIMEOUT_MS)
-                                          ──▶ lưu vào bộ nhớ đệm trong HEALTH_CACHE_TTL_MS
-                                          ──▶ trả về kết quả
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Nếu không có cơ chế này, một proxy không hoạt động sẽ chặn mọi yêu cầu trong toàn bộ thời gian `PROXY_TIMEOUT_MS` (mặc định 30 giây) trước khi báo lỗi.
+Nếu không có điều này, một proxy chết sẽ chặn mọi yêu cầu cho toàn bộ `PROXY_TIMEOUT_MS` (30 giây mặc định) trước khi thất bại.
 
-### Các biến môi trường có thể điều chỉnh
+### Biến môi trường có thể điều chỉnh
 
-| Biến                         | Mặc định | Mục đích                                              |
-| ---------------------------- | -------- | ----------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`   | Thời gian chờ kết nối TCP cho mỗi lần kiểm tra        |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`  | Thời gian lưu kết quả kiểm tra tình trạng trong cache |
+| Biến                         | Mặc định | Mục đích                                                |
+| ---------------------------- | -------- | ------------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`   | hết thời gian kết nối TCP cho mỗi lần kiểm tra sức khỏe |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`  | Kết quả sức khỏe được lưu trữ trong bao lâu             |
 
 **Giá trị được đề xuất:**
 
-| Trường hợp                   | Thời gian chờ fast-fail | TTL bộ nhớ đệm | Lý do                                                                     |
-| ---------------------------- | ----------------------- | -------------- | ------------------------------------------------------------------------- |
-| Cổng API có lưu lượng cao    | 1500ms                  | 60000ms        | Báo lỗi nhanh tích cực, lưu cache lâu hơn để giảm số lần kiểm tra         |
-| Các nút phân tán theo địa lý | 3000ms                  | 15000ms        | Mạng chậm cần thêm thời gian; cache ngắn hơn để chuyển đổi dự phòng nhanh |
-| Phát triển / kiểm thử        | 1000ms                  | 10000ms        | Lặp lại nhanh với các proxy cục bộ                                        |
-| Ẩn mình / chống phát hiện    | 2500ms                  | 45000ms        | Tránh thăm dò nhanh có thể kích hoạt giới hạn tốc độ                      |
+| Kịch bản                  | Thời gian chờ lỗi nhanh | Bộ nhớ cache TTL | Lý luận                                                                             |
+| ------------------------- | ----------------------- | ---------------- | ----------------------------------------------------------------------------------- |
+| Cổng API thông lượng cao  | 1500 mili giây          | 60000 mili giây  | Lỗi nhanh, bộ đệm dài hơn để giảm kiểm tra                                          |
+| Các nút phân phối địa lý  | 3000 mili giây          | 15000 mili giây  | Mạng chậm hơn cần nhiều thời gian hơn; bộ đệm ngắn hơn để chuyển đổi dự phòng nhanh |
+| Phát triển/thử nghiệm     | 1000 mili giây          | 10000 mili giây  | Lặp lại nhanh trên proxy cục bộ                                                     |
+| Tàng hình/chống phát hiện | 2500 mili giây          | 45000 mili giây  | Tránh việc thăm dò nhanh có thể gây ra giới hạn tốc độ                              |
 
 ### Kiểm tra tình trạng proxy
 
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Buộc kiểm tra lại một proxy cụ thể
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Cờ `stale` là `true` khi mục trong bộ nhớ đệm đã vượt quá `HEALTH_CACHE_TTL_MS` và yêu cầu tiếp theo sẽ kích hoạt một lần kiểm tra mới.
+Cờ `stale` là `true` khi mục nhập bộ đệm vượt quá `HEALTH_CACHE_TTL_MS` và yêu cầu tiếp theo sẽ kích hoạt kiểm tra mới.
 
-### Giá trị mặc định theo từng loại proxy
+### Mặc định loại mỗi proxy
 
-Quá trình kiểm tra tình trạng sử dụng các giá trị mặc định hợp lý dựa trên lược đồ URL:
+Kiểm tra tình trạng sử dụng các giá trị mặc định hợp lý dựa trên sơ đồ URL :
 
-| Lược đồ                    | Cổng mặc định |
+| Cơ chế                     | Cổng mặc định |
 | -------------------------- | ------------- |
 | `http://`                  | 8080          |
 | `https://`                 | 443           |
 | `socks5://` / `socks5h://` | 1080          |
 
-Các cổng tùy chỉnh trong URL (`http://host:9999`) luôn được ưu tiên hơn giá trị mặc định của lược đồ.
+Các cổng tùy chỉnh trong URL (`http://host:9999`) luôn được ưu tiên hơn mặc định của lược đồ.
 
 ---
 
-## Phân tích & Khả năng quan sát Proxy
+## Phân tích proxy & khả năng quan sát
 
-OmniRoute theo dõi mức sử dụng của từng proxy để giúp người vận hành chẩn đoán các mẫu định tuyến, tình trạng độ trễ tăng đột biến và lỗi tái diễn.
+OmniRoute theo dõi mức sử dụng trên mỗi proxy để giúp người vận hành chẩn đoán các kiểu định tuyến, độ trễ tăng đột biến và các lỗi lặp lại.
 
-### Các dữ liệu được theo dõi
+### Những gì được theo dõi
 
-Đối với mọi yêu cầu đi qua một proxy đã cấu hình, OmniRoute ghi lại:
+Đối với mọi yêu cầu thông qua proxy được định cấu hình, OmniRoute sẽ ghi lại:
 
-| Chỉ số       | Mô tả                                                       |
-| ------------ | ----------------------------------------------------------- |
-| `proxy_url`  | URL proxy đầy đủ (đã che thông tin xác thực)                |
-| `provider`   | ID nhà cung cấp thượng nguồn (openai, anthropic, v.v.)      |
-| `latency_ms` | Tổng thời gian khứ hồi, bao gồm quá trình bắt tay với proxy |
-| `connect_ms` | Chỉ tính thời gian kết nối TCP                              |
-| `status`     | Mã trạng thái HTTP từ thượng nguồn                          |
-| `error`      | Lớp lỗi nếu yêu cầu thất bại                                |
-| `timestamp`  | ISO 8601 UTC                                                |
+| Số liệu      | Sự miêu tả                                             |
+| ------------ | ------------------------------------------------------ |
+| `proxy_url`  | URL proxy đầy đủ (với thông tin xác thực được che dấu) |
+| `provider`   | Nhà cung cấp thượng nguồn ID (openai, anthropic, v.v.) |
+| `latency_ms` | Tổng thời gian khứ hồi bao gồm cả bắt tay proxy        |
+| `connect_ms` | TCP chỉ thời gian kết nối                              |
+| `status`     | mã trạng thái HTTP từ thượng nguồn                     |
+| `error`      | Lớp lỗi nếu yêu cầu không thành công                   |
+| `timestamp`  | ISO 8601 UTC                                           |
 
 ### Truy cập dữ liệu
 
 ```bash
-# Các sự kiện proxy gần đây
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Endpoint thực tế là `/api/usage/proxy-logs` (xem `src/app/api/usage/proxy-logs/route.ts`). Endpoint này hỗ trợ:
+Điểm cuối thực sự là `/api/usage/proxy-logs` (xem `src/app/api/usage/proxy-logs/route.ts`). Điểm cuối này hỗ trợ:
 
 - `GET /api/usage/proxy-logs` — truy xuất nhật ký proxy
-- `DELETE /api/usage/proxy-logs` — xóa toàn bộ nhật ký proxy
+- `DELETE /api/usage/proxy-logs` — xóa tất cả nhật ký proxy
 
-Nếu cần, có thể truy vấn trực tiếp số liệu thống kê tổng hợp từ bảng `proxy_logs` bằng SQL. Giao diện dashboard có thể cung cấp các chế độ xem tổng hợp.
+Số liệu thống kê tổng hợp có thể được truy vấn trực tiếp từ bảng `proxy_logs` qua SQL nếu cần. Trang tổng quan UI có thể cung cấp chế độ xem tổng hợp.
 
-### Các mẫu phổ biến
+### Các mẫu chung
 
-**Phát hiện proxy hoạt động chập chờn** (luân phiên giữa thành công/thất bại):
+**Phát hiện proxy vỗ** (xen kẽ giữa success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Tìm các proxy chậm** (độ trễ p95 > 2 giây):
+**Tìm proxy chậm** (độ trễ p95 > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,96 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Cây quyết định chiến lược xoay vòng
+## Cây quyết định chiến lược luân chuyển
 
-Khi nhiều proxy được gán cho một phạm vi, OmniRoute sử dụng một **chiến lược xoay vòng** để chọn proxy sẽ dùng cho từng yêu cầu. Chiến lược được cấu hình ở cấp phạm vi (toàn cục, theo từng nhà cung cấp, theo từng tài khoản, theo từng tổ hợp).
+Khi nhiều proxy được gán cho một phạm vi, OmniRoute sử dụng một** chiến lược luân chuyển** để chọn cái nào sẽ sử dụng cho mỗi yêu cầu. Chiến lược được định cấu hình ở cấp phạm vi (toàn cầu, mỗi nhà cung cấp, mỗi tài khoản, mỗi tổ hợp).
 
-### Các chiến lược khả dụng
+### Chiến lược có sẵn
 
-| Chiến lược           | Khi nào nên sử dụng                                         | Đánh đổi                                                                               |
-| -------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `quality` (mặc định) | Môi trường production với các proxy có chất lượng khác nhau | Ưu tiên proxy được đánh giá cao; có thể khiến proxy được đánh giá thấp ít được sử dụng |
-| `random`             | Phân phối tải, quyền riêng tư                               | Phân phối đồng đều; bỏ qua các tín hiệu chất lượng                                     |
-| `sequential`         | Gỡ lỗi, kiểm thử có tính xác định                           | Luân phiên proxy theo thứ tự; dễ phân tích hành vi                                     |
+| Chiến lược           | Khi nào nên sử dụng                   | Đánh đổi                                                                     |
+| -------------------- | ------------------------------------- | ---------------------------------------------------------------------------- |
+| `quality` (mặc định) | Sản xuất với proxy chất lượng hỗn hợp | Ủng hộ proxy được đánh giá cao; có thể bỏ đói những người được đánh giá thấp |
+| `random`             | Phân phối tải, quyền riêng tư         | Phân phối đồng đều; bỏ qua tín hiệu chất lượng                               |
+| `sequential`         | Gỡ lỗi, kiểm tra xác định             | Chuyển qua các proxy theo thứ tự; dễ lý luận về                              |
 
 ### Cây quyết định
 
 ```
-                    Bạn có điểm chất lượng cho các proxy không?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       CÓ                    KHÔNG
+       YES                     NO
         │                       │
-   Tất cả proxy có             │
-   chất lượng gần                 │
-   tương đương nhau không?       │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  CÓ       KHÔNG              Dùng
+  YES       NO                Use
    │         │              `random`
-   │         │              (phân bổ đều
-   │         │              giúp tích lũy dữ liệu
-   │         │              chất lượng theo thời gian)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Dùng `quality`
-   │    (tốt nhất khi
-   │    chất lượng khác nhau)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Dùng `random`
-(phân phối tải
-đồng đều)
+Use `random`
+(spread load
+evenly)
 ```
 
 ## Tự động loại trừ lỗi cho proxy của riêng bạn
 
-Nhóm proxy trên marketplace 1proxy đã tự động hạ cấp các proxy bị lỗi (xem
-[Điểm chất lượng proxy](#proxy-quality-scores)). Đối với các proxy **bạn** đã thêm
-vào registry, bộ lập lịch kiểm tra tình trạng chạy nền
-(`src/lib/proxyHealth/scheduler.ts`) cung cấp cùng cơ chế "tự động loại trừ một
-thành viên không hoạt động khỏi chuỗi" mà không xóa bất kỳ thứ gì:
+Nhóm thị trường 1proxy đã tự động hạ cấp các proxy không thành công (xem [Điểm chất lượng proxy](#proxy-quality-scores) ). Dành cho proxy** Bạn** được thêm vào sổ đăng ký, bộ lập lịch sức khỏe nền (`src/lib/proxyHealth/scheduler.ts`) cung cấp hành vi "tự động loại trừ một thành viên đã chết khỏi chuỗi" mà không xóa bất cứ điều gì:
 
 ```bash
-# .env — vô hiệu hóa tạm thời một proxy sau 3 lần kiểm tra liên tiếp thất bại và
-# tự động kích hoạt lại khi proxy bắt đầu phản hồi các lần kiểm tra.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Cách cơ chế này hoạt động trong một chuỗi nhiều proxy:
+Làm thế nào nó phù hợp với chuỗi nhiều proxy:
 
-1. Bộ lập lịch kiểm tra mọi proxy đã đăng ký sau mỗi `PROXY_HEALTH_INTERVAL_MS`
-   (mặc định 10 phút; tối thiểu 1 phút).
-2. Sau `PROXY_AUTO_REMOVE_AFTER` lần lỗi **có kết luận rõ ràng** liên tiếp (một
-   lỗi kết nối thực sự — thời gian chờ hết hạn hoặc lỗi 5xx của chính đích kiểm tra
-   không bao giờ được tính, xem
-   [Kiểm tra tình trạng proxy](#proxy-health-checking-v3816)), `status` của proxy
-   được đặt thành `dead`.
-3. `dead` là một trong các trạng thái bị bộ lọc trạng thái hoạt động dùng khi phân
-   giải nhóm/vòng xoay loại trừ, vì vậy vòng xoay của một phạm vi (round-robin /
-   ngẫu nhiên / cố định / độ trễ — xem
-   [Cây quyết định chiến lược xoay vòng](#rotation-strategy-decision-tree))
-   ngay lập tức ngừng cung cấp proxy đó cho các yêu cầu mới. Không proxy nào khác
-   trong nhóm bị ảnh hưởng và toàn bộ nhóm không bao giờ âm thầm chuyển sang kết
-   nối trực tiếp — xem cơ chế bảo vệ đóng khi lỗi của
-   [Hệ thống proxy 4 cấp](#4-level-proxy-system).
-4. Bộ lập lịch tiếp tục kiểm tra các proxy `dead` theo cùng khoảng thời gian. Lần
-   kiểm tra thành công tiếp theo sẽ chuyển `status` trở lại `active` và proxy sẽ
-   tham gia lại vòng xoay — không cần thêm lại theo cách thủ công.
+1. Bộ lập lịch sẽ thăm dò mọi proxy đã đăng ký mỗi `PROXY_HEALTH_INTERVAL_MS` (mặc định là 10 phút; tối thiểu 1 phút).
+2. Sau `PROXY_AUTO_REMOVE_AFTER` liên tiếp** kết luận** lỗi (lỗi kết nối thực sự — hết thời gian chờ hoặc 5xx của chính mục tiêu thăm dò không bao giờ được tính, hãy xem [Kiểm tra tình trạng proxy](#proxy-health-checking-v3816) ), `status` của proxy được đặt thành `dead`.
+3. `dead` là một trong những trạng thái mà bộ lọc trạng thái hoạt động được độ phân giải pool/rotation sử dụng loại trừ, do đó, quá trình xoay vòng của phạm vi (quay vòng / ngẫu nhiên / cố định / độ trễ — xem [Cây quyết định chiến lược xoay vòng](#rotation-strategy-decision-tree) ) ngay lập tức ngừng chuyển proxy đó cho các yêu cầu mới. Không có proxy nào khác trong nhóm bị ảnh hưởng và toàn bộ nhóm không bao giờ âm thầm quay trở lại kết nối trực tiếp — xem hệ thống bảo vệ không đóng [của Hệ thống proxy 4 cấp](#4-level-proxy-system).
+4. Bộ lập lịch tiếp tục thăm dò các proxy `dead` trong cùng một khoảng thời gian. Đầu dò thành công tiếp theo sẽ lật `status` trở lại `active` và nó quay lại — mà không cần thêm lại thủ công.
 
-Cơ chế này được thiết kế có chủ đích để **chỉ hoạt động khi được bật và không gây
-phá hủy**: theo mặc định, bộ lập lịch chỉ đếm và ghi nhật ký các lỗi (xem chính
-sách C trong `decision.ts`), còn `PROXY_AUTO_DISABLE` không bao giờ xóa một hàng
-— đó là mục đích của cờ `PROXY_AUTO_REMOVE` riêng biệt và mạnh tay hơn. Nếu cả hai
-được đặt thành `true`, `PROXY_AUTO_REMOVE` sẽ được ưu tiên (việc vô hiệu hóa tạm
-thời một proxy sắp bị xóa là không cần thiết). Xem tài liệu tham khảo
-[Cấu hình môi trường](../reference/ENVIRONMENT.md) để biết danh sách biến đầy đủ.
+Đây là cố tình** chọn tham gia và không phá hủy** : theo mặc định, bộ lập lịch chỉ đếm và ghi lại các lỗi (xem chính sách C trong `decision.ts`) và `PROXY_AUTO_DISABLE` không bao giờ xóa một hàng —, đó là mục đích của cờ `PROXY_AUTO_REMOVE` riêng biệt, linh hoạt hơn. Nếu cả hai được đặt thành `true`, `PROXY_AUTO_REMOVE` sẽ thắng (một proxy sắp bị xóa sẽ không được sử dụng để tắt mềm ở giữa). Xem tài liệu tham khảo [Cấu hình môi trường](../reference/ENVIRONMENT.md) để biết danh sách biến đầy đủ.
 
 ---
 
-> 📖 **Tài liệu liên quan:**
+> 📖** Tài liệu liên quan:**
 >
-> - [Hướng dẫn người dùng](../guides/USER_GUIDE.md) — Thiết lập và cấu hình chung
-> - [Tài liệu tham khảo API](../reference/API_REFERENCE.md) — Tài liệu API đầy đủ
-> - [Cấu hình môi trường](../reference/ENVIRONMENT.md) — Tất cả các biến môi trường
+> - [Hướng dẫn sử dụng](../guides/USER_GUIDE.md) — Thiết lập và cấu hình chung - [API Tham khảo](../reference/API_REFERENCE.md) — Tài liệu API đầy đủ - [Cấu hình môi trường](../reference/ENVIRONMENT.md) — Tất cả các biến môi trường

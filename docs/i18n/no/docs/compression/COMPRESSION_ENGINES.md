@@ -4,266 +4,188 @@
 
 ---
 
-OmniRoute-komprimering er bygget rundt motorkontrakter. En modus kan kjøre én motor direkte
-(`caveman` eller `rtk`) eller en deterministisk, stablet pipeline som kjører flere motorer i rekkefølge.
+OmniRoute kompresjon er bygget rundt motorkontrakter. En modus kan kjøre én motor direkte (`caveman` eller `rtk`) eller en deterministisk stablet rørledning som kjører flere motorer i rekkefølge.
 
-## Moduser
+## Modi
 
-| Modus        | Motorsti                                                                                  | Tiltenkt input                                    |
-| ------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `off`        | ingen                                                                                     | Nøyaktig bevaring av prompt                       |
-| `lite`       | Caveman lite-hjelpere                                                                     | Lavrisiko alltid-på-opprydding                    |
-| `standard`   | Caveman                                                                                   | Naturlig-språklig prompt-kondensering             |
-| `aggressive` | Caveman + historie-/verktøy-oppsummerere                                                  | Lange chat-sesjoner                               |
-| `ultra`      | Caveman + beskjæringshjelpere                                                             | Gjenoppretting av kontekstgrense                  |
-| `rtk`        | RTK                                                                                       | Terminal-, shell-, bygg-, test- og git-utdata     |
-| `omniglyph`  | OmniGlyph                                                                                 | Kontekst-som-bilde på den native leverandørtråden |
-| `stacked`    | Pipeline. Standard forespørsel er `session-dedup -> lite`. `rtk -> caveman` er valgfritt. | Blandede verktøylogger og prosa, maks besparelser |
+| Modus        | Motorvei                                                                                  | Tiltenkt innspill                                            |
+| ------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `off`        | ingen                                                                                     | Nøyaktig umiddelbar bevaring                                 |
+| `lite`       | Caveman lite hjelpere                                                                     | Alltid-på-opprydding med lav risiko                          |
+| `standard`   | Hulemann                                                                                  | Språkkondensering på naturlig språk                          |
+| `aggressive` | Caveman + history/tool oppsummerere                                                       | Lange chat-økter                                             |
+| `ultra`      | Caveman + beskjæringshjelpere                                                             | Gjenoppretting av kontekstgrense                             |
+| `rtk`        | RTK                                                                                       | Terminal, shell, build, test og git-utgang                   |
+| `omniglyph`  | OmniGlyph                                                                                 | Kontekst-som-bilde på den opprinnelige leverandørens ledning |
+| `stacked`    | Rørledning. Standardinnstillingen er `session-dedup -> lite`. `rtk -> caveman` er opt-in. | Blandede verktøylogger og prosa, maksimale besparelser       |
 
-### OmniGlyph komprimeringsprofiler
+### OmniGlyph kompresjonsprofiler
 
-`omniglyph`-motoren (pakke `omniglyph`, 1.4.0+) aksepterer en navngitt semantisk profil, satt
-globalt via `omniglyph.profile` i komprimeringsinnstillingene eller per trinn via
-den stablede pipelinens trinnkonfigurasjon:
+`omniglyph` motoren (pakke `omniglyph`, 1.4.0 +) aksepterer en navngitt semantisk profil, satt globalt gjennom `omniglyph.profile` i komprimeringsinnstillingene eller per trinn gjennom den stablede rørledningens trinnkonfigurasjon:
 
-| Profil        | Grense                                                                                                        |
-| ------------- | ------------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Standard. Retningslinjene de publiserte kvitteringene målte – bildesystem, verktøydokumenter og tett historie |
-| `balanced`    | Beholder live-tilstand native, beskytter de siste 8 svingene, kollapser eldre lukket historie                 |
-| `coding-safe` | Beholder autoritet, verktøyskjemaer og live verktøyutdata native, beskytter de siste 12 svingene              |
-| `passthrough` | Ruter uten transformering; motoren hoppes over                                                                |
+| Profil        | Grense                                                                                                     |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Misligholde. Policyen de publiserte kvitteringene målte — -bildesystem, verktøydokumenter og tett historie |
+| `balanced`    | Holder live state native, beskytter de siste 8 svingene, kollapser eldre lukket historie                   |
+| `coding-safe` | Holder autoritet, verktøyskjemaer og live verktøyutgang native, beskytter de siste 12 svingene             |
+| `passthrough` | Ruter uten transformasjon; motoren hoppes over                                                             |
 
-Profilen er et **tak, ikke et gulv**: `mergeCompressionProfileOptions` i pakken
-nekter å la en anroper overstyre gjenåpning av en tapsbringende bane profilen stengte, så en per-trinn
-`preserveSystemPrompt: false` kan ikke gjenaktivere systemkomprimering under `coding-safe`.
+Profilen er en** tak, ikke et gulv** : `mergeCompressionProfileOptions` i pakken nekter å la en innringer overstyre gjenåpne en tapsbasert bane profilen stengt, så en per-trinns `preserveSystemPrompt: false` kan ikke reaktivere systemkomprimering under `coding-safe`.
 
-Målt på denne kodebasen: `coding-safe` og `balanced` hever `minCompressChars` til sitt
-maksimum og beholder system, verktøyskjemaer og verktøyresultater native, så en sesjon som ikke
-har akkumulert historie ennå, stopper ved `below_min_chars` og motoren transformerer ingenting. Det
-er derfor standard er `aggressive` i stedet for den sikreste profilen.
+Målt på denne kodebasen: `coding-safe` og `balanced` hever `minCompressChars` til sitt maksimum og beholder system, verktøyskjemaer og verktøyresultater native, slik at en økt som ikke har akkumulert historie ennå stopper ved `below_min_chars` og motoren transformerer ingenting. Det er derfor standarden er `aggressive` i stedet for den sikreste profilen.
 
-Pakken løser sitt eget modellomfang og profil fra miljøkonfigurasjonen.
-OmniRoute delegerer aldri beslutningen: adapteren fester modellporten til pakkens
-mest restriktive omfang, slik at verts-miljøinnstillinger bare kan innsnevre tillatelseslisten, aldri
-utvide den utover OmniRoutes målte kvitteringer.
+Pakken løser sitt eget modellomfang og profil fra miljøkonfigurasjonen. OmniRoute delegerer aldri avgjørelsen: adapteren fester modellporten til pakkens mest restriktive omfang, så vertsmiljøinnstillinger kan bare begrense tillatelseslisten, aldri utvide den forbi OmniRoute målte kvitteringer.
 
 ## Motorregister
 
-Registeret finnes i `open-sse/services/compression/engines/registry.ts`. Motorene tilbyr en felles
-kontrakt:
+Registeret bor i `open-sse/services/compression/engines/registry.ts`. Motorer viser en delt kontrakt:
 
-- `id`: stabil motor-ID, for eksempel `caveman` eller `rtk`
-- `apply(text, config)`: eldre kjøringssti brukt av stablede pipelines
-- `compress(input, config)`: primær kjøringssti som returnerer tekst + statistikk
-- `getConfigSchema()`: returnerer den JSON-Schema-lignende strukturen for gyldig konfigurasjon
+- `id`: stabil motor-ID som `caveman` eller `rtk`
+- `apply(text, config)`: eldre utførelsesbane brukt av stablede rørledninger
+- `compress(input, config)`: primær utførelsesbane som returnerer tekst + -statistikk
+- `getConfigSchema()`: returnerer den JSON-skjema-lignende formen til gyldig konfig
 - `validateConfig(config)`: returnerer `{ valid, errors[] }`
 
-Registrering bruker `registerCompressionEngine(engine)` (eller `registerEngine` for avanserte tilfeller),
-som kaller `assertValidEngine()` og `validateConfig(defaultConfig)` før motoren godtas.
-Bruk `unregisterCompressionEngine(id)` for å fjerne en motor under kjøring.
+Registrering bruker `registerCompressionEngine(engine)` (eller `registerEngine` for avanserte tilfeller), som kaller `assertValidEngine()` og `validateConfig(defaultConfig)` før den godtas. Bruk `unregisterCompressionEngine(id)` for å fjerne en motor under drift.
 
-`strategySelector.ts` registrerer de innebygde motorene før komprimeringen kjøres. Dette gjør at forhåndsvisning,
-kjøretidskomprimering, stablet modus, tester og fremtidige motorer kan bruke den samme kjøringsstien.
+`strategySelector.ts` registrerer de innebygde motorene før kompresjonen går. Dette lar forhåndsvisning, kjøretidskomprimering, stablet modus, tester og fremtidige motorer bruke samme utførelsesvei.
 
-### Komprimering av MCP-beskrivelser (relatert)
+### MCP beskrivelseskomprimering (relatert)
 
-Et separat register komprimerer beskrivelsesmetadata for MCP-verktøy på registernivå – se
-`open-sse/mcp-server/descriptionCompressor.ts` og [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Det gjenbruker
-Caveman-regler, men opererer på verktøymetadata, ikke forespørselsnyttelaster.
+Et eget register komprimerer metadata MCP verktøybeskrivelse på registernivå — se `open-sse/mcp-server/descriptionCompressor.ts` og [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Den gjenbruker Caveman-regler, men opererer på verktøymetadata, ikke forespørselsnyttelast.
 
-### Ytterligere innebygde motorer
+### Ekstra innebygde motorer
 
-I tillegg til Caveman, RTK og LLMLingua-2 inneholder registeret flere spesialiserte tapsfrie /
-strukturelle motorer (brukt av stablede pipelines, testmiljøet og tester):
+Utover Caveman, RTK og LLMLingua-2, sender registeret flere spesialiserte tapsfrie / strukturelle motorer (brukt av stablede rørledninger, lekeplassen og tester):
 
-| Motor         | ID              | Hva den gjør                                                                                                                                                                             |
-| ------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): erstatter store sammenhengende tekstblokker med innholdsadresserte referanser, slik at gjentatte/store blokker sendes én gang og deretter refereres til. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): tapsfri tabellkomprimering av homogene JSON-array-nyttelaster til et kolonnebasert `[N rows]`-format.                                                            |
-| ionizer       | `ionizer`       | Utvalg av rader fra begynnelsen, midten og slutten av svært store homogene blokker, der den utelatte midtdelen lagres som en CCR-innholdsadressert referanse.                            |
-| session-dedup | `session-dedup` | Innholdsadressert deduplisering på tvers av dialogrunder (inspirert av TokenMizer): utelater tekst som allerede er sett i tidligere dialogrunder i samme økt.                            |
+| Motor         | ID              | Hva den gjør                                                                                                                                                                   |
+| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CCR           | `ccr`           | Content-Compress-Retrieve (H4): erstatter store sammenhengende tekstblokker med innholdsadresserte referanser, så repeated/large blokker sendes én gang og refereres deretter. |
+| takhøyde      | `headroom`      | SmartCrusher (H3 + N5): tapsfri tabellkomprimering av homogene JSON-array-nyttelaster til en søyleformet `[N rows]` form.                                                      |
+| ionisator     | `ionizer`       | Head/middle/tail radsampling for veldig store homogene blokker, lagrer den eliderte midten som en CCR -innholdsadressert referanse.                                            |
+| session-dedup | `session-dedup` | Innholdsadressert kryssvendingsdeduplisering (TokenMizer-inspirert): fjerner tekst som allerede er sett i tidligere svinger i samme økt.                                       |
 
-**Instruksjon for CCR-henteprotokollen (#8033):** Første gang CCR erstatter ≥1 blokk i en
-forespørsel, legger motoren til én enkelt, idempotent `system`-melding først (som begynner med
-sentinelen `[CCR protocol]`) for å lære opp den som kaller, i kontrakten mellom markør og verktøy: hva en
-`[CCR retrieve hash=<24hex> chars=N]`-markør betyr, at hashen må kopieres ordrett
-(alle 24 heksadesimale tegn – feilkopierte hasher er den sannsynlige årsaken til treff med «blokk ikke funnet»),
-og at en `[dedup:ref sha=...]`-markør betyr «se tilbake i historikken», ikke «kall
-verktøyet». Merknaden settes inn **bare når den som kaller, sine annonserte `tools[]` beviser at den
-faktisk kan nå `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` i
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) – en vanlig
-OpenAI-kompatibel klient uten dette verktøyet mottar aldri en instruksjon om å kalle noe
-den ikke kan nå. Idempotens håndheves ved å søke gjennom meldingshistorikken etter sentinelen
-før innsetting, slik at forespørsler over flere dialogrunder (som spiller av tidligere meldinger på nytt) ikke stabler
-merknaden én gang per dialogrunde.
+**CCR gjenopprettingsprotokollinstruksjon (#8033):** første gang CCR erstatter ≥ 1 blokk i en forespørsel, legger motoren en enkelt, idempotent `system` -melding (som leder med `[CCR protocol]` vaktposten) som lærer den som ringer markøren → verktøykontrakten: hva en `[CCR retrieve hash=<24hex> chars=N]` markør betyr, at hashen må kopieres ordrett (alle 24 heksede tegn — feilkopi er sannsynligvis ikke funnet en årsak til feil-kopier) `[dedup:ref sha=...]` -markør betyr "se tilbake i historien", ikke "ring verktøyet". Seddelen er injisert** bare når anroperens annonserte `tools[]` beviser at den faktisk kan nå `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — en vanlig OpenAI-kompatibel oppringer uten det verktøyet mottar aldri en instruksjon om å ringe noe den ikke kan nå. Idempotens håndheves ved å skanne meldingshistorikken for vaktposten før injisering, slik at forespørsler om flere svinger (som spiller av tidligere meldinger på nytt) ikke stables lappen en gang per tur.
 
-## Caveman
+## Hulemann
 
-Caveman-modus fokuserer på semantisk kondensering av vanlig prosa:
+Caveman-modus fokuserer på semantisk kondensering av normal prosa:
 
-- bevarer kodeblokker, URL-er, JSON, stier og strukturerte data
-- fjerner fyllord, forbehold, gjentatt kontekst og omstendelige bindeformuleringer
-- støtter språktilpassede filregelpakker i `open-sse/services/compression/rules/`
-- er fortsatt tilgjengelig gjennom de eldre modusene `standard`, `aggressive` og `ultra`
+- bevarer kodeblokker, URLs, JSON, baner og strukturerte data
+- fjerner filler, hedging, gjentatt kontekst og detaljerte bindende fraseringer
+- støtter språkbevisste filregelpakker i `open-sse/services/compression/rules/`
+- forblir tilgjengelig gjennom de gamle `standard`, `aggressive` og `ultra` -modusene
 
-Dashbordvisningen er `Dashboard -> Context & Cache -> Caveman`.
+Dashbordoverflaten er `Dashboard -> Context & Cache -> Caveman`.
 
-Oppstrømsprosjektet Caveman rapporterer `~75%` færre utdata-tokener, gjennomsnittlig `65%` reduksjon i utdata i referansetester
-med et spenn på `22-87%`, og et verktøy med `~46%` komprimering av inndata. OmniRoute bruker Cavemans tall for inndatasiden
-ved dokumentasjon av kombinerte besparelser for ledetekst/kontekst. Cavemans utdatamodus er fortsatt en separat
-funksjon for responsatferd.
+Caveman oppstrøms rapporterer `~75%` færre output tokens, `65%` gjennomsnittlige output besparelser i benchmarks med en `22-87%` range, og et `~46%` input-compression tool. OmniRoute bruker Caveman-inndatanummeret når han dokumenterer stablede prompt/context sparinger; Caveman-utgangsmodus forblir en separat respons-atferdsfunksjon.
 
 ## RTK
 
-RTK-modus fokuserer på utdata fra kommandoer og verktøy:
+RTK modus fokuserer på kommando- og verktøyutgang:
 
-- oppdager utdataklasser som `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  Cargo-/Go-tester, TypeScript-/Vite-/Webpack-bygg, ESLint, npm-revisjoner/installasjoner, Docker-logger,
-  skallkommandoene `find`/`grep`, stakkspor og generiske logger
-- bruker 49 JSON-filtre fra `open-sse/services/compression/engines/rtk/filters/`
-- støtter den deklarative pipelinen i RTK-stil: fjerning av ANSI, erstatning, kortslutning ved samsvarende utdata,
-  fjerning/bevaring av linjer, avkorting per linje, avkorting av begynnelse/slutt/maksimalt antall linjer og reserveverdi ved tomt resultat
-- støtter prosjektfiltre underlagt tillitskontroll i `.rtk/filters.json` og globale filtre i
-  `DATA_DIR/rtk/filters.json`
-- fjerner ANSI-sekvenser, fremdriftsstøy, gjentatte linjer og lite nyttig standardtekst
-- bevarer feil som kan følges opp, advarsler, sammendrag, endrede filer og kontekst på slutten
-- kan valgfritt beholde sladdede rådata for gjenoppretting/feilsøking gjennom autentiserte administrasjonsruter
+- oppdager utgangsklasser som `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go -tester, TypeScript/Vite/Webpack builds, ESLint, npm audit/installs, Docker logger, shell `find`/`grep`, stackspor og generiske logger
+- bruker 49 JSON filtre fra `open-sse/services/compression/engines/rtk/filters/`
+- støtter den deklarative pipeline i RTK-stil: ANSI stripping, replace, match-output kortslutning, strip/keep linjer, per-line trunkering, head/tail/max-line trunkering og on-empty fallback
+- støtter trust-gatede prosjektfiltre i `.rtk/filters.json` og globale filtre i `DATA_DIR/rtk/filters.json`
+- striper ANSI -sekvenser, fremdriftsstøy, gjentatte linjer og lite hjelpsom kjeleplate
+- bevarer handlingsbare feil, advarsler, sammendrag, endrede filer og halekontekst
+- kan valgfritt beholde redigert råutgang for recovery/debugging gjennom autentiserte administrasjonsruter
 
-Dashbordvisningen er `Dashboard -> Context & Cache -> RTK`.
+Dashbordoverflaten er `Dashboard -> Context & Cache -> RTK`.
 
-Driftsdetaljer for egendefinerte filtre, tillit, verifisering og gjenoppretting av rådata finnes i
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Driftsdetaljer for tilpassede filtre, tillit, verifisering og gjenoppretting av råutdata live i [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-Oppstrømsprosjektet RTK rapporterer `60-90%` besparelse ved komprimering av kommandoutdata. Eksempelet i README-filen viser at en
-30-minutters Claude Code-økt går fra `~118,000` tokener til `~23,900`, eller en besparelse på `79.7%`.
+RTK oppstrøms rapporterer `60-90%` besparelser for kommando-utdata-komprimering. README eksemplet viser en 30-minutters Claude Code-økt som går fra `~118,000` tokens til `~23,900`, eller `79.7%` lagret.
 
 ## LLMLingua-2 (semantisk beskjæring)
 
-LLMLingua-2-modus utfører **semantisk tokenbeskjæring** på prosa ved hjelp av en liten ONNX-tokenklassifikator,
-som utfyller de regelbaserte Caveman- og RTK-motorene:
+LLMLingua-2 modus utfører** semantisk tokenbeskjæring** på prosa ved å bruke en liten ONNX -tokenklassifisering, som komplementerer de regelbaserte Caveman- og RTK -motorene:
 
-- komprimerer bare prosa i meldinger som ikke er systemmeldinger; inngjerdede kodeblokker og andre bevarte
-  konstruksjoner endres aldri
-- kjører `@atjsh/llmlingua-2`-bakenden (ONNX via `@huggingface/transformers`) i en
-  arbeidertråd, slik at modellinferens aldri blokkerer forespørselens hendelsesløkke
-- kan **stables** (`stackPriority` 35): I en stablet pipeline kjører den etter de
-  strukturelle motorene (CCR, session-dedup, headroom, Caveman), men før `ultra`, siden
-  semantisk beskjæring er mest effektiv på tekst som allerede er strukturelt komprimert – f.eks.
-  `rtk -> caveman -> llmlingua`
-- **går videre ved enhver feil** (manglende valgfrie avhengigheter, oppstart av arbeider, modellinnlasting, inferens
-  eller tidsavbrudd) → originalteksten returneres uendret, aldri en feil
+- komprimerer kun prosa i ikke-systemmeldinger; inngjerdede kodeblokker og andre bevarte konstruksjoner blir aldri endret
+- kjører `@atjsh/llmlingua-2` backend (ONNX via `@huggingface/transformers`) i en arbeidstråd, så modellslutning blokkerer aldri forespørselshendelsesløkken
+- er** stables** (`stackPriority` 35): i en stablet pipeline kjører den etter strukturmotorene (CCR, session-dedup, headroom, Caveman) men før `ultra`, siden semantisk beskjæring er mest effektiv på allerede strukturelt komprimert tekst — f.eks. `rtk -> caveman -> llmlingua`
+- **feil-åpner ved enhver feil** (mangler valgfrie deps, worker spawn, modellbelastning, inferens eller tidsavbrudd) → den opprinnelige teksten returneres uendret, aldri en feil
 
-Motorplassering: `open-sse/services/compression/engines/llmlingua/`. Dashbordvisningen
-er `Dashboard -> Context & Cache -> LLMLingua`.
+Motorens plassering: `open-sse/services/compression/engines/llmlingua/`. Overflaten på dashbordet er `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modeller
 
-Standardmodellen er **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-rask). En mer nøyaktig **BERT-base**-modell (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) er tilgjengelig via feltet `model` i motorkonfigurasjonen. `@huggingface/transformers`
-laster den valgte modellen ned ved behov fra HuggingFace Hub til
-`${DATA_DIR}/models/llmlingua` ved første kall (`modelStore.ts`); en overstyring med `modelPath` i konfigurasjonen
-peker i stedet til en lokal kopi (for frakoblede / isolerte installasjoner).
+Standardmodellen er**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, rask). En høyere nøyaktighet** BERT-base** modell (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) er tilgjengelig via motorkonfigurasjonsfeltet `model`. `@huggingface/transformers` laster ned den valgte modellen dovent fra HuggingFace Hub til `${DATA_DIR}/models/llmlingua` ved det første anropet (`modelStore.ts`); en `modelPath` -konfigurasjonsoverstyring peker den mot en lokal kopi i stedet (offline/installasjoner uten luft).
 
-### Valgfrie avhengigheter og behovsstyrt installasjon
+### Valgfrie avhengigheter og installasjon på forespørsel
 
-Den fjernbare LLMLingua-kjøretidsstakken med peer-avhengigheter er **valgfri**. To pakker er deklarert som
-`optionalDependencies` i `package.json` og holdes **eksterne** av produksjonsbygget
-(`scripts/build/prepublish.ts` inkluderer dem ikke i pakken):
+Den beskjærbare LLMLingua runtime peer-stabelen er** valgfri** . To pakker er deklarert som `optionalDependencies` i `package.json` og beholdes** utvendig** av produksjonsbygget (`scripts/build/prepublish.ts` pakker dem ikke):
 
-| Pakke                | Versjon (låst) | Merknader                                          |
-| -------------------- | -------------- | -------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`        | Inngangspakke; deklarerer de andre som peer-pakker |
-| `js-tiktoken`        | `^1.0.20`      | Tokenisator                                        |
+| Pakke                | Versjon (pinne) | Notater                                           |
+| -------------------- | --------------- | ------------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`         | Inngangspakke; erklærer de andre som jevnaldrende |
+| `js-tiktoken`        | `^1.0.20`       | Tokenizer                                         |
 
-`@huggingface/transformers` er låst til `^4.2.0` (deles med den lokale banen for innebygginger og
-spores også inn i den frittstående pakken); `@atjsh/llmlingua-2@2.0.5` bruker den som peer-avhengighet med
-`"^3.5.2 || ^4.0.0"`, så både Transformers.js v3 og v4 støttes. Fra og med 2.0.4
-krever `@atjsh/llmlingua-2` ikke lenger `@tensorflow/tfjs`, noe som fjernet den største enkeltstående
-bidragsyteren (TensorFlow.js) fra SLM-stakken. Bare de to pakkene ovenfor er fjernbare SLM-
-peer-avhengigheter. En standard `npm install` (utvikling) installerer den valgfrie stakken automatisk med mindre valgfrie
-avhengigheter utelates.
+`@huggingface/transformers` er festet til `^4.2.0` (delt med den lokale innebyggingsbanen og spores også inn i den frittstående pakken); `@atjsh/llmlingua-2@2.0.5` peer på den med `"^3.5.2 || ^4.0.0"`, så både Transformers.js v3 og v4 støttes. Siden 2.0.4 krever `@atjsh/llmlingua-2` ikke lenger `@tensorflow/tfjs`, som fjernet den største enkeltbidragsyteren (TensorFlow.js) fra SLM stakken. Bare de to pakkene ovenfor er beskjærbare SLM kamerater. En standard `npm install` (dev) installerer den valgfrie stabelen automatisk med mindre valgfrie avhengigheter er utelatt.
 
-**Hvorfor behovsstyrt:** Den npm-publiserte pakken, den frittstående pakken og Docker-avbildningen
-leveres **uten** disse avhengighetene for å holde størrelsen nede. Når de mangler, mislykkes arbeiderens
-avhengighetskontroll (en `@atjsh/llmlingua-2`-oppløsningskontroll i `worker.ts`), og motoren
-**går stille videre** – valg av LLMLingua blir en no-op (teksten returneres uendret, og ingen
-feil logges). Installer den valgfrie stakken for å aktivere den i et redusert miljø:
+**Hvorfor på forespørsel:** den npm-publiserte pakken, den frittstående pakken og Docker -bildeskipet** uten** disse deps for å holde seg slank. Når de er fraværende, svikter arbeiderens avhengighetsport (en `@atjsh/llmlingua-2` resolve probe i `worker.ts`) og motoren** fail-åpner stille** — å velge LLMLingua blir en no-op (tekst returnert uendret, ingen feil logget). For å aktivere den i et beskjært miljø, installer den valgfrie stabelen:
 
 ```bash
-# lås til versjonene som er deklarert i package.json optionalDependencies
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Fjerningen av `@tensorflow/tfjs` (2.0.4+) eliminerer den tidligere dominerende bidragsyteren på ~800 MB
-– det gjenværende fotavtrykket består av kjøretidsmiljøene transformers.js + onnxruntime-node,
-samt TinyBERT-modellen (~57 MB), som lastes ned ved første gangs bruk (ikke via npm).
+`@tensorflow/tfjs` fjerningen (2.0.4 +) eliminerer den tidligere dominerende ~ 800 MB bidragsyteren — det gjenværende fotavtrykket er transformers.js + onnxruntime-node-kjøretidene, pluss TinyBERT modellen (~ 57 MB) lastet ned ved første bruk (ikke via npm).
 
 Per miljø:
 
-- **Utvikling / `npm install`** — installeres automatisk med mindre du brukte `--omit=optional`
-  (eller `--no-optional`). Ingen handling er nødvendig.
-- **Global npm (`npm i -g omniroute`) / frittstående** — kjør installasjonskommandoen ovenfor i
-  katalogen til den installerte pakken, eller installer på nytt uten å utelate valgfrie avhengigheter.
-- **Docker** — legg til installasjonskommandoen i et avledet bildelag; det publiserte bildet
-  leveres bevisst i en minimal utgave.
-- **VPS (PM2)** — installer i appens `node_modules`, og start deretter prosessen på nytt slik at
-  arbeidsprosessen kontrollerer porten på nytt.
-- **Rå Next-frittstående (`npm run build` → `.build/next/standalone/server.js`)** — den
-  frittstående sporingen leveres VERKEN med arbeidsprosessen eller de valgfrie avhengighetene, så motoren
-  går stille over til åpen modus ved feil. `scripts/build/colocate-standalone.mjs` legger til begge deler på nytt (esbuild for arbeidsprosessen +
-  rekursiv inkludering av valgfrie avhengigheter i det frittstående treet); det kjøres automatisk via
-  npm-hooken `postbuild` etter hver bygging. Idempotent og fortsetter uten feil når avhengigheter mangler.
+- **Dev / `npm install`** — installeres automatisk med mindre du passerte `--omit=optional` (eller `--no-optional`). Ingen handling nødvendig.
+- **Global npm (`npm i -g omniroute`) / frittstående** — kjør installeringskommandoen ovenfor i den installerte pakkekatalogen, eller installer på nytt uten å utelate valgfrie deps.
+- **Docker** — legg til installeringskommandoen i et avledet bildelag; det publiserte bildet leveres slankt av design.
+- **VPS (PM2)** — installer i appens `node_modules`, og start deretter prosessen på nytt slik at arbeideren undersøker porten på nytt.
+- **Raw Next frittstående (`npm run build` → `.build/next/standalone/server.js`)** — den frittstående sporingen sendes NEITHER arbeideren eller de valgfrie depsene, så motoren feilåpnes stille. `scripts/build/colocate-standalone.mjs` bruker begge på nytt (worker esbuild + optional-dep closure inn i det frittstående treet); den kjører automatisk via `postbuild` npm-kroken etter hvert bygg. Idempotent, feilmyk når deps er fraværende.
 
-**Bekreft at den er aktiv:** Når LLMLingua er valgt, blir faktisk prosa reelt forkortet (motoren
-slutter å gå over til åpen modus ved feil), og den første forespørselen utløser nedlasting av modellen til
-`${DATA_DIR}/models/llmlingua`. Porten kontrollerer med hensikt bare `@atjsh/llmlingua-2` —
-de andre peer-avhengighetene er kun ESM, og `require.resolve` kaster feil for dem selv når de finnes — så
-arbeidsprosessen går fortsatt over til åpen modus ved feil hvis en peer-avhengighet faktisk mangler på `import()`-tidspunktet.
+**Bekreft at den er aktiv:** med LLMLingua valgt, krymper ekte prosa faktisk (motoren stopper feilåpning), og den første forespørselen utløser modellnedlastingen til `${DATA_DIR}/models/llmlingua`. Porten sonderer med vilje bare `@atjsh/llmlingua-2` — de andre peerne er ESM-only og `require.resolve` kaster på dem selv når de er tilstede — slik at arbeideren fortsatt feil-åpner hvis noen peer virkelig mangler på `import()` tidspunktet.
 
-## Stablede pipelines
+## Stablede rørledninger
 
-Stablet modus kjører pipeline-trinn i rekkefølge. Standardrekkefølgen er:
+Stablet modus kjører rørledningstrinn i rekkefølge. Standard er:
 
 ```txt
 rtk -> caveman
 ```
 
-Bruk dette for økter med kodeagenter der en ledetekst kombinerer utdata fra kommandoer med tekst fra mennesker eller assistenter. RTK reduserer først støyende verktøylogger, og deretter komprimerer Caveman det gjenværende naturlige språket.
+Bruk dette for koding-agent-sesjoner der en ledetekst kombinerer kommandoutgang med menneskelig eller assistentprosa. RTK reduserer støyende verktøylogger først, deretter komprimerer Caveman gjenværende naturlig språk.
 
-Pipeline-trinn konfigureres med `stackedPipeline` i komprimeringsinnstillingene eller gjennom komprimeringskombinasjoner.
+Rørledningstrinn er konfigurert med `stackedPipeline` i kompresjonsinnstillinger eller gjennom kompresjonskombinasjoner.
 
-Når begge motorene reduserer den samme kvalifiserte nyttelasten, forsterkes besparelsene:
+Når begge motorene reduserer den samme kvalifiserte nyttelasten, vil sparesammensetningen:
 
 ```txt
-kombinert    = 1 - (1 - RTK-besparelse) * (1 - Caveman-inndatabesparelse)
-gjennomsnitt = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
-intervall    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
+combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
+average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
+range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## MCP-filter for tilgjengelighetstre
+## MCP Tilgjengelighetstrefilter
 
-MCP-smartfilteret for tilgjengelighetstrær er et komprimeringslag som kjøres etter utførelse på MCP-**verktøyresultater**, ikke på ledetekster eller kontekst. Det er rettet mot de omfattende nyttelastene med tilgjengelighetstrær og nettleserøyeblikksbilder som returneres av verktøy som Playwright, computer-use og MCP-servere for nettleserautomatisering.
+MCP accessibility-tree smart-filteret er et komprimeringslag etter utførelse som kjører på MCP** verktøyresultater** , ikke på ledetekster eller kontekst. Den retter seg mot det detaljerte tilgjengelighetstreet og nettleserens snapshot-nyttelaster som returneres av verktøy som Playwright, datamaskinbruk og nettleserautomatisering MCP servere.
 
-### Hva det gjør
+### Hva den gjør
 
-1. **Fjerning av støy** — fjerner tomme generiske oppføringer og tekstoppføringer (`- generic:`, `- text: ""`)
-2. **Sammenfolding av sideordnede elementer** — når ≥ `collapseThreshold` (standardverdi 30) sammenhengende linjer er strukturelle gjentakelser, foldes de sammen til de første `collapseKeepHead` (standardverdi 10) linjene + et sammendrag med antall + de siste `collapseKeepTail` (standardverdi 5) linjene
-3. **Bevaring av referanser** — `[ref=eXX]`-ankre som kreves av Playwright/computer-use, blir aldri endret
-4. **Fast avkorting** — hvis teksten etter sammenfolding fortsatt overstiger `maxTextChars` (standardverdi 50 000), avkortes den med et navigasjonstips slik at agenten kan fortsette arbeidet
+1. **Støyfjerning** — fjerner tomme generic/text -oppføringer (`- generic:`, `- text: ""`)
+2. **Søsken kollapser** — når ≥ `collapseThreshold` (standard 30) påfølgende linjer er strukturelle repetisjoner, kollapser dem til de første `collapseKeepHead` (standard 10) linjene + en oppsummering av antall + de siste `collapseKeepTail` (standard 5) linjene
+3. **Ref konservering** — `[ref=eXX]` -ankere som kreves av Playwright/computer-use, berøres aldri
+4. **Hard avkorting** — hvis teksten etter kollaps fortsatt overstiger `maxTextChars` (standard 50 000), avkortes med et navigasjonshint slik at agenten kan fortsette å jobbe
 
-### Plassering av motoren
+### Motorens plassering
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← inngangspunkt for smartFilterText()
-  collapseRepeated.ts ← algoritme for sammenfolding av sideordnede elementer
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Konfigurasjon
 
-Styres av `compression.mcpAccessibility` i de globale innstillingene (migrering 056). Standardkonfigurasjon:
+Kontrollert av `compression.mcpAccessibility` i globale innstillinger (migrering 056). Standard konfigurasjon:
 
 ```json
 {
@@ -276,114 +198,170 @@ Styres av `compression.mcpAccessibility` i de globale innstillingene (migrering 
 }
 ```
 
-Filteret brukes bare på nyttelaster med verktøyresultater der `type` er `"text"`, og der lengden overstiger `minLengthToProcess`. Det påvirker ikke komprimering av ledetekster eller forespørselsnyttelaster.
+Filteret brukes bare på nyttelaster med verktøyresultater hvis `type` er `"text"` og hvis lengde overstiger `minLengthToProcess`. Det påvirker ikke promptkomprimering eller forespørselsnyttelast.
 
-### Forventede besparelser
+### Forventet besparelse
 
-60–80 % på verktøyresultater med nettleserøyeblikksbilder, avhengig av sidens kompleksitet. Sammenfoldingsalgoritmen er O(n) i antall linjer og gir ubetydelig ekstra forsinkelse.
+60–80 % på resultater av nettleserøyeblikksbilder, avhengig av sidens kompleksitet. Kollapsalgoritmen er O(n) i linjetelling og legger til ubetydelig latens.
 
-### Dette filteret sammenlignet med komprimeringsmotorene ovenfor
+### Dette filteret kontra kompresjonsmotorene ovenfor
 
-| Aspekt         | Caveman / RTK / stablet             | MCP-filter for tilgjengelighet         |
-| -------------- | ----------------------------------- | -------------------------------------- |
-| Mål            | Ledetekster/kontekst i forespørsler | MCP-verktøyresultater                  |
-| Utløser        | Innstilling for komprimeringsmodus  | `compression.mcpAccessibility.enabled` |
-| Omfang         | Alle SSE-meldinger                  | Bare verktøyresultater                 |
-| Referanseankre | Ikke relevant                       | Bevares uten unntak                    |
+| Aspekt     | Hulemann / RTK / stablet          | MCP tilgjengelighetsfilter             |
+| ---------- | --------------------------------- | -------------------------------------- |
+| Mål        | Forespørsler/kontekst             | MCP -verktøyresultater                 |
+| Avtrekker  | Innstilling av komprimeringsmodus | `compression.mcpAccessibility.enabled` |
+| Omfang     | Alle SSE -meldinger               | Kun verktøyresultater                  |
+| Ref ankere | N/A                               | Bevart ubetinget                       |
 
 ---
 
 ## Komprimeringskombinasjoner
 
-Komprimeringskombinasjoner er navngitte komprimeringsprofiler som kan tilordnes rutingskombinasjoner:
+Kompresjonskombinasjoner er navngitte komprimeringsprofiler som kan tilordnes til rutingkombinasjoner:
 
-- `compression_combos`: lagrer modus, pipeline, RTK-konfigurasjon, språkkonfigurasjon og standardmarkør
-- `compression_combo_assignments`: knytter en komprimeringskombinasjon til en rutingskombinasjon
-- kjøretidsintegrasjonen løser en tilordnet komprimeringskombinasjon før generelle overstyringer for kombinasjoner
-- analyse inkluderer `compression_combo_id` og `engine`
+- `compression_combos`: lagrer modus, pipeline, RTK config, language config og standardmarkør
+- `compression_combo_assignments`: kartlegger en kompresjonskombinasjon til en rutingkombinasjon
+- runtime-integrasjon løser en tildelt kompresjonskombinasjon før generisk kombinasjon overstyrer
+- analyser inkluderer `compression_combo_id` og `engine`
 
-Plassering i kontrollpanelet: `Dashboard -> Context & Cache -> Compression Combos`.
+Dashbordoverflate: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## API-grensesnitt
+## Forutsetninger / operatørveiledning (CCR & session-dedup)
 
-| Rute                                   | Formål                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------- |
-| `/api/settings/compression`            | Globale komprimeringsinnstillinger (inkluderer `mcpAccessibility`-oppsett) |
-| `/api/compression/preview`             | Forhåndsvis en hvilken som helst komprimeringsmodus                        |
-| `/api/compression/language-packs`      | Vis tilgjengelige Caveman-språkpakker                                      |
-| `/api/context/caveman/config`          | Alias for Caveman-innstillinger                                            |
-| `/api/context/rtk/config`              | RTK-standardverdier og -innstillinger                                      |
-| `/api/context/rtk/filters`             | RTK-filterkatalog                                                          |
-| `/api/context/rtk/test`                | Endepunkt for RTK-forhåndsvisning/-testing                                 |
-| `/api/context/rtk/raw-output/[id]`     | Autentisert gjenoppretting av sladdet råutdata                             |
-| `/api/context/combos`                  | CRUD for komprimeringskombinasjoner                                        |
-| `/api/context/combos/[id]/assignments` | CRUD for tilordning av rutingskombinasjoner                                |
-| `/api/context/analytics`               | Alias for komprimeringsanalyse                                             |
+CCR (`ccr`) og `session-dedup` erstatter eller fjerner tekst og la a** markør** bak. Denne delen er operatørreferansen for å koble en klient opp, lese de to markørene og hente eller diagnostisere det eliderte innholdet. Mekanikken til hver motor er dekket ovenfor; dette er "hvordan kjører jeg det"-laget.
 
-Administrasjonsruter krever administrasjonsautentisering eller kontroll av API-nøkkelpolicy.
+### Transporter og endepunkter
 
-## MCP-verktøy
+MCP serveren som avslører CCR verktøyene kan nås på tre måter. Standardbasen URL er `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
 
-Komprimering eksponerer fem MCP-verktøy:
+| Transportere                      | URL / kommando                          | Notater                                                                                                                        |
+| --------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Streambar HTTP (klient, anbefalt) | `http://localhost:20128/api/mcp/stream` | Endepunktet gjeldende MCP klienter snakker med.                                                                                |
+| Legacy SSE singleton              | `http://localhost:20128/api/mcp/sse`    | Eldre singleton transport. Den** lukkes** streambare økter; bruk `streamable-http` klienter mot `/api/mcp/stream`, ikke denne. |
+| stdio                             | `omniroute --mcp`                       | For IDE MCP config som skaper prosessen. Det er ikke noe `--dev` flagg; `omniroute --mcp` er inngangspunktet for stdio.        |
 
-| Verktøy                             | Omfang              | Formål                                           |
-| ----------------------------------- | ------------------- | ------------------------------------------------ |
-| `omniroute_compression_status`      | `read:compression`  | Innstillinger, analyse og hurtigbufferstatistikk |
-| `omniroute_compression_configure`   | `write:compression` | Oppdater globale innstillinger                   |
-| `omniroute_set_compression_engine`  | `write:compression` | Angi modus og valgfri pipeline                   |
-| `omniroute_list_compression_combos` | `read:compression`  | Vis komprimeringskombinasjoner                   |
-| `omniroute_compression_combo_stats` | `read:compression`  | Les analyse for kombinasjoner/motorer            |
+### Lagringsnivåer (det som overlever en omstart)
 
-## Omfang og ekskluderinger
+CCR er en** to-lags** butikk, ikke bare i minnet:
 
-**Embeddings komprimeres aldri.** `open-sse/handlers/embeddings.ts` kaller aldri noen
-komprimeringsmotor — forespørsels-/responskroppene sendes rett til eksekveringskomponenten uten endringer.
-Dette er strukturelt i dag (embeddings og chat-fullføringer har separate håndteringskomponenter), ikke en
-kjøretidskontroll, men det betyr at bekymringen for vektorforvrengning i #8034 ikke har noen eksponeringsflate
-i embeddings-flyten.
+- **Varmt nivå i minnet** — per-blokk cap 2 MiB, per-principal 16 MiB, global 64 MiB. Oppføringer er som standard en 24 timers TTL (maksimalt 7 dager). Full MCP henting fra minnet er begrenset til 256 KiB; noe større er fortsatt tilgjengelig gjennom ranged / grep-modusene.
+- **Slitesterk SQLite -lag** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, på som standard) — støtter minnenivået slik at en blokk overlever LRU utkastelse, en omstart eller en gjenoppretting som lander på en annen instans. Raden beholder blokkens TTL, så en blokk forbi TTL er borte fra begge nivåene.
 
-**Ekskluderingsfilter per modell/endepunkt (#8034).** For chat-fullføringer kan en operatør angi
-modell-ID-er / `provider/model`-mål som aldri skal komprimeres — et sikkerhetstiltak som er nyttig hvis
-komprimering senere kobles nærmere en embeddings-tilgrensende flyt, og generelt nyttig
-for alle modeller der en eksakt byte-for-byte-prompt er viktig (deterministiske evalueringer, hurtigbufferfølsomme
-prefikser osv.).
+Tre vakter holder det holdbare nivået avgrenset — en blokk forblir bare minnet når:
 
-- Innstillingsfelt: `exclusions?: string[]` i den globale komprimeringskonfigurasjonen
-  (`GET`/`PUT /api/settings/compression`), lagret via det eksisterende `key_value`-navnerommet for komprimering
-  (`src/lib/db/compression.ts`) — ingen ny tabell.
-- Fane i kontrollpanelet: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Mønstersyntaks: `*` er det eneste jokertegnet. Alle andre regex-metategn i et mønster blir
-  escapet før samsvarskontroll, slik at `gpt-5.6` bare samsvarer med den bokstavelige strengen, aldri `gpt-5x6`
-  (ReDoS-sikkert, avgrenset, ingen nestede kvantifikatorer). Mønstre samsvares uten hensyn til store og små bokstaver mot
-  både den rene modell-ID-en og den sammensatte `provider/model`-verdien — `gpt-5-6`, `openai/gpt-5-6`
-  og `openai/*` fungerer alle, og `*` alene ekskluderer alle modeller.
-- Samsvarskontroll: `isCompressionExcluded()` / `normalizeCompressionExclusions()` i
-  `open-sse/services/compression/exclusions.ts`. `chatCore.ts` kontrollerer det ekskluderte målet
-  rett etter at komprimeringsinnstillingene er løst, **før noen motor kjører**, og behandler et samsvar
-  nøyaktig som om komprimering var globalt deaktivert — forespørselskroppen er beviselig
-  byte-for-byte-identisk. Hoppet registreres via `writeCompressionSkip(..., "excluded")` for
-  synlighet i analysen.
-- Standard (tom/manglende liste): identisk med oppførselen før #8034 — ingenting ekskluderes.
+1. blokken er over** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. kjøretiden er en skykjøring (ingen lokal disk);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Så "blokken forsvant" er ikke en generell omstartshistorie: en sub-512 KB blokk på en lokal, ikke-sky-kjøretid overlever en omstart via det varige nivået til dens TTL går tom. Se [miljøreferanse](../reference/ENVIRONMENT.md) for variabelen.
+
+### De to markørene
+
+| Markør                                | Betydning                                                                                                                                     | Hva modellen skal gjøre                                                                                                                                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | En stor blokk ble lagret innholdsadressert.                                                                                                   | Ring `omniroute_ccr_retrieve` med** 24-hex hash kopiert ordrett** for å få tilbake den opprinnelige teksten.                                                                                                            |
+| `[dedup:ref sha=…]`                   | `session-dedup` elided tekst allerede sendt i en tidligere tur i samme økt. Dette er en** bevisst tilbakeblikk** , ikke et tap eller en feil. | Gjøre** ikke** ring ethvert verktøy og gjør det** ikke** prøv å "rekonstruere" det. Den første forekomsten av teksten er den kanoniske kopien; den gjeldende svingen skrives aldri om, den dedupes ved en senere sving. |
+
+`[dedup:ref]` -tilbakeblikket er en bevisst protokollavgjørelse — det er ingen rekonstruksjon før sending. Behandle det som "denne nøyaktige teksten var allerede på ledningen tidligere i denne økten."
+
+### Kundens forutsetninger
+
+- **Nøkkel (stdio):** en stdio-anroper har ingen identitet per forespørsel, så den autentiserer med `OMNIROUTE_API_KEY` (sett i MCP -serverens `env`). Uten den er innringeren anonym og verktøy som krever en rektor kan forringes.
+- **`tools[]` er injeksjonsforutsetningen.** CCR -hentingsprotokollinstruksjonen (#8033) injiseres** bare** når forespørselens annonserte `tools[]` beviser at klienten faktisk kan nå `omniroute_ccr_retrieve`. Matchen er en etterfølgende segmentmatch avgrenset av en separator (`__`, `.`, `/`, `:`) — aldri en bare delstreng — så et navn med navn som `mcp__gateway__omniroute_ccr_retrieve` teller fortsatt. En fraværende eller ikke-matchende `tools[]` betyr at instruksjonen er _ikke_ injisert, etter design.
+- **`codemode:false` (OpenCode klienter).** OpenCode er som standard kodemodus, som kun annonserer de opprinnelige verktøyene til modellen og** ikke** legg MCP verktøy på den opprinnelige `tools[]` listen. Sett `codemode: false` på MCP -serveroppføringen slik at `omniroute_ccr_*` verktøyene blir annonsert. Dette er en** klient** innstilling, ikke en OmniRoute. Den får ikke CCR instruksjonen injisert ennå: OpenCode navngir et verktøy `<server>_<tool>`, så en server kalt `omniroute` eksponerer `omniroute_omniroute_ccr_retrieve`, og `_` er ikke en av de matchende skilletegnene.
+- **Rektorer.** Lagring og henting er isolert per autentisert hovedperson (per API nøkkel). En nøkkel ser bare sine egne blokker.
+
+### Omfang per verktøy
+
+Omfangshåndhevelse er alltid på for HTTP/SSE -anropere med smale områder. `omniroute_` CCR verktøyene krever:
+
+| Verktøy                  | Omfang              |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Et manglende omfang returnerer en**MCP verktøy feil resultat** (`isError: true`, ikke en HTTP 403 — `403 LOCAL_ONLY` er den separate loopback-rutevakt-authoriseringen): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` En minimal fjernnøkkel kan inneholde `mcp:connect` (autoriserer `/api/mcp/` local-only carve-out) pluss det spesifikke read/write omfanget den trenger.
+
+### Klientmatrise
+
+| Klient            | Transportere                              | Konfigurasjon å bruke                                                                                                                                                                                                                                        | `tools[]` annonsert? (→ CCR instruksjon injisert)                                                                                                                                                       |
+| ----------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude kode       | streambar-http                            | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                            | Ja — MCP-kompatible; injisert.                                                                                                                                                                          |
+| Cursor / Cline    | `stdio`** eller** `streamable-http`       | stdio: `omniroute --mcp` med `OMNIROUTE_API_KEY` i `env`; eller en ekstern MCP -oppføring som peker på `http://localhost:20128/api/mcp/stream` (se [Installasjonsveiledning → MCP Client Configuration](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Ja — annonsere `omniroute_ccr_*` verktøyene.                                                                                                                                                            |
+| OpenCode          | streambar-http                            | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream` pluss `codemode: false`                                                                                                                                                             | Verktøy som kun annonseres med `codemode: false`; instruksjonen er fortsatt ikke injisert, fordi `omniroute_omniroute_ccr_retrieve` ikke samsvarer (se [Klientforutsetninger](#client-prerequisites) ). |
+| OpenAI-kompatibel | OpenAI-kompatibel HTTP (chatfullføringer) | standard chat-fullføringsklient mot det OpenAI-kompatible endepunktet                                                                                                                                                                                        | **Aldri** — en vanlig OpenAI-kompatibel oppringer blir aldri bedt om å ringe verktøyet, og instruksjonen blir ikke injisert.                                                                            |
+
+### Hentingsgrenser og paginering
+
+MCP -verktøytekstresultater klippes rundt `mcpAccessibility.maxTextChars` (standard `50000`). En `full` henting av en blokk er begrenset til 256 KiB —** det er ingen ubegrenset full gjenfinning** . Når `chars=N` til en blokk er stor, kan du bladre den i stedet for å trekke hele greia:
+
+- Tommelfingerregel:**`chars > 40000` → bruk en `mode`** , aldri bare full.
+- `mode:"grep"` — regex `pattern` matchet linje for linje, opptil 1000 matchende linjer (`unique: true` dropper gjentakelser), billigste for "finn den ene linjen jeg trenger."
+- `mode:"lines"` — et 1-indeksert linjeområde; trenger både `start` og `end`.
+- `mode:"head"` / `mode:"tail"` — first/last `n` linjer.
+- `mode:"stats"` — linje, tegn og byte teller uten kroppen.
+
+Bruk `mode:"lines"` med `start`/`end` for å gå en lang blokk i sider i stedet for å be om hele på en gang.
+
+### Navn på verktøy
+
+Gjenopprettingsverktøyet heter for øyeblikket `omniroute_ccr_retrieve` ( `omniroute_` prefikset er en datert løsning for navnekollisjoner på tvers av servere). Et renere avgrenset suffiksverktøynavn og en rettelse for MCP JSON resultater avkortet midtstreng spores som oppstrøms oppfølginger; denne siden dokumenterer kun gjeldende, sendt oppførsel.
+
+### Øktens livssyklus
+
+Streambare HTTP-økter går på tomgang og serveren høster dem; det inaktive vinduet er `MCP_SESSION_IDLE_MS` konstanten (referert til ved navn, ikke en hardkodet verdi, så denne siden driver ikke når den endres). Symptomet på en inaktiv økt er en HTTP 404 med `Unknown Mcp-Session-Id` — løsningen er å koble til på nytt eller starte økten på nytt,** ikke** for å rotere en nøkkel, endre et omfang eller gi nytt navn til et verktøy.
+
+## API Overflate
+
+| Rute                                   | Hensikt                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------- |
+| `/api/settings/compression`            | Globale komprimeringsinnstillinger (inkluderer `mcpAccessibility` config) |
+| `/api/compression/preview`             | Forhåndsvis enhver komprimeringsmodus                                     |
+| `/api/compression/language-packs`      | Liste tilgjengelige Caveman-språkpakker                                   |
+| `/api/context/caveman/config`          | Caveman innstillinger alias                                               |
+| `/api/context/rtk/config`              | RTK standarder og innstillinger                                           |
+| `/api/context/rtk/filters`             | RTK filterkatalog                                                         |
+| `/api/context/rtk/test`                | RTK preview/test endepunkt                                                |
+| `/api/context/rtk/raw-output/[id]`     | Autentisert redigert gjenoppretting av råutdata                           |
+| `/api/context/combos`                  | Kompresjonskombinasjon CRUD                                               |
+| `/api/context/combos/[id]/assignments` | Ruting-kombinasjonsoppgave CRUD                                           |
+| `/api/context/analytics`               | Alias for komprimeringsanalyse                                            |
+
+Administrasjonsruter krever administrasjonsautentisering eller kontroller av API-nøkler.
+
+## MCP verktøy
+
+Komprimering avslører fem MCP verktøy:
+
+| Verktøy                             | Omfang              | Hensikt                                  |
+| ----------------------------------- | ------------------- | ---------------------------------------- |
+| `omniroute_compression_status`      | `read:compression`  | Innstillinger, analyser, cachestatistikk |
+| `omniroute_compression_configure`   | `write:compression` | Oppdater globale innstillinger           |
+| `omniroute_set_compression_engine`  | `write:compression` | Still inn modus og valgfri rørledning    |
+| `omniroute_list_compression_combos` | `read:compression`  | List kompresjonskombinasjoner            |
+| `omniroute_compression_combo_stats` | `read:compression`  | Les combo/engine analytics               |
+
+## Omfang og unntak
+
+**Innebygginger komprimeres aldri.** `open-sse/handlers/embeddings.ts` kaller aldri noen kompresjonsmotor — request/response kroppene passerer rett til eksekutøren urørt. Dette er strukturelt i dag (innbygginger og chatfullføringer er usammenhengende behandlere), ikke en kjøretidssjekk, men det betyr at vektorforvrengningsproblemet i #8034 ikke har noen eksponeringsoverflate i innbyggingsbanen.
+
+**Per-model/endpoint eksklusjonsfilter (#8034).** For chatfullføringer kan en operatør navngi modell-ID-er / `provider/model` -mål som aldri må komprimeres — et autovern nyttig hvis komprimering noen gang kobles nærmere en innbyggings-tilstøtende bane senere, og generelt nyttig for alle modeller hvis eksakte byte-for-byte-prompt betyr noe (deterministiske evaler, cache-sensitive prefikser, etc.).
+
+- Innstillingsfelt: `exclusions?: string[]` på den globale komprimeringskonfigurasjonen (`GET`/`PUT /api/settings/compression`), vedvarte via det eksisterende `key_value` -komprimeringsnavneområdet (`src/lib/db/compression.ts`) — ingen ny tabell.
+- Dashboard-fane:** Dashboard → Komprimering → -ekskluderinger** (`/dashboard/compression/exclusions`).
+- Mønstersyntaks: `*` er det eneste jokertegnet. Annenhvert regex-metategn i et mønster escapes før matching, så `gpt-5.6` samsvarer kun med den bokstavelige strengen, aldri `gpt-5x6` (ReDoS-safe, bounded, ingen nestede kvantifiserere). Mønstre samsvarer uten store og små bokstaver mot både den bare modell-ID og `provider/model` kompositten — `gpt-5-6`, `openai/gpt-5-6` og `openai/*` fungerer alle, og `*` alene ekskluderer hver modell.
+- Matchende: `isCompressionExcluded()` / `normalizeCompressionExclusions()` i `open-sse/services/compression/exclusions.ts`. `chatCore.ts` sjekker det ekskluderte målet rett etter å ha løst komprimeringsinnstillingene,** før noen motor går** , og behandler en kamp nøyaktig som at komprimering er globalt deaktivert — forespørselsteksten er beviselig byte-identisk. Hoppet registreres via `writeCompressionSkip(..., "excluded")` for analysesynlighet.
+- Standard (empty/absent liste): identisk med pre-#8034 atferd — ingenting er ekskludert.
 
 ## Kjente begrensninger
 
-- **LLMLingua-2 (SLM) krever samlokaliserte valgfrie avhengigheter.** Workeren kjører bare i et
-  produksjonsbygg når `@atjsh/llmlingua-2` + peer-avhengigheter er samlokalisert i
-  `dist/node_modules` (se `scripts/build/colocateOptionals.mjs`, #4286). Uten dem går
-  motoren over til sikker standardatferd (returnerer originalteksten). Worker-oppløsning avhenger ikke lenger av
-  `import.meta.url` (den feiler i den frittstående pakken) — den forankres i kjøretidsmiljøets
-  cwd / `argv[1]`.
-- **Caveman-språkpakkene `de` / `fr` / `ja` er ufullstendige.** De leveres med regler for `context` +
-  `filler` + `structural`, men uten pakker for `dedup` / `ultra`, så intensiteten `ultra` er
-  ikke sterkere enn `full` for disse språkene (de bruker bare sine egne regler — det finnes ingen
-  skjult tilbakefall til de engelske `dedup`/`ultra`-reglene, som ville ha ødelagt fremmedspråklig tekst).
-  `en` / `es` / `id` / `pt-BR` er komplette. Bidrag med `dedup.json` + `ultra.json`
-  for de ufullstendige pakkene er velkomne.
-- **Stablet telemetri viser bare motorer som utførte komprimering.** Et trinn i en stablet pipeline der
-  motoren kjørte, men ga 0 % besparelse, returnerer `stats:null` og vises derfor ikke i
-  `engineBreakdown` — det kan ikke skilles fra et trinn som ble hoppet over. Å skille mellom
-  «kjørte, 0 %» og «hoppet over» ville kreve en endring i oversiktsmodellen og er utsatt.
+- **LLMLingua-2 (SLM) krever samlokaliserte valgfrie deps.** Arbeideren kjører bare i en produksjonsbygning når `@atjsh/llmlingua-2` + kolleger er samlokalisert i `dist/node_modules` (se `scripts/build/colocateOptionals.mjs`, #4286). Uten dem åpner motoren feil (returnerer originalteksten). Arbeideroppløsning avhenger ikke lenger av `import.meta.url` (den dør i den frittstående pakken) — den forankrer på kjøretidscwd / `argv[1]`.
+- **Caveman språkpakker `de` / `fr` / `ja` er delvise.** De sender `context` + `filler` + `structural` regler, men ingen `dedup` / `ultra` pakker, så `ultra` intensiteten er ikke sterkere enn `full` for disse språkene (de bruker bare sine egne regler — det er ingen stille fall-tilbake til de engelske `dedup`/`ultra` -reglene, som ville mangle utenlandsk tekst). `en` / `es` / `id` / `pt-BR` er fullført. Bidrag av `dedup.json` + `ultra.json` for delpakkene er velkomne.
+- **Stablet telemetri viser bare motorer som er komprimert.** Et stablet-rørledningstrinn hvis motor gikk, men ga 0 % besparelse, gir `stats:null` og vises derfor ikke i `engineBreakdown` — som ikke kan skilles fra et trinn som ble hoppet over. Å skille "løp, 0 %" fra "hoppet over" vil kreve en endring av sammenbruddsmodellen og blir utsatt.
 
 ## Validering
 

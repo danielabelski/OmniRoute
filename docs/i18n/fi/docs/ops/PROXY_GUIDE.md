@@ -4,9 +4,9 @@
 
 ---
 
-> **Ohita maantieteelliset estot, suojaa henkilöllisyytesi ja reititä tekoälyliikenne minkä tahansa välityspalvelimen kautta — ilman monimutkaista määritystä.**
+> **Ohita maantieteelliset lohkot, suojaa henkilöllisyytesi ja reititä AI -liikenne minkä tahansa — välityspalvelimen kautta ilman monimutkaisuutta.**
 
-OmniRoute sisältää kattavan välityspalvelinten hallintajärjestelmän, jonka avulla voit reitittää tekoälypalveluntarjoajille lähtevän liikenteen HTTP-, HTTPS- tai SOCKS5-välityspalvelinten kautta. Olitpa estetyllä alueella, tarvitset IP-osoitteiden kierrätystä tai haluat estää sormenjälkitunnistuksen — tämä opas kattaa kaiken.
+OmniRoute sisältää täysin varustetun välityspalvelinhallintajärjestelmän, jonka avulla voit reitittää ylävirran AI palveluntarjoajan liikennettä HTTP, HTTPS tai SOCKS5 välityspalvelinten kautta. Oletpa sitten estetyllä alueella, tarvitset IP kiertoa tai haluat salata sormenjäljet — tämä opas kattaa kaiken.
 
 ---
 
@@ -14,36 +14,36 @@ OmniRoute sisältää kattavan välityspalvelinten hallintajärjestelmän, jonka
 
 - [Miksi käyttää välityspalvelimia?](#why-use-proxies)
 - [Arkkitehtuurin yleiskatsaus](#architecture-overview)
-- [4-tasoinen välityspalvelinjärjestelmä](#4-level-proxy-system)
+- [4-tason välityspalvelinjärjestelmä](#4-level-proxy-system)
 - [Välityspalvelinrekisteri (CRUD)](#proxy-registry-crud)
-- [Ilmainen 1proxy-markkinapaikka](#1proxy-free-proxy-marketplace)
-- [Välityspalvelinten kierrätys](#proxy-rotation)
-- [Tunnistamisen esto ja häivetila](#anti-detection--stealth)
-- [Lähtevän liikenteen välityspalvelintilat](#upstream-proxy-modes)
-- [Hallintapaneelin käyttöliittymä](#dashboard-ui)
-- [API-viite](#api-reference)
+- [1 välityspalvelin ilmainen markkinapaikka](#1proxy-free-proxy-marketplace)
+- [Välityspalvelimen kierto](#proxy-rotation)
+- [Havaitsemisen esto & Stealth](#anti-detection--stealth)
+- [Ylävirran välityspalvelintilat](#upstream-proxy-modes)
+- [Kojelauta UI](#dashboard-ui)
+- [API Viite](#api-reference)
 - [Ympäristömuuttujat](#environment-variables)
-- [Vianmääritys](#troubleshooting)
+- [Vianetsintä](#troubleshooting)
 
 ---
 
 ## Miksi käyttää välityspalvelimia?
 
-Monet tekoälypalveluntarjoajat rajoittavat käyttöä maantieteellisen alueen perusteella. Kehittäjät **Venäjällä, Kiinassa, Iranissa, Kuubassa, Turkissa** ja muissa maissa kohtaavat seuraavan kaltaisia virheitä:
+Monet AI palveluntarjoajat rajoittavat pääsyä maantieteellisen alueen mukaan. Kehittäjät sisään** Venäjä, Kiina, Iran, Kuuba, Turkki** ja muut maat kohtaavat virheitä, kuten:
 
 ```
 unsupported_country_region_territory
 ```
 
-Välityspalvelimista on hyötyä myös estettyjen alueiden ulkopuolella:
+Välityspalvelimet ovat hyödyllisiä myös estettyjen alueiden ulkopuolella:
 
-| Käyttötapaus                         | Kuvaus                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------- |
-| **Maantieteellisten estojen ohitus** | Käytä OpenAI-, Anthropic-, Codex- ja Copilot-palveluita estetyistä maista |
-| **IP-osoitteiden kierrätys**         | Jaa pyynnöt useille IP-osoitteille nopeusrajoitusten välttämiseksi        |
-| **Yksityisyys**                      | Piilota todellinen IP-osoitteesi palveluntarjoajilta                      |
-| **Vaatimustenmukaisuus**             | Reititä liikenne tiettyjen lainkäyttöalueiden kautta                      |
-| **Testaus**                          | Simuloi eri alueilta lähetettyjä pyyntöjä                                 |
+| Käytä Case                  | Kuvaus                                                      |
+| --------------------------- | ----------------------------------------------------------- |
+| **Maantieteellinen ohitus** | Pääsy OpenAI, Anthropic, Codex, Copilot estetyistä maista   |
+| **IP kierto**               | Jaa pyynnöt usealle IPs välttääksesi nopeuden rajoittamisen |
+| **Yksityisyys**             | Piilota todellinen IP alkupään palveluntarjoajilta          |
+| **Vaatimustenmukaisuus**    | Ohjaa liikenne tiettyjen lainkäyttöalueiden kautta          |
+| **Testaus**                 | Simuloi pyyntöjä eri alueilta                               |
 
 ---
 
@@ -51,103 +51,114 @@ Välityspalvelimista on hyötyä myös estettyjen alueiden ulkopuolella:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       OmniRoute-palvelin                      │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Välityspal- │    │ Välityspal-  │    │ Välityspalvelin-│  │
-│  │ velinrekis- │───▶│ velinvälitys │───▶│ haku (undici)    │  │
-│  │ teri(SQLite)│    │ (välimuisti) │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ 1proxy-     │                        │ Ulkoinen         │  │
-│  │ synkronointi│                        │ palveluntarjoaja │  │
-│  │(ilmainen valikoima)                  │ API              │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Keskeiset komponentit
+### Tärkeimmät komponentit
 
-| Komponentti                  | Tiedosto                                     | Rooli                                                                   |
-| ---------------------------- | -------------------------------------------- | ----------------------------------------------------------------------- |
-| **Välityspalvelinrekisteri** | `src/lib/db/proxies.ts`                      | Välityspalvelinmerkintöjen CRUD-toiminnot ja käyttöalueiden määritykset |
-| **Välityspalvelinvälitys**   | `open-sse/utils/proxyDispatcher.ts`          | Luo välimuistia käyttävät `undici` ProxyAgent-/SOCKS-välittäjät         |
-| **Välityspalvelinhaku**      | `open-sse/utils/proxyFetch.ts`               | Ympäröi `fetch()`-kutsun välityspalvelinvälittäjän injektoinnilla       |
-| **Asetusreitti**             | `src/app/api/settings/proxy/route.ts`        | Vanha välityspalvelinmääritysten API (GET/PUT/DELETE)                   |
-| **Hallintareitti**           | `src/app/api/v1/management/proxies/route.ts` | Rekisterin CRUD-API (GET/POST/PATCH/DELETE)                             |
-| **1proxy-tietokanta**        | `src/lib/db/oneproxy.ts`                     | Ilmaisen välityspalvelinmarkkinapaikan pysyvä tallennus                 |
+| Komponentti                     | Tiedosto                                     | Rooli                                                   |
+| ------------------------------- | -------------------------------------------- | ------------------------------------------------------- |
+| **Välityspalvelimen rekisteri** | `src/lib/db/proxies.ts`                      | CRUD välityspalvelinmerkinnöille + -laajuusmääritykset  |
+| **Välityspalvelin Dispatcher**  | `open-sse/utils/proxyDispatcher.ts`          | Luo `undici` ProxyAgent/SOCKS -välittäjiä välimuistilla |
+| **Välityspalvelimen haku**      | `open-sse/utils/proxyFetch.ts`               | Kääri `fetch()` välityspalvelimella                     |
+| **Asetukset Reitti**            | `src/app/api/settings/proxy/route.ts`        | Vanha välityspalvelimen määritys API (GET/PUT/DELETE)   |
+| **Hallintoreitti**              | `src/app/api/v1/management/proxies/route.ts` | Rekisteri CRUD API (GET/POST/PATCH/DELETE)              |
+| **1 välityspalvelin DB**        | `src/lib/db/oneproxy.ts`                     | Ilmainen välityspalvelinmarkkinoiden pysyvyys           |
 
 ---
 
-## 4-tasoinen välityspalvelinjärjestelmä
+## Uusien tilien oletusvälityspalvelimen tila
 
-OmniRoute tukee välityspalvelinten määritystä **neljällä toisistaan riippumattomalla tasolla**, jotka ratkaistaan tärkeysjärjestyksessä:
+sisään** Asetukset → Välityspalvelin → Yleiset asetukset** , käytä** Ota välityspalvelin oletuksena käyttöön uusille yhteyksille** valitaksesi uusien palveluntarjoajatilien alkuperäisen välityspalvelimen tilan.
+
+Uusi asetus hallitsee äskettäin lisättyjen palveluntarjoajatilien alkuperäistä välityspalvelintilaa. Se ei muuta olemassa olevia tilejä tai korvaa yleistä välityspalvelinkytkintä. Sen alkuarvo säilyttää aiemman käyttäytymisen. Poista se käytöstä kerran, jos haluat luoda tulevia tilejä, joissa välityspalvelin on oletuksena pois käytöstä.
+
+Asetus tallennetaan nimellä `defaultNewConnectionProxyEnabled` olemassa olevien asetusten API kautta. Se on oletuksena `true`, kun sitä ei koskaan tallennettu. `false` tallentaminen tulee voimaan seuraavissa uusissa tileissä ilman uudelleenkäynnistystä. `POST /api/providers` hyväksyy valinnaisen tiukan loogisen `proxyEnabled`; eksplisiittinen `true` tai `false` on etusijalla luomisoletusarvoon nähden. Päällekkäisen tilin puuttuminen tai OAuth reconnect säilyttää tilin tallennetun tilan. Yksittäiset tilit voidaan edelleen ottaa käyttöön tai poistaa käytöstä myöhemmin.
+
+Valikoidut palveluntarjoajan siirrot käyttävät kohdeasennuksen oletusasetusta uusille tileille ja säilyttävät kohdekäytännön, kun nykyiset tilit korvataan. Välityspalvelimen kytkimet eivät ole siirrettäviä siirtokenttiä. Täysi varmuuskopion palautus ja historiallinen JSON/SQL -siirto säilyttävät nykyisen palautussemantiikkansa, mukaan lukien tallennetut tiliarvot ja vanhat skeeman oletusasetukset; täydellinen asetusten palautus voi myös palauttaa tämän asetuksen.
+
+Tämä asetus ei määritä välityspalvelinta tai vahvista, että se on terve tai käytössä. Todellinen reititys riippuu edelleen yleisestä välityspalvelimen kytkimestä ja soveltuvista välityspalvelimen määrityksistä. Synteettiset palveluntarjoajat, joilla ei ole pysyvää tiliä, OAuth -liikenne ennen tilin luomista, environment/system -välityspalvelimet ja ulkoisten taustajärjestelmien verkot eivät kuulu sen soveltamisalaan.
+
+## 4-tason välityspalvelinjärjestelmä
+
+OmniRoute tukee välityspalvelimen määritystä osoitteessa** neljä itsenäistä kiikaritähtää** , ratkaistaan tärkeysjärjestyksessä:
 
 ```
-Tärkeysjärjestys (korkein → matalin):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Tilin/yhteyden välityspalvelin  →  API-avaimen / OAuth-yhteyden mukaan
-  2. 🟡 Palveluntarjoajan välityspalvelin → palveluntarjoajan mukaan (esim. kaikki OpenAI-liikenne)
-  3. 🟠 Yhdistelmän välityspalvelin      → yhdistelmä-/reititysmäärityksen mukaan
-  4. 🟢 Yleinen välityspalvelin         → kaikki liikenne, kaikki palveluntarjoajat
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Ratkaisujärjestyksen toiminta
+### Miten resoluutio toimii
 
-Kun OmniRoute lähettää pyynnön ulkoiselle palveluntarjoajalle, se kutsuu `resolveProxyForConnectionFromRegistry()`-funktiota, joka tarkistaa jokaisen tason järjestyksessä:
+Kun OmniRoute lähettää pyynnön ylävirran toimittajalle, se soittaa `resolveProxyForConnectionFromRegistry()`, joka tarkistaa jokaisen tason järjestyksessä:
 
-1. **Tilitason määritys** — Onko tälle tietylle yhteystunnukselle määritetty välityspalvelin?
-2. **Palveluntarjoajatason määritys** — Onko tälle palveluntarjoajalle (esim. `openai`) määritetty välityspalvelin?
-3. **Yleisen tason määritys** — Onko yleinen välityspalvelin määritetty?
+1. **Tilitason** — Onko tälle tietylle yhteydelle ID määritetty välityspalvelin?
+2. **Palveluntarjoajataso** — Onko tälle palveluntarjoajalle määritetty välityspalvelin (esim. `openai`)?
+3. **Globaali taso** — Onko globaali välityspalvelin määritetty?
 4. **Ei välityspalvelinta** — Suora yhteys palveluntarjoajaan.
 
-Ensimmäinen osuma valitaan. Tämä tarkoittaa, että voit määrittää yleisen välityspalvelimen varavaihtoehdoksi mutta ohittaa sen tietyille palveluntarjoajille tai yhteyksille.
+Ensimmäinen ottelu voittaa. Tämä tarkoittaa, että voit asettaa globaalin välityspalvelimen varavaihtoehdoksi, mutta ohittaa sen tietyille palveluntarjoajille tai yhteyksille.
 
-### Välityspalvelimen kautta kulkeva liikenne
+### Mitä välitetään
 
-| Liikenteen tyyppi      | Välitetäänkö? | Huomautukset                                             |
-| ---------------------- | ------------- | -------------------------------------------------------- |
-| Keskustelutäydennykset | ✅            | Kaikki `/v1/chat/completions`-pyynnöt                    |
-| Upotukset              | ✅            | `/v1/embeddings`                                         |
-| Kuvien luonti          | ✅            | `/v1/images/generations`                                 |
-| Ääni (TTS/STT)         | ✅            | `/v1/audio/*`                                            |
-| OAuth-tunnuksen vaihto | ✅            | Ratkaisee `unsupported_country_region_territory`-virheen |
-| Yhteystestit           | ✅            | "Test Connection" -painike käyttää välityspalvelinta     |
-| Tunnuksen uusiminen    | ✅            | OAuth-tunnuksen uusiminen taustalla                      |
-| Mallien synkronointi   | ✅            | Mallien luettelointi ja etsiminen                        |
+| Liikennetyyppi       | Välityspalvelin? | Huomautuksia                                       |
+| -------------------- | ---------------- | -------------------------------------------------- |
+| Chatin valmistuminen | ✅               | Kaikki `/v1/chat/completions` -pyynnöt             |
+| Upotukset            | ✅               | `/v1/embeddings`                                   |
+| Kuvan luominen       | ✅               | `/v1/images/generations`                           |
+| Ääni (TTS/STT)       | ✅               | `/v1/audio/*`                                      |
+| OAuth tokenin vaihto | ✅               | Ratkaisee `unsupported_country_region_territory`   |
+| Yhteystestit         | ✅               | "Testaa yhteys" -painike käyttää välityspalvelinta |
+| Tokenin päivitys     | ✅               | Tausta OAuth uusiminen                             |
+| Mallin synkronointi  | ✅               | Mallien luettelointi ja löytäminen                 |
 
 ---
 
 ## Välityspalvelinrekisteri (CRUD)
 
-Välityspalvelinrekisteri on SQLite-taulu (`proxy_registry`), johon kaikki välityspalvelimesi tallennetaan. Jokaisella välityspalvelimella on seuraavat kentät:
+Välityspalvelinrekisteri on SQLite taulukko (`proxy_registry`), joka tallentaa kaikki välityspalvelimesi. Jokaisella välityspalvelimella on:
 
-| Kenttä     | Tyyppi       | Kuvaus                                               |
-| ---------- | ------------ | ---------------------------------------------------- |
-| `id`       | UUID         | Yksilöllinen tunniste                                |
-| `name`     | Merkkijono   | Ihmisen luettavissa oleva nimi                       |
-| `type`     | Merkkijono   | Protokolla: `http`, `https`, `socks5`                |
-| `host`     | Merkkijono   | Välityspalvelimen isäntänimi tai IP-osoite           |
-| `port`     | Kokonaisluku | Portin numero                                        |
-| `username` | Merkkijono   | Todennuksen käyttäjänimi (salattuna tallennettaessa) |
-| `password` | Merkkijono   | Todennuksen salasana (salattuna tallennettaessa)     |
-| `region`   | Merkkijono   | Maantieteellisen alueen tunniste                     |
-| `notes`    | Merkkijono   | Vapaamuotoiset muistiinpanot                         |
-| `status`   | Merkkijono   | `active` tai `inactive`                              |
-| `source`   | Merkkijono   | `manual` tai `oneproxy`                              |
+| Ala        | Tyyppi       | Kuvaus                                  |
+| ---------- | ------------ | --------------------------------------- |
+| `id`       | UUID         | Ainutlaatuinen tunniste                 |
+| `name`     | merkkijono   | Ihmisen luettava etiketti               |
+| `type`     | merkkijono   | Protokolla: `http`, `https`, `socks5`   |
+| `host`     | merkkijono   | Välityspalvelimen isäntänimi tai IP     |
+| `port`     | Kokonaisluku | Portin numero                           |
+| `username` | merkkijono   | Todennus käyttäjänimi (salattu levossa) |
+| `password` | merkkijono   | Auth salasana (salattu levossa)         |
+| `region`   | merkkijono   | Maantieteellisen alueen tunniste        |
+| `notes`    | merkkijono   | Vapaatekstiset muistiinpanot            |
+| `status`   | merkkijono   | `active` tai `inactive`                 |
+| `source`   | merkkijono   | `manual` tai `oneproxy`                 |
 
 ### Välityspalvelimen luominen
 
-**Hallintapaneelin kautta:**
+**Kojelaudan kautta:**
 
-1. Siirry kohtaan **Settings → Proxy**
-2. Napsauta **Add Proxy**
-3. Anna tyyppi, isäntänimi, portti ja valinnaiset todennustiedot
-4. Tallenna
+1. Siirry osoitteeseen** Asetukset → Proxy**
+2. Napsauta** Lisää välityspalvelin**
+3. Täytä tyyppi, isäntä, portti ja valinnaiset todennustiedot
+4. Tallentaa
 
-**API:n kautta:**
+**API kautta:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -175,54 +186,54 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Huomautus:** Todennustiedot säilytetään, ellet nimenomaisesti lähetä niiden tilalle uusia arvoja, jotka eivät ole tyhjiä. Tyhjien merkkijonojen lähettäminen `username`-/`password`-kentissä säilyttää tallennetut arvot.
+> **Huomautus:** Tunnukset säilytetään, ellet nimenomaisesti lähetä ei-tyhjiä korvauksia. Tyhjien merkkijonojen lähettäminen `username`/`password` säilyttää tallennetut arvot.
 
 ### Välityspalvelimen poistaminen
 
 ```bash
-# Epäonnistuu, jos välityspalvelin on määritetty mille tahansa tasolle
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Pakotettu poisto (poistaa myös määritykset)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Välityspalvelinten luettelointi
+### Listauksen välityspalvelimet
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Välityspalvelinten määrittäminen eri tasoille
+### Välityspalvelinten määrittäminen laajuuksille
 
 ```bash
-# Määritä yleiselle tasolle
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Määritä tietylle palveluntarjoajalle
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Määritä tietylle yhteydelle/avaimelle
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Käytettävän välityspalvelimen ratkaiseminen
+### Tehokkaan välityspalvelimen ratkaiseminen
 
-Tarkista, mitä välityspalvelinta tietylle yhteydelle käytettäisiin:
+Tarkista, mitä välityspalvelinta käytettäisiin tietylle yhteydelle:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Palauttaa ratkaistun välityspalvelimen sekä sen tason (`account`, `provider` tai `global`) ja lähteen.
+Palauttaa ratkaistun välityspalvelimen tason (`account`, `provider` tai `global`) ja lähteen kanssa.
 
-### Joukkomääritys
+### Joukkotehtävä
 
 Määritä yksi välityspalvelin useille palveluntarjoajille tai yhteyksille kerralla:
 
@@ -236,184 +247,184 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Tuonti/vienti
+### Import/Export
 
-Välityspalvelimet sisältyvät **varmuuskopiointi-/palautusjärjestelmään**. Kun viet OmniRoute-määrityksesi:
+Välityspalvelimet sisältyvät**Backup/Restore** järjestelmä. Kun viet OmniRoute kokoonpanosi:
 
-1. Siirry kohtaan **Dashboard → Settings → Backup**
-2. Napsauta **Export** — välityspalvelinrekisteri ja määritykset sisällytetään vientiin
-3. Palauta tiedot napsauttamalla **Import** ja lataamalla varmuuskopiotiedosto
+1. Siirry osoitteeseen** Kojelauta → Asetukset → Varmuuskopio**
+2. Napsauta** Viedä** — -välityspalvelinrekisteri ja tehtävät sisältyvät
+3. Palauta napsauttamalla** Tuoda** ja lataa varmuuskopiotiedosto
 
-Välityspalvelinrekisteri tukee myös **upsert-toimintoa isäntänimen ja portin perusteella** — jos tuot välityspalvelimen, joka on jo olemassa (sama isäntänimi ja portti), olemassa oleva tietue päivitetään kaksoiskappaleen luomisen sijaan.
+Välityspalvelinrekisteri tukee myös** isäntä + portti** — jos tuot välityspalvelimen, joka on jo olemassa (sama isäntä ja portti), se päivittyy kaksoiskappaleen luomisen sijaan.
 
-### Vanhojen määritysten siirto
+### Vanha siirto
 
-Jos määritit välityspalvelimia vanhemmassa versiossa (ennen rekisteriä), OmniRoute siirtää ne automaattisesti:
+Jos määritit välityspalvelimet vanhemmassa versiossa (esirekisteri), OmniRoute siirtää ne automaattisesti:
 
 ```
-Vanha key_value-tietovarasto → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Tämä tapahtuu kerran ensimmäisen päivityksen jälkeisen käynnistyksen yhteydessä. Suorita siirto uudelleen komennolla `migrateLegacyProxyConfigToRegistry({ force: true })`.
+Tämä tapahtuu kerran ensimmäisellä käynnistyksellä päivityksen jälkeen. Käytä `migrateLegacyProxyConfigToRegistry({ force: true })` suorittaaksesi uudelleen.
 
 ---
 
-## 1proxy – ilmaisten välityspalvelinten markkinapaikka
+## 1proxy Ilmainen välityspalvelinmarkkinapaikka
 
-> 🆕 **Tekijä: [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (ongelma [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Kirjoittaja [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (ongelma [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute integroituu **[1proxy](https://1proxy-api.aitradepulse.com)**-yhteisöalustaan ja tarjoaa pääsyn **satoihin ilmaisiin, validoituihin välityspalvelimiin** eri puolilta maailmaa. Tämä sopii täydellisesti käyttäjille, joilla ei ole omaa välityspalvelininfrastruktuuria.
+OmniRoute integroituu** [1 välityspalvelin](https://1proxy-api.aitradepulse.com)** yhteisön alusta, johon pääsy on mahdollista** satoja ilmaisia, vahvistettuja välityspalvelimia** ympäri maailmaa. Tämä on täydellinen käyttäjille, joilla ei ole omaa välityspalvelininfrastruktuuria.
 
-### Toimintaperiaate
+### Miten se toimii
 
 ```
-┌─────────────┐   Synkronointi  ┌─────────────────┐   Kierto     ┌─────────────────┐
-│  1proxy API │ ──────────────▶ │  proxy_registry  │ ──────────▶ │ Palveluntarjoajan│
-│  (ulkoinen) │  enintään 500   │  source=oneproxy │  laadun      │       API       │
-└─────────────┘ välityspalvelinta└─────────────────┘  perusteella └─────────────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Synkronointi** — OmniRoute hakee validoidut välityspalvelimet 1proxy-rajapinnasta
-2. **Tallennus** — Välityspalvelimet tallennetaan samaan `proxy_registry`-tauluun arvolla `source = 'oneproxy'`
-3. **Suodatus** — Suodata protokollan, maan ja laatupisteiden perusteella
-4. **Kierto** — Valitse paras välityspalvelin käyttämällä laatuun perustuvaa, satunnaista tai peräkkäistä strategiaa
-5. **Automaattinen heikennys** — Epäonnistuneiden välityspalvelinten laatupisteitä alennetaan; raja-arvon alittuessa → merkitään ei-aktiiviseksi
+1. **Synkronoi** — OmniRoute hakee vahvistetut välityspalvelimet 1-välityspalvelimelta API
+2. **Store** — Välityspalvelimet tallennetaan samaan `proxy_registry` taulukkoon `source = 'oneproxy'` kanssa
+3. **Suodattaa** — Suodata protokollan, maan tai laatupisteiden mukaan
+4. **Kiertää** — Valitse paras välityspalvelin käyttämällä laatu-, satunnaisia tai peräkkäisiä strategioita
+5. **Automaattinen hajoaminen** — Epäonnistuneiden välityspalvelinten laatupisteitä alennetaan; kynnyksen alapuolella → merkitty ei-aktiiviseksi
 
 ### Välityspalvelinten synkronointi
 
-**Hallintapaneelin kautta:**
+**Kojelaudan kautta:**
 
-1. Siirry välilehteen **Asetukset → 1proxy**
-2. Napsauta **"Synkronoi nyt"**
-3. Tarkastele tilastoja: välityspalvelinten kokonaismäärä, aktiivisten määrä, keskimääräinen laatu ja maakohtainen jakauma
+1. Siirry osoitteeseen** Asetukset → 1proxy** -välilehti
+2. Napsauta** "Synkronoi nyt"**
+3. Näytä tilastot: välityspalvelimet yhteensä, aktiivisten määrä, keskimääräinen laatu, erittely maittain
 
-**Rajapinnan kautta:**
+**API kautta:**
 
 ```bash
-# Käynnistä synkronointi
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Vastaus:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Välityspalvelinten suodatus
 
 ```bash
-# Suodata protokollan perusteella
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Suodata maan perusteella
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Suodata laatupisteiden vähimmäisarvon perusteella
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Yhdistä suodattimia
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Välityspalvelinten laatupisteet
+### Välityspalvelimen laatupisteet
 
-Jokainen 1proxy-välityspalvelin sisältää seuraavat metatiedot:
+Jokaisen 1-välityspalvelimen mukana tulee metatiedot:
 
-| Kenttä          | Kuvaus                                               |
-| --------------- | ---------------------------------------------------- |
-| `qualityScore`  | 1proxyn validoinnin antama arvosana asteikolla 0–100 |
-| `latencyMs`     | Mitattu verkkoviive                                  |
-| `anonymity`     | `transparent`, `anonymous` tai `elite`               |
-| `googleAccess`  | Voiko välityspalvelin käyttää Googlen palveluita     |
-| `countryCode`   | Kaksikirjaiminen ISO-maakoodi                        |
-| `lastValidated` | Viimeisimmän validoinnin aikaleima                   |
+| Ala             | Kuvaus                                          |
+| --------------- | ----------------------------------------------- |
+| `qualityScore`  | 0-100 arvio 1 välityspalvelimen vahvistuksesta  |
+| `latencyMs`     | Mitattu verkon latenssi                         |
+| `anonymity`     | `transparent`, `anonymous` tai `elite`          |
+| `googleAccess`  | Voiko välityspalvelin käyttää Google palveluita |
+| `countryCode`   | Kaksikirjaiminen ISO -maakoodi                  |
+| `lastValidated` | Viimeisimmän vahvistuksen aikaleima             |
 
 Laatupisteitä säädetään dynaamisesti:
 
-- **Epäonnistuneet pyynnöt** alentavat pistemäärää 10 pisteellä
-- **Pistemäärä laskee arvoon ≤10** → välityspalvelin merkitään tilaan `inactive`
-- Ei-aktiiviset välityspalvelimet jätetään kierron ulkopuolelle
+- **Epäonnistuneita pyyntöjä** pienentää pisteitä 10 pisteellä
+- **Pisteet putoavat ≤ 10:een** → välityspalvelin on merkitty `inactive`
+- Ei-aktiiviset välityspalvelimet jätetään kiertämisen ulkopuolelle
 
 ### Kiertostrategiat
 
 ```bash
-# Kierrä laadun perusteella (paras välityspalvelin ensin) — oletus
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Satunnainen kierto
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Peräkkäinen kierto (kauimmin sitten validoitu ensin)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
 ### Katkaisija
 
-1proxy-synkronoinnissa on sisäänrakennettu katkaisija:
+1-välityspalvelimen synkronoinnissa on sisäänrakennettu katkaisija:
 
-- **5 peräkkäisen synkronointivirheen** jälkeen uudet synkronointiyritykset estetään
-- Nollaa komennolla `resetOneproxyCircuitBreaker()` tai käynnistä palvelin uudelleen
+- Jälkeen** 5 peräkkäistä synkronointivirhettä** , lisäsynkronointiyritykset estetään
+- Nollaa komennolla: `resetOneproxyCircuitBreaker()` tai käynnistä palvelin uudelleen
 - Synkronoinnin tila on saatavilla osoitteessa `GET /api/settings/oneproxy?action=status`
 
-### 1proxy-välityspalvelinten tyhjentäminen
+### 1 välityspalvelimen välityspalvelinten tyhjentäminen
 
 ```bash
-# Poista yksittäinen 1proxy-välityspalvelin
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Tyhjennä KAIKKI 1proxy-välityspalvelimet (manuaalisia välityspalvelimia ei muuteta)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Havaitsemisen esto ja huomaamattomuus
+## Havaitsemisen esto & Stealth
 
-OmniRoute ei ainoastaan reititä liikennettä välityspalvelimen kautta — se saa liikenteen näyttämään aidolta:
+OmniRoute ei vain ohjaa liikennettä välityspalvelimen — kautta, vaan saa liikenteen näyttämään lailliselta:
 
-### TLS-sormenjäljen väärentäminen
+### TLS Sormenjälkihuijaus
 
-Luo `wreq-js`-paketin avulla selaimen kaltaisia TLS-sormenjälkiä ja ohittaa bottien tunnistusjärjestelmät, jotka merkitsevät muiden kuin selainten TLS-kättelyt epäilyttäviksi.
+Käyttää `wreq-js` luomaan selaimen kaltaisia TLS sormenjälkiä ohittaen bottien tunnistusjärjestelmät, jotka merkitsevät muiden kuin selaimen TLS kättelyjä.
 
-### CLI-sormenjäljen täsmäytys
+### CLI Sormenjälkien täsmäys
 
-**CLI-sormenjäljen valitsin** (`Asetukset → Suojaus`) järjestää HTTP-otsakkeet ja JSON-rungon kentät uudelleen vastaamaan natiivien CLI-binääritiedostojen (Claude Code, Codex jne.) tarkkaa allekirjoitusta. Tämä toimii **välityspalvelimen lisäksi**:
+The**CLI Sormenjälkikytkin** (`Settings → Security`) järjestää HTTP otsikot ja JSON -tekstikentät uudelleen vastaamaan alkuperäisten CLI binäärien (Claude koodi, Codex jne.) tarkkaa allekirjoitusta. Tämä toimii** päälle** välityspalvelin:
 
 ```
-IP-osoitteesi (estetty) → Välityspalvelimen IP (Yhdysvallat) → Palveluntarjoajan API
-                          + TLS-väärennös
-                          + CLI-sormenjälki
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Saat samanaikaisesti sekä **IP-osoitteen peittämisen** että **pyynnön aitouden**.
+Saat molemmat**IP maskaus** ja** pyytää aitoutta** samanaikaisesti.
 
-### Välityspalvelimen IP-osoitteen säilyttäminen
+### Välityspalvelin IP Säilytys
 
-Hallintapaneelin värikoodatut tunnukset osoittavat aktiivisen välityspalvelintason:
+Kojelaudan värikoodatut merkit osoittavat, mikä välityspalvelintaso on aktiivinen:
 
-| Tunnus | Taso     | Merkitys                                              |
-| ------ | -------- | ----------------------------------------------------- |
-| 🟢     | Globaali | Kaikki liikenne kulkee tämän välityspalvelimen kautta |
-| 🟡     | Tarjoaja | Vain tämän palveluntarjoajan liikenne välitetään      |
-| 🔵     | Yhteys   | Tämä tietty avain/tili käyttää tätä välityspalvelinta |
+| Kunniamerkki | Taso              | Merkitys                                               |
+| ------------ | ----------------- | ------------------------------------------------------ |
+| 🟢           | Maailmanlaajuinen | Kaikki liikenne kulkee tämän välityspalvelimen kautta  |
+| 🟡           | Palveluntarjoaja  | Vain tämän palveluntarjoajan liikenne välitetään       |
+| 🔵           | Yhteys            | Tämä tietty key/account käyttää tätä välityspalvelinta |
 
-Tunnus näyttää tarkistusta varten myös selvitetyn välityspalvelimen IP-osoitteen.
+Merkissä näkyy myös ratkaistu välityspalvelin IP vahvistusta varten.
 
 ---
 
 ## Ylävirran välityspalvelintilat
 
-CLIProxyAPI-mallia käyttäville palveluntarjoajille OmniRoute tukee kolmea ylävirran välityspalvelintilaa:
+Palveluntarjoajille, jotka käyttävät CLIProxyAPI -mallia, OmniRoute tukee kolmea ylävirran välityspalvelintilaa:
 
-| Tila          | Kuvaus                                                               |
-| ------------- | -------------------------------------------------------------------- |
-| `native`      | OmniRoute käsittelee välityspalvelinreitityksen suoraan (oletus)     |
-| `cliproxyapi` | Delegoi ulkoiselle CLIProxyAPI-instanssille                          |
-| `fallback`    | Kokeilee ensin natiivia tilaa ja siirtyy tarvittaessa CLIProxyAPI:in |
+| tila          | Kuvaus                                                              |
+| ------------- | ------------------------------------------------------------------- |
+| `native`      | OmniRoute käsittelee välityspalvelimen reitityksen suoraan (oletus) |
+| `cliproxyapi` | Delegoi ulkoiseen CLIProxyAPI instanssiin                           |
+| `fallback`    | Yrittää ensin alkuperäistä, palaa takaisin CLIProxyAPI              |
 
 Määritä palveluntarjoajakohtaisesti:
 
@@ -425,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Hallintapaneelin käyttöliittymä
+## Kojelauta UI
 
 ### Asetukset → Välityspalvelin-välilehti
 
-- **Globaalin välityspalvelimen** määritys (määritä kerran kaikkea liikennettä varten)
-- **Palveluntarjoajakohtaiset välityspalvelimen** ohitukset
-- **Yhteyskohtaiset välityspalvelinmääritykset**
+- **Globaali välityspalvelin** määritykset (asetetaan kerran kaikelle liikenteelle)
+- **Palveluntarjoajakohtainen välityspalvelin** ohittaa
+- **Yhteyskohtainen välityspalvelin** tehtäviä
 - **Yhteystesti** määritetyn välityspalvelimen kautta
-- **Värikoodatut tunnukset**, jotka näyttävät aktiivisen välityspalvelintason
+- **Värikoodatut merkit** näyttää aktiivisen välityspalvelimen tason
 
-### Asetukset → 1proxy-välilehti
+### Asetukset → 1proxy Tab
 
-- **Synkronoi nyt** -painike ilmaisten välityspalvelinten hakemiseen
-- **Tilastokortit**: yhteensä, aktiiviset, keskimääräinen laatu, viimeisin synkronointi
-- **Suodattimet**: protokolla, maakoodi, vähimmäislaatu
-- **Välityspalvelintaulukko**, jossa näkyvät isäntä, protokolla, maa, laatupisteet, viive, anonymiteetti ja Google-käyttöoikeus
-- **Synkronoinnin tilapaneeli**, jossa seurataan onnistumisia, epäonnistumisia ja peräkkäisten epäonnistumisten määrää
-- **Tyhjennä kaikki** kaikkien 1proxy-merkintöjen poistamiseen
+- **Synkronoi nyt** -painiketta ilmaisten välityspalvelinten hakemiseksi
+- **Tilastot kortit** : Yhteensä, aktiivinen, keskimääräinen laatu, viimeinen synkronointi
+- **Suodattimet** : Protokolla, maakoodi, vähimmäislaatu
+- **Välityspalvelintaulukko** isäntä, protokolla, maa, laatupisteet, latenssi, nimettömyys, Google -käyttö
+- **Synkronoinnin tila** paneeli, jossa on success/failure -seuranta ja peräkkäisten vikojen määrä
+- **Tyhjennä kaikki** poistaaksesi kaikki 1 välityspalvelinmerkinnät
 
 ---
 
-## API-viite
+## API Viite
 
-### Välityspalvelinasetusten API
+### Välityspalvelimen asetukset API
 
-| Menetelmä | Päätepiste                                     | Kuvaus                                    |
-| --------- | ---------------------------------------------- | ----------------------------------------- |
-| `GET`     | `/api/settings/proxy`                          | Hae välityspalvelimen koko määritys       |
-| `GET`     | `/api/settings/proxy?level=global`             | Hae globaali välityspalvelin              |
-| `GET`     | `/api/settings/proxy?level=provider&id=openai` | Hae palveluntarjoajan välityspalvelin     |
-| `GET`     | `/api/settings/proxy?resolve=connectionId`     | Selvitä käytössä oleva välityspalvelin    |
-| `PUT`     | `/api/settings/proxy`                          | Päivitä välityspalvelimen määritys        |
-| `DELETE`  | `/api/settings/proxy?level=provider&id=openai` | Poista välityspalvelin kyseiseltä tasolta |
+| Menetelmä | Päätepiste                                     | Kuvaus                                   |
+| --------- | ---------------------------------------------- | ---------------------------------------- |
+| `GET`     | `/api/settings/proxy`                          | Hanki täysi välityspalvelimen kokoonpano |
+| `GET`     | `/api/settings/proxy?level=global`             | Hanki globaali välityspalvelin           |
+| `GET`     | `/api/settings/proxy?level=provider&id=openai` | Hanki palveluntarjoajan välityspalvelin  |
+| `GET`     | `/api/settings/proxy?resolve=connectionId`     | Ratkaise tehokas välityspalvelin         |
+| `PUT`     | `/api/settings/proxy`                          | Päivitä välityspalvelimen asetukset      |
+| `DELETE`  | `/api/settings/proxy?level=provider&id=openai` | Poista välityspalvelin tasolta           |
 
-### Välityspalvelinrekisterin API
+### Välityspalvelinrekisteri API
 
-| Menetelmä | Päätepiste                                        | Kuvaus                                    |
-| --------- | ------------------------------------------------- | ----------------------------------------- |
-| `GET`     | `/api/v1/management/proxies`                      | Luettele kaikki välityspalvelimet         |
-| `GET`     | `/api/v1/management/proxies?id=uuid`              | Hae välityspalvelin tunnuksen perusteella |
-| `GET`     | `/api/v1/management/proxies?id=uuid&where_used=1` | Hae välityspalvelinmääritykset            |
-| `POST`    | `/api/v1/management/proxies`                      | Luo välityspalvelin                       |
-| `PATCH`   | `/api/v1/management/proxies`                      | Päivitä välityspalvelin                   |
-| `DELETE`  | `/api/v1/management/proxies?id=uuid`              | Poista välityspalvelin                    |
-| `DELETE`  | `/api/v1/management/proxies?id=uuid&force=1`      | Pakota poistaminen                        |
-| `POST`    | `/api/v1/management/proxies/bulk-assign`          | Määritä joukkona                          |
-| `GET`     | `/api/v1/management/proxies/assignments`          | Luettele määritykset                      |
-| `GET`     | `/api/v1/management/proxies/health`               | Välityspalvelinten kuntotilastot          |
+| Menetelmä | Päätepiste                                        | Kuvaus                            |
+| --------- | ------------------------------------------------- | --------------------------------- |
+| `GET`     | `/api/v1/management/proxies`                      | Listaa kaikki välityspalvelimet   |
+| `GET`     | `/api/v1/management/proxies?id=uuid`              | Hanki välityspalvelin ID          |
+| `GET`     | `/api/v1/management/proxies?id=uuid&where_used=1` | Hanki välityspalvelintehtäviä     |
+| `POST`    | `/api/v1/management/proxies`                      | Luo välityspalvelin               |
+| `PATCH`   | `/api/v1/management/proxies`                      | Päivitä välityspalvelin           |
+| `DELETE`  | `/api/v1/management/proxies?id=uuid`              | Poista välityspalvelin            |
+| `DELETE`  | `/api/v1/management/proxies?id=uuid&force=1`      | Pakota poistaminen                |
+| `POST`    | `/api/v1/management/proxies/bulk-assign`          | Joukkomääräys                     |
+| `GET`     | `/api/v1/management/proxies/assignments`          | Listaa tehtävät                   |
+| `GET`     | `/api/v1/management/proxies/health`               | Välityspalvelimen terveystilastot |
 
-### Tunnelien API
+### Tunnelit API
 
-Lisätietoja OmniRoute-instanssin julkaisemisesta internetiin (Cloudflare/ngrok/Tailscale) lähtevän liikenteen välityspalvelimen kautta reitittämisen sijaan on oppaassa [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunnelien REST API sijaitsee polun `/api/tunnels/{cloudflared,ngrok,tailscale}/*` alla ja on riippumaton edellä dokumentoidusta lähtevän liikenteen välityspalvelinketjusta.
+Lisätietoja OmniRoute -ilmentymän paljastamisesta julkiselle Internetille (Cloudflare/ngrok/Tailscale) välityspalvelimen kautta lähtevän lähteen reitittämisen sijaan on kohdassa [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunneli REST API sijaitsee `/api/tunnels/{cloudflared,ngrok,tailscale}/*` alla ja on ortogonaalinen edellä dokumentoituun lähtevän välityspalvelimen ketjuun nähden.
 
-### 1proxy API
+### 1 välityspalvelin API
 
 | Menetelmä | Päätepiste                             | Kuvaus                               |
 | --------- | -------------------------------------- | ------------------------------------ |
-| `GET`     | `/api/settings/oneproxy`               | Luettele 1proxy-välityspalvelimet    |
-| `GET`     | `/api/settings/oneproxy?action=stats`  | Hae tilastot ja synkronoinnin tila   |
+| `GET`     | `/api/settings/oneproxy`               | Listaa 1 välityspalvelinta           |
+| `GET`     | `/api/settings/oneproxy?action=stats`  | Hae tilastot + synkronoinnin tila    |
 | `GET`     | `/api/settings/oneproxy?action=status` | Hae vain synkronoinnin tila          |
-| `POST`    | `/api/settings/oneproxy`               | Käynnistä synkronointi               |
-| `POST`    | `/api/settings/oneproxy/rotate`        | Vaihda seuraavaan välityspalvelimeen |
+| `POST`    | `/api/settings/oneproxy`               | Triggerin synkronointi               |
+| `POST`    | `/api/settings/oneproxy/rotate`        | Kierrä seuraavaan välityspalvelimeen |
 | `DELETE`  | `/api/settings/oneproxy?id=uuid`       | Poista yksi                          |
 | `DELETE`  | `/api/settings/oneproxy?clearAll=1`    | Tyhjennä kaikki                      |
 
-### Ylävirran välityspalvelimen API
+### Ylävirran välityspalvelin API
 
-| Menetelmä | Päätepiste                        | Kuvaus                                      |
-| --------- | --------------------------------- | ------------------------------------------- |
-| `GET`     | `/api/upstream-proxy/:providerId` | Hae ylävirran välityspalvelimen määritys    |
-| `PUT`     | `/api/upstream-proxy/:providerId` | Aseta ylävirran välityspalvelintila         |
-| `DELETE`  | `/api/upstream-proxy/:providerId` | Poista ylävirran välityspalvelimen määritys |
+| Menetelmä | Päätepiste                        | Kuvaus                                           |
+| --------- | --------------------------------- | ------------------------------------------------ |
+| `GET`     | `/api/upstream-proxy/:providerId` | Hanki ylävirran välityspalvelimen asetukset      |
+| `PUT`     | `/api/upstream-proxy/:providerId` | Aseta ylävirran välityspalvelintila              |
+| `DELETE`  | `/api/upstream-proxy/:providerId` | Poista ylävirran välityspalvelimen konfiguraatio |
 
 ---
 
 ## Ympäristömuuttujat
 
-| Muuttuja              | Oletusarvo | Kuvaus                                                                                 |
-| --------------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`     | Ota SOCKS5-välityspalvelintuki käyttöön (oletuksena `true` tiedostossa `.env.example`) |
+| Muuttuva              | Oletus | Kuvaus                                                                         |
+| --------------------- | ------ | ------------------------------------------------------------------------------ |
+| `ENABLE_SOCKS5_PROXY` | `true` | Ota SOCKS5 -välityspalvelimen tuki käyttöön (oletus `true` `.env.example`:ssä) |
 
 ---
 
-## Vianmääritys
+## Vianetsintä
 
-### "SOCKS5-välityspalvelin on poistettu käytöstä"
+### "SOCKS5 -välityspalvelin on poistettu käytöstä"
 
-Aseta `.env`-tiedostossa `ENABLE_SOCKS5_PROXY=true` ja käynnistä uudelleen.
+Aseta `ENABLE_SOCKS5_PROXY=true` `.env` -tiedostoosi ja käynnistä uudelleen.
 
-### "socket hang up" -virheet välityspalvelinta käytettäessä
+### "socket hang up" -virheet välityspalvelimen kautta
 
-Tämä on normaalia halvoilla välityspalvelimilla, jotka katkaisevat käyttämättömät yhteydet. OmniRoute käsittelee tämän jo seuraavasti:
+Tämä on normaalia halvoilla välityspalvelimilla, jotka katkaisevat tyhjäkäynnit. OmniRoute hoitaa tämän jo:
 
-- Keep-alive poistetaan käytöstä välityspalvelinyhteyksissä (`keepAliveTimeout: 1`)
-- Liukuhihnakäsittely poistetaan käytöstä (`pipelining: 0`)
-- Välittäjät tallennetaan välimuistiin toistuvien kättelyjen välttämiseksi
+- Välityspalvelinyhteyksien säilymisen poistaminen käytöstä (`keepAliveTimeout: 1`)
+- Liukujohdotuksen poistaminen käytöstä (`pipelining: 0`)
+- Välittäjät välimuistiin toistuvien kättelyjen välttämiseksi
 
-Jos ongelma jatkuu, kokeile toista välityspalvelinta tai käytä 1proxy-kiertotoimintoa.
+Jos se jatkuu, kokeile toista välityspalvelinta tai käytä 1-välityspalvelimen kiertotoimintoa.
 
-### "unsupported_country_region_territory" OAuthin aikana
+### "unsupported_country_region_territory" OAuth aikana
 
-Varmista, että välityspalvelin on määritetty **ennen** OAuth-prosessin aloittamista. OmniRoute reitittää OAuth-tunnuksen vaihdon määritetyn välityspalvelimen kautta. Määritä ensin yleinen tai palveluntarjoajakohtainen välityspalvelin ja muodosta sitten yhteys.
+Varmista, että välityspalvelin on määritetty** ennen** käynnistää OAuth virran. OmniRoute reitittää OAuth -merkkien vaihdon määritetyn välityspalvelimen kautta. Aseta ensin maailmanlaajuinen tai palveluntarjoajatason välityspalvelin ja muodosta sitten yhteys.
 
 ### Välityspalvelinta ei käytetä
 
-Tarkista ratkaisujärjestys:
+Tarkista resoluutiojärjestys:
 
-1. Tarkista pyynnöllä `GET /api/settings/proxy?resolve=your-connection-id`
-2. Tarkista, että välityspalvelimen `status` on `active` (ei `inactive`)
-3. Varmista, että välityspalvelinmäärityksen laajuus vastaa yhteyttäsi
+1. Tarkista `GET /api/settings/proxy?resolve=your-connection-id`
+2. Tarkista, onko välityspalvelin `status` `active` (ei `inactive`)
+3. Varmista, että välityspalvelimen määritysalue vastaa yhteyttäsi
 
-### 1proxy-synkronointi epäonnistuu
+### 1 välityspalvelimen synkronointi epäonnistui
 
 Tarkista synkronoinnin tila:
 
@@ -544,13 +555,13 @@ Tarkista synkronoinnin tila:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Jos `consecutiveFailures >= 5`, suojakatkaisin on lauennut. Nollaa se käynnistämällä palvelin uudelleen tai odota manuaalista nollausta.
+Jos `consecutiveFailures >= 5`, katkaisija on lauennut. Käynnistä palvelin uudelleen nollataksesi tai odota manuaalista nollausta.
 
 ---
 
-## Tietokantaskeema
+## Tietokantakaavio
 
-### `proxy_registry`-taulu
+### `proxy_registry`
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -564,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' tai 'oneproxy'
-  quality_score INTEGER,                     -- 0–100 (vain 1proxy)
-  latency_ms INTEGER,                        -- millisekuntia (vain 1proxy)
-  anonymity TEXT,                            -- läpinäkyvä/anonyymi/elite
-  google_access INTEGER DEFAULT 0,           -- voiko käyttää Googlea? (1proxy)
-  last_validated TEXT,                       -- ISO-aikaleima (1proxy)
-  country_code TEXT,                         -- kaksikirjaiminen ISO-koodi (1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
+  anonymity TEXT,                            -- transparent/anonymous/elite
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### `proxy_assignments`-taulu
+### `proxy_assignments`
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- palveluntarjoajan tunnus, yhteyden tunnus tai yhdistelmän tunnus
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Välityspalvelimen kunnon tarkistus (v3.8.16+)
+## Välityspalvelimen kuntotarkastus (v3.8.16 +)
 
-OmniRouten **välityspalvelimen nopean epäonnistumisen** mekanismi (`src/lib/proxyHealth.ts`) tunnistaa toimimattomat välityspalvelimet alle 2 sekunnissa nopealla TCP-yhteystarkistuksella ja **tallentaa tuloksen välimuistiin** pyyntökohtaisen kuormituksen välttämiseksi.
+OmniRoute's** välityspalvelin nopea epäonnistuminen** mekanismi (`src/lib/proxyHealth.ts`) havaitsee kuolleet välityspalvelimet < 2s:ssä nopean TCP yhteystarkistuksen avulla, sitten** tallentaa tuloksen välimuistiin** pyyntökohtaisten yleiskustannusten välttämiseksi.
 
-### Toimintaperiaate
+### Miten se toimii
 
 ```
-Pyyntö ──▶ ProxyHealthCache.get(url)
+Request ──▶ ProxyHealthCache.get(url)
              │
-             ├─ Välimuistiosuma + tuore?  ──▶ palauta välimuistiin tallennettu tila
+             ├─ Cache hit + fresh?  ──▶ return cached status
              │
-             └─ Välimuistihuti / vanhentunut?  ──▶ TCP-yhteys kohteeseen host:port
-                                                    (aikakatkaisu: FAST_FAIL_TIMEOUT_MS)
-                                                    ──▶ tallenna välimuistiin ajaksi HEALTH_CACHE_TTL_MS
-                                                    ──▶ palauta tulos
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Ilman tätä toimimaton välityspalvelin estäisi jokaisen pyynnön koko `PROXY_TIMEOUT_MS`-ajan (oletuksena 30 s) ennen epäonnistumista.
+Ilman tätä kuollut välityspalvelin estäisi kaikki pyynnöt täydelle `PROXY_TIMEOUT_MS` (oletus 30s) ennen epäonnistumista.
 
-### Säädettävät ympäristömuuttujat
+### Viritettävät ympäristömuuttujat
 
-| Muuttuja                     | Oletusarvo | Tarkoitus                                         |
-| ---------------------------- | ---------- | ------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`     | TCP-yhteyden aikakatkaisu kuntotarkistusta kohden |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`    | Kuinka kauan kuntotulos säilytetään välimuistissa |
+| Muuttuva                     | Oletus  | Tarkoitus                                          |
+| ---------------------------- | ------- | -------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | TCP yhteyden aikakatkaisu terveystarkastusta kohti |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Kuinka kauan terveystulos on välimuistissa         |
 
 **Suositellut arvot:**
 
-| Skenaario                            | Nopean epäonnistumisen aikakatkaisu | Välimuistin TTL | Perustelu                                                                                        |
-| ------------------------------------ | ----------------------------------- | --------------- | ------------------------------------------------------------------------------------------------ |
-| Suuren kapasiteetin API-yhdyskäytävä | 1500ms                              | 60000ms         | Aggressiivinen nopea epäonnistuminen ja pidempi välimuisti tarkistusten vähentämiseksi           |
-| Maantieteellisesti hajautetut solmut | 3000ms                              | 15000ms         | Hitaat verkot tarvitsevat enemmän aikaa; lyhyempi välimuisti nopeaa vikasietoista vaihtoa varten |
-| Kehitys / testaus                    | 1000ms                              | 10000ms         | Nopea iterointi paikallisilla välityspalvelimilla                                                |
-| Häive / tunnistamisen esto           | 2500ms                              | 45000ms         | Vältä nopeaa tunnustelua, joka voisi laukaista nopeusrajoitukset                                 |
+| Skenaario                            | Nopea epäonnistumisen aikakatkaisu | Välimuisti TTL | Päättely                                                                                 |
+| ------------------------------------ | ---------------------------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| Tehokas API -yhdyskäytävä            | 1500 ms                            | 60 000 ms      | Aggressiivinen vikanopea, pidempi välimuisti vähentää tarkistuksia                       |
+| Maantieteellisesti hajautetut solmut | 3000 ms                            | 15 000 ms      | Hitaammat verkot tarvitsevat enemmän aikaa; lyhyempi välimuisti nopeaa vikasietoa varten |
+| Kehittäjä / testaus                  | 1000 ms                            | 10 000 ms      | Nopea iterointi paikallisilla välityspalvelimilla                                        |
+| Stealth / anti-detection             | 2500 ms                            | 45 000 ms      | Vältä nopeaa mittausta, joka voi laukaista nopeusrajoja                                  |
 
-### Välityspalvelimen kunnon tarkastelu
+### Välityspalvelimen kunnon tarkastaminen
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Pakota tietyn välityspalvelimen uudelleentarkistus
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-`stale`-lippu on `true`, kun välimuistimerkinnän ikä on ylittänyt arvon `HEALTH_CACHE_TTL_MS` ja seuraava pyyntö käynnistää uuden tarkistuksen.
+`stale` lippu on `true`, kun välimuistin merkintä on ylittänyt `HEALTH_CACHE_TTL_MS` ja seuraava pyyntö käynnistää uuden tarkistuksen.
 
-### Välityspalvelintyyppikohtaiset oletusarvot
+### Välityspalvelimen tyypin oletukset
 
-Kuntotarkistus käyttää URL-skeemaan perustuvia järkeviä oletusarvoja:
+Terveystarkastuksessa käytetään järkeviä oletusarvoja URL mallin perusteella:
 
-| Skeema                     | Oletusportti |
+| Kaavio                     | Oletusportti |
 | -------------------------- | ------------ |
 | `http://`                  | 8080         |
 | `https://`                 | 443          |
 | `socks5://` / `socks5h://` | 1080         |
 
-URL-osoitteessa määritetyt mukautetut portit (`http://host:9999`) ohittavat aina skeeman oletusarvon.
+Mukautetut portit URL ssa (`http://host:9999`) ovat aina etusijalla järjestelmän oletusarvoon nähden.
 
 ---
 
-## Välityspalvelinten analytiikka ja havainnoitavuus
+## Välityspalvelinanalyysi ja havainnointi
 
-OmniRoute seuraa välityspalvelinkohtaista käyttöä auttaakseen ylläpitäjiä diagnosoimaan reititysmalleja, viivepiikkejä ja toistuvia virheitä.
+OmniRoute seuraa välityspalvelinkohtaista käyttöä auttaakseen operaattoreita diagnosoimaan reititysmallit, latenssipiikit ja toistuvat viat.
 
-### Seurattavat tiedot
+### Mitä seurataan
 
-OmniRoute tallentaa seuraavat tiedot jokaisesta määritetyn välityspalvelimen kautta kulkevasta pyynnöstä:
+Jokaiselle määritetyn välityspalvelimen kautta lähetetylle pyynnölle OmniRoute tallentaa:
 
-| Mittari      | Kuvaus                                                      |
-| ------------ | ----------------------------------------------------------- |
-| `proxy_url`  | Välityspalvelimen täydellinen URL (tunnukset peitettyinä)   |
-| `provider`   | Ulkoisen palveluntarjoajan tunnus (openai, anthropic jne.)  |
-| `latency_ms` | Kokonaiskiertoaika, mukaan lukien välityspalvelimen kättely |
-| `connect_ms` | Vain TCP-yhteyden muodostamiseen kulunut aika               |
-| `status`     | Ulkoisen palvelun palauttama HTTP-tilakoodi                 |
-| `error`      | Virheluokka, jos pyyntö epäonnistui                         |
-| `timestamp`  | ISO 8601 UTC                                                |
+| Metrinen     | Kuvaus                                                                    |
+| ------------ | ------------------------------------------------------------------------- |
+| `proxy_url`  | Täysi välityspalvelin URL (todennuskirjautumistiedot peitettynä)          |
+| `provider`   | Ylävirran toimittaja ID (openai, antrooppinen jne.)                       |
+| `latency_ms` | Edestakaisen matkan kokonaisaika, mukaan lukien välityspalvelimen kättely |
+| `connect_ms` | TCP vain yhteysaika                                                       |
+| `status`     | HTTP tilakoodi alkupäästä                                                 |
+| `error`      | Virheluokka, jos pyyntö epäonnistui                                       |
+| `timestamp`  | ISO 8601 UTC                                                              |
 
-### Tietojen käyttäminen
+### Tietojen käyttö
 
 ```bash
-# Viimeisimmät välityspalvelintapahtumat
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Varsinainen päätepiste on `/api/usage/proxy-logs` (katso `src/app/api/usage/proxy-logs/route.ts`). Tämä päätepiste tukee seuraavia toimintoja:
+Todellinen päätepiste on `/api/usage/proxy-logs` (katso `src/app/api/usage/proxy-logs/route.ts`). Tämä päätepiste tukee:
 
-- `GET /api/usage/proxy-logs` — hae välityspalvelinlokit
-- `DELETE /api/usage/proxy-logs` — tyhjennä kaikki välityspalvelinlokit
+- `GET /api/usage/proxy-logs` — noutaa välityspalvelimen lokit
+- `DELETE /api/usage/proxy-logs` — tyhjennä kaikki välityspalvelimen lokit
 
-Koostetut tilastot voidaan tarvittaessa hakea suoraan `proxy_logs`-taulusta SQL-kyselyllä. Hallintapaneelin käyttöliittymä voi tarjota koostettuja näkymiä.
+Aggregaattitilastoja voi tarvittaessa kysyä suoraan `proxy_logs` taulukosta SQL kautta. Kojelauta UI voi tarjota yhdistettyjä näkymiä.
 
-### Yleisiä malleja
+### Yleiset mallit
 
-**Tunnista epävakaa välityspalvelin** (vaihtelee onnistumisen ja epäonnistumisen välillä):
+**Tunnista heiluva välityspalvelin** (vaihtelee success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Etsi hitaat välityspalvelimet** (p95-viive > 2 s):
+**Etsi hitaita välityspalvelimia** (p95 latenssi > 2s):
 
 ```sql
 WITH ranked AS (
@@ -725,92 +736,68 @@ ORDER BY latency_ms DESC;
 
 ## Kiertostrategian päätöspuu
 
-Kun yhdelle käyttöalueelle on määritetty useita välityspalvelimia, OmniRoute valitsee kuhunkin pyyntöön käytettävän palvelimen **kiertostrategian** perusteella. Strategia määritetään käyttöaluetasolla (yleinen, palveluntarjoajakohtainen, tilikohtainen tai yhdistelmäkohtainen).
+Kun alueelle on määritetty useita välityspalvelimia, OmniRoute käyttää a** kiertostrategia** valita, kumpaa käytetään kuhunkin pyyntöön. Strategia määritetään laajuustasolla (maailmanlaajuinen, palveluntarjoajakohtainen, tilikohtainen, yhdistelmä).
 
 ### Käytettävissä olevat strategiat
 
-| Strategia          | Käyttötilanne                                      | Kompromissi                                                                               |
-| ------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `quality` (oletus) | Tuotanto, jossa välityspalvelinten laatu vaihtelee | Suosii korkealle arvioituja palvelimia; heikosti arvioidut voivat jäädä ilman liikennettä |
-| `random`           | Kuormanjako, yksityisyys                           | Tasainen jakauma; jättää laatutiedot huomiotta                                            |
-| `sequential`       | Virheenkorjaus, deterministinen testaus            | Kiertää välityspalvelimet järjestyksessä; toiminta on helppo ymmärtää                     |
+| strategia          | Milloin käyttää                                   | Kompromissi                                                                  |
+| ------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `quality` (oletus) | Tuotanto sekalaatuisten välityspalvelinten kanssa | Suosii korkealuokkaisia välityspalvelimia; voivat nääntyä matalapalkkaisille |
+| `random`           | Kuormanjako, yksityisyys                          | Tasainen jakelu; jättää huomioimatta laatusignaalit                          |
+| `sequential`       | Virheenkorjaus, deterministinen testaus           | Kiertää välityspalvelinten läpi järjestyksessä; helppo perustella            |
 
 ### Päätöspuu
 
 ```
-                    Onko välityspalvelimillasi laatupisteet?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-      KYLLÄ                    EI
+       YES                     NO
         │                       │
- Ovatko kaikki                 │
- välityspalvelimet             │
- laadultaan suunnilleen        │
- samanlaisia?                  │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
- KYLLÄ      EI               Käytä
+  YES       NO                Use
    │         │              `random`
-   │         │              (tasainen jakauma
-   │         │              kerryttää laatutietoja
-   │         │              ajan myötä)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Käytä `quality`
-   │    (paras vaihtelevalle
-   │    laadulle)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Käytä `random`
-(jaa kuorma
-tasaisesti)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Omien välityspalvelimiesi automaattinen poissulkeminen vikatilanteessa
+## Omien välityspalvelinten automaattinen epäonnistumisen poissulkeminen
 
-1proxy-markkinapaikan pooli heikentää jo automaattisesti toimimattomien välityspalvelimien luokitusta (katso
-[Välityspalvelimien laatupisteet](#proxy-quality-scores)). Rekisteriin **itse**
-lisäämillesi välityspalvelimille taustalla toimiva kunnonvalvonnan ajastin
-(`src/lib/proxyHealth/scheduler.ts`) tarjoaa saman toiminnon, joka sulkee toimimattoman
-jäsenen automaattisesti pois ketjusta poistamatta mitään:
+1proxy-markkinapaikan pooli heikentää jo automaattisesti epäonnistuneet välityspalvelimet (katso [Välityspalvelimen laatupisteet](#proxy-quality-scores) ). Välityspalvelimet** sinä** Rekisteriin lisätty taustaterveysajastin (`src/lib/proxyHealth/scheduler.ts`) tarjoaa saman "sulje pois kuollut jäsen ketjusta automaattisesti" -toiminnon poistamatta mitään:
 
 ```bash
-# .env — poista välityspalvelin pehmeästi käytöstä 3 peräkkäisen epäonnistuneen tarkistuksen jälkeen ja ota se
-# automaattisesti uudelleen käyttöön, kun se alkaa jälleen vastata tarkistuksiin.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Toiminta usean välityspalvelimen ketjussa:
+Kuinka se sopii usean välityspalvelimen ketjuun:
 
-1. Ajastin tarkistaa jokaisen rekisteröidyn välityspalvelimen `PROXY_HEALTH_INTERVAL_MS`-välein
-   (oletusarvo 10 min; vähintään 1 min).
-2. Kun **varmoja** epäonnistumisia on tapahtunut `PROXY_AUTO_REMOVE_AFTER` kertaa peräkkäin (todellinen
-   yhteysvirhe — aikakatkaisua tai tarkistuskohteen omaa 5xx-virhettä ei koskaan lasketa; katso
-   [Välityspalvelimen kunnon tarkistaminen](#proxy-health-checking-v3816)), välityspalvelimen `status`-arvoksi
-   asetetaan `dead`.
-3. `dead` on yksi niistä tiloista, jotka poolin/kierron määrityksessä käytettävä
-   aktiivisten tilojen suodatin sulkee pois. Tämän vuoksi kohdealueen kierto (vuorottelu / satunnainen / pysyvä /
-   viiveeseen perustuva — katso [Kiertostrategian päätöspuu](#rotation-strategy-decision-tree))
-   lakkaa välittömästi osoittamasta kyseistä välityspalvelinta uusille pyynnöille. Tämä ei vaikuta poolin
-   muihin välityspalvelimiin, eikä koko pooli koskaan siirry huomaamatta käyttämään suoraa
-   yhteyttä — katso [4-tasoinen välityspalvelinjärjestelmä](#4-level-proxy-system) ja sen vikatilanteessa
-   yhteyden estävä suojaus.
-4. Ajastin jatkaa `dead`-tilassa olevien välityspalvelimien tarkistamista samalla aikavälillä. Seuraava
-   onnistunut tarkistus vaihtaa `status`-arvon takaisin arvoon `active`, jolloin välityspalvelin palaa kiertoon —
-   sitä ei tarvitse lisätä uudelleen manuaalisesti.
+1. Ajastin tutkii jokaisen rekisteröidyn välityspalvelimen joka `PROXY_HEALTH_INTERVAL_MS` (oletus 10 min; vähintään 1 min).
+2. `PROXY_AUTO_REMOVE_AFTER` jälkeen peräkkäin** ratkaiseva** epäonnistumisia (todellinen yhteysvirhe — aikakatkaisu tai mittauskohteen oma 5xx ei koskaan laske, katso [Välityspalvelimen kunnon tarkistus](#proxy-health-checking-v3816) ), välityspalvelimen `status` on `dead`.
+3. `dead` on yksi niistä tiloista, jotka pool/rotation -resoluution käyttämä alive-status-suodatin sulkee pois, joten laajuuden kierto (round-robin / random / sticky / latency — katso [Rotation Strategy Decision Tree](#rotation-strategy-decision-tree) ) lopettaa välittömästi välityspalvelimen luovuttamisen uusille pyynnöille. Tämä ei vaikuta muihin altaan välityspalvelimiin, eikä koko pooli koskaan palaa takaisin suoralle yhteydelle — katso [4-tason välityspalvelinjärjestelmän](#4-level-proxy-system) vikasuljettu suoja.
+4. Ajastin tutkii `dead` välityspalvelimia samalla aikavälillä. Seuraava onnistunut anturi kääntää `status` takaisin `active` ksi ja se palaa kiertoon — manuaalista lisäystä ei vaadita.
 
-Tämä on tarkoituksellisesti **valinnainen ja tietoja poistamaton** toiminto: oletusarvoisesti ajastin vain
-laskee ja kirjaa epäonnistumiset (katso käytäntö C tiedostossa `decision.ts`), eikä `PROXY_AUTO_DISABLE`
-koskaan poista riviä — sitä varten on erillinen ja aggressiivisempi
-`PROXY_AUTO_REMOVE`-asetus. Jos molempien arvoksi on asetettu `true`, `PROXY_AUTO_REMOVE`
-on etusijalla (poistettavaa välityspalvelinta ei kannata poistaa ensin väliaikaisesti käytöstä). Katso
-täydellinen muuttujaluettelo [ympäristömääritysten](../reference/ENVIRONMENT.md) viiteoppaasta.
+Tämä on tarkoituksella** opt-in ja tuhoamaton** : oletusarvoisesti ajastin laskee ja kirjaa vain virheitä (katso käytäntö C kohdassa `decision.ts`), ja `PROXY_AUTO_DISABLE` ei koskaan poista riviä — jota varten erillinen, aggressiivisempi `PROXY_AUTO_REMOVE` lippu on tarkoitettu. Jos molemmat on asetettu arvoon `true`, `PROXY_AUTO_REMOVE` voittaa (poistettavissa olevalla välityspalvelimella ei ole käyttöä pehmeälle poistolle välissä). Katso koko muuttujaluettelo kohdasta [Environment Config](../reference/ENVIRONMENT.md).
 
 ---
 
-> 📖 **Aiheeseen liittyvä dokumentaatio:**
+> 📖** Asiaan liittyvä dokumentaatio:**
 >
-> - [Käyttöopas](../guides/USER_GUIDE.md) — Yleiset asennus- ja määritysohjeet
-> - [API-viiteopas](../reference/API_REFERENCE.md) — Täydellinen API-dokumentaatio
-> - [Ympäristömääritykset](../reference/ENVIRONMENT.md) — Kaikki ympäristömuuttujat
+> - [Käyttöopas](../guides/USER_GUIDE.md) — Yleiset asetukset ja konfigurointi - [API Viite](../reference/API_REFERENCE.md) — Täydellinen API -dokumentaatio - [Environment Config](../reference/ENVIRONMENT.md) — Kaikki ympäristömuuttujat

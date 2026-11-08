@@ -4,46 +4,46 @@
 
 ---
 
-> **Lewati pemblokiran geografis, lindungi identitas Anda, dan rutekan lalu lintas AI melalui proksi apa pun — tanpa kerumitan konfigurasi.**
+> **Lewati blok geografis, lindungi identitas Anda, dan rutekan lalu lintas AI melalui proxy — apa pun tanpa kompleksitas konfigurasi.**
 
-OmniRoute menyertakan sistem manajemen proksi berfitur lengkap yang memungkinkan Anda merutekan lalu lintas penyedia AI upstream melalui proksi HTTP, HTTPS, atau SOCKS5. Baik Anda berada di wilayah yang diblokir, memerlukan rotasi IP, maupun menginginkan penyamaran sidik jari — panduan ini mencakup semuanya.
+OmniRoute menyertakan sistem manajemen proksi berfitur lengkap yang memungkinkan Anda merutekan lalu lintas penyedia AI hulu melalui proksi HTTP, HTTPS, atau SOCKS5. Baik Anda berada di wilayah yang diblokir, memerlukan rotasi IP, atau ingin sidik jari tersembunyi — panduan ini mencakup semuanya.
 
 ---
 
-## Daftar Isi
+## Daftar isi
 
-- [Mengapa Menggunakan Proksi?](#why-use-proxies)
+- [Mengapa Menggunakan Proxy?](#why-use-proxies)
 - [Ikhtisar Arsitektur](#architecture-overview)
 - [Sistem Proksi 4 Tingkat](#4-level-proxy-system)
 - [Registri Proksi (CRUD)](#proxy-registry-crud)
-- [Marketplace Gratis 1proxy](#1proxy-free-proxy-marketplace)
+- [1proxy Pasar Gratis](#1proxy-free-proxy-marketplace)
 - [Rotasi Proksi](#proxy-rotation)
-- [Anti-Deteksi & Penyamaran](#anti-detection--stealth)
-- [Mode Proksi Upstream](#upstream-proxy-modes)
-- [UI Dasbor](#dashboard-ui)
+- [Anti-Deteksi & Siluman](#anti-detection--stealth)
+- [Mode Proksi Hulu](#upstream-proxy-modes)
+- [Dasbor UI](#dashboard-ui)
 - [Referensi API](#api-reference)
 - [Variabel Lingkungan](#environment-variables)
-- [Pemecahan Masalah](#troubleshooting)
+- [Pemecahan masalah](#troubleshooting)
 
 ---
 
-## Mengapa Menggunakan Proksi?
+## Mengapa Menggunakan Proxy?
 
-Banyak penyedia AI membatasi akses berdasarkan wilayah geografis. Pengembang di **Rusia, Tiongkok, Iran, Kuba, Turki**, dan negara-negara lainnya mengalami kesalahan seperti:
+Banyak penyedia AI membatasi akses berdasarkan wilayah geografis. Pengembang di** Rusia, Cina, Iran, Kuba, Turki** , dan negara lain mengalami kesalahan seperti:
 
 ```
 unsupported_country_region_territory
 ```
 
-Bahkan di luar wilayah yang diblokir, proksi berguna untuk:
+Bahkan di luar wilayah yang diblokir, proxy berguna untuk:
 
-| Kasus Penggunaan                | Deskripsi                                                                    |
-| ------------------------------- | ---------------------------------------------------------------------------- |
-| **Lewati pembatasan geografis** | Mengakses OpenAI, Anthropic, Codex, Copilot dari negara yang diblokir        |
-| **Rotasi IP**                   | Mendistribusikan permintaan ke beberapa IP untuk menghindari pembatasan laju |
-| **Privasi**                     | Menyembunyikan IP asli Anda dari penyedia upstream                           |
-| **Kepatuhan**                   | Merutekan lalu lintas melalui yurisdiksi tertentu                            |
-| **Pengujian**                   | Menyimulasikan permintaan dari wilayah yang berbeda                          |
+| Kasus Penggunaan           | Keterangan                                                                  |
+| -------------------------- | --------------------------------------------------------------------------- |
+| **Jalan pintas geografis** | Akses OpenAI, Anthropic, Codex, Copilot dari negara yang diblokir           |
+| **rotasi IP**              | Distribusikan permintaan ke beberapa IPs untuk menghindari pembatasan tarif |
+| **Pribadi**                | Sembunyikan IP asli Anda dari penyedia hulu                                 |
+| **Kepatuhan**              | Rutekan lalu lintas melalui yurisdiksi tertentu                             |
+| **Pengujian**              | Simulasikan permintaan dari berbagai wilayah                                |
 
 ---
 
@@ -51,101 +51,112 @@ Bahkan di luar wilayah yang diblokir, proksi berguna untuk:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Server OmniRoute                        │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Registri    │    │ Dispatcher   │    │ Fetch            │  │
-│  │ Proksi      │───▶│ Proksi       │───▶│ (undici)         │  │
-│  │ (SQLite)    │    │ (di-cache)   │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Sinkronisasi│                        │ API Penyedia     │  │
-│  │ 1proxy      │                        │ Upstream         │  │
-│  │ (pool gratis)│                       │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 ### Komponen Utama
 
-| Komponen              | File                                         | Peran                                                       |
-| --------------------- | -------------------------------------------- | ----------------------------------------------------------- |
-| **Registri Proksi**   | `src/lib/db/proxies.ts`                      | CRUD untuk entri proksi + penetapan cakupan                 |
-| **Dispatcher Proksi** | `open-sse/utils/proxyDispatcher.ts`          | Membuat dispatcher `undici` ProxyAgent/SOCKS dengan caching |
-| **Fetch Proksi**      | `open-sse/utils/proxyFetch.ts`               | Membungkus `fetch()` dengan injeksi dispatcher proksi       |
-| **Rute Pengaturan**   | `src/app/api/settings/proxy/route.ts`        | API konfigurasi proksi lama (GET/PUT/DELETE)                |
-| **Rute Manajemen**    | `src/app/api/v1/management/proxies/route.ts` | API CRUD registri (GET/POST/PATCH/DELETE)                   |
-| **DB 1proxy**         | `src/lib/db/oneproxy.ts`                     | Persistensi marketplace proksi gratis                       |
+| Komponen               | Mengajukan                                   | Peran                                                     |
+| ---------------------- | -------------------------------------------- | --------------------------------------------------------- |
+| **Registri Proksi**    | `src/lib/db/proxies.ts`                      | CRUD untuk entri proxy penetapan cakupan +                |
+| **Pengirim Proksi**    | `open-sse/utils/proxyDispatcher.ts`          | Membuat operator `undici` ProxyAgent/SOCKS dengan caching |
+| **Pengambilan Proksi** | `open-sse/utils/proxyFetch.ts`               | Membungkus `fetch()` dengan injeksi operator proxy        |
+| **Pengaturan Rute**    | `src/app/api/settings/proxy/route.ts`        | Konfigurasi proksi lama API (GET/PUT/DELETE)              |
+| **Rute Pengelolaan**   | `src/app/api/v1/management/proxies/route.ts` | Registri CRUD API (GET/POST/PATCH/DELETE)                 |
+| **1proksi DB**         | `src/lib/db/oneproxy.ts`                     | Kegigihan pasar proxy gratis                              |
 
 ---
 
-## Sistem Proxy 4 Tingkat
+## Status proksi default untuk akun baru
 
-OmniRoute mendukung konfigurasi proxy pada **empat cakupan independen**, yang diresolusikan berdasarkan urutan prioritas:
+Di dalam** Pengaturan → Proxy → Konfigurasi global** , menggunakan** Aktifkan proxy secara default untuk koneksi baru** untuk memilih status proksi awal dari akun penyedia yang baru ditambahkan.
+
+Pengaturan baru mengontrol status proksi awal dari akun penyedia yang baru ditambahkan. Itu tidak mengubah akun yang ada atau menggantikan saklar proksi global. Nilai awalnya mempertahankan perilaku sebelumnya. Nonaktifkan sekali untuk membuat akun berikutnya dengan proxy yang dinonaktifkan secara default.
+
+Preferensi disimpan sebagai `defaultNewConnectionProxyEnabled` melalui Pengaturan yang ada API. Defaultnya adalah `true` ketika tidak pernah disimpan. Menyimpan `false` berlaku untuk akun baru berikutnya tanpa memulai ulang. `POST /api/providers` menerima boolean ketat opsional `proxyEnabled`; `true` atau `false` eksplisit lebih diutamakan daripada default pembuatan. Kelalaian pada akun duplikat atau penyambungan kembali OAuth mempertahankan status penyimpanan akun tersebut. Akun individual masih dapat diaktifkan atau dinonaktifkan setelahnya.
+
+Transfer penyedia selektif menggunakan default instalasi tujuan untuk akun baru dan mempertahankan kebijakan tujuan saat mengganti akun yang ada. Tombol alih proxy bukanlah bidang transfer portabel. Pemulihan cadangan penuh dan migrasi JSON/SQL historis mempertahankan semantik pemulihan yang ada, termasuk nilai akun yang disimpan dan default skema lama; pemulihan pengaturan penuh juga dapat memulihkan preferensi ini.
+
+Preferensi ini tidak menetapkan proxy atau menetapkan bahwa proxy tersebut sehat atau sedang digunakan. Perutean sebenarnya masih bergantung pada saklar proksi global dan konfigurasi proksi yang berlaku. Penyedia sintetis tanpa akun tetap, lalu lintas OAuth sebelum pembuatan akun, proxy environment/system, dan jaringan backend eksternal berada di luar cakupannya.
+
+## Sistem Proksi 4 Tingkat
+
+OmniRoute mendukung konfigurasi proxy di** empat ruang lingkup independen** , diselesaikan dalam urutan prioritas:
 
 ```
-Urutan Prioritas Resolusi (tertinggi → terendah):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Proxy Akun/Koneksi  →  per kunci API / koneksi OAuth
-  2. 🟡 Proxy Penyedia      →  per penyedia (misalnya, semua lalu lintas OpenAI)
-  3. 🟠 Proxy Kombo         →  per konfigurasi kombo/perutean
-  4. 🟢 Proxy Global        →  semua lalu lintas, semua penyedia
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Cara Kerja Resolusi
+### Bagaimana Resolusi Bekerja
 
-Ketika OmniRoute mengirim permintaan ke penyedia hulu, OmniRoute memanggil `resolveProxyForConnectionFromRegistry()` yang memeriksa setiap tingkat secara berurutan:
+Ketika OmniRoute mengirimkan permintaan ke penyedia upstream, ia memanggil `resolveProxyForConnectionFromRegistry()` yang memeriksa setiap level secara berurutan:
 
-1. **Tingkat akun** — Apakah ada proxy yang ditetapkan ke ID koneksi tertentu ini?
-2. **Tingkat penyedia** — Apakah ada proxy yang ditetapkan ke penyedia ini (misalnya, `openai`)?
+1. **Tingkat akun** — Apakah ada proxy yang ditugaskan untuk koneksi khusus ini ID?
+2. **Tingkat penyedia** — Apakah ada proxy yang ditugaskan ke penyedia ini (misal, `openai`)?
 3. **Tingkat global** — Apakah ada proxy global yang dikonfigurasi?
-4. **Tanpa proxy** — Koneksi langsung ke penyedia.
+4. **Tidak ada proksi** — Koneksi langsung ke penyedia.
 
-Kecocokan pertama akan digunakan. Artinya, Anda dapat menetapkan proxy global sebagai cadangan, tetapi menggantinya untuk penyedia atau koneksi tertentu.
+Pertandingan pertama menang. Ini berarti Anda dapat mengatur proksi global sebagai cadangan tetapi menggantinya untuk penyedia atau koneksi tertentu.
 
-### Lalu Lintas yang Menggunakan Proxy
+### Apa yang Diproksikan
 
-| Jenis Lalu Lintas      | Menggunakan Proxy? | Catatan                                          |
-| ---------------------- | ------------------ | ------------------------------------------------ |
-| Penyelesaian chat      | ✅                 | Semua permintaan `/v1/chat/completions`          |
-| Embedding              | ✅                 | `/v1/embeddings`                                 |
-| Pembuatan gambar       | ✅                 | `/v1/images/generations`                         |
-| Audio (TTS/STT)        | ✅                 | `/v1/audio/*`                                    |
-| Pertukaran token OAuth | ✅                 | Mengatasi `unsupported_country_region_territory` |
-| Pengujian koneksi      | ✅                 | Tombol "Uji Koneksi" menggunakan proxy           |
-| Penyegaran token       | ✅                 | Pembaruan OAuth di latar belakang                |
-| Sinkronisasi model     | ✅                 | Pencantuman dan penemuan model                   |
+| Jenis Lalu Lintas      | Diproksi? | Catatan                                           |
+| ---------------------- | --------- | ------------------------------------------------- |
+| Selesainya obrolan     | ✅        | Semua permintaan `/v1/chat/completions`           |
+| Penyematan             | ✅        | `/v1/embeddings`                                  |
+| Pembuatan gambar       | ✅        | `/v1/images/generations`                          |
+| Audio (TTS/STT)        | ✅        | `/v1/audio/*`                                     |
+| pertukaran token OAuth | ✅        | Memecahkan `unsupported_country_region_territory` |
+| Tes koneksi            | ✅        | Tombol "Uji Koneksi" menggunakan proxy            |
+| Penyegaran token       | ✅        | Pembaruan OAuth latar belakang                    |
+| Sinkronisasi model     | ✅        | Daftar dan penemuan model                         |
 
 ---
 
-## Registri Proxy (CRUD)
+## Registri Proksi (CRUD)
 
-Registri proxy adalah tabel SQLite (`proxy_registry`) yang menyimpan semua proxy Anda. Setiap proxy memiliki:
+Registri proksi adalah tabel SQLite (`proxy_registry`) yang menyimpan semua proksi Anda. Setiap proksi memiliki:
 
-| Bidang     | Tipe    | Deskripsi                                             |
-| ---------- | ------- | ----------------------------------------------------- |
-| `id`       | UUID    | Pengidentifikasi unik                                 |
-| `name`     | String  | Label yang mudah dibaca manusia                       |
-| `type`     | String  | Protokol: `http`, `https`, `socks5`                   |
-| `host`     | String  | Nama host atau IP proxy                               |
-| `port`     | Integer | Nomor port                                            |
-| `username` | String  | Nama pengguna autentikasi (terenkripsi saat disimpan) |
-| `password` | String  | Kata sandi autentikasi (terenkripsi saat disimpan)    |
-| `region`   | String  | Label wilayah geografis                               |
-| `notes`    | String  | Catatan teks bebas                                    |
-| `status`   | String  | `active` atau `inactive`                              |
-| `source`   | String  | `manual` atau `oneproxy`                              |
+| Bidang     | Jenis          | Keterangan                                            |
+| ---------- | -------------- | ----------------------------------------------------- |
+| `id`       | UUID           | Pengidentifikasi unik                                 |
+| `name`     | Rangkaian      | Label yang dapat dibaca manusia                       |
+| `type`     | Rangkaian      | Protokol: `http`, `https`, `socks5`                   |
+| `host`     | Rangkaian      | Nama host proxy atau IP                               |
+| `port`     | Bilangan bulat | Nomor pelabuhan                                       |
+| `username` | Rangkaian      | Nama pengguna autentikasi (dienkripsi saat istirahat) |
+| `password` | Rangkaian      | Kata sandi autentikasi (dienkripsi saat istirahat)    |
+| `region`   | Rangkaian      | Label wilayah geografis                               |
+| `notes`    | Rangkaian      | Catatan teks bebas                                    |
+| `status`   | Rangkaian      | `active` atau `inactive`                              |
+| `source`   | Rangkaian      | `manual` atau `oneproxy`                              |
 
-### Membuat Proxy
+### Membuat Proksi
 
 **Melalui Dasbor:**
 
-1. Buka **Pengaturan → Proxy**
-2. Klik **Tambah Proxy**
-3. Isi tipe, host, port, dan kredensial autentikasi opsional
-4. Simpan
+1. Pergi ke** Pengaturan → Proksi**
+2. Klik** Tambahkan Proksi**
+3. Isi jenis, host, port, dan kredensial autentikasi opsional
+4. Menyimpan
 
 **Melalui API:**
 
@@ -163,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Memperbarui Proxy
+### Memperbarui Proksi
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -175,54 +186,54 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Catatan:** Kredensial dipertahankan kecuali Anda secara eksplisit mengirimkan nilai pengganti yang tidak kosong. Mengirim string kosong untuk `username`/`password` akan mempertahankan nilai yang tersimpan.
+> **Catatan:** Kredensial dipertahankan kecuali Anda secara eksplisit mengirimkan pengganti yang tidak kosong. Mengirim string kosong untuk `username`/`password` akan mempertahankan nilai yang disimpan.
 
-### Menghapus Proxy
+### Menghapus Proksi
 
 ```bash
-# Gagal jika proxy ditetapkan ke cakupan apa pun
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Hapus paksa (juga menghapus penetapan)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Menampilkan Daftar Proxy
+### Daftar Proksi
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Menetapkan Proxy ke Cakupan
+### Menetapkan Proksi ke Cakupan
 
 ```bash
-# Tetapkan ke cakupan global
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Tetapkan ke penyedia tertentu
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Tetapkan ke koneksi/kunci tertentu
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Meresolusikan Proxy Efektif
+### Menyelesaikan Proxy yang Efektif
 
-Periksa proxy yang akan digunakan untuk koneksi tertentu:
+Periksa proxy mana yang akan digunakan untuk koneksi tertentu:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Mengembalikan proxy hasil resolusi beserta tingkatnya (`account`, `provider`, atau `global`) dan sumbernya.
+Mengembalikan proksi yang terselesaikan beserta levelnya (`account`, `provider`, atau `global`) dan sumbernya.
 
-### Penetapan Massal
+### Penugasan Massal
 
 Tetapkan satu proxy ke beberapa penyedia atau koneksi sekaligus:
 
@@ -236,93 +247,93 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Impor/Ekspor
+### Import/Export
 
-Proxy disertakan dalam sistem **Pencadangan/Pemulihan**. Saat Anda mengekspor konfigurasi OmniRoute:
+Proksi disertakan dalam**Backup/Restore** sistem. Saat Anda mengekspor konfigurasi OmniRoute Anda:
 
-1. Buka **Dasbor → Pengaturan → Pencadangan**
-2. Klik **Ekspor** — registri proxy dan penetapannya akan disertakan
-3. Untuk memulihkan, klik **Impor** dan unggah file cadangan
+1. Pergi ke** Dasbor → Pengaturan → Cadangan**
+2. Klik** Ekspor** registri dan penugasan proxy — disertakan
+3. Untuk memulihkan, klik** Impor** dan unggah file cadangan
 
-Registri proxy juga mendukung **upsert berdasarkan host+port** — jika Anda mengimpor proxy yang sudah ada (host dan port yang sama), proxy tersebut akan diperbarui alih-alih membuat duplikat.
+Registri proxy juga mendukung** dimasukkan oleh port host +** — jika Anda mengimpor proxy yang sudah ada (host dan port yang sama), proxy tersebut akan diperbarui alih-alih membuat duplikat.
 
-### Migrasi Lama
+### Migrasi Warisan
 
-Jika Anda mengonfigurasi proxy pada versi lama (sebelum registry), OmniRoute akan memigrasikannya secara otomatis:
+Jika Anda mengonfigurasi proxy di versi yang lebih lama (prapendaftaran), OmniRoute secara otomatis memigrasikannya:
 
 ```
-Penyimpanan key_value lama → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Proses ini hanya terjadi sekali saat startup pertama setelah upgrade. Gunakan `migrateLegacyProxyConfigToRegistry({ force: true })` untuk menjalankannya kembali.
+Ini terjadi sekali pada permulaan pertama setelah pemutakhiran. Gunakan `migrateLegacyProxyConfigToRegistry({ force: true })` untuk menjalankan kembali.
 
 ---
 
-## Marketplace Proxy Gratis 1proxy
+## 1proxy Pasar Proxy Gratis
 
-> 🆕 **Dikontribusikan oleh [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Isu [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Dikontribusikan oleh [@ oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Masalah [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute terintegrasi dengan platform komunitas **[1proxy](https://1proxy-api.aitradepulse.com)** untuk menyediakan akses ke **ratusan proxy gratis yang telah divalidasi** dari seluruh dunia. Fitur ini sangat cocok bagi pengguna yang tidak memiliki infrastruktur proxy sendiri.
+OmniRoute terintegrasi dengan** [1proksi](https://1proxy-api.aitradepulse.com)** platform komunitas untuk menyediakan akses** ratusan proxy gratis dan tervalidasi** dari seluruh dunia. Ini sempurna untuk pengguna yang tidak memiliki infrastruktur proxy sendiri.
 
 ### Cara Kerjanya
 
 ```
-┌─────────────┐   Sinkronisasi ┌─────────────────┐    Rotasi     ┌──────────┐
-│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Penyedia │
-│ (eksternal) │ hingga 500    │  source=oneproxy │ berdasarkan   │   API    │
-└─────────────┘    proxy      └─────────────────┘   kualitas    └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Sinkronisasi** — OmniRoute mengambil proxy yang telah divalidasi dari 1proxy API
-2. **Penyimpanan** — Proxy disimpan dalam tabel `proxy_registry` yang sama dengan `source = 'oneproxy'`
-3. **Pemfilteran** — Filter berdasarkan protokol, negara, dan skor kualitas
-4. **Rotasi** — Pilih proxy terbaik menggunakan strategi berdasarkan kualitas, acak, atau berurutan
-5. **Penurunan otomatis** — Skor kualitas proxy yang gagal akan dikurangi; jika di bawah ambang batas → ditandai tidak aktif
+1. **Sinkronisasi** — OmniRoute mengambil proxy yang divalidasi dari 1proxy API
+2. **Toko** — Proksi disimpan dalam tabel `proxy_registry` yang sama dengan `source = 'oneproxy'`
+3. **Menyaring** — Filter berdasarkan protokol, negara, skor kualitas
+4. **Memutar** — Pilih proxy terbaik menggunakan strategi berkualitas, acak, atau berurutan
+5. **Degradasi otomatis** — Proxy yang gagal mendapatkan skor kualitasnya berkurang; di bawah ambang batas → ditandai tidak aktif
 
-### Menyinkronkan Proxy
+### Menyinkronkan Proksi
 
 **Melalui Dasbor:**
 
-1. Buka tab **Pengaturan → 1proxy**
-2. Klik **"Sinkronkan Sekarang"**
-3. Lihat statistik: jumlah total proxy, jumlah aktif, kualitas rata-rata, dan perincian berdasarkan negara
+1. Pergi ke** Pengaturan → 1proxy** tab
+2. Klik** "Sinkronkan Sekarang"**
+3. Lihat statistik: total proxy, jumlah aktif, kualitas rata-rata, perincian menurut negara
 
 **Melalui API:**
 
 ```bash
-# Picu sinkronisasi
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Respons:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### Memfilter Proxy
+### Memfilter Proksi
 
 ```bash
-# Filter berdasarkan protokol
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Filter berdasarkan negara
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Filter berdasarkan skor kualitas minimum
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Gabungkan filter
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Skor Kualitas Proxy
+### Angka Mutu Proksi
 
-Setiap proxy 1proxy dilengkapi dengan metadata:
+Setiap proksi 1proxy dilengkapi dengan metadata:
 
-| Bidang          | Deskripsi                                   |
+| Bidang          | Keterangan                                  |
 | --------------- | ------------------------------------------- |
-| `qualityScore`  | Peringkat 0-100 dari validasi 1proxy        |
-| `latencyMs`     | Latensi jaringan yang diukur                |
+| `qualityScore`  | Peringkat 0-100 dari 1 validasi proxy       |
+| `latencyMs`     | Latensi jaringan diukur                     |
 | `anonymity`     | `transparent`, `anonymous`, atau `elite`    |
 | `googleAccess`  | Apakah proxy dapat mengakses layanan Google |
 | `countryCode`   | Kode negara ISO dua huruf                   |
@@ -330,92 +341,92 @@ Setiap proxy 1proxy dilengkapi dengan metadata:
 
 Skor kualitas disesuaikan secara dinamis:
 
-- **Permintaan yang gagal** mengurangi skor sebanyak 10 poin
-- **Skor turun hingga ≤10** → proxy ditandai `inactive`
-- Proxy yang tidak aktif dikecualikan dari rotasi
+- **Permintaan gagal** mengurangi skor sebanyak 10 poin
+- **Skor turun menjadi ≤ 10** proksi → ditandai `inactive`
+- Proksi yang tidak aktif dikecualikan dari rotasi
 
 ### Strategi Rotasi
 
 ```bash
-# Rotasi berdasarkan kualitas (proxy terbaik terlebih dahulu) — default
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Rotasi acak
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Berurutan (yang paling lama tidak divalidasi didahulukan)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Circuit Breaker
+### Pemutus Arus
 
-Sinkronisasi 1proxy memiliki circuit breaker bawaan:
+Sinkronisasi 1proxy memiliki pemutus sirkuit bawaan:
 
-- Setelah **5 kegagalan sinkronisasi berturut-turut**, upaya sinkronisasi berikutnya akan diblokir
-- Atur ulang dengan: `resetOneproxyCircuitBreaker()` atau mulai ulang server
+- Setelah** 5 kegagalan sinkronisasi berturut-turut** , upaya sinkronisasi lebih lanjut diblokir
+- Reset dengan: `resetOneproxyCircuitBreaker()` atau restart server
 - Status sinkronisasi tersedia di `GET /api/settings/oneproxy?action=status`
 
-### Menghapus Proxy 1proxy
+### Menghapus 1proxy Proxy
 
 ```bash
-# Hapus satu proxy 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Hapus SEMUA proxy 1proxy (proxy manual tidak terpengaruh)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Anti-Deteksi & Mode Siluman
+## Anti-Deteksi & Siluman
 
-OmniRoute tidak hanya merutekan lalu lintas melalui proksi — OmniRoute membuat lalu lintas tersebut terlihat sah:
+OmniRoute tidak hanya mengarahkan lalu lintas melalui proxy — tetapi juga membuat lalu lintas terlihat sah:
 
-### Pemalsuan Sidik Jari TLS
+### TLS Pemalsuan Sidik Jari
 
-Menggunakan `wreq-js` untuk menghasilkan sidik jari TLS yang menyerupai browser, sehingga dapat melewati sistem deteksi bot yang menandai handshake TLS non-browser.
+Menggunakan `wreq-js` untuk menghasilkan sidik jari TLS seperti browser, melewati sistem deteksi bot yang menandai jabat tangan TLS non-browser.
 
-### Pencocokan Sidik Jari CLI
+### CLI Pencocokan Sidik Jari
 
-**Tombol Sidik Jari CLI** (`Pengaturan → Keamanan`) mengurutkan ulang header HTTP dan bidang isi JSON agar cocok dengan karakteristik persis biner CLI native (Claude Code, Codex, dll.). Fitur ini bekerja **di atas** proksi:
+Itu**CLI Pengalih Sidik Jari** (`Settings → Security`) menyusun ulang header HTTP dan bidang isi JSON agar sesuai dengan tanda tangan persis binari CLI asli ( Kode Claude, Codex, dll.). Ini berhasil** di atas** proksi:
 
 ```
-IP Anda (diblokir) → IP Proksi (AS) → API Penyedia
-                     + pemalsuan TLS
-                     + sidik jari CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Anda mendapatkan **penyamaran IP** dan **keaslian permintaan** secara bersamaan.
+Anda mendapatkan keduanya** penyamaran IP** Dan** meminta keaslian** serentak.
 
-### Pemeliharaan IP Proksi
+### Pelestarian proksi IP
 
-Lencana berkode warna di dasbor menunjukkan tingkat proksi yang sedang aktif:
+Lencana berkode warna di dasbor menunjukkan tingkat proxy mana yang aktif:
 
-| Lencana | Tingkat  | Arti                                            |
-| ------- | -------- | ----------------------------------------------- |
-| 🟢      | Global   | Semua lalu lintas melewati proksi ini           |
-| 🟡      | Penyedia | Hanya lalu lintas penyedia ini yang diproksikan |
-| 🔵      | Koneksi  | Kunci/akun tertentu ini menggunakan proksi ini  |
+| Lencana | Tingkat  | Arti                                         |
+| ------- | -------- | -------------------------------------------- |
+| 🟢      | Global   | Semua lalu lintas melewati proxy ini         |
+| 🟡      | Penyedia | Hanya lalu lintas penyedia ini yang diproksi |
+| 🔵      | Koneksi  | key/account khusus ini menggunakan proxy ini |
 
-Lencana tersebut juga menampilkan IP proksi yang telah di-resolve untuk verifikasi.
+Lencana juga menunjukkan proksi IP yang terselesaikan untuk verifikasi.
 
 ---
 
-## Mode Proksi Upstream
+## Mode Proksi Hulu
 
 Untuk penyedia yang menggunakan pola CLIProxyAPI, OmniRoute mendukung tiga mode proksi upstream:
 
-| Mode          | Deskripsi                                                        |
-| ------------- | ---------------------------------------------------------------- |
-| `native`      | OmniRoute menangani perutean proksi secara langsung (default)    |
-| `cliproxyapi` | Mendelegasikan ke instans CLIProxyAPI eksternal                  |
-| `fallback`    | Mencoba mode native terlebih dahulu, lalu beralih ke CLIProxyAPI |
+| Mode          | Keterangan                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `native`      | OmniRoute menangani perutean proxy secara langsung (default) |
+| `cliproxyapi` | Delegasi ke instance CLIProxyAPI eksternal                   |
+| `fallback`    | Mencoba yang asli dulu, kembali ke CLIProxyAPI               |
 
-Konfigurasikan per penyedia:
+Konfigurasi per penyedia:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## UI Dasbor
+## Dasbor UI
 
-### Pengaturan → Tab Proksi
+### Pengaturan → Proxy Tab
 
-- Konfigurasi **proksi global** (atur sekali untuk seluruh lalu lintas)
-- Penggantian **proksi per penyedia**
-- Penetapan **proksi per koneksi**
-- **Pengujian koneksi** melalui proksi yang telah dikonfigurasi
-- **Lencana berkode warna** yang menunjukkan tingkat proksi aktif
+- **Proksi global** konfigurasi (ditetapkan sekali untuk semua lalu lintas)
+- **Proksi per penyedia** menimpa
+- **Proksi per koneksi** tugas
+- **Tes koneksi** melalui proxy yang dikonfigurasi
+- **Lencana berkode warna** menunjukkan tingkat proxy aktif
 
-### Pengaturan → Tab 1proxy
+### Pengaturan → 1proxy Tab
 
-- Tombol **Sinkronkan Sekarang** untuk mengambil proksi gratis
-- **Kartu statistik**: Total, Aktif, Kualitas Rata-rata, Sinkronisasi Terakhir
-- **Filter**: Protokol, Kode Negara, Kualitas Minimum
-- **Tabel proksi** yang memuat host, protokol, negara, skor kualitas, latensi, anonimitas, dan akses Google
-- Panel **status sinkronisasi** dengan pelacakan keberhasilan/kegagalan serta jumlah kegagalan berturut-turut
+- **Sinkronkan Sekarang** tombol untuk mengambil proxy gratis
+- **Kartu statistik** : Total, Aktif, Kualitas Rata-Rata, Sinkronisasi Terakhir
+- **Filter** : Protokol, Kode Negara, Kualitas Min
+- **Tabel proxy** dengan host, protokol, negara, skor kualitas, latensi, anonimitas, akses Google
+- **Status sinkronisasi** panel dengan pelacakan success/failure dan jumlah kegagalan berturut-turut
 - **Hapus Semua** untuk menghapus semua entri 1proxy
 
 ---
 
 ## Referensi API
 
-### API Pengaturan Proksi
+### Pengaturan Proksi API
 
-| Metode   | Endpoint                                       | Deskripsi                              |
-| -------- | ---------------------------------------------- | -------------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Mendapatkan konfigurasi proksi lengkap |
-| `GET`    | `/api/settings/proxy?level=global`             | Mendapatkan proksi global              |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Mendapatkan proksi penyedia            |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Me-resolve proksi efektif              |
-| `PUT`    | `/api/settings/proxy`                          | Memperbarui konfigurasi proksi         |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Menghapus proksi pada tingkat ini      |
+| Metode   | Titik akhir                                    | Keterangan                         |
+| -------- | ---------------------------------------------- | ---------------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Dapatkan konfigurasi proxy lengkap |
+| `GET`    | `/api/settings/proxy?level=global`             | Dapatkan proksi global             |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Dapatkan proksi penyedia           |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Selesaikan proksi yang efektif     |
+| `PUT`    | `/api/settings/proxy`                          | Perbarui konfigurasi proksi        |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Hapus proxy di level               |
 
-### API Registri Proksi
+### Registri Proksi API
 
-| Metode   | Endpoint                                          | Deskripsi                         |
-| -------- | ------------------------------------------------- | --------------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Menampilkan semua proksi          |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Mendapatkan proksi berdasarkan ID |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Mendapatkan penetapan proksi      |
-| `POST`   | `/api/v1/management/proxies`                      | Membuat proksi                    |
-| `PATCH`  | `/api/v1/management/proxies`                      | Memperbarui proksi                |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Menghapus proksi                  |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Menghapus secara paksa            |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Menetapkan secara massal          |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Menampilkan daftar penetapan      |
-| `GET`    | `/api/v1/management/proxies/health`               | Statistik kesehatan proksi        |
+| Metode   | Titik akhir                                       | Keterangan                |
+| -------- | ------------------------------------------------- | ------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | Daftar semua proxy        |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Dapatkan proksi dengan ID |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Dapatkan tugas proxy      |
+| `POST`   | `/api/v1/management/proxies`                      | Buat proksi               |
+| `PATCH`  | `/api/v1/management/proxies`                      | Perbarui proksi           |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Hapus proksi              |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Hapus paksa               |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Penugasan massal          |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Daftar tugas              |
+| `GET`    | `/api/v1/management/proxies/health`               | Statistik kesehatan proxy |
 
-### API Tunnel
+### Terowongan API
 
-Untuk mengekspos instans OmniRoute Anda ke internet publik (Cloudflare/ngrok/Tailscale), alih-alih merutekan lalu lintas keluar melalui proksi, lihat [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). REST API tunnel berada di bawah `/api/tunnels/{cloudflared,ngrok,tailscale}/*` dan tidak bergantung pada rantai proksi keluar yang didokumentasikan di atas.
+Untuk mengekspos instance OmniRoute Anda ke internet publik (Cloudflare/ngrok/Tailscale) alih-alih merutekan keluar melalui proksi, lihat [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Terowongan REST API berada di bawah `/api/tunnels/{cloudflared,ngrok,tailscale}/*` dan ortogonal terhadap rantai proksi keluar yang didokumentasikan di atas.
 
-### API 1proxy
+### 1proksi API
 
-| Metode   | Endpoint                               | Deskripsi                                   |
-| -------- | -------------------------------------- | ------------------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | Menampilkan daftar proksi 1proxy            |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Mendapatkan statistik + status sinkronisasi |
-| `GET`    | `/api/settings/oneproxy?action=status` | Hanya mendapatkan status sinkronisasi       |
-| `POST`   | `/api/settings/oneproxy`               | Memicu sinkronisasi                         |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Beralih ke proksi berikutnya                |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Menghapus satu proksi                       |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Menghapus semuanya                          |
+| Metode   | Titik akhir                            | Keterangan                               |
+| -------- | -------------------------------------- | ---------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Daftar 1proxy proxy                      |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Dapatkan statistik status sinkronisasi + |
+| `GET`    | `/api/settings/oneproxy?action=status` | Dapatkan status sinkronisasi saja        |
+| `POST`   | `/api/settings/oneproxy`               | Sinkronisasi pemicu                      |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Putar ke proksi berikutnya               |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Hapus satu                               |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Hapus semuanya                           |
 
-### API Proksi Upstream
+### Proksi Hulu API
 
-| Metode   | Endpoint                          | Deskripsi                               |
-| -------- | --------------------------------- | --------------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Mendapatkan konfigurasi proksi upstream |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Menetapkan mode proksi upstream         |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Menghapus konfigurasi proksi upstream   |
+| Metode   | Titik akhir                       | Keterangan                       |
+| -------- | --------------------------------- | -------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Dapatkan konfigurasi proksi hulu |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Atur mode proksi hulu            |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Hapus konfigurasi proksi hulu    |
 
 ---
 
 ## Variabel Lingkungan
 
-| Variabel              | Default | Deskripsi                                                          |
-| --------------------- | ------- | ------------------------------------------------------------------ |
-| `ENABLE_SOCKS5_PROXY` | `true`  | Aktifkan dukungan proksi SOCKS5 (default `true` di `.env.example`) |
+| Variabel              | Bawaan | Keterangan                                                         |
+| --------------------- | ------ | ------------------------------------------------------------------ |
+| `ENABLE_SOCKS5_PROXY` | `true` | Aktifkan dukungan proxy SOCKS5 ( `true` default di `.env.example`) |
 
 ---
 
-## Pemecahan Masalah
+## Pemecahan masalah
 
-### "Proksi SOCKS5 dinonaktifkan"
+### "proksi SOCKS5 dinonaktifkan"
 
-Tetapkan `ENABLE_SOCKS5_PROXY=true` dalam file `.env` Anda, lalu mulai ulang.
+Atur `ENABLE_SOCKS5_PROXY=true` di file `.env` Anda dan mulai ulang.
 
-### Error "socket hang up" saat melalui proksi
+### kesalahan "socket hang up" melalui proxy
 
-Hal ini normal pada proksi murah yang memutus koneksi tidak aktif. OmniRoute telah menanganinya dengan:
+Hal ini normal terjadi pada proxy murah yang menghentikan koneksi menganggur. OmniRoute sudah menangani ini dengan:
 
-- Menonaktifkan keep-alive pada koneksi proksi (`keepAliveTimeout: 1`)
-- Menonaktifkan pipelining (`pipelining: 0`)
-- Menyimpan dispatcher dalam cache untuk menghindari handshake berulang
+- Menonaktifkan keep-alive pada koneksi proxy (`keepAliveTimeout: 1`)
+- Menonaktifkan pemipaan (`pipelining: 0`)
+- Menyimpan cache operator untuk menghindari jabat tangan berulang-ulang
 
-Jika masalah berlanjut, coba proksi lain atau gunakan fitur rotasi 1proxy.
+Jika masih berlanjut, coba proxy lain atau gunakan fitur rotasi 1proxy.
 
-### "unsupported_country_region_territory" selama OAuth
+### "wilayah_negara_tidak didukung" selama OAuth
 
-Pastikan proksi dikonfigurasi **sebelum** memulai alur OAuth. OmniRoute merutekan pertukaran token OAuth melalui proksi yang dikonfigurasi. Tetapkan proksi global atau tingkat penyedia terlebih dahulu, lalu hubungkan.
+Pastikan proksi dikonfigurasi** sebelum** memulai aliran OAuth. OmniRoute merutekan pertukaran token OAuth melalui proksi yang dikonfigurasi. Tetapkan proksi tingkat global atau penyedia terlebih dahulu, lalu sambungkan.
 
 ### Proksi tidak digunakan
 
-Periksa urutan resolusinya:
+Periksa urutan resolusi:
 
 1. Verifikasi dengan `GET /api/settings/proxy?resolve=your-connection-id`
-2. Periksa apakah `status` proksi adalah `active` (bukan `inactive`)
-3. Pastikan cakupan penetapan proksi sesuai dengan koneksi Anda
+2. Periksa apakah proxy `status` adalah `active` (bukan `inactive`)
+3. Pastikan cakupan penugasan proxy cocok dengan koneksi Anda
 
-### Sinkronisasi 1proxy gagal
+### 1 sinkronisasi proxy gagal
 
 Periksa status sinkronisasi:
 
@@ -544,13 +555,13 @@ Periksa status sinkronisasi:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Jika `consecutiveFailures >= 5`, circuit breaker telah terpicu. Mulai ulang server untuk meresetnya, atau tunggu reset manual.
+Jika `consecutiveFailures >= 5`, pemutus arus telah trip. Restart server untuk mereset, atau tunggu reset manual.
 
 ---
 
-## Skema Database
+## Skema Basis Data
 
-### Tabel `proxy_registry`
+### `proxy_registry` Tabel
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -564,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' atau 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (khusus 1proxy)
-  latency_ms INTEGER,                        -- milidetik (khusus 1proxy)
-  anonymity TEXT,                            -- transparan/anonim/elite
-  google_access INTEGER DEFAULT 0,           -- dapat mengakses Google? (1proxy)
-  last_validated TEXT,                       -- stempel waktu ISO (1proxy)
-  country_code TEXT,                         -- kode 2 huruf ISO (1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
+  anonymity TEXT,                            -- transparent/anonymous/elite
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### Tabel `proxy_assignments`
+### `proxy_assignments` Tabel
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID penyedia, ID koneksi, atau ID kombinasi
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,40 +603,40 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Pemeriksaan Kesehatan Proksi (v3.8.16+)
+## Pemeriksaan Kesehatan Proksi (v3.8.16 +)
 
-Mekanisme **proxy fast-fail** OmniRoute (`src/lib/proxyHealth.ts`) mendeteksi proksi yang tidak aktif dalam <2 detik melalui pemeriksaan koneksi TCP cepat, lalu **menyimpan hasilnya dalam cache** untuk menghindari overhead per permintaan.
+OmniRoute** proxy cepat gagal** mekanisme (`src/lib/proxyHealth.ts`) mendeteksi proxy mati di < 2s melalui pemeriksaan koneksi TCP cepat, lalu** menyimpan hasilnya dalam cache** untuk menghindari overhead per permintaan.
 
 ### Cara Kerjanya
 
 ```
-Permintaan ──▶ ProxyHealthCache.get(url)
-                │
-                ├─ Cache ditemukan + masih valid?  ──▶ kembalikan status dari cache
-                │
-                └─ Cache tidak ditemukan / kedaluwarsa?  ──▶ hubungkan TCP ke host:port
-                                                              (batas waktu: FAST_FAIL_TIMEOUT_MS)
-                                                              ──▶ simpan dalam cache selama HEALTH_CACHE_TTL_MS
-                                                              ──▶ kembalikan hasil
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Tanpa mekanisme ini, proksi yang tidak aktif akan memblokir setiap permintaan selama durasi penuh `PROXY_TIMEOUT_MS` (default 30 detik) sebelum gagal.
+Tanpa ini, proxy yang mati akan memblokir setiap permintaan untuk `PROXY_TIMEOUT_MS` penuh (default 30 detik) sebelum gagal.
 
-### Variabel Lingkungan yang Dapat Disesuaikan
+### Variabel Lingkungan Merdu
 
-| Variabel                     | Default | Tujuan                                                     |
-| ---------------------------- | ------- | ---------------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | Batas waktu koneksi TCP per pemeriksaan kesehatan          |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Durasi penyimpanan hasil pemeriksaan kesehatan dalam cache |
+| Variabel                     | Bawaan  | Tujuan                                            |
+| ---------------------------- | ------- | ------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | batas waktu koneksi TCP per pemeriksaan kesehatan |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Berapa lama hasil kesehatan di-cache              |
 
-**Nilai yang direkomendasikan:**
+**Nilai yang disarankan:**
 
-| Skenario                             | Batas waktu fast-fail | TTL cache | Alasan                                                                                             |
-| ------------------------------------ | --------------------- | --------- | -------------------------------------------------------------------------------------------------- |
-| Gateway API dengan throughput tinggi | 1500ms                | 60000ms   | Gagal cepat secara agresif, cache lebih lama untuk mengurangi pemeriksaan                          |
-| Node yang tersebar secara geografis  | 3000ms                | 15000ms   | Jaringan yang lebih lambat memerlukan lebih banyak waktu; cache lebih singkat untuk failover cepat |
-| Pengembangan / pengujian             | 1000ms                | 10000ms   | Iterasi cepat pada proksi lokal                                                                    |
-| Penyamaran / anti-deteksi            | 2500ms                | 45000ms   | Menghindari probing cepat yang dapat memicu batas laju                                             |
+| Skenario                                 | Batas waktu kegagalan cepat | Tembolok TTL | Pemikiran                                                                                          |
+| ---------------------------------------- | --------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| Gerbang API throughput tinggi            | 1500 ms                     | 60000ms      | Cache yang agresif dan cepat gagal, lebih lama untuk mengurangi pemeriksaan                        |
+| Node yang terdistribusi secara geografis | 3000 ms                     | 15000ms      | Jaringan yang lebih lambat membutuhkan lebih banyak waktu; cache lebih pendek untuk failover cepat |
+| Pengembangan / pengujian                 | 1000 ms                     | 10.000 ms    | Iterasi cepat pada proxy lokal                                                                     |
+| Siluman / anti deteksi                   | 2500 ms                     | 45000ms      | Hindari pemeriksaan cepat yang dapat memicu batas kecepatan                                        |
 
 ### Memeriksa Kesehatan Proksi
 
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Paksa pemeriksaan ulang proksi tertentu
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Flag `stale` bernilai `true` ketika entri cache telah melewati `HEALTH_CACHE_TTL_MS`, dan permintaan berikutnya akan memicu pemeriksaan baru.
+Bendera `stale` adalah `true` ketika entri cache telah melebihi `HEALTH_CACHE_TTL_MS` dan permintaan berikutnya akan memicu pemeriksaan baru.
 
-### Default Berdasarkan Jenis Proksi
+### Default Jenis Per-Proxy
 
-Pemeriksaan kesehatan menggunakan default yang sesuai berdasarkan skema URL:
+Pemeriksaan kesehatan menggunakan default yang masuk akal berdasarkan skema URL :
 
-| Skema                      | Port default |
-| -------------------------- | ------------ |
-| `http://`                  | 8080         |
-| `https://`                 | 443          |
-| `socks5://` / `socks5h://` | 1080         |
+| Skema                      | Pelabuhan bawaan |
+| -------------------------- | ---------------- |
+| `http://`                  | 8080             |
+| `https://`                 | 443              |
+| `socks5://` / `socks5h://` | 1080             |
 
-Port khusus dalam URL (`http://host:9999`) selalu lebih diutamakan daripada default skema.
+Port khusus di URL (`http://host:9999`) selalu diutamakan daripada skema default.
 
 ---
 
-## Analitik & Observabilitas Proksi
+## Analisis & Observabilitas Proksi
 
-OmniRoute melacak penggunaan per proksi untuk membantu operator mendiagnosis pola perutean, lonjakan latensi, dan kegagalan berulang.
+OmniRoute melacak penggunaan per proxy untuk membantu operator mendiagnosis pola perutean, lonjakan latensi, dan kegagalan berulang.
 
-### Yang Dilacak
+### Apa yang Dilacak
 
-Untuk setiap permintaan melalui proksi yang dikonfigurasi, OmniRoute mencatat:
+Untuk setiap permintaan melalui proxy yang dikonfigurasi, OmniRoute mencatat:
 
-| Metrik       | Deskripsi                                              |
-| ------------ | ------------------------------------------------------ |
-| `proxy_url`  | URL proksi lengkap (kredensial autentikasi disamarkan) |
-| `provider`   | ID penyedia upstream (openai, anthropic, dll.)         |
-| `latency_ms` | Total waktu pulang-pergi termasuk handshake proksi     |
-| `connect_ms` | Waktu koneksi TCP saja                                 |
-| `status`     | Kode status HTTP dari upstream                         |
-| `error`      | Kelas kesalahan jika permintaan gagal                  |
-| `timestamp`  | ISO 8601 UTC                                           |
+| Metrik       | Keterangan                                                  |
+| ------------ | ----------------------------------------------------------- |
+| `proxy_url`  | Proksi penuh URL (dengan kredensial autentikasi disamarkan) |
+| `provider`   | Penyedia hulu ID (openai, antropik, dll.)                   |
+| `latency_ms` | Total waktu pulang pergi termasuk jabat tangan proxy        |
+| `connect_ms` | TCP menghubungkan waktu saja                                |
+| `status`     | kode status HTTP dari hulu                                  |
+| `error`      | Kelas kesalahan jika permintaan gagal                       |
+| `timestamp`  | ISO 8601 UTC                                                |
 
 ### Mengakses Data
 
 ```bash
-# Peristiwa proksi terbaru
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Endpoint sebenarnya adalah `/api/usage/proxy-logs` (lihat `src/app/api/usage/proxy-logs/route.ts`). Endpoint ini mendukung:
+Titik akhir sebenarnya adalah `/api/usage/proxy-logs` (lihat `src/app/api/usage/proxy-logs/route.ts`). Titik akhir ini mendukung:
 
 - `GET /api/usage/proxy-logs` — mengambil log proksi
-- `DELETE /api/usage/proxy-logs` — menghapus semua log proksi
+- `DELETE /api/usage/proxy-logs` — hapus semua log proxy
 
-Jika diperlukan, statistik agregat dapat dikueri secara langsung dari tabel `proxy_logs` melalui SQL. UI dasbor mungkin menyediakan tampilan agregat.
+Statistik agregat dapat ditanyakan langsung dari tabel `proxy_logs` melalui SQL jika diperlukan. Dasbor UI mungkin menawarkan tampilan agregat.
 
 ### Pola Umum
 
-**Mendeteksi proksi yang tidak stabil** (bergantian antara berhasil/gagal):
+**Deteksi proxy yang mengepak** (bergantian antara success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Menemukan proksi lambat** (latensi p95 > 2 dtk):
+**Temukan proxy yang lambat** (latensi p95 > 2s):
 
 ```sql
 WITH ranked AS (
@@ -725,91 +736,68 @@ ORDER BY latency_ms DESC;
 
 ## Pohon Keputusan Strategi Rotasi
 
-Ketika beberapa proksi ditetapkan ke suatu cakupan, OmniRoute menggunakan **strategi rotasi** untuk memilih proksi yang akan digunakan bagi setiap permintaan. Strategi tersebut dikonfigurasi pada tingkat cakupan (global, per penyedia, per akun, per kombinasi).
+Ketika beberapa proxy ditugaskan ke suatu ruang lingkup, OmniRoute menggunakan a** strategi rotasi** untuk memilih mana yang akan digunakan untuk setiap permintaan. Strategi dikonfigurasikan pada tingkat cakupan (global, per penyedia, per akun, per kombo).
 
 ### Strategi yang Tersedia
 
-| Strategi            | Kapan digunakan                             | Konsekuensi                                                                                  |
-| ------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `quality` (default) | Produksi dengan proksi berkualitas campuran | Mengutamakan proksi berperingkat tinggi; proksi berperingkat rendah mungkin jarang digunakan |
-| `random`            | Distribusi beban, privasi                   | Distribusi merata; mengabaikan sinyal kualitas                                               |
-| `sequential`        | Debugging, pengujian deterministik          | Menggilir proksi secara berurutan; mudah dipahami                                            |
+| Strategi           | Kapan harus digunakan                   | Pertukaran                                                                              |
+| ------------------ | --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `quality` (bawaan) | Produksi dengan proxy kualitas campuran | Mendukung proxy berperingkat tinggi; mungkin membuat kelaparan yang berperingkat rendah |
+| `random`           | Distribusi beban, privasi               | pemerataan; mengabaikan sinyal kualitas                                                 |
+| `sequential`       | Debugging, pengujian deterministik      | Menggilir proxy secara berurutan; mudah untuk dipikirkan                                |
 
 ### Pohon Keputusan
 
 ```
-                    Apakah Anda memiliki skor kualitas untuk proksi Anda?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       YA                     TIDAK
+       YES                     NO
         │                       │
-   Apakah semua proksi          │
-   memiliki kualitas            │
-   yang kurang lebih sama?      │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  YA       TIDAK             Gunakan
+  YES       NO                Use
    │         │              `random`
-   │         │              (distribusi merata
-   │         │              membangun data
-   │         │              kualitas seiring waktu)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Gunakan `quality`
-   │    (terbaik untuk
-   │    kualitas campuran)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Gunakan `random`
-(sebarkan beban
-secara merata)
+Use `random`
+(spread load
+evenly)
 ```
 
 ## Pengecualian Kegagalan Otomatis untuk Proksi Anda Sendiri
 
-Pool marketplace 1proxy sudah secara otomatis menurunkan prioritas proksi yang gagal
-(lihat [Skor Kualitas Proksi](#proxy-quality-scores)). Untuk
-proksi yang **Anda** tambahkan ke registri, penjadwal kesehatan latar belakang
-(`src/lib/proxyHealth/scheduler.ts`) menyediakan perilaku yang sama untuk "mengecualikan anggota yang mati
-dari rantai secara otomatis", tanpa menghapus apa pun:
+Kumpulan pasar 1proxy sudah secara otomatis mendegradasi proxy yang gagal (lihat [Skor Kualitas Proxy](#proxy-quality-scores) ). Untuk proxy** Anda** ditambahkan ke registri, penjadwal kesehatan latar belakang (`src/lib/proxyHealth/scheduler.ts`) memberikan perilaku "kecualikan anggota mati dari rantai secara otomatis" yang sama, tanpa menghapus apa pun:
 
 ```bash
-# .env — nonaktifkan sementara proksi setelah 3 pemeriksaan berturut-turut gagal, lalu aktifkan kembali
-# secara otomatis setelah proksi mulai merespons pemeriksaan lagi.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Cara kerjanya dalam rantai multi-proksi:
+Bagaimana ini cocok dengan rantai multi-proksi:
 
-1. Penjadwal memeriksa setiap proksi terdaftar setiap `PROXY_HEALTH_INTERVAL_MS`
-   (default 10 menit; minimum 1 menit).
-2. Setelah `PROXY_AUTO_REMOVE_AFTER` kegagalan **konklusif** berturut-turut (kegagalan
-   koneksi nyata — timeout atau respons 5xx dari target pemeriksaan itu sendiri tidak pernah dihitung, lihat
-   [Pemeriksaan Kesehatan Proksi](#proxy-health-checking-v3816)), `status` proksi
-   diatur menjadi `dead`.
-3. `dead` adalah salah satu status yang dikecualikan oleh filter status aktif yang digunakan dalam
-   resolusi pool/rotasi, sehingga rotasi suatu cakupan (round-robin / acak / sticky /
-   latensi — lihat [Pohon Keputusan Strategi Rotasi](#rotation-strategy-decision-tree))
-   segera berhenti memberikan proksi tersebut kepada permintaan baru. Proksi lain di dalam
-   pool tidak terpengaruh, dan seluruh pool tidak pernah secara diam-diam beralih ke koneksi
-   langsung — lihat pengaman fail-closed pada [Sistem Proksi 4 Tingkat](#4-level-proxy-system).
-4. Penjadwal terus memeriksa proksi `dead` pada interval yang sama. Pemeriksaan
-   berhasil berikutnya mengubah `status` kembali menjadi `active` dan proksi masuk kembali ke rotasi —
-   tidak perlu menambahkannya kembali secara manual.
+1. Penjadwal memeriksa setiap proxy yang terdaftar setiap `PROXY_HEALTH_INTERVAL_MS` (default 10 menit; minimum 1 menit).
+2. Setelah `PROXY_AUTO_REMOVE_AFTER` berturut-turut** pasti** kegagalan (kegagalan koneksi nyata — batas waktu atau 5xx milik target probe tidak pernah dihitung, lihat [Pemeriksaan Kesehatan Proxy](#proxy-health-checking-v3816) ), `status` proxy disetel ke `dead`.
+3. `dead` adalah salah satu status yang tidak termasuk dalam filter status hidup yang digunakan oleh resolusi pool/rotation, sehingga rotasi cakupan (round-robin / acak / lengket / latensi — lihat [Pohon Keputusan Strategi Rotasi](#rotation-strategy-decision-tree) ) segera berhenti menyerahkan proksi tersebut ke permintaan baru. Tidak ada proxy lain di kumpulan yang terpengaruh, dan seluruh kumpulan tidak pernah secara diam-diam kembali ke koneksi langsung — lihat penjaga [sistem Proksi 4 Tingkat](#4-level-proxy-system) yang gagal ditutup.
+4. Penjadwal terus memeriksa proxy `dead` pada interval yang sama. Probe berikutnya yang berhasil membalik `status` kembali ke `active` dan memasuki kembali rotasi — tidak diperlukan penambahan ulang secara manual.
 
-Fitur ini sengaja dibuat **opsional dan tidak destruktif**: secara default, penjadwal hanya
-menghitung dan mencatat kegagalan (lihat kebijakan C di `decision.ts`), dan `PROXY_AUTO_DISABLE`
-tidak pernah menghapus baris — fungsi tersebut disediakan oleh flag terpisah yang lebih agresif,
-`PROXY_AUTO_REMOVE`. Jika keduanya diatur ke `true`, `PROXY_AUTO_REMOVE`
-akan diprioritaskan (proksi yang akan dihapus tidak memerlukan penonaktifan sementara terlebih dahulu). Lihat
-referensi [Konfigurasi Lingkungan](../reference/ENVIRONMENT.md) untuk daftar
-variabel lengkap.
+Ini sengaja** ikut serta dan tidak merusak** : secara default, penjadwal hanya menghitung dan mencatat kegagalan (lihat kebijakan C di `decision.ts`), dan `PROXY_AUTO_DISABLE` tidak pernah menghapus baris — itulah gunanya tanda `PROXY_AUTO_REMOVE` yang terpisah dan lebih agresif. Jika keduanya disetel ke `true`, `PROXY_AUTO_REMOVE` menang (proxy yang akan dihapus tidak ada gunanya untuk soft-disable di antaranya). Lihat referensi [Konfigurasi Lingkungan](../reference/ENVIRONMENT.md) untuk daftar variabel lengkap.
 
 ---
 
-> 📖 **Dokumentasi terkait:**
+> 📖** Dokumentasi terkait:**
 >
-> - [Panduan Pengguna](../guides/USER_GUIDE.md) — Penyiapan dan konfigurasi umum
-> - [Referensi API](../reference/API_REFERENCE.md) — Dokumentasi API lengkap
-> - [Konfigurasi Lingkungan](../reference/ENVIRONMENT.md) — Semua variabel lingkungan
+> - [Panduan Pengguna](../guides/USER_GUIDE.md) — Pengaturan dan konfigurasi umum - [API Referensi](../reference/API_REFERENCE.md) — Dokumentasi API lengkap - [Konfigurasi Lingkungan](../reference/ENVIRONMENT.md) — Semua variabel lingkungan

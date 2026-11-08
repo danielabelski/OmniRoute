@@ -4,147 +4,158 @@
 
 ---
 
-> **Ketare shingen yanki, kare ainihinka, kuma bi da zirga-zirgar AI ta kowace proxy — ba tare da rikitarwar saitawa ba.**
+> **Keɓance shingen yanki, kare asalin ku, da kuma hanyar zirga-zirgar AI ta kowane — wakili tare da rikitaccen sanyi.**
 
-OmniRoute ya ƙunshi cikakken tsarin sarrafa proxy wanda ke ba ka damar bi da zirga-zirgar masu samar da AI na upstream ta HTTP, HTTPS, ko SOCKS5 proxies. Ko kana yankin da aka toshe, kana buƙatar sauya IP akai-akai, ko kuma kana son ɓoye sawun gano na’ura — wannan jagorar ta ƙunshi komai.
+OmniRoute ya ƙunshi cikakken tsarin gudanarwa na wakili wanda zai ba ku damar hayar zirga-zirgar AI hawa ta hanyar HTTP, HTTPS, ko SOCKS5 proxies. Ko kana cikin yankin da aka katange, kuna buƙatar jujjuyawar IP, ko kuna son yin sawun yatsa — wannan jagorar ta ƙunshi komai.
 
 ---
 
-## Jerin Abubuwan da ke Ciki
+## Teburin Abubuwan Ciki
 
-- [Me Ya Sa Ake Amfani da Proxies?](#why-use-proxies)
-- [Bayanin Tsarin Gine-gine](#architecture-overview)
-- [Tsarin Proxy Mai Matakai 4](#4-level-proxy-system)
-- [Rajistar Proxy (CRUD)](#proxy-registry-crud)
-- [Kasuwar Proxies Kyauta ta 1proxy](#1proxy-free-proxy-marketplace)
-- [Sauya Proxy](#proxy-rotation)
-- [Kariya Daga Ganowa & Ɓoyewa](#anti-detection--stealth)
-- [Yanayin Upstream Proxy](#upstream-proxy-modes)
+- [Me yasa Amfani da Proxies?](#why-use-proxies)
+- [Bayanin Gine-gine](#architecture-overview)
+- [4-Level Proxy System](#4-level-proxy-system)
+- [Wakilci Registry (CRUD)](#proxy-registry-crud)
+- [1 Wakilin Kasuwanci Kyauta](#1proxy-free-proxy-marketplace)
+- [Juyawa wakili](#proxy-rotation)
+- [Anti-Gane & Stealth](#anti-detection--stealth)
+- [Hanyoyin Wakilci na Upstream](#upstream-proxy-modes)
 - [Dashboard UI](#dashboard-ui)
-- [Manazartar API](#api-reference)
-- [Environment Variables](#environment-variables)
-- [Warware Matsaloli](#troubleshooting)
+- [API Reference](#api-reference)
+- [Canje-canjen Muhalli](#environment-variables)
+- [Shirya matsala](#troubleshooting)
 
 ---
 
-## Me Ya Sa Ake Amfani da Proxies?
+## Me yasa Amfani da Proxies?
 
-Yawancin masu samar da AI suna ƙuntata damar shiga bisa yankin ƙasa. Masu haɓaka software a **Rasha, Sin, Iran, Cuba, Turkiyya**, da sauran ƙasashe suna cin karo da kurakurai kamar:
+Yawancin masu samar da AI sun hana shiga ta yankin yanki. Developers in** Rasha, China, Iran, Cuba, Turkiyya** , da sauran ƙasashe suna fuskantar kurakurai kamar:
 
 ```
 unsupported_country_region_territory
 ```
 
-Ko da a wajen yankunan da aka toshe, proxies suna da amfani ga:
+Ko da waje da aka katange yankuna, wakilai suna da amfani ga:
 
-| Yanayin Amfani           | Bayani                                                                   |
-| ------------------------ | ------------------------------------------------------------------------ |
-| **Ketare shingen yanki** | Samun damar OpenAI, Anthropic, Codex, Copilot daga ƙasashen da aka toshe |
-| **Sauya IP**             | Rarraba buƙatu tsakanin IPs da yawa don guje wa iyakance yawan buƙatu    |
-| **Sirri**                | Ɓoye ainihin IP ɗinka daga masu samar da upstream                        |
-| **Bin ƙa’idoji**         | Bi da zirga-zirga ta takamaiman yankunan ikon shari’a                    |
-| **Gwaji**                | Kwaikwayon buƙatu daga yankuna daban-daban                               |
+| Amfani Case           | Bayani                                                                  |
+| --------------------- | ----------------------------------------------------------------------- |
+| **Geographic kewaye** | Samun damar OpenAI, Anthropic, Codex, Copilot daga kasashe da aka toshe |
+| **juyawa IP**         | Rarraba buƙatun a fadin IPs da yawa don guje wa iyakance ƙima           |
+| **Keɓantawa**         | Ɓoye ainihin IP ɗinku daga masu samarwa na sama                         |
+| **Biyayya**           | Rarraba zirga-zirga ta hanyar takamaiman yankuna                        |
+| **Gwaji**             | Yi kwatancen buƙatun daga yankuna daban-daban                           |
 
 ---
 
-## Bayanin Tsarin Gine-gine
+## Bayanin Gine-gine
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Sabar OmniRoute                         │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Rajistar    │    │ Mai Rarraba  │    │ Proxy            │  │
-│  │ Proxy       │───▶│ Proxy        │───▶│ Fetch (undici)   │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
 │  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Daidaitawar │                        │ API na Mai       │  │
-│  │ 1proxy      │                        │ Samar da Upstream│  │
-│  │ (free pool) │                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Muhimman Sassa
+### Mabuɗin Abubuwan Maɓalli
 
-| Sashi                 | Fayil                                        | Aiki                                                           |
-| --------------------- | -------------------------------------------- | -------------------------------------------------------------- |
-| **Rajistar Proxy**    | `src/lib/db/proxies.ts`                      | CRUD don bayanan proxy + rabon scopes                          |
-| **Mai Rarraba Proxy** | `open-sse/utils/proxyDispatcher.ts`          | Ƙirƙirar `undici` ProxyAgent/SOCKS dispatchers tare da caching |
-| **Proxy Fetch**       | `open-sse/utils/proxyFetch.ts`               | Na lulluɓe `fetch()` tare da shigar da proxy dispatcher        |
-| **Settings Route**    | `src/app/api/settings/proxy/route.ts`        | API na tsohon tsarin proxy (GET/PUT/DELETE)                    |
-| **Management Route**  | `src/app/api/v1/management/proxies/route.ts` | API na CRUD na rajista (GET/POST/PATCH/DELETE)                 |
-| **1proxy DB**         | `src/lib/db/oneproxy.ts`                     | Adana bayanan kasuwar proxies kyauta                           |
-
----
-
-## Tsarin Proxy Mai Matakai 4
-
-OmniRoute yana goyon bayan daidaita proxy a **matakai huɗu masu zaman kansu**, waɗanda ake tantancewa bisa jerin fifiko:
-
-```
-Jerin Tantance Fifiko (mafi girma → mafi ƙanƙanta):
-
-  1. 🔵 Proxy na Asusu/Haɗi       →  ga kowane API key / haɗin OAuth
-  2. 🟡 Proxy na Mai Bayarwa      →  ga kowane mai bayarwa (misali, duk zirga-zirgar OpenAI)
-  3. 🟠 Proxy na Combo            →  ga kowane tsarin combo/routing
-  4. 🟢 Proxy na Duniya           →  duk zirga-zirga, duk masu bayarwa
-```
-
-### Yadda Tantancewa Ke Aiki
-
-Lokacin da OmniRoute ya aika buƙata zuwa wani mai bayarwa na waje, yana kiran `resolveProxyForConnectionFromRegistry()` wanda ke duba kowane mataki bisa jeri:
-
-1. **Matakin asusu** — Shin akwai proxy da aka sanya wa wannan takamaiman ID na haɗi?
-2. **Matakin mai bayarwa** — Shin akwai proxy da aka sanya wa wannan mai bayarwa (misali, `openai`)?
-3. **Matakin duniya** — Shin an daidaita proxy na duniya?
-4. **Babu proxy** — Haɗi kai tsaye zuwa mai bayarwa.
-
-Wanda aka fara samu shi ake amfani da shi. Wannan yana nufin za ka iya saita proxy na duniya a matsayin madadin, amma ka maye gurbinsa ga takamaiman masu bayarwa ko haɗe-haɗe.
-
-### Abubuwan da Ake Bi ta Proxy
-
-| Nau'in Zirga-zirga     | Ana Bi ta Proxy? | Bayanan kula                                        |
-| ---------------------- | ---------------- | --------------------------------------------------- |
-| Kammalawar tattaunawa  | ✅               | Duk buƙatun `/v1/chat/completions`                  |
-| Embeddings             | ✅               | `/v1/embeddings`                                    |
-| Ƙirƙirar hoto          | ✅               | `/v1/images/generations`                            |
-| Sauti (TTS/STT)        | ✅               | `/v1/audio/*`                                       |
-| Musayar token na OAuth | ✅               | Yana warware `unsupported_country_region_territory` |
-| Gwajin haɗi            | ✅               | Maɓallin "Gwada Haɗi" yana amfani da proxy          |
-| Sabunta token          | ✅               | Sabunta OAuth a bayan fage                          |
-| Daidaita samfurori     | ✅               | Jera da gano samfurori                              |
+| Bangaren              | Fayil                                        | Matsayi                                                      |
+| --------------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| **Rajistar wakili**   | `src/lib/db/proxies.ts`                      | CRUD don shigarwar wakili + iyakar ayyuka                    |
+| **Wakili Dispatcher** | `open-sse/utils/proxyDispatcher.ts`          | Ƙirƙirar masu aika `undici` ProxyAgent/SOCKS tare da caching |
+| **Proxy Fetch**       | `open-sse/utils/proxyFetch.ts`               | Nannade `fetch()` tare da allura mai aikawa da wakili        |
+| **Hanyar Saituna**    | `src/app/api/settings/proxy/route.ts`        | Legacy proxy config API (GET/PUT/DELETE)                     |
+| **Hanyar Gudanarwa**  | `src/app/api/v1/management/proxies/route.ts` | Registry CRUD API (GET/POST/PATCH/DELETE)                    |
+| **1 wakili DB**       | `src/lib/db/oneproxy.ts`                     | Dagewar kasuwar wakili kyauta                                |
 
 ---
 
-## Rijistar Proxy (CRUD)
+## Tsohuwar jihar wakili don sababbin asusu
 
-Rijistar proxy tebur ne na SQLite (`proxy_registry`) wanda ke adana dukkan proxy-proxy ɗinka. Kowane proxy yana da:
+A ciki** Saituna → Proxy → Tsarin Duniya** , amfani** Kunna wakili ta tsohuwa don sababbin haɗi** don zaɓar matsayin wakili na farko na sabbin ƙarin asusun mai ba da sabis.
 
-| Filin      | Nau'i   | Bayani                                                   |
-| ---------- | ------- | -------------------------------------------------------- |
-| `id`       | UUID    | Mai ganowa na musamman                                   |
-| `name`     | String  | Lakabi mai sauƙin fahimta                                |
-| `type`     | String  | Ka'ida: `http`, `https`, `socks5`                        |
-| `host`     | String  | Sunan host ko IP na proxy                                |
-| `port`     | Integer | Lambar port                                              |
-| `username` | String  | Sunan mai amfani na tantancewa (an ɓoye shi yayin ajiya) |
-| `password` | String  | Kalmar sirrin tantancewa (an ɓoye ta yayin ajiya)        |
-| `region`   | String  | Lakabin yankin ƙasa                                      |
-| `notes`    | String  | Bayanan rubutu na zaɓi                                   |
-| `status`   | String  | `active` ko `inactive`                                   |
-| `source`   | String  | `manual` ko `oneproxy`                                   |
+Sabon saitin yana sarrafa yanayin wakili na farko na sabbin asusun masu bada da aka ƙara. Ba ya canza asusu masu wanzuwa ko maye gurbin canjin wakili na duniya. Ƙimar farko ta tana kiyaye halayen da suka gabata. Kashe shi sau ɗaya don ƙirƙirar asusun nan gaba tare da kashe wakili ta tsohuwa.
 
-### Ƙirƙirar Proxy
+Ana adana zaɓin azaman `defaultNewConnectionProxyEnabled` ta cikin Saitunan da ke akwai API. Yana saɓawa zuwa `true` lokacin da ba a adana shi ba. Ajiye `false` yana aiki don sabbin asusu na gaba ba tare da sake farawa ba. `POST /api/providers` ya yarda da wani zaɓi na zaɓi mai tsauri `proxyEnabled`; bayyanannen `true` ko `false` yana ɗaukan fifiko akan tsohowar halitta. Ragewa akan kwafin asusu ko sake haɗin OAuth yana adana yanayin da aka adana asusu. Har yanzu ana iya kunna ko kashe asusun ɗaya bayan haka.
 
-**Ta Dashboard:**
+Canja wurin mai ba da zaɓaɓɓu yana amfani da tsohowar shigarwar wurin da za a shigar don sababbin asusu da adana manufofin manufa lokacin da ake maye gurbin asusun da ke akwai. Toggles wakili ba filayen canja wuri ba ne. Cikakkun gyare-gyaren ajiyar ajiya da ƙaura JSON/SQL na tarihi suna riƙe da abubuwan da suka dace na maido da su, gami da ajiyayyun ƙimar asusu da gazawar tsarin gado; cikakken saituna mayar kuma zai iya mayar da wannan zaɓin.
 
-1. Je zuwa **Settings → Proxy**
-2. Danna **Add Proxy**
-3. Cika nau'i, host, port, da bayanan tantancewa na zaɓi
+Wannan zaɓin baya sanya wakili ko tabbatar da cewa mutum yana da koshin lafiya ko ana amfani dashi. Haƙiƙan hanyar tuƙi har yanzu ya dogara da canjin wakili na duniya da daidaitawar wakili. Masu samar da roba ba tare da dagewar asusu ba, zirga-zirgar OAuth kafin ƙirƙirar asusun, environment/system proxies, da hanyoyin sadarwar mara waya na waje ba su da iyaka.
+
+## 4-Level Proxy System
+
+OmniRoute tana goyan bayan daidaitawar wakili a** hudu masu zaman kansu iyakoki** , an warware shi cikin tsari mai fifiko:
+
+```
+Priority Resolution Order (highest → lowest):
+
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
+```
+
+### Yadda Kudirin ke Aiki
+
+Lokacin da OmniRoute ta aika buƙatu zuwa ga mai samarwa na sama, tana kiran `resolveProxyForConnectionFromRegistry()` wanda ke bincika kowane matakin a jere:
+
+1. **Matsayin lissafi** — Shin akwai wakili da aka sanya wa wannan takamaiman haɗin ID?
+2. **Matsayin mai bayarwa** — Shin akwai wakili da aka sanya wa wannan mai bada (misali, `openai`)?
+3. **Matsayin duniya** — Akwai wakili na duniya da aka saita?
+4. **Babu wakili** — Kai tsaye haɗi zuwa mai bayarwa.
+
+Wasan farko yayi nasara. Wannan yana nufin zaku iya saita wakili na duniya azaman koma baya amma ku soke shi don takamaiman masu samarwa ko haɗin kai.
+
+### Abin da ke Samun Proxied
+
+| Nau'in zirga-zirga  | Wakilci? | Bayanan kula                                        |
+| ------------------- | -------- | --------------------------------------------------- |
+| An kammala taɗi     | ✅       | Duk buƙatun `/v1/chat/completions`                  |
+| Abun ciki           | ✅       | `/v1/embeddings`                                    |
+| Ƙarfin hoto         | ✅       | `/v1/images/generations`                            |
+| Audio (TTS/STT)     | ✅       | `/v1/audio/*`                                       |
+| OAuth token musayar | ✅       | Yana warware `unsupported_country_region_territory` |
+| Gwajin haɗi         | ✅       | Maballin "Test Connection" yana amfani da wakili    |
+| Alamar wartsakewa   | ✅       | Bayan fage sabunta OAuth                            |
+| Samfuran aiki tare  | ✅       | Lissafin samfuri da ganowa                          |
+
+---
+
+## Wakilci Registry (CRUD)
+
+Wurin rajistar wakili shine tebur SQLite (`proxy_registry`) wanda ke adana duk wakilan ku. Kowane wakili yana da:
+
+| Filin      | Nau'in | Bayani                                  |
+| ---------- | ------ | --------------------------------------- |
+| `id`       | UUID   | Mai ganowa na musamman                  |
+| `name`     | Zaren  | Label mai iya karantawa ɗan adam        |
+| `type`     | Zaren  | Protocol: `http`, `https`, `socks5`     |
+| `host`     | Zaren  | Sunan wakili ko IP                      |
+| `port`     | lamba  | Lambar tashar jiragen ruwa              |
+| `username` | Zaren  | Auth sunan mai amfani (rufewa a sauran) |
+| `password` | Zaren  | Ƙimar kalmar sirri (rufewa a sauran)    |
+| `region`   | Zaren  | Alamar yankin yanki                     |
+| `notes`    | Zaren  | Bayanan rubutu kyauta                   |
+| `status`   | Zaren  | `active` or `inactive`                  |
+| `source`   | Zaren  | `manual` or `oneproxy`                  |
+
+### Ƙirƙirar wakili
+
+**Ta hanyar Dashboard:**
+
+1. Je zuwa** Saituna → Proxy**
+2. Danna** Ƙara Wakili**
+3. Cika nau'in, mai masaukin baki, tashar jiragen ruwa, da takaddun shaida na zaɓi na zaɓi
 4. Ajiye
 
 **Ta API:**
@@ -163,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Sabunta Proxy
+### Ana ɗaukaka wakili
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -175,56 +186,56 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Lura:** Ana kiyaye bayanan tantancewa sai dai idan ka aika sabbin bayanai marasa fanko kai tsaye. Aika zaren da babu komai a ciki don `username`/`password` zai sa a ci gaba da amfani da ƙimomin da aka adana.
+> **Lura:** Ana adana takaddun shaida sai dai idan kun aika da madaidaicin marasa fanko a sarari. Aika fanko kirtani don `username`/`password` zai kiyaye ƙimar da aka adana.
 
-### Share Proxy
+### Share wakili
 
 ```bash
-# Zai gaza idan an sanya proxy ga kowane mataki
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Share da ƙarfi (yana cire abubuwan da aka sanya masa ma)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Jera Proxy-Proxies
+### Jerin Wakilai
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Sanya Proxy-Proxies ga Matakai
+### Bayar da Proxies zuwa Iyakoki
 
 ```bash
-# Sanya ga matakin duniya
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Sanya ga takamaiman mai bayarwa
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Sanya ga takamaiman haɗi/key
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Tantance Proxy da Za a Yi Amfani da Shi
+### Magance Wakilci Mai inganci
 
-Bincika proxy ɗin da za a yi amfani da shi ga wani takamaiman haɗi:
+Bincika wanne wakili za a yi amfani da shi don haɗin da aka bayar:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Yana dawo da proxy da aka tantance tare da matakinsa (`account`, `provider`, ko `global`) da tushensa.
+Yana dawo da wakili mai warwarewa tare da matakinsa (`account`, `provider`, ko `global`) da tushensa.
 
-### Sanya ga Abubuwa da Yawa
+### Babban Ayyuka
 
-Sanya proxy ɗaya ga masu bayarwa ko haɗe-haɗe da yawa a lokaci guda:
+Sanya wakili ɗaya ga masu samarwa da yawa ko haɗin kai lokaci guda:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Shigo da/Fitar da Bayanai
+### Import/Export
 
-Ana haɗa proxy-proxies cikin tsarin **Backup/Restore**. Lokacin da ka fitar da daidaitawar OmniRoute ɗinka:
+Ana haɗa wakilai a cikin**Backup/Restore** tsarin. Lokacin da kuke fitar da tsarin OmniRoute ɗinku:
 
-1. Je zuwa **Dashboard → Settings → Backup**
-2. Danna **Export** — an haɗa rijistar proxy da abubuwan da aka sanya
-3. Don maidowa, danna **Import** sannan ka loda fayil ɗin ajiyar bayanai
+1. Je zuwa** Dashboard → Saituna → Ajiyayyen**
+2. Danna** fitarwa** An haɗa rajistar wakili na — da ayyuka
+3. Don maidowa, danna** Shigo da** kuma upload da madadin fayil
 
-Rijistar proxy kuma tana goyon bayan **upsert ta host+port** — idan ka shigo da proxy wanda ya riga ya wanzu (host da port iri ɗaya), za a sabunta shi maimakon ƙirƙirar kwafi.
+Rijistar wakili kuma tana goyan bayan** mai masaukin baki tashar +** — idan kun shigo da wakili wanda ya riga ya wanzu (mai masaukin baki daya da tashar jiragen ruwa), yana sabuntawa maimakon ƙirƙirar kwafi.
 
-### Ƙaura daga Tsohon Tsari
+### Hijira na gado
 
-Idan ka saita proxies a tsohuwar sigar (kafin registry), OmniRoute zai ƙaura da su ta atomatik:
+Idan kun saita proxies a cikin tsohuwar sigar (pre-registry), OmniRoute yana ƙaura ta atomatik zuwa gare su:
 
 ```
-Tsohon ma’ajin key_value → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Wannan yana faruwa sau ɗaya a fara kunnawa bayan sabuntawa. Yi amfani da `migrateLegacyProxyConfigToRegistry({ force: true })` don sake gudanar da shi.
+Wannan yana faruwa sau ɗaya a farawa na farko bayan haɓakawa. Yi amfani da `migrateLegacyProxyConfigToRegistry({ force: true })` don sake gudu.
 
 ---
 
-## Kasuwar Proxy Kyauta ta 1proxy
+## 1 Wakili Kyautar Kasuwa
 
-> 🆕 **Gudummawa daga [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Matsala [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** [@oyi77](https://github.com/oyi77) ne ya bayar da gudunmawa** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Batun [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute yana haɗuwa da dandalin al’umma na **[1proxy](https://1proxy-api.aitradepulse.com)** don samar da damar amfani da **ɗaruruwan proxy kyauta da aka tabbatar** daga ko’ina cikin duniya. Wannan ya dace sosai da masu amfani waɗanda ba su da nasu ababen more rayuwa na proxy.
+OmniRoute hadewa da** [1 wakili](https://1proxy-api.aitradepulse.com)** dandalin al'umma don samar da dama ga** ɗaruruwan kyauta, ingantattun wakilai** daga ko'ina cikin duniya. Wannan cikakke ne ga masu amfani waɗanda ba su da nasu kayan aikin wakili.
 
-### Yadda Yake Aiki
+### Yadda Ake Aiki
 
 ```
-┌─────────────┐   Daidaitawa   ┌─────────────────┐    Juyawa    ┌──────────┐
-│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Mai Bayarwa │
-│  (na waje)  │  har zuwa 500 │  source=oneproxy │ bisa inganci  │   API    │
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
 └─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Daidaitawa** — OmniRoute yana ɗauko proxies da aka tabbatar daga 1proxy API
-2. **Adanawa** — Ana adana proxies a cikin teburin `proxy_registry` ɗaya tare da `source = 'oneproxy'`
-3. **Tacewa** — Tace bisa ga protocol, ƙasa, da makin inganci
-4. **Juyawa** — Zaɓi proxy mafi kyau ta amfani da dabarun inganci, bazuwar zaɓi, ko jere
-5. **Rage-inganci ta atomatik** — Ana rage makin ingancin proxies da suka gaza; idan ya yi ƙasa da iyaka → a sanya su marasa aiki
+1. **Aiki tare** — OmniRoute yana ɗaukar ingantattun wakilai daga 1proxy API
+2. **Store** — ana ajiye wakilai a cikin tebur `proxy_registry` ɗaya tare da `source = 'oneproxy'`
+3. **Tace** — Tace ta hanyar yarjejeniya, ƙasa, ƙimar inganci
+4. **Juyawa** — Zaɓi mafi kyawun wakili ta amfani da inganci, bazuwar, ko dabarun jeri
+5. **Ƙaddamarwa ta atomatik** — Waɗanda suka gaza sun sami raguwar ƙimar ƙimar su; kasa bakin kofa → alamar mara aiki
 
-### Daidaita Proxies
+### Ana daidaita Proxies
 
-**Ta Dashboard:**
+**Ta hanyar Dashboard:**
 
-1. Je zuwa shafin **Settings → 1proxy**
-2. Danna **"Sync Now"**
-3. Duba ƙididdiga: jimillar proxies, adadin masu aiki, matsakaicin inganci, da rabon ƙasashe
+1. Je zuwa** Saituna → 1proxy** tab
+2. Danna** "Sync Now"**
+3. Duba ƙididdiga: jimlar wakilai, ƙidayar aiki, matsakaicin inganci, rugujewar ƙasa
 
 **Ta API:**
 
 ```bash
-# Fara daidaitawa
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Amsa:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Tace Proxies
 
 ```bash
-# Tace bisa ga protocol
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Tace bisa ga ƙasa
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Tace bisa ga mafi ƙarancin makin inganci
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Haɗa matatun
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Makin Ingancin Proxy
+### Makin Nagartattun Wakilai
 
-Kowane proxy na 1proxy yana zuwa da metadata:
+Kowane wakili na 1 yana zuwa da metadata:
 
-| Fili            | Bayani                                 |
-| --------------- | -------------------------------------- |
-| `qualityScore`  | Ƙimar 0-100 daga tantancewar 1proxy    |
-| `latencyMs`     | Jinkirin cibiyar sadarwa da aka auna   |
-| `anonymity`     | `transparent`, `anonymous`, ko `elite` |
-| `googleAccess`  | Ko proxy zai iya shiga ayyukan Google  |
-| `countryCode`   | Lambar ƙasa ta ISO mai haruffa biyu    |
-| `lastValidated` | Hatimin lokacin tantancewa na ƙarshe   |
+| Filin           | Bayani                                      |
+| --------------- | ------------------------------------------- |
+| `qualityScore`  | 0-100 rating daga 1 wakili ingantacce       |
+| `latencyMs`     | An auna jinkirin hanyar sadarwa             |
+| `anonymity`     | `transparent`, `anonymous`, ko `elite`      |
+| `googleAccess`  | Ko wakili na iya samun damar ayyukan Google |
+| `countryCode`   | Harafi biyu ISO lambar ƙasa                 |
+| `lastValidated` | Tambarin tabbatarwa na ƙarshe               |
 
-Ana daidaita makin inganci kai tsaye:
+Ana daidaita makin masu inganci sosai:
 
-- **Buƙatun da suka gaza** suna rage makin da maki 10
-- **Maki ya sauka zuwa ≤10** → ana sanya proxy a matsayin `inactive`
-- Ba a haɗa proxies marasa aiki cikin juyawa
+- **Buƙatun da ba a yi nasara ba** rage maki da maki 10
+- **Maki ya ragu zuwa ≤ 10** → wakili ana yiwa alama `inactive`
+- An keɓe wakilai marasa aiki daga juyawa
 
 ### Dabarun Juyawa
 
 ```bash
-# Juyawa bisa inganci (proxy mafi kyau da farko) — na asali
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Juyawa ta bazuwar zaɓi
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Bisa jere (wanda aka fi daɗewa ba a tantance shi ba da farko)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Circuit Breaker
+### Mai Satar Zama
 
-Daidaitawar 1proxy tana da ginannen circuit breaker:
+Aiki tare na wakili na 1 yana da ginanniyar keɓaɓɓiyar kewayawa:
 
-- Bayan **gazawar daidaitawa sau 5 a jere**, ana toshe ƙarin yunƙurin daidaitawa
-- Sake saita shi da: `resetOneproxyCircuitBreaker()` ko sake kunna uwar garken
-- Ana samun matsayin daidaitawa a `GET /api/settings/oneproxy?action=status`
+- Bayan** gazawar daidaitawa guda 5 a jere** , Ana toshe ƙarin ƙoƙarin daidaitawa
+- Sake saitin tare da: `resetOneproxyCircuitBreaker()` ko sake kunna uwar garken
+- Ana samun halin daidaitawa a `GET /api/settings/oneproxy?action=status`
 
-### Share Proxies na 1proxy
+### Share Proxy Proxies 1
 
 ```bash
-# Goge proxy guda ɗaya na 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Share DUK proxies na 1proxy (ba za a taɓa proxies da aka ƙara da hannu ba)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Kauce wa Ganowa & Ɓoye Kai
+## Anti-Gane & Stealth
 
-OmniRoute ba wai kawai yana tura zirga-zirga ta cikin proxy ba ne — yana sa zirga-zirgar ta yi kama da halastacciya:
+OmniRoute ba wai kawai hanyar zirga-zirga ta hanyar wakili — ba yana sa zirga-zirgar ta zama halal:
 
-### Kwaikwayon Sawun Yatsa na TLS
+### TLS yatsa
 
-Yana amfani da `wreq-js` don samar da sawun yatsan TLS mai kama da na burauza, yana kauce wa tsarin gano bot da ke yi wa musayar haɗin TLS da ba ta burauza ba alama.
+Yana amfani da `wreq-js` don samar da zanen yatsu kamar TLS mai bincike, yana ƙetare tsarin gano bot wanda ke nuna musafaha mara amfani da TLS.
 
-### Daidaita Sawun Yatsan CLI
+### CLI Sawun yatsa
 
-**Maɓallin Kunna/Kashe Sawun Yatsan CLI** (`Settings → Security`) yana sake tsara HTTP headers da filayen JSON body don su dace da ainihin sa hannun binaries na CLI na asali (Claude Code, Codex, da sauransu). Wannan yana aiki **a saman** proxy:
+The**CLI Sawun yatsa** (`Settings → Security`) yana sake yin odar kanun labarai HTTP da filayen jikin JSON don dacewa da ainihin sa hannu na binaries na CLI (Claude Code, Codex, da sauransu). Wannan yana aiki** a saman** wakili:
 
 ```
-IP ɗinka (an toshe) → IP na Proxy (US) → API na Mai Bayarwa
-                      + kwaikwayon TLS
-                      + sawun yatsan CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Za ka samu duka **ɓoye IP** da **ingancin buƙata** a lokaci guda.
+Kuna samun duka biyu**IP masking** kuma** nemi sahihanci** lokaci guda.
 
-### Kiyaye IP na Proxy
+### Proxy IP Preservation
 
-Alamomi masu launuka a dashboard suna nuna matakin proxy da ke aiki:
+Alamomi masu launi a cikin dashboard suna nuna wane matakin wakili ke aiki:
 
-| Alama | Mataki      | Ma’ana                                                    |
-| ----- | ----------- | --------------------------------------------------------- |
-| 🟢    | Na Duniya   | Duk zirga-zirga tana bi ta wannan proxy                   |
-| 🟡    | Mai Bayarwa | Zirga-zirgar wannan mai bayarwa kaɗai ake bi ta proxy     |
-| 🔵    | Haɗi        | Wannan takamaiman key/account yana amfani da wannan proxy |
+| Alama | Mataki      | Ma'ana                                                     |
+| ----- | ----------- | ---------------------------------------------------------- |
+| 🟢    | Duniya      | Duk zirga-zirga yana wucewa ta wannan wakili               |
+| 🟡    | Mai bayarwa | Hanyoyin zirga-zirgar wannan mai ba da izini ne kawai      |
+| 🔵    | Haɗin kai   | Wannan takamaiman key/account yana amfani da wannan wakili |
 
-Alamar kuma tana nuna IP na proxy da aka tantance domin tabbatarwa.
+Alamar kuma tana nuna madaidaicin wakili IP don tabbatarwa.
 
 ---
 
-## Yanayin Upstream Proxy
+## Hanyoyin Wakilci na Upstream
 
-Ga masu bayarwa da ke amfani da tsarin CLIProxyAPI, OmniRoute yana goyon bayan yanayin upstream proxy guda uku:
+Ga masu samarwa da ke amfani da tsarin CLIProxyAPI, OmniRoute yana goyan bayan hanyoyin wakili guda uku:
 
-| Yanayi        | Bayani                                                   |
+| Yanayin       | Bayani                                                   |
 | ------------- | -------------------------------------------------------- |
-| `native`      | OmniRoute yana sarrafa tura proxy kai tsaye (na asali)   |
-| `cliproxyapi` | Yana miƙa aikin ga wata instance ta CLIProxyAPI ta waje  |
-| `fallback`    | Yana fara gwada native, idan ya gaza ya koma CLIProxyAPI |
+| `native`      | OmniRoute tana sarrafa proxy routing kai tsaye (default) |
+| `cliproxyapi` | Wakilai zuwa misalin CLIProxyAPI na waje                 |
+| `fallback`    | Ya fara gwada ɗan ƙasa, ya koma CLIProxyAPI              |
 
-Saita ga kowane mai bayarwa:
+Saita kowane mai bayarwa:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,132 +436,132 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Fuskar Dashboard
+## Dashboard UI
 
-### Settings → Shafin Proxy
+### Saituna → Wakili Tab
 
-- Saitin **global proxy** (saita sau ɗaya domin duk zirga-zirga)
-- Sauye-sauyen **proxy na kowane mai bayarwa**
-- Sanya **proxy na kowane haɗi**
-- **Gwajin haɗi** ta cikin proxy da aka saita
-- **Alamomi masu launuka** da ke nuna matakin proxy mai aiki
+- **Wakilin duniya** daidaitawa (saita sau ɗaya don duk zirga-zirga)
+- **Wakilin mai bayarwa** soke
+- **Wakili na haɗin kai** ayyuka
+- **Gwajin haɗi** ta hanyar da aka kafa wakili
+- **Alamomi masu launi** yana nuna matakin wakili mai aiki
 
-### Settings → Shafin 1proxy
+### Saituna → 1proxy Tab
 
-- Maɓallin **Sync Now** don ɗauko proxies na kyauta
-- **Katunan ƙididdiga**: Jimilla, Masu Aiki, Matsakaicin Inganci, Daidaitawa ta Ƙarshe
-- **Matatu**: Protocol, Lambar Ƙasa, Mafi Ƙarancin Inganci
-- **Teburin proxy** mai ɗauke da host, protocol, ƙasa, makin inganci, latency, ɓoye-suna, damar shiga Google
-- Sashen **matsayin daidaitawa** mai bin diddigin nasara/rashin nasara da adadin gazawa a jere
-- **Clear All** don cire duk shigarwar 1proxy
+- **Daidaita Yanzu** maballin don ɗauko wakili na kyauta
+- **Katunan ƙididdiga** : Jima'i, Mai Aiki, Matsayin Matsakaici, Daidaiton Ƙarshe
+- **Tace** : Yarjejeniya, Lambar Ƙasa, Min Quality
+- **Teburin wakili** tare da mai masaukin baki, yarjejeniya, ƙasa, ƙimar inganci, latency, rashin sani, damar Google
+- **Halin daidaitawa** panel tare da bin diddigin success/failure da ƙidayar gazawa a jere
+- **Share Duk** don cire duk shigarwar wakili 1
 
 ---
 
-## Bayanin API
+## API Reference
 
-### API na Saitunan Proxy
+### Saitunan wakili API
 
-| Hanya    | Endpoint                                       | Bayani                      |
-| -------- | ---------------------------------------------- | --------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Samu cikakken saitin proxy  |
-| `GET`    | `/api/settings/proxy?level=global`             | Samu global proxy           |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Samu proxy na mai bayarwa   |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Tantance proxy mai aiki     |
-| `PUT`    | `/api/settings/proxy`                          | Sabunta saitin proxy        |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Cire proxy a wannan matakin |
+| Hanya    | Ƙarshen Ƙarshe                                 | Bayani                       |
+| -------- | ---------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Samun cikakken saitin wakili |
+| `GET`    | `/api/settings/proxy?level=global`             | Samu wakili na duniya        |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Samu wakili na mai bayarwa   |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Gyara wakili mai tasiri      |
+| `PUT`    | `/api/settings/proxy`                          | Sabunta saitin wakili        |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Cire wakili a matakin        |
 
-### API na Rijistar Proxy
+### Proxy Registry API
 
-| Hanya    | Endpoint                                          | Bayani                    |
+| Hanya    | Ƙarshen Ƙarshe                                    | Bayani                    |
 | -------- | ------------------------------------------------- | ------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Jera duk proxies          |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Samu proxy ta ID          |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Samu wuraren sanya proxy  |
-| `POST`   | `/api/v1/management/proxies`                      | Ƙirƙiri proxy             |
-| `PATCH`  | `/api/v1/management/proxies`                      | Sabunta proxy             |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Share proxy               |
+| `GET`    | `/api/v1/management/proxies`                      | Lissafin duk wakilai      |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Samun wakili ta ID        |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Samu ayyukan wakili       |
+| `POST`   | `/api/v1/management/proxies`                      | Ƙirƙiri wakili            |
+| `PATCH`  | `/api/v1/management/proxies`                      | Sabunta wakili            |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Share wakili              |
 | `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Tilasta sharewa           |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Sanya da yawa lokaci guda |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Jera wuraren sanya proxy  |
-| `GET`    | `/api/v1/management/proxies/health`               | Ƙididdigar lafiyar proxy  |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Babban aiki               |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Jerin ayyuka              |
+| `GET`    | `/api/v1/management/proxies/health`               | Ƙididdigar lafiyar wakili |
 
-### API na Tunnels
+### Tunnels API
 
-Don fallasa instance ɗinka na OmniRoute ga intanet na jama'a (Cloudflare/ngrok/Tailscale) maimakon tura zirga-zirga mai fita ta cikin proxy, duba [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). REST API na tunnel yana ƙarƙashin `/api/tunnels/{cloudflared,ngrok,tailscale}/*` kuma ya zaman kansa daga jerin proxy mai fita da aka bayyana a sama.
+Don bayyana misalin OmniRoute ɗinku ga intanet na jama'a (Cloudflare/ngrok/Tailscale) maimakon fitar da fita ta hanyar wakili, duba [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Ramin REST API yana zaune a ƙarƙashin `/api/tunnels/{cloudflared,ngrok,tailscale}/*` kuma yana daidai da sarkar wakili mai fita da aka rubuta a sama.
 
-### API na 1proxy
+### 1 wakili API
 
-| Hanya    | Endpoint                               | Bayani                               |
-| -------- | -------------------------------------- | ------------------------------------ |
-| `GET`    | `/api/settings/oneproxy`               | Jera proxies na 1proxy               |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Samu ƙididdiga + matsayin daidaitawa |
-| `GET`    | `/api/settings/oneproxy?action=status` | Samu matsayin daidaitawa kawai       |
-| `POST`   | `/api/settings/oneproxy`               | Fara daidaitawa                      |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Juya zuwa proxy na gaba              |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Share guda ɗaya                      |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Share duka                           |
+| Hanya    | Ƙarshen Ƙarshe                         | Bayani                      |
+| -------- | -------------------------------------- | --------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Jerin wakili na 1           |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Samo halin daidaita + stats |
+| `GET`    | `/api/settings/oneproxy?action=status` | Samu halin daidaitawa kawai |
+| `POST`   | `/api/settings/oneproxy`               | Haɗa aiki tare              |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Juyawa zuwa wakili na gaba  |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Share daya                  |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Share duk                   |
 
-### API na Upstream Proxy
+### Upstream Proxy API
 
-| Hanya    | Endpoint                          | Bayani                       |
+| Hanya    | Ƙarshen Ƙarshe                    | Bayani                       |
 | -------- | --------------------------------- | ---------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Samu saitin upstream proxy   |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Saita yanayin upstream proxy |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Cire saitin upstream proxy   |
+| `GET`    | `/api/upstream-proxy/:providerId` | Samo saitin wakili na sama   |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Saita yanayin wakili na sama |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Cire saitin wakili na sama   |
 
 ---
 
-## Sauye-sauyen Muhalli
+## Canje-canjen Muhalli
 
-| Sauyi                 | Tsoho  | Bayani                                                                      |
-| --------------------- | ------ | --------------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true` | Kunna tallafin proxy na SOCKS5 (tsoho shi ne `true` a cikin `.env.example`) |
+| Mai canzawa           | Default | Bayani                                                                 |
+| --------------------- | ------- | ---------------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`  | Kunna tallafin wakili na SOCKS5 (tsohon `true` a cikin `.env.example`) |
 
 ---
 
-## Magance Matsaloli
+## Shirya matsala
 
-### "An kashe proxy na SOCKS5"
+### "SOCKS5 proxy is disabled"
 
-Saita `ENABLE_SOCKS5_PROXY=true` a cikin fayil ɗin `.env` sannan ka sake farawa.
+Saita `ENABLE_SOCKS5_PROXY=true` a cikin fayil ɗin `.env` ku kuma sake farawa.
 
-### Kurakuran "socket hang up" ta hanyar proxy
+### kurakurai "socket hang up" ta hanyar wakili
 
-Wannan abu ne na yau da kullum ga proxy masu arha waɗanda ke katse haɗin da ba ya aiki. OmniRoute ya riga ya magance wannan ta hanyar:
+Wannan al'ada ce tare da wakilai masu arha waɗanda ke sauke haɗin kai marasa aiki. OmniRoute ta riga ta sarrafa wannan ta:
 
-- Kashe keep-alive a haɗin proxy (`keepAliveTimeout: 1`)
-- Kashe pipelining (`pipelining: 0`)
-- Adana dispatchers a cache don guje wa maimaita handshakes
+- Kashe ci gaba da rai akan haɗin wakili (`keepAliveTimeout: 1`)
+- Kashe bututun mai (`pipelining: 0`)
+- Caching masu aikawa don gujewa maimaita musafaha
 
-Idan matsalar ta ci gaba, gwada wani proxy daban ko amfani da fasalin juyawar 1proxy.
+Idan ya ci gaba, gwada wani wakili na daban ko amfani da fasalin juyawa na wakili na 1.
 
-### "unsupported_country_region_territory" yayin OAuth
+### "ƙasar_yankin_yankin_marasa tallafi" yayin OAuth
 
-Tabbatar an saita proxy **kafin** fara tsarin OAuth. OmniRoute yana bi da musayar token na OAuth ta proxy da aka saita. Da farko saita proxy na gaba ɗaya ko na matakin provider, sannan ka haɗa.
+Tabbatar an saita wakili** kafin** OAuth kwarara zuqa. hanyoyin OmniRoute OAuth token musanya ta hanyar wakilcin da aka saita. Saita wakili na duniya ko matakin mai bayarwa da farko, sannan haɗi.
 
-### Ba a amfani da proxy
+### Ba a amfani da wakili
 
-Duba tsarin warwarewa:
+Duba odar ƙuduri:
 
 1. Tabbatar da `GET /api/settings/proxy?resolve=your-connection-id`
-2. Duba ko `status` na proxy shi ne `active` (ba `inactive` ba)
-3. Tabbatar cewa iyakar sanya proxy ta dace da haɗinka
+2. Duba idan `status` wakili ne `active` (ba `inactive`)
+3. Tabbatar cewa iyakar aikin wakili ya dace da haɗin ku
 
-### Aiki tare na 1proxy yana gazawa
+### 1 wakili sync ya kasa
 
-Duba matsayin aiki tare:
+Duba yanayin daidaitawa:
 
 ```bash
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Idan `consecutiveFailures >= 5`, circuit breaker ya kunna. Sake kunna uwar garken don sake saita shi, ko jira a sake saita shi da hannu.
+Idan `consecutiveFailures >= 5`, mai kewayawa ya faskara. Sake kunna uwar garken don sake saiti, ko jira sake saitin hannu.
 
 ---
 
-## Tsarin Bayanai
+## Tsarin Database
 
-### Jadawalin `proxy_registry`
+### `proxy_registry` Table
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -564,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' ko 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (1proxy kawai)
-  latency_ms INTEGER,                        -- milliseƙan (1proxy kawai)
-  anonymity TEXT,                            -- bayyane/maras suna/elite
-  google_access INTEGER DEFAULT 0,           -- zai iya shiga Google? (1proxy)
-  last_validated TEXT,                       -- hatimin lokaci na ISO (1proxy)
-  country_code TEXT,                         -- lambar haruffa 2 ta ISO (1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
+  anonymity TEXT,                            -- transparent/anonymous/elite
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### Jadawalin `proxy_assignments`
+### `proxy_assignments` Table
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID na provider, ID na connection, ko ID na combo
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Duba Lafiyar Proxy (v3.8.16+)
+## Duba lafiyar wakili (v3.8.16 +)
 
-Tsarin **proxy fast-fail** na OmniRoute (`src/lib/proxyHealth.ts`) yana gano proxy da ba sa aiki cikin <2s ta hanyar saurin duba haɗin TCP, sannan ya **adana sakamakon a cache** don guje wa ƙarin nauyi ga kowace buƙata.
+OmniRoute s** wakili mai sauri-kasa** tsarin (`src/lib/proxyHealth.ts`) yana gano matattun proxies a cikin < 2s ta hanyar binciken haɗin TCP mai sauri, sannan** caches sakamakon** don kauce wa kan abin da ake buƙata.
 
-### Yadda Yake Aiki
+### Yadda Ake Aiki
 
 ```
-Buƙata ──▶ ProxyHealthCache.get(url)
+Request ──▶ ProxyHealthCache.get(url)
              │
-             ├─ An same shi a cache + sabo ne?  ──▶ mayar da matsayin da aka adana
+             ├─ Cache hit + fresh?  ──▶ return cached status
              │
-             └─ Babu a cache / ya tsufa?  ──▶ haɗa TCP zuwa host:port
-                                               (lokacin ƙarewa: FAST_FAIL_TIMEOUT_MS)
-                                               ──▶ adana a cache na HEALTH_CACHE_TTL_MS
-                                               ──▶ mayar da sakamako
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Ba tare da wannan ba, proxy da ba ya aiki zai toshe kowace buƙata har tsawon cikakken `PROXY_TIMEOUT_MS` (tsoho 30s) kafin ya gaza.
+Idan ba tare da wannan ba, mataccen wakili zai toshe duk buƙatun cikakken `PROXY_TIMEOUT_MS` (tsoho 30s) kafin ya gaza.
 
-### Sauye-sauyen Muhalli Masu Daidaituwa
+### Canje-canjen Muhalli Mai Sauƙi
 
-| Sauyi                        | Tsoho   | Manufa                                              |
+| Mai canzawa                  | Default | Manufar                                             |
 | ---------------------------- | ------- | --------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | Lokacin ƙarewar haɗin TCP ga kowane binciken lafiya |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Tsawon lokacin adana sakamakon lafiya a cache       |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | lokacin ƙayyadaddun haɗin TCP ta kowane duba lafiya |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Yaya tsawon lokacin da aka adana sakamakon lafiya   |
 
-**Ƙimomin da aka ba da shawara:**
+**Abubuwan da aka ba da shawarar:**
 
-| Yanayi                          | Lokacin ƙarewar fast-fail | Cache TTL | Dalili                                                                                      |
-| ------------------------------- | ------------------------- | --------- | ------------------------------------------------------------------------------------------- |
-| Ƙofar API mai yawan zirga-zirga | 1500ms                    | 60000ms   | Gaggauta gazawa, cache mai tsawo don rage bincike                                           |
-| Nodes da aka rarraba ta wurare  | 3000ms                    | 15000ms   | Hanyoyin sadarwa masu jinkiri na buƙatar ƙarin lokaci; gajeren cache don saurin sauya hanya |
-| Haɓakawa / gwaji                | 1000ms                    | 10000ms   | Saurin maimaita gwaji a kan proxy na gida                                                   |
-| Ɓoyewa / hana ganowa            | 2500ms                    | 45000ms   | Guje wa bincike akai-akai wanda zai iya kunna iyakokin ƙima                                 |
+| Halin yanayi          | Lokacin gazawar sauri | Cache TTL | Hankali                                                                                  |
+| --------------------- | --------------------- | --------- | ---------------------------------------------------------------------------------------- |
+| Ƙofar API mai girma   | 1500ms                | 60000ms   | M kasa-sauri, dogon cache don rage cache                                                 |
+| Geo-rarraba nodes     | 3000ms                | 15000ms   | Cibiyoyin sadarwa masu hankali suna buƙatar ƙarin lokaci; guntu cache don saurin gazawar |
+| Dev / gwaji           | 1000ms                | 10000ms   | Saurin maimaitawa akan wakilai na gida                                                   |
+| Stealth / anti-ganewa | 2500ms                | 45000ms   | Guji bincike cikin sauri wanda zai iya haifar da iyakoki                                 |
 
-### Bincika Lafiyar Proxy
+### Duba lafiyar wakili
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Tilasta sake duba wani takamaiman proxy
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Alamar `stale` tana zama `true` idan shigarwar cache ta wuce `HEALTH_CACHE_TTL_MS` kuma buƙata ta gaba za ta jawo sabon bincike.
+Tutar `stale` ita ce `true` lokacin shigar da cache ya wuce `HEALTH_CACHE_TTL_MS` kuma buƙatu ta gaba za ta haifar da sabon rajistan.
 
-### Tsoffin Ƙimomi Bisa Nau'in Kowane Proxy
+### Nau'in Per-Proxy Defaults
 
-Binciken lafiya yana amfani da tsoffin ƙimomi masu dacewa bisa tsarin URL:
+Binciken lafiyar yana amfani da rashin kuskure bisa tsarin URL :
 
-| Tsari                      | Tsohuwar tashar |
-| -------------------------- | --------------- |
-| `http://`                  | 8080            |
-| `https://`                 | 443             |
-| `socks5://` / `socks5h://` | 1080            |
+| Tsari                      | Tsohuwar tashar jiragen ruwa |
+| -------------------------- | ---------------------------- |
+| `http://`                  | 8080                         |
+| `https://`                 | 443                          |
+| `socks5://` / `socks5h://` | 1080                         |
 
-Tashoshin da aka keɓance a cikin URL (`http://host:9999`) koyaushe suna da fifiko a kan tsohuwar tashar tsarin.
+Tashar jiragen ruwa na al'ada a cikin URL (`http://host:9999`) koyaushe suna kan gaba akan tsohowar tsarin.
 
 ---
 
-## Nazarin Proxy da Sa Ido
+## Proxy Analytics & Observability
 
-OmniRoute yana bin diddigin amfani da kowane proxy don taimaka wa masu gudanarwa gano tsarin zaɓin hanya, hauhawar jinkiri, da matsalolin da ke maimaituwa.
+OmniRoute yana bibiyar amfani da kowane wakili don taimakawa masu aiki bincikar tsarin tuƙi, latency spikes, da maimaita gazawar.
 
-### Abubuwan da Ake Bibiyarsu
+### Abin da Aka Bibiya
 
-Ga kowace buƙata da ta bi ta wani proxy da aka saita, OmniRoute yana adana:
+Ga kowane buƙatu ta hanyar wakili da aka saita, OmniRoute yana yin rikodin:
 
-| Ma'auni      | Bayani                                                         |
-| ------------ | -------------------------------------------------------------- |
-| `proxy_url`  | Cikakken URL na proxy (an ɓoye bayanan tabbatarwa)             |
-| `provider`   | ID na mai samarwa na upstream (openai, anthropic, da sauransu) |
-| `latency_ms` | Jimillar lokacin tafiya da dawowa, har da haɗawar proxy        |
-| `connect_ms` | Lokacin haɗin TCP kaɗai                                        |
-| `status`     | Lambar matsayin HTTP daga upstream                             |
-| `error`      | Nau'in kuskure idan buƙatar ta gaza                            |
-| `timestamp`  | ISO 8601 UTC                                                   |
+| Ma'auni      | Bayani                                                   |
+| ------------ | -------------------------------------------------------- |
+| `proxy_url`  | Cikakkun wakili URL (tare da abin rufe fuska na gaskiya) |
+| `provider`   | Mai bada ID na sama (openai, anthropic, da sauransu)     |
+| `latency_ms` | Jimlar lokacin tafiya gami da musafaha wakili            |
+| `connect_ms` | TCP haɗa lokacin kawai                                   |
+| `status`     | HTTP status code daga sama                               |
+| `error`      | Kuskure aji idan bukatar ta gaza                         |
+| `timestamp`  | ISO 8601 UTC                                             |
 
-### Samun Bayanai
+### Shiga Data
 
 ```bash
-# Abubuwan da suka faru kwanan nan na proxy
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Ainihin endpoint ɗin shi ne `/api/usage/proxy-logs` (duba `src/app/api/usage/proxy-logs/route.ts`). Wannan endpoint yana tallafawa:
+Ainihin ƙarshen shine `/api/usage/proxy-logs` (duba `src/app/api/usage/proxy-logs/route.ts`). Wannan ƙarshen ƙarshen yana goyan bayan:
 
-- `GET /api/usage/proxy-logs` — dawo da rajistocin proxy
-- `DELETE /api/usage/proxy-logs` — share duk rajistocin proxy
+- `GET /api/usage/proxy-logs` — maido da rajistan ayyukan wakili
+- `DELETE /api/usage/proxy-logs` — share duk rajistan ayyukan wakili
 
-Idan ana buƙata, ana iya neman ƙididdigar jimilla kai tsaye daga teburin `proxy_logs` ta hanyar SQL. UI na dashboard na iya samar da duban ƙididdigar jimilla.
+Ana iya tambayar ƙididdiga tara kai tsaye daga tebur `proxy_logs` ta hanyar SQL idan an buƙata. Dashboard UI na iya ba da jimillar ra'ayoyi.
 
-### Tsarukan da Aka Saba Gani
+### Samfuran gama gari
 
-**Gano proxy mai sauyawa akai-akai** (yana canzawa tsakanin nasara da gazawa):
+**Gano wakili mai jujjuyawa** (maɓallai tsakanin success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Nemo proxy masu jinkiri** (jinkirin p95 > 2s):
+**Nemo wakili a hankali** (p95 latency > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,93 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Bishiyar Yanke Shawarar Dabarar Juyawa
+## Bishiyar Yanke Dabarun Juyawa
 
-Lokacin da aka sanya proxy da yawa ga wani fage, OmniRoute yana amfani da **dabarar juyawa** don zaɓar wanda zai yi amfani da shi ga kowace buƙata. Ana saita dabarar a matakin fage (na gaba ɗaya, na kowane mai samarwa, na kowane asusu, na kowane haɗi).
+Lokacin da aka sanya wakilai da yawa zuwa iyaka, OmniRoute tana amfani da a** dabarun juyawa** don zaɓar wacce za a yi amfani da ita don kowace buƙata. An tsara dabarun a matakin iyaka (duniya, mai ba da kyauta, kowane asusu, kowane-gwamnati).
 
-### Dabarun da Ake Da Su
+### Dabarun Akwai
 
-| Dabara            | Lokacin amfani                                        | Sakamakon rangwame                                                        |
-| ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- |
-| `quality` (tsoho) | Aiki na zahiri tare da proxy masu inganci daban-daban | Yana fifita proxy masu ƙima mai kyau; ƙila ya hana marasa ƙima samun aiki |
-| `random`          | Rarraba nauyi, sirri                                  | Rarrabawa daidai; yana yin watsi da alamun inganci                        |
-| `sequential`      | Gyaran kurakurai, gwaji mai tabbataccen tsari         | Yana zagayawa ta proxy bisa jeri; yana da sauƙin fahimta                  |
+| Dabarun             | Lokacin amfani                       | Ciniki-kashe                                                       |
+| ------------------- | ------------------------------------ | ------------------------------------------------------------------ |
+| `quality` (default) | Ƙirƙira tare da gauraye masu inganci | Ya ba da fifiko ga manyan wakilai; na iya kashe masu ƙarancin ƙima |
+| `random`            | Rarraba kaya, keɓantawa              | Ko da rarraba; yayi watsi da sigina masu inganci                   |
+| `sequential`        | Debugging, deterministic gwaji       | Zagayawa ta hanyar wakilai cikin tsari; mai sauƙin tunani          |
 
-### Bishiyar Yanke Shawara
+### Bishiyar yanke shawara
 
 ```
-                    Kuna da makin inganci na proxy ɗinku?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       EH                      A'A
+       YES                     NO
         │                       │
-   Shin duk proxy              │
-   kusan daidai suke              │
-   wajen inganci?                │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  EH       A'A                Yi amfani da
+  YES       NO                Use
    │         │              `random`
-   │         │              (rarrabawa daidai
-   │         │              tana tara bayanan
-   │         │              inganci a hankali)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Yi amfani da `quality`
-   │    (shi ya fi dacewa da
-   │    inganci iri-iri)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Yi amfani da `random`
-(rarraba nauyi
-daidai)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Cire Proxies Naku da Suka Gaza ta Atomatik
+## Keɓewar Kasawar Kai tsaye don Wakilan ku
 
-Rukunin kasuwar 1proxy ya riga ya rage darajar proxies da suka gaza da kansa ta atomatik (duba
-[Makin Ingancin Proxy](#proxy-quality-scores)). Ga
-proxies da **ku** kuka ƙara zuwa rajistar, mai tsara aikin duba lafiyar bango
-(`src/lib/proxyHealth/scheduler.ts`) yana samar da irin wannan halayyar ta “cire mamba da ya daina aiki daga
-sarkar ta atomatik”, ba tare da share komai ba:
+Wurin wakilta na 1proxy ya riga ya lalata abubuwan wakilci da kansa (duba [Proxy Quality Scores](#proxy-quality-scores) ). Domin wakilai** ka** ƙara zuwa wurin yin rajista, mai tsara tsarin kiwon lafiya na baya (`src/lib/proxyHealth/scheduler.ts`) yana ba da irin wannan "ban da mataccen memba daga sarkar ta atomatik", ba tare da share wani abu ba:
 
 ```bash
-# .env — a kashe proxy na ɗan lokaci bayan bincike 3 a jere da suka gaza, sannan a sake kunna shi
-# ta atomatik da zarar ya fara amsa binciken kuma.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Yadda yake aiki a cikin sarkar proxies da yawa:
+Yadda ya dace da sarkar wakili mai yawa:
 
-1. Mai tsara aikin yana bincika kowane proxy da aka yi wa rajista a duk `PROXY_HEALTH_INTERVAL_MS`
-   (tsoho minti 10; mafi ƙaranci minti 1).
-2. Bayan gazawa **tabbatattu** a jere adadin `PROXY_AUTO_REMOVE_AFTER` (gazawar
-   haɗi ta gaske — ƙarewar lokaci ko 5xx na maƙasudin binciken kansa ba ya taɓa ƙirguwa, duba
-   [Duba Lafiyar Proxy](#proxy-health-checking-v3816)), ana saita `status` na proxy ɗin
-   zuwa `dead`.
-3. `dead` yana ɗaya daga cikin halayen da matatar halin-aiki da warwarewar pool/rotation
-   ke cirewa, don haka juyawar scope (bi da bi / bazuwar / manne /
-   latency — duba [Bishiyar Yanke Shawarar Dabarar Juyawa](#rotation-strategy-decision-tree))
-   nan take take daina ba da wannan proxy ga sabbin buƙatu. Babu wani proxy a cikin
-   pool ɗin da abin ya shafa, kuma gaba ɗayan pool ɗin ba ya taɓa komawa a ɓoye zuwa haɗin
-   kai tsaye — duba kariyar fail-closed ta [Tsarin Proxy Mai Matakai 4](#4-level-proxy-system).
-4. Mai tsara aikin yana ci gaba da bincikar proxies masu `dead` a wannan tazara. Bincike na gaba
-   da ya yi nasara zai mayar da `status` zuwa `active`, sannan proxy ɗin ya sake shiga juyawa —
-   ba a buƙatar sake ƙara shi da hannu.
+1. Mai tsara jadawalin yana bincika kowane wakili mai rijista kowane `PROXY_HEALTH_INTERVAL_MS` (tsoho 10 min; ƙaramar min 1).
+2. Bayan `PROXY_AUTO_REMOVE_AFTER` a jere** m** gazawar (rashin haɗin kai na gaske — lokacin ƙarewa ko nasa 5xx na bincike bai taɓa ƙidaya ba, duba [Proxy Health Checking](#proxy-health-checking-v3816) ), an saita `status` na wakili zuwa `dead`.
+3. `dead` yana ɗaya daga cikin ma'auni na tace mai rai wanda ƙudurin pool/rotation ke amfani da shi ya keɓance, don haka jujjuyawar iyaka (zagaye-robin / random / sticky / latency — duba [Juya Dabarun Yanke shawarar Bishiyar](#rotation-strategy-decision-tree) ) nan da nan ya daina ba da wannan wakili ga sababbin buƙatun. Babu wasu wakilai a cikin tafkin da abin ya shafa, kuma duk tafkin bai taɓa yin shuru ba ya koma ga haɗin kai tsaye — duba [Tsarin Proxy-Level 4](#4-level-proxy-system) ya kasa rufewa.
+4. Mai tsara jadawalin yana ci gaba da binciken `dead` a lokaci guda. Binciken nasara na gaba yana jujjuya `status` zuwa `active` kuma yana sake shigar da juyawa — babu sake ƙarawa da hannu da ake buƙata.
 
-An tsara wannan da gangan a matsayin abin da ake **zaɓar kunnawa kuma ba ya lalata bayanai**: a tsoho, mai tsara aikin kawai
-yana ƙirga gazawa kuma yana rubuta su a rajista (duba manufar C a cikin `decision.ts`), kuma `PROXY_AUTO_DISABLE`
-ba ya taɓa share layi — wannan shi ne aikin tutar `PROXY_AUTO_REMOVE` ta daban, wadda
-ta fi tsauri. Idan an saita dukansu zuwa `true`, `PROXY_AUTO_REMOVE`
-ne ke da fifiko (proxy da ake shirin sharewa ba shi da amfanin kashewa na ɗan lokaci kafin nan). Duba
-bayanan [Tsarin Muhalli](../reference/ENVIRONMENT.md) don cikakken
-jerin variables.
+Wannan shi ne da gangan** ficewa da mara lalacewa** : ta tsohuwa mai tsara jadawalin kawai yana ƙididdigewa kuma ya yi rikodin gazawar (duba manufofin C a cikin `decision.ts`), kuma `PROXY_AUTO_DISABLE` baya share — jere wanda shine abin da ya bambanta, tuta ta `PROXY_AUTO_REMOVE` mai tsananin zafi. Idan an saita su zuwa `true`, `PROXY_AUTO_REMOVE` yayi nasara (wakilin da ke shirin sharewa ba shi da wani amfani ga mai laushi mai laushi a tsakanin). Dubi ma'anar Saitin [Muhalli](../reference/ENVIRONMENT.md) don cikakken jerin m.
 
 ---
 
-> 📖 **Takardun da suka shafi wannan:**
+> 📖** Takardu masu alaƙa:**
 >
-> - [Jagorar Mai Amfani](../guides/USER_GUIDE.md) — Saitawa da daidaitawa gaba ɗaya
-> - [Bayanan API](../reference/API_REFERENCE.md) — Cikakkun takardun API
-> - [Tsarin Muhalli](../reference/ENVIRONMENT.md) — Duk variables na muhalli
+> - [Jagorar mai amfani](../guides/USER_GUIDE.md) — Gabaɗaya saitin da daidaitawa - [API Reference](../reference/API_REFERENCE.md) — Cikakkun takaddun API - [Tsarin Muhalli](../reference/ENVIRONMENT.md) — Duk masu canjin yanayi

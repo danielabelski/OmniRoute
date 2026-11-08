@@ -4,150 +4,161 @@
 
 ---
 
-> **Kerülje meg a földrajzi korlátozásokat, védje személyazonosságát, és irányítsa az AI-forgalmat bármilyen proxyn keresztül — mindezt konfigurációs bonyodalmak nélkül.**
+> **Kerülje meg a földrajzi blokkokat, védje meg személyazonosságát, és irányítsa AI forgalmat bármely — proxy-n keresztül, anélkül, hogy a konfiguráció bonyolult.**
 
-Az OmniRoute teljes funkcionalitású proxykezelő rendszert tartalmaz, amellyel a felsőbb szintű AI-szolgáltatók felé irányuló forgalmat HTTP-, HTTPS- vagy SOCKS5-proxykon keresztül továbbíthatja. Akár blokkolt régióban tartózkodik, IP-rotációra van szüksége, vagy rejtett ujjlenyomat-kezelést szeretne — ez az útmutató minden részletre kitér.
+OmniRoute tartalmaz egy teljes funkcionalitású proxykezelő rendszert, amely lehetővé teszi AI szolgáltató felfelé irányuló forgalmának HTTP, HTTPS vagy SOCKS5 proxykon keresztül történő irányítását. Függetlenül attól, hogy blokkolt régióban tartózkodik, IP forgatásra van szüksége, vagy lopakodó — ujjlenyomatot szeretne venni, ez az útmutató mindenre kiterjed.
 
 ---
 
 ## Tartalomjegyzék
 
-- [Miért érdemes proxykat használni?](#why-use-proxies)
-- [Az architektúra áttekintése](#architecture-overview)
-- [Négyszintű proxyrendszer](#4-level-proxy-system)
-- [Proxyregiszter (CRUD)](#proxy-registry-crud)
-- [Az 1proxy ingyenes piactere](#1proxy-free-proxy-marketplace)
-- [Proxyrotáció](#proxy-rotation)
-- [Észlelés elleni védelem és rejtett működés](#anti-detection--stealth)
-- [Felsőbb szintű proxymódok](#upstream-proxy-modes)
-- [Vezérlőpult felhasználói felülete](#dashboard-ui)
-- [API-referencia](#api-reference)
+- [Miért használjunk proxykat?](#why-use-proxies)
+- [Építészet áttekintése](#architecture-overview)
+- [4 szintű proxy rendszer](#4-level-proxy-system)
+- [Proxy Registry (CRUD)](#proxy-registry-crud)
+- [1proxy ingyenes piactér](#1proxy-free-proxy-marketplace)
+- [Proxy forgatás](#proxy-rotation)
+- [Anti-Detection & Stealth](#anti-detection--stealth)
+- [Upstream proxy módok](#upstream-proxy-modes)
+- [Műszerfal UI](#dashboard-ui)
+- [API Referencia](#api-reference)
 - [Környezeti változók](#environment-variables)
 - [Hibaelhárítás](#troubleshooting)
 
 ---
 
-## Miért érdemes proxykat használni?
+## Miért használjunk proxykat?
 
-Számos AI-szolgáltató földrajzi régió alapján korlátozza a hozzáférést. Az **Oroszországban, Kínában, Iránban, Kubában, Törökországban** és más országokban dolgozó fejlesztők az alábbihoz hasonló hibákkal találkozhatnak:
+Sok AI szolgáltató földrajzi régió szerint korlátozza a hozzáférést. Fejlesztők itt** Oroszország, Kína, Irán, Kuba, Törökország** , és más országokban olyan hibák jelentkeznek, mint:
 
 ```
 unsupported_country_region_territory
 ```
 
-A proxyk a blokkolt régiókon kívül is hasznosak:
+A proxyk még a blokkolt régiókon kívül is hasznosak:
 
-| Felhasználási mód                      | Leírás                                                                    |
-| -------------------------------------- | ------------------------------------------------------------------------- |
-| **Földrajzi korlátozások megkerülése** | Az OpenAI, Anthropic, Codex és Copilot elérése blokkolt országokból       |
-| **IP-rotáció**                         | A kérések elosztása több IP-cím között a sebességkorlátozás elkerüléséhez |
-| **Adatvédelem**                        | A valódi IP-cím elrejtése a felsőbb szintű szolgáltatók elől              |
-| **Megfelelőség**                       | A forgalom meghatározott joghatóságokon keresztüli irányítása             |
-| **Tesztelés**                          | Különböző régiókból érkező kérések szimulálása                            |
+| Használati eset      | Leírás                                                                          |
+| -------------------- | ------------------------------------------------------------------------------- |
+| **Földrajzi kitérő** | Hozzáférés OpenAI, Anthropic, Codex, Copilot eléréséhez a letiltott országokból |
+| **IP forgás**        | Ossza el a kéréseket több IPs között, hogy elkerülje a sebességkorlátozást      |
+| **Magánélet**        | Rejtse el valódi IP ját az upstream szolgáltatók elől                           |
+| **Megfelelés**       | A forgalom meghatározott joghatóságokon keresztül történő átirányítása          |
+| **Tesztelés**        | Szimulálja a különböző régiókból érkező kéréseket                               |
 
 ---
 
-## Az architektúra áttekintése
+## Építészet áttekintése
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       OmniRoute-kiszolgáló                    │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Proxy-      │    │ Proxy-       │    │ Proxy            │  │
-│  │ regiszter   │───▶│ diszpécser   │───▶│ Fetch (undici)   │  │
-│  │ (SQLite)    │    │ (gyorsítótár)│    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ 1proxy-     │                        │ Felsőbb szintű   │  │
-│  │ szinkroniz. │                        │ szolgáltatói API │  │
-│  │ (ingyenes)  │                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Fő összetevők
+### Kulcsfontosságú komponensek
 
-| Összetevő              | Fájl                                         | Szerep                                                               |
-| ---------------------- | -------------------------------------------- | -------------------------------------------------------------------- |
-| **Proxyregiszter**     | `src/lib/db/proxies.ts`                      | CRUD-műveletek a proxybejegyzésekhez és a hatókör-hozzárendelésekhez |
-| **Proxydiszpécser**    | `open-sse/utils/proxyDispatcher.ts`          | Gyorsítótárazott `undici` ProxyAgent/SOCKS diszpécserek létrehozása  |
-| **Proxy Fetch**        | `open-sse/utils/proxyFetch.ts`               | A `fetch()` kiegészítése proxydiszpécser-injektálással               |
-| **Beállítási útvonal** | `src/app/api/settings/proxy/route.ts`        | Korábbi proxykonfigurációs API (GET/PUT/DELETE)                      |
-| **Kezelési útvonal**   | `src/app/api/v1/management/proxies/route.ts` | Regiszterkezelő CRUD API (GET/POST/PATCH/DELETE)                     |
-| **1proxy-adatbázis**   | `src/lib/db/oneproxy.ts`                     | Az ingyenes proxypiactér adatainak tartós tárolása                   |
+| Összetevő                     | Fájl                                         | Szerep                                                                |
+| ----------------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| **Proxy Registry**            | `src/lib/db/proxies.ts`                      | CRUD proxy bejegyzésekhez + hatókör hozzárendelésekhez                |
+| **Meghatalmazott diszpécser** | `open-sse/utils/proxyDispatcher.ts`          | `undici` ProxyAgent/SOCKS diszpécsereket hoz létre gyorsítótárazással |
+| **Proxy letöltése**           | `open-sse/utils/proxyFetch.ts`               | `fetch()` becsomagolja proxy diszpécser injekcióval                   |
+| **Beállítások Útvonal**       | `src/app/api/settings/proxy/route.ts`        | Legacy proxy config API (GET/PUT/DELETE)                              |
+| **Menedzsment útvonal**       | `src/app/api/v1/management/proxies/route.ts` | Registry CRUD API (GET/POST/PATCH/DELETE)                             |
+| **1 proxy DB**                | `src/lib/db/oneproxy.ts`                     | Ingyenes proxy piactér kitartása                                      |
 
 ---
 
-## Négyszintű proxyrendszer
+## Alapértelmezett proxy állapot az új fiókokhoz
 
-Az OmniRoute **négy független hatókörben** támogatja a proxykonfigurációt, amelyek kiértékelése prioritási sorrendben történik:
+In** Beállítások → Proxy → Globális konfiguráció** , használja** Alapértelmezés szerint engedélyezze a proxyt az új kapcsolatokhoz** az újonnan hozzáadott szolgáltatói fiókok kezdeti proxyállapotának kiválasztásához.
+
+Az új beállítás szabályozza az újonnan hozzáadott szolgáltatói fiókok kezdeti proxy állapotát. Nem módosítja a meglévő fiókokat, és nem cseréli le a globális proxykapcsolót. Kezdeti értéke megőrzi a korábbi viselkedést. Kapcsolja ki egyszer, ha jövőbeli fiókokat szeretne létrehozni úgy, hogy a proxy alapértelmezés szerint le van tiltva.
+
+A preferenciát a `defaultNewConnectionProxyEnabled` néven tárolja a meglévő API beállításokon keresztül. Alapértelmezés szerint `true`, amikor soha nem menti. `false` mentése a következő új fiókoknál újraindítás nélkül lép életbe. `POST /api/providers` elfogad egy opcionális szigorú logikai `proxyEnabled`; az explicit `true` vagy `false` elsőbbséget élvez a létrehozási alapértelmezett értékkel szemben. A duplikált fiók kihagyása vagy OAuth reconnect megőrzi a fiók tárolt állapotát. Az egyéni fiókok ezután is engedélyezhetők vagy letilthatók.
+
+A szelektív szolgáltatói átvitel a céltelepítés alapértelmezett beállításait használja az új fiókokhoz, és megőrzi a célházirendet a meglévő fiókok cseréjekor. A proxy kapcsolók nem hordozható átviteli mezők. A teljes biztonsági másolat-visszaállítás és a történelmi JSON/SQL -migráció megtartja meglévő visszaállítási szemantikáját, beleértve a mentett fiókértékeket és a régi séma alapértelmezett beállításait; a beállítások teljes visszaállítása is visszaállíthatja ezt a preferenciát.
+
+Ez a beállítás nem rendel hozzá proxyt, és nem állapítja meg, hogy az egészséges vagy használatban van-e. A tényleges útválasztás továbbra is a globális proxykapcsolótól és az alkalmazandó proxykonfigurációtól függ. A megőrzött fiók nélküli szintetikus szolgáltatók, a fiók létrehozása előtti OAuth forgalom, environment/system proxy-k és a külső háttérrendszerek hálózata nem tartozik a hatálya alá.
+
+## 4 szintű proxy rendszer
+
+OmniRoute támogatja a proxykonfigurációt a címen** négy független szkóp** , prioritási sorrendben megoldva:
 
 ```
-Prioritási sorrend (legmagasabb → legalacsonyabb):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Fiók-/kapcsolati proxy  →  API-kulcsonként / OAuth-kapcsolatonként
-  2. 🟡 Szolgáltatói proxy      →  szolgáltatónként (pl. az összes OpenAI-forgalom)
-  3. 🟠 Kombinációs proxy       →  kombinációnként/útválasztási konfigurációnként
-  4. 🟢 Globális proxy          →  minden forgalom, minden szolgáltató
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### A feloldás működése
+### Hogyan működik a felbontás
 
-Amikor az OmniRoute kérést küld egy felsőbb szintű szolgáltatónak, meghívja a `resolveProxyForConnectionFromRegistry()` függvényt, amely sorrendben ellenőrzi az egyes szinteket:
+Amikor OmniRoute kérelmet küld egy upstream szolgáltatónak, meghívja `resolveProxyForConnectionFromRegistry()`, amely sorrendben ellenőrzi az egyes szinteket:
 
-1. **Fiókszint** — Van proxy hozzárendelve ehhez a konkrét kapcsolatazonosítóhoz?
-2. **Szolgáltatói szint** — Van proxy hozzárendelve ehhez a szolgáltatóhoz (pl. `openai`)?
-3. **Globális szint** — Van beállítva globális proxy?
+1. **Fiókszintű** — Van proxy hozzárendelve ehhez a konkrét ID kapcsolathoz?
+2. **Szolgáltatói szintű** — Hozzá van rendelve proxy ehhez a szolgáltatóhoz (pl. `openai`)?
+3. **Globális szinten** — Van globális proxy konfigurálva?
 4. **Nincs proxy** — Közvetlen kapcsolat a szolgáltatóval.
 
-Az első egyezés érvényesül. Ez azt jelenti, hogy beállíthat egy globális proxyt tartalékmegoldásként, majd felülbírálhatja azt bizonyos szolgáltatók vagy kapcsolatok esetében.
+Az első meccs nyer. Ez azt jelenti, hogy beállíthat egy globális proxyt tartalékként, de felülírhatja azt bizonyos szolgáltatók vagy kapcsolatok esetén.
 
-### Milyen forgalom halad át a proxyn
+### Mit kap proxyként
 
-| Forgalomtípus            | Proxyzott? | Megjegyzések                                             |
-| ------------------------ | ---------- | -------------------------------------------------------- |
-| Csevegési kiegészítések  | ✅         | Minden `/v1/chat/completions` kérés                      |
-| Beágyazások              | ✅         | `/v1/embeddings`                                         |
-| Képgenerálás             | ✅         | `/v1/images/generations`                                 |
-| Hang (TTS/STT)           | ✅         | `/v1/audio/*`                                            |
-| OAuth-token cseréje      | ✅         | Megoldja az `unsupported_country_region_territory` hibát |
-| Kapcsolattesztelés       | ✅         | A „Kapcsolat tesztelése” gomb proxyt használ             |
-| Tokenfrissítés           | ✅         | Háttérben végzett OAuth-megújítás                        |
-| Modellek szinkronizálása | ✅         | Modellek listázása és felderítése                        |
+| Forgalom típusa       | Meghatalmazott? | Megjegyzések                                    |
+| --------------------- | --------------- | ----------------------------------------------- |
+| Csevegés befejezése   | ✅              | Minden `/v1/chat/completions` kérés             |
+| Beágyazások           | ✅              | `/v1/embeddings`                                |
+| Képgenerálás          | ✅              | `/v1/images/generations`                        |
+| Hang (TTS/STT)        | ✅              | `/v1/audio/*`                                   |
+| OAuth tokencsere      | ✅              | Megoldja `unsupported_country_region_territory` |
+| Csatlakozási tesztek  | ✅              | A "Kapcsolat tesztelése" gomb proxyt használ    |
+| Token frissítése      | ✅              | Háttér OAuth megújulás                          |
+| Modell szinkronizálás | ✅              | Modell listázás és felfedezés                   |
 
 ---
 
-## Proxyregiszter (CRUD)
+## Proxy Registry (CRUD)
 
-A proxyregiszter egy SQLite-tábla (`proxy_registry`), amely az összes proxyt tárolja. Minden proxy a következő mezőkkel rendelkezik:
+A proxy-nyilvántartás egy SQLite tábla (`proxy_registry`), amely az összes proxyt tárolja. Minden proxy rendelkezik:
 
-| Mező       | Típus   | Leírás                                           |
-| ---------- | ------- | ------------------------------------------------ |
-| `id`       | UUID    | Egyedi azonosító                                 |
-| `name`     | Sztring | Ember által olvasható címke                      |
-| `type`     | Sztring | Protokoll: `http`, `https`, `socks5`             |
-| `host`     | Sztring | A proxy gépneve vagy IP-címe                     |
-| `port`     | Egész   | Portszám                                         |
-| `username` | Sztring | Hitelesítési felhasználónév (titkosítva tárolva) |
-| `password` | Sztring | Hitelesítési jelszó (titkosítva tárolva)         |
-| `region`   | Sztring | Földrajzi régió címkéje                          |
-| `notes`    | Sztring | Szabad szöveges megjegyzések                     |
-| `status`   | Sztring | `active` vagy `inactive`                         |
-| `source`   | Sztring | `manual` vagy `oneproxy`                         |
+| Mező       | Írja be    | Leírás                                                      |
+| ---------- | ---------- | ----------------------------------------------------------- |
+| `id`       | UUID       | Egyedi azonosító                                            |
+| `name`     | Húr        | Ember által olvasható címke                                 |
+| `type`     | Húr        | Protokoll: `http`, `https`, `socks5`                        |
+| `host`     | Húr        | Proxy gazdagépnév vagy IP                                   |
+| `port`     | Egész szám | Port száma                                                  |
+| `username` | Húr        | Felhasználónév hitelesítés (nyugalmi állapotban titkosítva) |
+| `password` | Húr        | Hitelesítési jelszó (nyugalmi állapotban titkosítva)        |
+| `region`   | Húr        | Földrajzi régió címke                                       |
+| `notes`    | Húr        | Szabad szövegű jegyzetek                                    |
+| `status`   | Húr        | `active` vagy `inactive`                                    |
+| `source`   | Húr        | `manual` vagy `oneproxy`                                    |
 
 ### Proxy létrehozása
 
 **Az irányítópulton keresztül:**
 
-1. Lépjen a **Beállítások → Proxy** menüpontra
-2. Kattintson a **Proxy hozzáadása** lehetőségre
-3. Adja meg a típust, a gépnevet, a portot és az opcionális hitelesítési adatokat
-4. Mentse a beállításokat
+1. Menj ide** Beállítások → Proxy**
+2. Kattintson** Proxy hozzáadása**
+3. Adja meg a típust, a gazdagépet, a portot és az opcionális hitelesítési adatokat
+4. Megtakarítás
 
-**API-n keresztül:**
+**API keresztül:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -175,56 +186,56 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Megjegyzés:** A hitelesítési adatok megmaradnak, hacsak nem küld kifejezetten nem üres helyettesítő értékeket. Ha üres sztringeket küld a `username`/`password` mezőkhöz, a tárolt értékek megmaradnak.
+> **Jegyzet:** A hitelesítési adatok megmaradnak, hacsak nem küld kifejezetten nem üres pótlásokat. `username`/`password` üres karakterláncainak elküldése megtartja a tárolt értékeket.
 
 ### Proxy törlése
 
 ```bash
-# Sikertelen, ha a proxy bármely hatókörhöz hozzá van rendelve
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Kényszerített törlés (a hozzárendeléseket is eltávolítja)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Proxyk listázása
+### Listázási proxyk
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Proxyk hozzárendelése hatókörökhöz
+### Proxyk hozzárendelése hatókörhöz
 
 ```bash
-# Hozzárendelés a globális hatókörhöz
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Hozzárendelés egy adott szolgáltatóhoz
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Hozzárendelés egy adott kapcsolathoz/kulcshoz
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### A tényleges proxy feloldása
+### A hatékony proxy feloldása
 
-Ellenőrizze, hogy egy adott kapcsolathoz melyik proxy lenne használva:
+Ellenőrizze, hogy egy adott kapcsolathoz melyik proxy kerül felhasználásra:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-A feloldott proxyt adja vissza annak szintjével (`account`, `provider` vagy `global`) és forrásával együtt.
+Visszaadja a feloldott proxyt a szintjével (`account`, `provider` vagy `global`) és a forrással együtt.
 
-### Tömeges hozzárendelés
+### Tömeges kiosztás
 
-Rendeljen hozzá egy proxyt egyszerre több szolgáltatóhoz vagy kapcsolathoz:
+Egy proxy hozzárendelése több szolgáltatóhoz vagy kapcsolathoz egyszerre:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Importálás/exportálás
+### Import/Export
 
-A proxyk szerepelnek a **Biztonsági mentés/visszaállítás** rendszerben. Az OmniRoute-konfiguráció exportálásakor:
+A proxyk benne vannak a**Backup/Restore** rendszer. A OmniRoute konfiguráció exportálásakor:
 
-1. Lépjen az **Irányítópult → Beállítások → Biztonsági mentés** menüpontra
-2. Kattintson az **Exportálás** lehetőségre — a proxyregiszter és a hozzárendelések is bekerülnek
-3. A visszaállításhoz kattintson az **Importálás** lehetőségre, majd töltse fel a biztonsági mentési fájlt
+1. Menj ide** Irányítópult → Beállítások → Biztonsági mentés**
+2. Kattintson** Export** — proxy registry és hozzárendelések szerepelnek benne
+3. A visszaállításhoz kattintson a gombra** Importálás** és töltse fel a biztonsági másolatot
 
-A proxyregiszter támogatja a **host+port alapján történő upsert műveletet** is — ha olyan proxyt importál, amely már létezik (azonos gépnévvel és porttal), akkor új példány létrehozása helyett a meglévőt frissíti.
+A proxy registry is támogatja** a gazdagép + portja által feltöltve** — ha már létező proxyt importál (ugyanaz a gazdagép és port), akkor a duplikáció létrehozása helyett frissít.
 
-### Örökölt adatok migrációja
+### Örökségi migráció
 
-Ha egy régebbi (registry előtti) verzióban konfigurált proxykat, az OmniRoute automatikusan migrálja őket:
+Ha a proxykat egy régebbi verzióban (előzetes regisztrációs adatbázisban) konfigurálta, OmniRoute automatikusan migrálja őket:
 
 ```
-Korábbi key_value tároló → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Ez a frissítés utáni első indításkor egyszer történik meg. Az újbóli futtatáshoz használja a `migrateLegacyProxyConfigToRegistry({ force: true })` függvényt.
+Ez egyszer történik meg a frissítés utáni első indításkor. Használja `migrateLegacyProxyConfigToRegistry({ force: true })` az újrafutáshoz.
 
 ---
 
-## 1proxy ingyenes proxy piactér
+## 1proxy Ingyenes proxy piactér
 
-> 🆕 **Közreműködő: [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Hibajegy: [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Közreműködött: [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) ( [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) probléma)
 
-Az OmniRoute integrálható a **[1proxy](https://1proxy-api.aitradepulse.com)** közösségi platformmal, így hozzáférést biztosít **több száz ingyenes, ellenőrzött proxyhoz** a világ minden tájáról. Ez tökéletes megoldás azoknak a felhasználóknak, akik nem rendelkeznek saját proxyinfrastruktúrával.
+OmniRoute integrálódik a** [1 proxy](https://1proxy-api.aitradepulse.com)** közösségi platform, amelyhez hozzáférést biztosít** több száz ingyenes, ellenőrzött proxy** a világ minden tájáról. Ez tökéletes azoknak a felhasználóknak, akik nem rendelkeznek saját proxy infrastruktúrával.
 
-### Működés
+### Hogyan működik
 
 ```
-┌─────────────┐  Szinkronizálás  ┌─────────────────┐   Váltás    ┌─────────────┐
-│  1proxy API │ ───────────────▶ │  proxy_registry  │ ──────────▶ │ Szolgáltató │
-│   (külső)   │   legfeljebb 500 │  source=oneproxy │  minőség    │     API     │
-└─────────────┘       proxy      └─────────────────┘   alapján    └─────────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Szinkronizálás** — Az OmniRoute lekéri az ellenőrzött proxykat a 1proxy API-ból
-2. **Tárolás** — A proxyk ugyanabban a `proxy_registry` táblában lesznek mentve, `source = 'oneproxy'` értékkel
-3. **Szűrés** — Szűrés protokoll, ország és minőségi pontszám alapján
-4. **Váltás** — A legjobb proxy kiválasztása minőségi, véletlenszerű vagy szekvenciális stratégia használatával
-5. **Automatikus leminősítés** — A sikertelen proxyk minőségi pontszáma csökken; a küszöbérték alatt → inaktívként lesznek megjelölve
+1. **Szinkronizál** — OmniRoute lekéri az érvényesített proxykat az 1proxy API ről
+2. **Bolt** — A proxykat ugyanabba a `proxy_registry` táblába menti a rendszer, mint `source = 'oneproxy'`
+3. **Szűrő** — Szűrés protokoll, ország, minőségi pontszám szerint
+4. **Forog** — Válassza ki a legjobb proxyt minőségi, véletlenszerű vagy szekvenciális stratégiák használatával
+5. **Automatikus lebontás** — A sikertelen proxyk minőségi pontszámuk csökken; küszöb alatti → inaktívként van megjelölve
 
 ### Proxyk szinkronizálása
 
-**A vezérlőpulton keresztül:**
+**Az irányítópulton keresztül:**
 
-1. Lépjen a **Beállítások → 1proxy** lapra
-2. Kattintson a **„Szinkronizálás most”** gombra
-3. Tekintse meg a statisztikákat: proxyk teljes száma, aktív proxyk száma, átlagos minőség és országonkénti bontás
+1. Menj ide** Beállítások → 1proxy** lapon
+2. Kattintson** "Szinkronizálás most"**
+3. Statisztikák megtekintése: összes proxy, aktív szám, átlagos minőség, országonkénti bontás
 
-**API-n keresztül:**
+**API keresztül:**
 
 ```bash
-# Szinkronizálás indítása
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Válasz:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Proxyk szűrése
 
 ```bash
-# Szűrés protokoll alapján
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Szűrés ország alapján
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Szűrés minimális minőségi pontszám alapján
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Szűrők kombinálása
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Proxyk minőségi pontszámai
+### Proxy minőségi pontszámok
 
-Minden 1proxy-proxyhoz metaadatok tartoznak:
+Minden 1proxy proxyhoz metaadatok tartoznak:
 
-| Mező            | Leírás                                            |
-| --------------- | ------------------------------------------------- |
-| `qualityScore`  | A 1proxy ellenőrzése alapján adott 0–100-as érték |
-| `latencyMs`     | Mért hálózati késleltetés                         |
-| `anonymity`     | `transparent`, `anonymous` vagy `elite`           |
-| `googleAccess`  | A proxy hozzáfér-e a Google szolgáltatásaihoz     |
-| `countryCode`   | Kétbetűs ISO-országkód                            |
-| `lastValidated` | A legutóbbi ellenőrzés időbélyege                 |
+| Mező            | Leírás                                      |
+| --------------- | ------------------------------------------- |
+| `qualityScore`  | 0-100 értékelés 1proxy érvényesítésből      |
+| `latencyMs`     | Mért hálózati késleltetés                   |
+| `anonymity`     | `transparent`, `anonymous` vagy `elite`     |
+| `googleAccess`  | A proxy hozzáfér-e Google szolgáltatásokhoz |
+| `countryCode`   | Kétbetűs ISO országkód                      |
+| `lastValidated` | Az utolsó érvényesítés időbélyege           |
 
-A minőségi pontszámok dinamikusan változnak:
+A minőségi pontszámok dinamikusan korrigálódnak:
 
-- A **sikertelen kérések** 10 ponttal csökkentik a pontszámot
-- Ha a **pontszám ≤10-re csökken** → a proxy `inactive` jelölést kap
-- Az inaktív proxyk kimaradnak a váltásból
+- **Sikertelen kérések** csökkentse a pontszámot 10 ponttal
+- **A pontszám ≤ 10-re csökken** → proxy `inactive` jelölésű
+- Az inaktív proxyk ki vannak zárva a forgatásból
 
-### Váltási stratégiák
+### Rotációs stratégiák
 
 ```bash
-# Váltás minőség alapján (először a legjobb proxy) — alapértelmezett
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Véletlenszerű váltás
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Szekvenciális (először a legrégebben ellenőrzött)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Megszakító
+### Áramköri megszakító
 
-A 1proxy szinkronizálása beépített megszakítóval rendelkezik:
+Az 1proxy szinkron beépített megszakítóval rendelkezik:
 
-- **5 egymást követő szinkronizálási hiba** után a további szinkronizálási kísérletek blokkolva lesznek
-- Visszaállítás: `resetOneproxyCircuitBreaker()`, vagy indítsa újra a szervert
-- A szinkronizálás állapota a `GET /api/settings/oneproxy?action=status` címen érhető el
+- Után** 5 egymást követő szinkronizálási hiba** , a további szinkronizálási kísérletek le vannak tiltva
+- Állítsa vissza a következővel: `resetOneproxyCircuitBreaker()` vagy indítsa újra a szervert
+- A szinkronizálási állapot a `GET /api/settings/oneproxy?action=status` oldalon érhető el
 
-### 1proxy-proxyk törlése
+### 1proxy proxyk törlése
 
 ```bash
-# Egyetlen 1proxy-proxy törlése
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Az ÖSSZES 1proxy-proxy törlése (a manuális proxyk érintetlenek maradnak)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Észlelés elleni védelem és rejtőzködés
+## Anti-Detection & Stealth
 
-Az OmniRoute nem csupán proxyn keresztül irányítja a forgalmat — hitelesnek is láttatja azt:
+OmniRoute nem csak egy proxy — keresztül irányítja a forgalmat, hanem legitimnek tűnik:
 
-### TLS-ujjlenyomat meghamisítása
+### TLS Ujjlenyomat-hamisítás
 
-A `wreq-js` használatával böngészőszerű TLS-ujjlenyomatokat generál, megkerülve azokat a botészlelő rendszereket, amelyek megjelölik a nem böngészőből származó TLS-kézfogásokat.
+`wreq-js` segítségével böngészőszerű TLS ujjlenyomatokat generál, megkerülve a nem böngésző TLS kézfogásait jelző botészlelő rendszereket.
 
-### CLI-ujjlenyomat egyeztetése
+### CLI Ujjlenyomat-illesztés
 
-A **CLI-ujjlenyomat kapcsoló** (`Beállítások → Biztonság`) átrendezi a HTTP-fejléceket és a JSON-törzs mezőit, hogy azok pontosan megfeleljenek a natív CLI-binárisok (Claude Code, Codex stb.) aláírásának. Ez a proxy használatán **felül** működik:
+A**CLI ujjlenyomat kapcsoló** (`Settings → Security`) átrendezi HTTP fejléceket és JSON törzsmezőket, hogy megfeleljenek a natív CLI binárisok (Claude kód, Codex stb.) pontos aláírásának. Ez működik** tetején** a proxy:
 
 ```
-Az Ön IP-je (blokkolva) → Proxy IP-je (USA) → Szolgáltatói API
-                           + TLS-hamisítás
-                           + CLI-ujjlenyomat
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Így egyszerre kap **IP-maszkolást** és **hiteles kéréseket**.
+Mindkettőt megkapod**IP maszkolás** és** hitelességet kérni** egyidejűleg.
 
-### A proxy IP-címének megőrzése
+### Proxy IP megőrzése
 
 Az irányítópulton színkódolt jelvények mutatják, hogy melyik proxyszint aktív:
 
-| Jelvény | Szint       | Jelentés                                              |
-| ------- | ----------- | ----------------------------------------------------- |
-| 🟢      | Globális    | Minden forgalom ezen a proxyn keresztül halad         |
-| 🟡      | Szolgáltató | Csak ezen szolgáltató forgalma halad proxyn keresztül |
-| 🔵      | Kapcsolat   | Ez a konkrét kulcs/fiók ezt a proxyt használja        |
+| Jelvény | Szint       | Jelentése                                                 |
+| ------- | ----------- | --------------------------------------------------------- |
+| 🟢      | Globális    | Az összes forgalom ezen a proxyn keresztül megy keresztül |
+| 🟡      | Szolgáltató | Csak ennek a szolgáltatónak a forgalma proxyzott          |
+| 🔵      | Kapcsolat   | Ez a konkrét key/account ezt a proxyt használja           |
 
-A jelvény az ellenőrzéshez a feloldott proxy IP-címét is megjeleníti.
+A jelvényen az ellenőrzéshez szükséges megoldott proxy IP is látható.
 
 ---
 
-## Kimenő proxy módok
+## Upstream proxy módok
 
-A CLIProxyAPI-mintát használó szolgáltatók esetén az OmniRoute három kimenő proxymódot támogat:
+A CLIProxyAPI mintát használó szolgáltatók esetében OmniRoute három upstream proxy módot támogat:
 
-| Mód           | Leírás                                                                  |
-| ------------- | ----------------------------------------------------------------------- |
-| `native`      | Az OmniRoute közvetlenül kezeli a proxy útválasztását (alapértelmezett) |
-| `cliproxyapi` | Átadja a feladatot egy külső CLIProxyAPI-példánynak                     |
-| `fallback`    | Először a natív módot próbálja, majd visszavált a CLIProxyAPI-ra        |
+| Mód           | Leírás                                                              |
+| ------------- | ------------------------------------------------------------------- |
+| `native`      | OmniRoute közvetlenül kezeli a proxy-útválasztást (alapértelmezett) |
+| `cliproxyapi` | Külső CLIProxyAPI példányhoz delegál                                |
+| `fallback`    | Először natíval próbálkozik, visszaesik CLIProxyAPI ra              |
 
-Szolgáltatónként konfigurálható:
+Konfigurálás szolgáltatónként:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Irányítópult felhasználói felülete
+## Műszerfal UI
 
-### Beállítások → Proxy lap
+### Beállítások → Proxy Tab
 
-- **Globális proxy** konfigurációja (egyszer állítható be az összes forgalomhoz)
-- **Szolgáltatónkénti proxy** felülbírálások
-- **Kapcsolatonkénti proxy** hozzárendelések
-- **Kapcsolatteszt** a konfigurált proxyn keresztül
-- Az aktív proxyszintet mutató **színkódolt jelvények**
+- **Globális proxy** konfiguráció (egyszer beállítva az összes forgalomhoz)
+- **Szolgáltatónkénti proxy** felülírja
+- **Kapcsolatonkénti proxy** feladatokat
+- **Csatlakozási teszt** konfigurált proxy segítségével
+- **Színes jelvények** aktív proxyszintet mutat
 
-### Beállítások → 1proxy lap
+### Beállítások → 1proxy Tab
 
-- **Szinkronizálás most** gomb az ingyenes proxyk lekéréséhez
-- **Statisztikai kártyák**: Összes, Aktív, Átlagos minőség, Utolsó szinkronizálás
-- **Szűrők**: Protokoll, Országkód, Minimális minőség
-- **Proxytáblázat** a gazdagéppel, protokollal, országgal, minőségi pontszámmal, késleltetéssel, anonimitással és Google-hozzáféréssel
-- **Szinkronizálási állapot** panel a sikeres és sikertelen műveletek követésével, valamint az egymást követő hibák számával
-- **Összes törlése** az összes 1proxy-bejegyzés eltávolításához
+- **Szinkronizálás most** gombot az ingyenes proxyk lekéréséhez
+- **Statisztikai kártyák** : Összes, Aktív, Átl. minőség, Utolsó szinkron
+- **Szűrők** : Protokoll, Országkód, Minimális minőség
+- **Proxy táblázat** gazdagéppel, protokollal, országgal, minőségi pontszámmal, késleltetéssel, névtelenséggel, Google hozzáféréssel
+- **Szinkronizálás állapota** panel success/failure követéssel és egymást követő hibaszámlálással
+- **Összes törlése** az összes 1proxy bejegyzés eltávolításához
 
 ---
 
-## API-referencia
+## API Referencia
 
-### Proxybeállítások API-ja
+### Proxy beállítások API
 
-| Metódus  | Végpont                                        | Leírás                                 |
+| Módszer  | Végpont                                        | Leírás                                 |
 | -------- | ---------------------------------------------- | -------------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | A teljes proxykonfiguráció lekérése    |
-| `GET`    | `/api/settings/proxy?level=global`             | A globális proxy lekérése              |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | A szolgáltatói proxy lekérése          |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | A tényleges proxy feloldása            |
-| `PUT`    | `/api/settings/proxy`                          | A proxykonfiguráció frissítése         |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | A proxy eltávolítása az adott szintről |
+| `GET`    | `/api/settings/proxy`                          | Töltse le a teljes proxy konfigurációt |
+| `GET`    | `/api/settings/proxy?level=global`             | Szerezzen be globális proxyt           |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Szerezze be a szolgáltatói proxyt      |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Hatékony proxy feloldása               |
+| `PUT`    | `/api/settings/proxy`                          | Frissítse a proxy konfigurációját      |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Távolítsa el a proxyt a szinten        |
 
-### Proxyregisztrációs API
+### Proxy Registry API
 
-| Metódus  | Végpont                                           | Leírás                           |
+| Módszer  | Végpont                                           | Leírás                           |
 | -------- | ------------------------------------------------- | -------------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Az összes proxy listázása        |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Proxy lekérése azonosító alapján |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Proxy-hozzárendelések lekérése   |
+| `GET`    | `/api/v1/management/proxies`                      | Sorolja fel az összes proxyt     |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Proxy beszerzése a ID            |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Proxy-hozzárendelések beszerzése |
 | `POST`   | `/api/v1/management/proxies`                      | Proxy létrehozása                |
-| `PATCH`  | `/api/v1/management/proxies`                      | Proxy frissítése                 |
+| `PATCH`  | `/api/v1/management/proxies`                      | Frissítse a proxyt               |
 | `DELETE` | `/api/v1/management/proxies?id=uuid`              | Proxy törlése                    |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Kényszerített törlés             |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Törlés kényszerítése             |
 | `POST`   | `/api/v1/management/proxies/bulk-assign`          | Tömeges hozzárendelés            |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Hozzárendelések listázása        |
-| `GET`    | `/api/v1/management/proxies/health`               | Proxyk állapotstatisztikái       |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Feladatok listázása              |
+| `GET`    | `/api/v1/management/proxies/health`               | Proxy egészségügyi statisztika   |
 
-### Alagutak API-ja
+### Alagutak API
 
-Ha az OmniRoute-példányt a nyilvános interneten szeretné elérhetővé tenni (Cloudflare/ngrok/Tailscale) ahelyett, hogy a kimenő forgalmat proxyn keresztül irányítaná, tekintse meg a [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md) dokumentumot. Az alagutak REST API-ja az `/api/tunnels/{cloudflared,ngrok,tailscale}/*` alatt érhető el, és független a fent dokumentált kimenő proxylánctól.
+Ha OmniRoute példányt a nyilvános internetnek (Cloudflare/ngrok/Tailscale) szeretné megjeleníteni a proxyn keresztüli kimenő útválasztás helyett, tekintse meg [TUNNELS_GUIDE.md fájlt](./TUNNELS_GUIDE.md). A REST API alagút `/api/tunnels/{cloudflared,ngrok,tailscale}/*` alatt található, és merőleges a fent dokumentált kimenő proxyláncra.
 
-### 1proxy API
+### 1 proxy API
 
-| Metódus  | Végpont                                | Leírás                                           |
-| -------- | -------------------------------------- | ------------------------------------------------ |
-| `GET`    | `/api/settings/oneproxy`               | Az 1proxy proxyk listázása                       |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Statisztikák és szinkronizálási állapot lekérése |
-| `GET`    | `/api/settings/oneproxy?action=status` | Csak a szinkronizálási állapot lekérése          |
-| `POST`   | `/api/settings/oneproxy`               | Szinkronizálás indítása                          |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Váltás a következő proxyra                       |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Egy bejegyzés törlése                            |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Az összes törlése                                |
+| Módszer  | Végpont                                | Leírás                                  |
+| -------- | -------------------------------------- | --------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Soroljon fel 1 proxy proxyt             |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Statisztikák + szinkronizálási állapota |
+| `GET`    | `/api/settings/oneproxy?action=status` | Csak a szinkronizálási állapot lekérése |
+| `POST`   | `/api/settings/oneproxy`               | Trigger szinkronizálás                  |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Forgatás a következő proxyra            |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Törölj egyet                            |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Minden törlése                          |
 
-### Kimenő proxy API
+### Upstream Proxy API
 
-| Metódus  | Végpont                           | Leírás                                    |
-| -------- | --------------------------------- | ----------------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | A kimenő proxy konfigurációjának lekérése |
-| `PUT`    | `/api/upstream-proxy/:providerId` | A kimenő proxymód beállítása              |
-| `DELETE` | `/api/upstream-proxy/:providerId` | A kimenő proxykonfiguráció eltávolítása   |
+| Módszer  | Végpont                           | Leírás                                        |
+| -------- | --------------------------------- | --------------------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Szerezze be az upstream proxy konfigurációját |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Állítsa be az upstream proxy módot            |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Távolítsa el az upstream proxybeállítást      |
 
 ---
 
 ## Környezeti változók
 
-| Változó               | Alapértelmezett érték | Leírás                                                                                          |
-| --------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`                | A SOCKS5-proxy támogatásának engedélyezése (alapértelmezetten `true` az `.env.example` fájlban) |
+| Változó               | Alapértelmezett | Leírás                                                                         |
+| --------------------- | --------------- | ------------------------------------------------------------------------------ |
+| `ENABLE_SOCKS5_PROXY` | `true`          | SOCKS5 proxy támogatás engedélyezése (alapértelmezett `true` a `.env.example`) |
 
 ---
 
 ## Hibaelhárítás
 
-### „A SOCKS5-proxy le van tiltva”
+### "SOCKS5 proxy le van tiltva"
 
-Állítsa be az `ENABLE_SOCKS5_PROXY=true` értéket az `.env` fájlban, majd indítsa újra a szolgáltatást.
+Állítsa be `ENABLE_SOCKS5_PROXY=true` `.env` fájlban, és indítsa újra.
 
-### „socket hang up” hibák proxyn keresztül
+### "Socket hang up" hibák proxyn keresztül
 
-Ez megszokott az olyan olcsó proxyknál, amelyek megszakítják az inaktív kapcsolatokat. Az OmniRoute ezt már kezeli a következő módokon:
+Ez normális az olcsó proxykkal, amelyek megszakítják a tétlen kapcsolatokat. OmniRoute ezt már kezeli:
 
-- Letiltja a keep-alive használatát a proxykapcsolatoknál (`keepAliveTimeout: 1`)
-- Letiltja a pipeline-kezelést (`pipelining: 0`)
-- Gyorsítótárazza a diszpécsereket az ismételt kézfogások elkerülése érdekében
+- Az életben tartás letiltása a proxykapcsolatokon (`keepAliveTimeout: 1`)
+- Csővezetékezés letiltása (`pipelining: 0`)
+- A diszpécserek gyorsítótárazása az ismételt kézfogások elkerülése érdekében
 
-Ha a probléma továbbra is fennáll, próbáljon ki egy másik proxyt, vagy használja az 1proxy rotációs funkcióját.
+Ha továbbra is fennáll, próbáljon ki egy másik proxyt, vagy használja az 1proxy rotációs funkciót.
 
-### „unsupported_country_region_territory” az OAuth során
+### "nem támogatott_ország_régió_területe" OAuth során
 
-Győződjön meg róla, hogy a proxy **az OAuth-folyamat elindítása előtt** van konfigurálva. Az OmniRoute az OAuth-tokenek cseréjét a konfigurált proxyn keresztül irányítja. Először állítson be egy globális vagy szolgáltatói szintű proxyt, majd csatlakozzon.
+Győződjön meg arról, hogy a proxy be van állítva** előtt** elindítva a OAuth áramlást. OmniRoute OAuth tokencserét a konfigurált proxyn keresztül irányítja. Először állítson be egy globális vagy szolgáltatói szintű proxyt, majd csatlakozzon.
 
 ### A proxy nincs használatban
 
-Ellenőrizze a feloldási sorrendet:
+Ellenőrizze a felbontás sorrendjét:
 
-1. Ellenőrizze a `GET /api/settings/proxy?resolve=your-connection-id` végponttal
-2. Ellenőrizze, hogy a proxy `status` értéke `active` legyen (ne `inactive`)
-3. Győződjön meg arról, hogy a proxy-hozzárendelés hatóköre megfelel a kapcsolatának
+1. Ellenőrizze `GET /api/settings/proxy?resolve=your-connection-id`
+2. Ellenőrizze, hogy a `status` proxy `active` (nem `inactive`)
+3. Győződjön meg arról, hogy a proxy-hozzárendelési hatókör megegyezik a kapcsolattal
 
-### Sikertelen 1proxy-szinkronizálás
+### 1 proxy szinkronizálási hiba
 
 Ellenőrizze a szinkronizálás állapotát:
 
@@ -544,13 +555,13 @@ Ellenőrizze a szinkronizálás állapotát:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Ha a `consecutiveFailures >= 5`, az áramkör-megszakító aktiválódott. Az alaphelyzetbe állításhoz indítsa újra a kiszolgálót, vagy várjon a kézi alaphelyzetbe állításra.
+Ha `consecutiveFailures >= 5`, akkor a megszakító kioldott. Indítsa újra a kiszolgálót a visszaállításhoz, vagy várja meg a kézi visszaállítást.
 
 ---
 
-## Adatbázisséma
+## Adatbázis séma
 
-### `proxy_registry` tábla
+### `proxy_registry` táblázat
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -564,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' vagy 'oneproxy'
-  quality_score INTEGER,                     -- 0–100 (csak 1proxy)
-  latency_ms INTEGER,                        -- ezredmásodperc (csak 1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- hozzáférhet a Google-höz? (1proxy)
-  last_validated TEXT,                       -- ISO-időbélyeg (1proxy)
-  country_code TEXT,                         -- kétbetűs ISO-kód (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### `proxy_assignments` tábla
+### `proxy_assignments` táblázat
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- szolgáltatói azonosító, kapcsolatazonosító vagy kombinációazonosító
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Proxyk állapotellenőrzése (v3.8.16+)
+## Proxy állapotának ellenőrzése (v3.8.16 +)
 
-Az OmniRoute **proxy gyors hibafelismerési** mechanizmusa (`src/lib/proxyHealth.ts`) egy gyors TCP-kapcsolat-ellenőrzéssel kevesebb mint 2 másodperc alatt észleli a nem működő proxykat, majd **gyorsítótárazza az eredményt**, hogy elkerülje a kérésenkénti többletterhelést.
+OmniRoute's** proxy gyors sikertelen** mechanizmus (`src/lib/proxyHealth.ts`) gyors TCP kapcsolatellenőrzéssel észleli a halott proxykat < 2s-ben, majd** gyorsítótárazza az eredményt** kérésenkénti rezsi elkerülése érdekében.
 
-### Működése
+### Hogyan működik
 
 ```
-Kérés ──▶ ProxyHealthCache.get(url)
-           │
-           ├─ Gyorsítótár-találat + friss?  ──▶ gyorsítótárazott állapot visszaadása
-           │
-           └─ Nincs találat / elavult?       ──▶ TCP-kapcsolódás ehhez: host:port
-                                                  (időtúllépés: FAST_FAIL_TIMEOUT_MS)
-                                                  ──▶ gyorsítótárazás HEALTH_CACHE_TTL_MS ideig
-                                                  ──▶ eredmény visszaadása
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Enélkül egy nem működő proxy minden kérést a teljes `PROXY_TIMEOUT_MS` időtartamára (alapértelmezetten 30 másodpercig) blokkolna, mielőtt hibával leállna.
+E nélkül egy halott proxy blokkolna minden kérést a teljes `PROXY_TIMEOUT_MS` ra (alapértelmezett 30 másodperc), mielőtt meghiúsulna.
 
 ### Hangolható környezeti változók
 
-| Változó                      | Alapértelmezett érték | Rendeltetés                                        |
-| ---------------------------- | --------------------- | -------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`                | TCP-kapcsolat időtúllépése állapotellenőrzésenként |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`               | Az állapoteredmény gyorsítótárazásának időtartama  |
+| Változó                      | Alapértelmezett | Cél                                                          |
+| ---------------------------- | --------------- | ------------------------------------------------------------ |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`          | TCP kapcsolat időtúllépés állapotellenőrzésenként            |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`         | Mennyi ideig tárolják az állapottal kapcsolatos eredményeket |
 
 **Ajánlott értékek:**
 
-| Forgatókönyv                              | Gyors hibafelismerés időtúllépése | Gyorsítótár TTL-je | Indoklás                                                                                |
-| ----------------------------------------- | --------------------------------- | ------------------ | --------------------------------------------------------------------------------------- |
-| Nagy áteresztőképességű API-átjáró        | 1500ms                            | 60000ms            | Agresszív gyors hibafelismerés, hosszabb gyorsítótárazás az ellenőrzések csökkentéséhez |
-| Földrajzilag elosztott csomópontok        | 3000ms                            | 15000ms            | A lassabb hálózatoknak több idő kell; rövidebb gyorsítótár a gyors átálláshoz           |
-| Fejlesztés / tesztelés                    | 1000ms                            | 10000ms            | Gyors iteráció helyi proxykkal                                                          |
-| Rejtett működés / észlelés elleni védelem | 2500ms                            | 45000ms            | Az adatforgalmi korlátokat aktiváló gyakori ellenőrzések elkerülése                     |
+| Forgatókönyv                       | Gyors hibaidőtúllépés | Gyorsítótár TTL | Érvelés                                                                                              |
+| ---------------------------------- | --------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
+| Nagy áteresztőképességű API átjáró | 1500 ms               | 60000 ms        | Agresszív, hibamentes, hosszabb gyorsítótár az ellenőrzések csökkentése érdekében                    |
+| Földrajzilag elosztott csomópontok | 3000 ms               | 15000 ms        | A lassabb hálózatokhoz több időre van szükség; rövidebb gyorsítótár a gyors feladatátvétel érdekében |
+| Fejlesztő / tesztelés              | 1000 ms               | 10000 ms        | Gyors iteráció helyi proxykon                                                                        |
+| Lopakodó / anti-detektálás         | 2500 ms               | 45000 ms        | Kerülje a gyors szondázást, amely sebességkorlátozást válthat ki                                     |
 
-### A proxy állapotának vizsgálata
+### A proxy állapotának ellenőrzése
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Egy adott proxy újbóli ellenőrzésének kikényszerítése
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-A `stale` jelző értéke `true`, ha a gyorsítótár-bejegyzés túllépte a `HEALTH_CACHE_TTL_MS` időtartamot, és a következő kérés új ellenőrzést indít.
+A `stale` jelző `true`, ha a gyorsítótár bejegyzése meghaladja `HEALTH_CACHE_TTL_MS`, és a következő kérés új ellenőrzést indít el.
 
-### Proxytípusonkénti alapértelmezett értékek
+### Proxytípusonkénti alapértelmezések
 
-Az állapotellenőrzés az URL-séma alapján megfelelő alapértelmezett értékeket használ:
+Az állapotfelmérés ésszerű alapértelmezéseket használ a URL séma alapján:
 
-| Séma                       | Alapértelmezett port |
+| Rendszer                   | Alapértelmezett port |
 | -------------------------- | -------------------- |
 | `http://`                  | 8080                 |
 | `https://`                 | 443                  |
 | `socks5://` / `socks5h://` | 1080                 |
 
-Az URL-ben megadott egyéni portok (`http://host:9999`) mindig elsőbbséget élveznek a séma alapértelmezett értékével szemben.
+A URL (`http://host:9999`) egyéni portjai mindig elsőbbséget élveznek a séma alapértelmezett értékével szemben.
 
 ---
 
-## Proxyanalitika és megfigyelhetőség
+## Proxy elemzés és megfigyelhetőség
 
-Az OmniRoute proxynként követi a használatot, hogy segítsen az üzemeltetőknek az útválasztási minták, a késleltetési kiugrások és az ismétlődő hibák diagnosztizálásában.
+OmniRoute nyomon követi a proxyhasználatot, hogy segítse a kezelőket az útválasztási minták, a késleltetési csúcsok és az ismétlődő hibák diagnosztizálásában.
 
-### Nyomon követett adatok
+### Mi van nyomon
 
-Az OmniRoute minden, beállított proxyn keresztül érkező kérésnél a következőket rögzíti:
+OmniRoute minden, konfigurált proxyn keresztül érkező kéréshez rögzíti:
 
-| Mérőszám     | Leírás                                                            |
-| ------------ | ----------------------------------------------------------------- |
-| `proxy_url`  | Teljes proxy-URL (kitakart hitelesítési adatokkal)                |
-| `provider`   | A felsőbb szintű szolgáltató azonosítója (openai, anthropic stb.) |
-| `latency_ms` | Teljes oda-vissza idő, beleértve a proxykézfogást                 |
-| `connect_ms` | Csak a TCP-kapcsolódás ideje                                      |
-| `status`     | A felsőbb szintű szolgáltatótól kapott HTTP-állapotkód            |
-| `error`      | Hiba esetén a hiba osztálya                                       |
-| `timestamp`  | ISO 8601 UTC                                                      |
+| Metrikus     | Leírás                                                        |
+| ------------ | ------------------------------------------------------------- |
+| `proxy_url`  | Teljes proxy URL (maszkolt hitelesítési adatokkal)            |
+| `provider`   | Upstream szolgáltató ID (openai, antropikus stb.)             |
+| `latency_ms` | Az oda-vissza út teljes ideje, beleértve a proxy-kézfogást is |
+| `connect_ms` | TCP csak csatlakozási idő                                     |
+| `status`     | HTTP állapotkód upstreamről                                   |
+| `error`      | Hibaosztály, ha a kérés sikertelen                            |
+| `timestamp`  | ISO 8601 UTC                                                  |
 
-### Az adatok elérése
+### Hozzáférés az adatokhoz
 
 ```bash
-# Legutóbbi proxyesemények
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-A tényleges végpont a `/api/usage/proxy-logs` (lásd: `src/app/api/usage/proxy-logs/route.ts`). Ez a végpont a következőket támogatja:
+A valódi végpont a `/api/usage/proxy-logs` (lásd `src/app/api/usage/proxy-logs/route.ts`). Ez a végpont támogatja:
 
-- `GET /api/usage/proxy-logs` — proxynaplók lekérése
-- `DELETE /api/usage/proxy-logs` — az összes proxynapló törlése
+- `GET /api/usage/proxy-logs` — proxy naplók lekérése
+- `DELETE /api/usage/proxy-logs` — minden proxynapló törlése
 
-Szükség esetén az összesített statisztikák közvetlenül lekérdezhetők SQL használatával a `proxy_logs` táblából. Az irányítópult felhasználói felülete összesített nézeteket is kínálhat.
+Az összesített statisztikák közvetlenül a `proxy_logs` táblából kérdezhetők le SQL keresztül, ha szükséges. A UI irányítópult összesített nézeteket kínálhat.
 
 ### Gyakori minták
 
-**Instabil proxy észlelése** (felváltva sikeres és sikertelen):
+**Egy csapkodó proxy észlelése** (felváltva success/failure között):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Lassú proxyk keresése** (p95 késleltetés > 2 s):
+**Keressen lassú proxykat** (p95 késleltetés > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,96 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Forgatási stratégia döntési fája
+## Rotációs stratégia döntési fa
 
-Ha egy hatókörhöz több proxy van hozzárendelve, az OmniRoute egy **forgatási stratégiával** választja ki, hogy melyiket használja az egyes kérésekhez. A stratégia a hatókör szintjén állítható be (globálisan, szolgáltatónként, fiókonként vagy kombinációnként).
+Ha egy hatókörhöz több proxy is hozzá van rendelve, OmniRoute a** rotációs stratégia** hogy melyiket használja az egyes kérésekhez. A stratégia a hatókör szintjén van konfigurálva (globális, szolgáltatónként, fiókonként, kombinációnként).
 
 ### Elérhető stratégiák
 
-| Stratégia                   | Mikor használja                               | Kompromisszum                                                                                  |
-| --------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `quality` (alapértelmezett) | Éles környezetben, eltérő minőségű proxykkal  | Előnyben részesíti a magas értékelésű proxykat; az alacsony értékelésűek háttérbe szorulhatnak |
-| `random`                    | Terheléselosztáshoz, adatvédelemhez           | Egyenletes elosztás; figyelmen kívül hagyja a minőségi jelzéseket                              |
-| `sequential`                | Hibakereséshez, determinisztikus teszteléshez | Sorrendben halad végig a proxykon; könnyen átlátható                                           |
+| Stratégia                   | Mikor kell használni                    | Trade-off                                                                           |
+| --------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------- |
+| `quality` (alapértelmezett) | Gyártás vegyes minőségű proxykkal       | Előnyben részesíti a magas besorolású proxykat; éhezhetnek az alacsony minősítésűek |
+| `random`                    | Terheléselosztás, adatvédelem           | Egyenletes elosztás; figyelmen kívül hagyja a minőségi jeleket                      |
+| `sequential`                | Hibakeresés, determinisztikus tesztelés | Sorrendben köröz a proxykon; könnyű érvelni                                         |
 
 ### Döntési fa
 
 ```
-                    Rendelkezik minőségi pontszámokkal a proxykhoz?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-      IGEN                     NEM
+       YES                     NO
         │                       │
-   Minden proxy                │
-   megközelítőleg              │
-   azonos minőségű?            │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
- IGEN       NEM              Használja a
+  YES       NO                Use
    │         │              `random`
-   │         │              stratégiát
-   │         │              (az egyenletes
-   │         │              elosztás idővel
-   │         │              minőségi adatokat gyűjt)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Használja a `quality`
-   │    stratégiát (eltérő
-   │    minőség esetén
-   │    ez a legjobb)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Használja a `random`
-stratégiát (egyenletes
-terheléselosztás)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Saját proxyk automatikus kizárása meghibásodás esetén
+## Automatikus meghibásodási kizárás a saját proxyk számára
 
-A 1proxy piactéri készlete már önállóan is automatikusan alacsonyabb prioritást ad a meghibásodott proxyknak (lásd:
-[Proxyk minőségi pontszámai](#proxy-quality-scores)). A rendszerleíró adatbázishoz **Ön** által hozzáadott
-proxyk esetén a háttérben futó állapotfigyelő ütemező
-(`src/lib/proxyHealth/scheduler.ts`) ugyanazt az „elérhetetlen tag automatikus kizárása
-a láncból” viselkedést biztosítja, bármi törlése nélkül:
+Az 1proxy piactér pool már önmagában is automatikusan lebontja a meghibásodott proxykat (lásd: [Proxy minőségi pontszámok](#proxy-quality-scores) ). A proxyknak** te** A rendszerleíró adatbázishoz hozzáadva a háttér állapotütemező (`src/lib/proxyHealth/scheduler.ts`) ugyanazt a "halott tag automatikus kizárása a láncból" viselkedést nyújtja anélkül, hogy bármit is törölne:
 
 ```bash
-# .env — proxy ideiglenes letiltása 3 egymást követő sikertelen ellenőrzés után,
-# majd automatikus újbóli engedélyezése, amint ismét válaszol az ellenőrzésekre.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Így illeszkedik egy több proxyból álló láncba:
+Hogyan illeszkedik egy több proxy láncba:
 
-1. Az ütemező minden regisztrált proxyt ellenőriz `PROXY_HEALTH_INTERVAL_MS`
-   időközönként (alapértelmezés szerint 10 percenként; legalább 1 percenként).
-2. `PROXY_AUTO_REMOVE_AFTER` egymást követő **egyértelmű** hiba (valós
-   kapcsolódási hiba — az időtúllépés vagy az ellenőrzési cél saját 5xx hibája soha nem számít bele, lásd:
-   [Proxyk állapotának ellenőrzése](#proxy-health-checking-v3816)) után a proxy `status` mezője
-   `dead` értékre lesz állítva.
-3. A `dead` azon állapotok egyike, amelyeket a készlet/rotáció
-   feloldásakor használt aktívállapot-szűrő kizár, így az adott hatókör rotációja (ciklikus / véletlenszerű / rögzített /
-   késleltetésalapú — lásd: [Rotációs stratégia döntési fája](#rotation-strategy-decision-tree))
-   azonnal leállítja az adott proxy hozzárendelését az új kérésekhez. A
-   készlet többi proxyját ez nem érinti, és a teljes készlet soha nem tér át észrevétlenül közvetlen
-   kapcsolatra — lásd a [Négyszintű proxyrendszer](#4-level-proxy-system) hibánál záró
-   védelmét.
-4. Az ütemező továbbra is ugyanilyen időközönként ellenőrzi a `dead` állapotú proxykat. A következő
-   sikeres ellenőrzés visszaállítja a `status` mezőt `active` értékre, és a proxy visszakerül a rotációba —
-   nincs szükség kézi újbóli hozzáadásra.
+1. Az ütemező minden regisztrált proxyt minden `PROXY_HEALTH_INTERVAL_MS` után megvizsgál (alapértelmezett 10 perc; minimum 1 perc).
+2. `PROXY_AUTO_REMOVE_AFTER` után egymást követő** meggyőző** hibák (valódi kapcsolati hiba — egy időtúllépés vagy a vizsgáló célpont saját 5xx-je soha nem számít, lásd: [Proxy állapotellenőrzés](#proxy-health-checking-v3816) ), a proxy `status` értéke `dead`.
+3. `dead` egyike azoknak az állapotoknak, amelyeket pool/rotation felbontás által használt élő állapot szűrő kizár, így a hatókör forgatása (körbefutó / véletlenszerű / ragadós / késleltetési — lásd: [Rotációs stratégia döntési fa](#rotation-strategy-decision-tree) ) azonnal leállítja a proxy átadását az új kéréseknek. A készletben lévő [többi](#4-level-proxy-system) proxyt ez nem érinti, és az egész készlet soha nem esik vissza csendben egy közvetlen kapcsolatra —
+4. Az ütemező folyamatosan vizsgálja `dead` proxykat ugyanazon az időközönként. A következő sikeres szonda visszafordítja `status` `active` -re, és újra belép — forgásba, nincs szükség kézi újraadásra.
 
-Ez szándékosan **külön engedélyezendő és adatvesztésmentes**: alapértelmezés szerint az ütemező csak
-számolja és naplózza a hibákat (lásd a C szabályzatot a `decision.ts` fájlban), a `PROXY_AUTO_DISABLE`
-pedig soha nem töröl sort — erre szolgál a különálló, agresszívebb
-`PROXY_AUTO_REMOVE` kapcsoló. Ha mindkettő `true` értékre van állítva, a `PROXY_AUTO_REMOVE`
-élvez elsőbbséget (egy törlés előtt álló proxyt nincs értelme közben ideiglenesen letiltani). A változók
-teljes listáját a [Környezeti konfiguráció](../reference/ENVIRONMENT.md) referenciadokumentációban
-találja.
+Ez szándékosan** opt-in és roncsolásmentes** : alapértelmezés szerint az ütemező csak a hibákat számolja és naplózza (lásd a C házirendet `decision.ts`-ban), és `PROXY_AUTO_DISABLE` soha nem törli a — sort, erre szolgál a különálló, agresszívebb `PROXY_AUTO_REMOVE` jelző. Ha mindkettő `true` értékre van állítva, `PROXY_AUTO_REMOVE` nyer (a törlés előtt álló proxynak nincs értelme a közöttük lévő soft-disable-nak). A teljes változólistát az [Environment Config](../reference/ENVIRONMENT.md) hivatkozásban találja.
 
 ---
 
-> 📖 **Kapcsolódó dokumentáció:**
+> 📖** Kapcsolódó dokumentáció:**
 >
-> - [Felhasználói útmutató](../guides/USER_GUIDE.md) — Általános telepítés és konfiguráció
-> - [API-referencia](../reference/API_REFERENCE.md) — Teljes API-dokumentáció
-> - [Környezeti konfiguráció](../reference/ENVIRONMENT.md) — Az összes környezeti változó
+> - [Felhasználói útmutató](../guides/USER_GUIDE.md) — Általános beállítás és konfiguráció - [API Referencia](../reference/API_REFERENCE.md) — Teljes API dokumentáció - [Környezeti konfiguráció](../reference/ENVIRONMENT.md) — Minden környezeti változó

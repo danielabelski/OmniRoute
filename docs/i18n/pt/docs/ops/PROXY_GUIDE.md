@@ -4,32 +4,32 @@
 
 ---
 
-> **Contorne bloqueios geográficos, proteja a sua identidade e encaminhe o tráfego de IA através de qualquer proxy — sem qualquer complexidade de configuração.**
+> **Ignore bloqueios geográficos, proteja a sua identidade e encaminhe o tráfego AI através de qualquer proxy — com complexidade de configuração zero.**
 
-O OmniRoute inclui um sistema completo de gestão de proxies que lhe permite encaminhar o tráfego para fornecedores de IA a montante através de proxies HTTP, HTTPS ou SOCKS5. Quer esteja numa região bloqueada, necessite de rotação de IPs ou pretenda ocultar a sua impressão digital — este guia aborda tudo.
+OmniRoute inclui um sistema de gestão de proxy completo que permite encaminhar o tráfego upstream do fornecedor AI através de proxies HTTP, HTTPS ou SOCKS5. Quer esteja numa região bloqueada, precise de rotação IP ou queira impressões digitais furtivas — este guia cobre tudo.
 
 ---
 
 ## Índice
 
-- [Porquê utilizar proxies?](#why-use-proxies)
+- [Porquê usar proxies?](#why-use-proxies)
 - [Visão geral da arquitetura](#architecture-overview)
-- [Sistema de proxies de 4 níveis](#4-level-proxy-system)
-- [Registo de proxies (CRUD)](#proxy-registry-crud)
-- [Mercado gratuito 1proxy](#1proxy-free-proxy-marketplace)
-- [Rotação de proxies](#proxy-rotation)
-- [Antideteção e ocultação](#anti-detection--stealth)
-- [Modos de proxy a montante](#upstream-proxy-modes)
-- [Interface do painel](#dashboard-ui)
-- [Referência da API](#api-reference)
+- [Sistema proxy de 4 níveis](#4-level-proxy-system)
+- [Registo de proxy (CRUD)](#proxy-registry-crud)
+- [1proxy Mercado Gratuito](#1proxy-free-proxy-marketplace)
+- [Rotação de proxy](#proxy-rotation)
+- [Antidetecção e furtividade](#anti-detection--stealth)
+- [Modos de proxy upstream](#upstream-proxy-modes)
+- [Painel UI](#dashboard-ui)
+- [Referência API](#api-reference)
 - [Variáveis de ambiente](#environment-variables)
-- [Resolução de problemas](#troubleshooting)
+- [Solução de problemas](#troubleshooting)
 
 ---
 
-## Porquê utilizar proxies?
+## Porquê usar proxies?
 
-Muitos fornecedores de IA restringem o acesso por região geográfica. Os programadores na **Rússia, China, Irão, Cuba, Turquia** e noutros países encontram erros como:
+Muitos fornecedores AI restringem o acesso por região geográfica. Os desenvolvedores em** Rússia, China, Irão, Cuba, Turquia** e outros países encontram erros como:
 
 ```
 unsupported_country_region_territory
@@ -37,13 +37,13 @@ unsupported_country_region_territory
 
 Mesmo fora das regiões bloqueadas, os proxies são úteis para:
 
-| Caso de utilização      | Descrição                                                                  |
-| ----------------------- | -------------------------------------------------------------------------- |
-| **Contorno geográfico** | Aceder ao OpenAI, Anthropic, Codex e Copilot a partir de países bloqueados |
-| **Rotação de IPs**      | Distribuir pedidos por vários IPs para evitar a limitação de pedidos       |
-| **Privacidade**         | Ocultar o seu IP real dos fornecedores a montante                          |
-| **Conformidade**        | Encaminhar o tráfego através de jurisdições específicas                    |
-| **Testes**              | Simular pedidos provenientes de diferentes regiões                         |
+| Caso de uso           | Descrição                                                         |
+| --------------------- | ----------------------------------------------------------------- |
+| **Desvio geográfico** | Aceder OpenAI, Anthropic, Codex, Copilot de países bloqueados     |
+| **rotação IP**        | Distribua os pedidos por vários IPs para evitar limitação de taxa |
+| **Privacidade**       | Esconda o seu IP real dos fornecedores upstream                   |
+| **Conformidade**      | Encaminhar o tráfego através de jurisdições específicas           |
+| **Teste**             | Simule pedidos de diferentes regiões                              |
 
 ---
 
@@ -51,103 +51,114 @@ Mesmo fora das regiões bloqueadas, os proxies são úteis para:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Servidor OmniRoute                      │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Registo de  │    │ Distribuidor │    │ Fetch (undici)   │  │
-│  │ proxies     │───▶│ de proxies   │───▶│                  │  │
-│  │ (SQLite)    │    │ (em cache)   │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Sincroniz.  │                        │ API do           │  │
-│  │ 1proxy      │                        │ fornecedor       │  │
-│  │ (pool grátis)│                       │ a montante       │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 ### Componentes principais
 
-| Componente                | Ficheiro                                     | Função                                                                  |
-| ------------------------- | -------------------------------------------- | ----------------------------------------------------------------------- |
-| **Registo de proxies**    | `src/lib/db/proxies.ts`                      | CRUD para entradas de proxy + atribuições de âmbito                     |
-| **Distribuidor de proxy** | `open-sse/utils/proxyDispatcher.ts`          | Cria distribuidores ProxyAgent/SOCKS do `undici` com colocação em cache |
-| **Fetch com proxy**       | `open-sse/utils/proxyFetch.ts`               | Encapsula `fetch()` com injeção do distribuidor de proxy                |
-| **Rota de definições**    | `src/app/api/settings/proxy/route.ts`        | API legada de configuração de proxy (GET/PUT/DELETE)                    |
-| **Rota de gestão**        | `src/app/api/v1/management/proxies/route.ts` | API CRUD do registo (GET/POST/PATCH/DELETE)                             |
-| **BD do 1proxy**          | `src/lib/db/oneproxy.ts`                     | Persistência do mercado de proxies gratuitos                            |
+| Componente             | Ficheiro                                     | Papel                                                 |
+| ---------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| **Registo de proxy**   | `src/lib/db/proxies.ts`                      | CRUD para entradas de proxy atribuições de âmbito +   |
+| **Despachante proxy**  | `open-sse/utils/proxyDispatcher.ts`          | Cria despachantes `undici` ProxyAgent/SOCKS com cache |
+| **Pesquisa por proxy** | `open-sse/utils/proxyFetch.ts`               | Envolve `fetch()` com injeção de despachante proxy    |
+| **Rota de definições** | `src/app/api/settings/proxy/route.ts`        | Configuração de proxy legado API (GET/PUT/DELETE)     |
+| **Rota de Gestão**     | `src/app/api/v1/management/proxies/route.ts` | Registo CRUD API (GET/POST/PATCH/DELETE)              |
+| **1proxy DB**          | `src/lib/db/oneproxy.ts`                     | Persistência gratuita no mercado proxy                |
 
 ---
 
-## Sistema de Proxy em 4 Níveis
+## Estado de proxy padrão para novas contas
 
-O OmniRoute suporta a configuração de proxies em **quatro âmbitos independentes**, resolvidos por ordem de prioridade:
+Em** Configurações → Proxy → Configuração global** , uso** Ativar proxy por padrão para novas ligações** para escolher o estado inicial do proxy das contas de fornecedor recém-adicionadas.
+
+A nova configuração controla o estado inicial do proxy das contas de fornecedor recém-adicionadas. Não altera as contas existentes nem substitui a opção de proxy global. O seu valor inicial preserva o comportamento anterior. Desative-o uma vez para criar contas futuras com o proxy desativado por defeito.
+
+A preferência é guardada como `defaultNewConnectionProxyEnabled` através das definições existentes API. O padrão é `true` quando nunca é guardado. Guardar `false` entra em vigor para novas contas subsequentes sem reinicialização. `POST /api/providers` aceita um booleano estrito opcional `proxyEnabled`; um `true` ou `false` explícito tem precedência sobre o padrão de criação. A omissão numa conta duplicada ou a reconexão OAuth preserva o estado armazenado dessa conta. As contas individuais ainda podem ser ativadas ou desativadas posteriormente.
+
+As transferências seletivas de fornecedores utilizam o padrão da instalação de destino para novas contas e preservam a política de destino ao substituir as contas existentes. Os alternadores de proxy não são campos de transferência portáteis. A restauração completa do backup e a migração histórica JSON/SQL mantêm a semântica de restauração existente, incluindo os valores de conta guardados e os padrões de esquema legado; uma restauração completa das definições também pode restaurar esta preferência.
+
+Esta preferência não atribui um proxy nem estabelece que este esteja íntegro ou em utilização. O encaminhamento real ainda depende do switch de proxy global e da configuração de proxy aplicável. Os fornecedores sintéticos sem uma conta persistente, o tráfego OAuth antes da criação da conta, os proxies environment/system e as redes de back-end externas estão fora do seu âmbito.
+
+## Sistema proxy de 4 níveis
+
+OmniRoute suporta a configuração de proxy em** quatro escopos independentes** , resolvido por ordem de prioridade:
 
 ```
-Ordem de resolução de prioridades (mais alta → mais baixa):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Proxy de conta/ligação      →  por chave de API / ligação OAuth
-  2. 🟡 Proxy de fornecedor        →  por fornecedor (por exemplo, todo o tráfego da OpenAI)
-  3. 🟠 Proxy de combinação        →  por configuração de combinação/encaminhamento
-  4. 🟢 Proxy global               →  todo o tráfego, todos os fornecedores
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
 ### Como funciona a resolução
 
-Quando o OmniRoute envia um pedido para um fornecedor a montante, chama `resolveProxyForConnectionFromRegistry()`, que verifica cada nível por ordem:
+Quando OmniRoute envia um pedido a um fornecedor upstream, este chama `resolveProxyForConnectionFromRegistry()`, que verifica cada nível por ordem:
 
-1. **Nível da conta** — Existe um proxy atribuído a este ID de ligação específico?
-2. **Nível do fornecedor** — Existe um proxy atribuído a este fornecedor (por exemplo, `openai`)?
+1. **Nível da conta** — Existe um proxy atribuído a esta ligação específica ID?
+2. **Nível do prestador** — Existe um proxy atribuído a este fornecedor (por exemplo, `openai`)?
 3. **Nível global** — Existe um proxy global configurado?
-4. **Sem proxy** — Ligação direta ao fornecedor.
+4. **Sem proxy** — Ligação direta com o fornecedor.
 
-É utilizada a primeira correspondência. Isto significa que pode definir um proxy global como alternativa, mas substituí-lo para fornecedores ou ligações específicos.
+A primeira partida vence. Isto significa que pode definir um proxy global como substituto, mas substituí-lo por fornecedores ou ligações específicas.
 
-### O que é encaminhado através do proxy
+### O que é o proxy
 
-| Tipo de tráfego          | Usa proxy? | Notas                                          |
-| ------------------------ | ---------- | ---------------------------------------------- |
-| Conclusões de chat       | ✅         | Todos os pedidos `/v1/chat/completions`        |
-| Incorporações            | ✅         | `/v1/embeddings`                               |
-| Geração de imagens       | ✅         | `/v1/images/generations`                       |
-| Áudio (TTS/STT)          | ✅         | `/v1/audio/*`                                  |
-| Troca de tokens OAuth    | ✅         | Resolve `unsupported_country_region_territory` |
-| Testes de ligação        | ✅         | O botão "Testar ligação" utiliza o proxy       |
-| Renovação de tokens      | ✅         | Renovação de OAuth em segundo plano            |
-| Sincronização de modelos | ✅         | Listagem e deteção de modelos                  |
+| Tipo de tráfego         | Procurado? | Notas                                          |
+| ----------------------- | ---------- | ---------------------------------------------- |
+| Conclusões de bate-papo | ✅         | Todas as solicitações `/v1/chat/completions`   |
+| Incorporações           | ✅         | `/v1/embeddings`                               |
+| Geração de imagem       | ✅         | `/v1/images/generations`                       |
+| Áudio (TTS/STT)         | ✅         | `/v1/audio/*`                                  |
+| troca de token OAuth    | ✅         | Resolve `unsupported_country_region_territory` |
+| Testes de ligação       | ✅         | O botão "Testar ligação" utiliza proxy         |
+| Atualização de token    | ✅         | Renovação OAuth em segundo plano               |
+| Sincronização de modelo | ✅         | Listagem e descoberta de modelos               |
 
 ---
 
-## Registo de Proxies (CRUD)
+## Registo de proxy (CRUD)
 
-O registo de proxies é uma tabela SQLite (`proxy_registry`) que armazena todos os seus proxies. Cada proxy tem:
+O registo proxy é uma tabela SQLite (`proxy_registry`) que armazena todos os seus proxies. Cada proxy possui:
 
 | Campo      | Tipo    | Descrição                                                  |
 | ---------- | ------- | ---------------------------------------------------------- |
-| `id`       | UUID    | Identificador único                                        |
-| `name`     | String  | Etiqueta legível por humanos                               |
-| `type`     | String  | Protocolo: `http`, `https`, `socks5`                       |
-| `host`     | String  | Nome de anfitrião ou IP do proxy                           |
-| `port`     | Integer | Número da porta                                            |
-| `username` | String  | Nome de utilizador de autenticação (encriptado em repouso) |
-| `password` | String  | Palavra-passe de autenticação (encriptada em repouso)      |
-| `region`   | String  | Etiqueta da região geográfica                              |
-| `notes`    | String  | Notas de texto livre                                       |
-| `status`   | String  | `active` ou `inactive`                                     |
-| `source`   | String  | `manual` ou `oneproxy`                                     |
+| `id`       | UUID    | Identificador exclusivo                                    |
+| `name`     | Fio     | Etiqueta legível por humanos                               |
+| `type`     | Fio     | Protocolo: `http`, `https`, `socks5`                       |
+| `host`     | Fio     | Nome do host proxy ou IP                                   |
+| `port`     | Inteiro | Número da porta                                            |
+| `username` | Fio     | Nome de utilizador de autenticação (encriptado em repouso) |
+| `password` | Fio     | Palavra-passe de autenticação (encriptada em repouso)      |
+| `region`   | Fio     | Rótulo de região geográfica                                |
+| `notes`    | Fio     | Notas de texto livre                                       |
+| `status`   | Fio     | `active` ou `inactive`                                     |
+| `source`   | Fio     | `manual` ou `oneproxy`                                     |
 
-### Criar um proxy
+### Criando um proxy
 
 **Através do painel:**
 
-1. Aceda a **Definições → Proxy**
-2. Clique em **Adicionar proxy**
-3. Preencha o tipo, o anfitrião, a porta e as credenciais de autenticação opcionais
-4. Guarde
+1. Vá para** Configurações do proxy →**
+2. Clique** Adicionar proxy**
+3. Preencha o tipo, host, porta e credenciais de autenticação opcionais
+4. Guardar
 
-**Através da API:**
+**Via API:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -175,52 +186,52 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Nota:** As credenciais são preservadas, a menos que envie explicitamente substituições não vazias. O envio de strings vazias para `username`/`password` manterá os valores armazenados.
+> **Nota:** As credenciais são preservadas, a menos que envie explicitamente substituições não vazias. O envio de strings vazias para `username`/`password` irá manter os valores armazenados.
 
-### Eliminar um proxy
+### Apagar um proxy
 
 ```bash
-# Falha se o proxy estiver atribuído a qualquer âmbito
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Forçar a eliminação (também remove as atribuições)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Listar proxies
+### Listando Proxies
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Atribuir proxies a âmbitos
+### Atribuindo Proxies aos Escopos
 
 ```bash
-# Atribuir ao âmbito global
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Atribuir a um fornecedor específico
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Atribuir a uma ligação/chave específica
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Resolver o proxy efetivo
+### Resolvendo proxy eficaz
 
-Verifique qual proxy seria utilizado para uma determinada ligação:
+Verifique qual o proxy que seria utilizado para uma determinada ligação:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Devolve o proxy resolvido com o respetivo nível (`account`, `provider` ou `global`) e origem.
+Retorna o proxy resolvido com o seu nível (`account`, `provider` ou `global`) e origem.
 
 ### Atribuição em massa
 
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Importação/Exportação
+### Import/Export
 
-Os proxies estão incluídos no sistema de **Cópia de segurança/Restauro**. Quando exporta a configuração do OmniRoute:
+Os proxies estão incluídos no**Backup/Restore** sistema. Ao exportar a sua configuração OmniRoute :
 
-1. Aceda a **Painel → Definições → Cópia de segurança**
-2. Clique em **Exportar** — o registo de proxies e as atribuições estão incluídos
-3. Para restaurar, clique em **Importar** e carregue o ficheiro de cópia de segurança
+1. Vá para** Painel → Configurações → Backup**
+2. Clique** Exportar** registo de proxy — e atribuições estão incluídos
+3. Para restaurar, clique em** Importação** e carregue o ficheiro de cópia de segurança
 
-O registo de proxies também suporta **upsert por host+port** — se importar um proxy que já exista (o mesmo anfitrião e a mesma porta), este é atualizado em vez de ser criado um duplicado.
+O registo proxy também suporta** upsert pelo host + port** — se importar um proxy que já existe (mesmo host e porta), este será atualizado em vez de criar um duplicado.
 
-### Migração legada
+### Migração herdada
 
-Se configurou proxies numa versão mais antiga (anterior ao registo), o OmniRoute migra-os automaticamente:
+Se tiver configurado proxies numa versão mais antiga (pré-registo), OmniRoute irá migrá-los automaticamente:
 
 ```
-Armazenamento key_value legado → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Isto acontece uma única vez no primeiro arranque após a atualização. Utilize `migrateLegacyProxyConfigToRegistry({ force: true })` para voltar a executar.
+Isto acontece uma vez na primeira inicialização após a atualização. Utilize `migrateLegacyProxyConfigToRegistry({ force: true })` para executar novamente.
 
 ---
 
-## Mercado de proxies gratuitos 1proxy
+## Mercado de proxy gratuito 1proxy
 
-> 🆕 **Contribuição de [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Issue [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Contribuição de [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Edição [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-O OmniRoute integra-se com a plataforma comunitária **[1proxy](https://1proxy-api.aitradepulse.com)** para fornecer acesso a **centenas de proxies gratuitos e validados** de todo o mundo. Isto é ideal para utilizadores que não possuem uma infraestrutura de proxies própria.
+OmniRoute integra-se com o** [1proxy](https://1proxy-api.aitradepulse.com)** plataforma comunitária para proporcionar acesso a** centenas de proxies validados e gratuitos** de todo o mundo. Isto é perfeito para utilizadores que não possuem infraestrutura de proxy própria.
 
 ### Como funciona
 
 ```
-┌─────────────┐  Sincronizar  ┌─────────────────┐    Alternar    ┌────────────┐
-│  API 1proxy │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Fornecedor │
-│  (externa)  │    até 500    │  source=oneproxy │  por qualidade│    API     │
-└─────────────┘    proxies    └─────────────────┘                └────────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Sincronização** — O OmniRoute obtém proxies validados da API 1proxy
-2. **Armazenamento** — Os proxies são guardados na mesma tabela `proxy_registry` com `source = 'oneproxy'`
-3. **Filtragem** — Filtre por protocolo, país e pontuação de qualidade
-4. **Rotação** — Selecione o melhor proxy através de estratégias por qualidade, aleatórias ou sequenciais
-5. **Degradação automática** — Os proxies que falham veem a sua pontuação de qualidade reduzida; abaixo do limiar → são marcados como inativos
+1. **Sincronizar** — OmniRoute procura proxies validados do 1proxy API
+2. **Loja** Os proxies — são guardados na mesma tabela `proxy_registry` com `source = 'oneproxy'`
+3. **Filtro** — Filtrar por protocolo, país, índice de qualidade
+4. **Girar** — Escolha o melhor proxy utilizando estratégias de qualidade, aleatórias ou sequenciais
+5. **Degradação automática** — Proxies com falha têm o seu índice de qualidade reduzido; abaixo do limite → marcado como inativo
 
-### Sincronizar proxies
+### Sincronizando Proxies
 
 **Através do painel:**
 
-1. Aceda ao separador **Definições → 1proxy**
-2. Clique em **"Sincronizar agora"**
-3. Consulte as estatísticas: total de proxies, quantidade de ativos, qualidade média e distribuição por país
+1. Vá para** Configurações → 1proxy** aba
+2. Clique** "Sincronizar agora"**
+3. Ver estatísticas: total de proxies, contagem ativa, qualidade média, detalhe por país
 
-**Através da API:**
+**Via API:**
 
 ```bash
-# Acionar a sincronização
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Resposta:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### Filtrar proxies
+### Filtrando Proxies
 
 ```bash
-# Filtrar por protocolo
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Filtrar por país
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Filtrar por pontuação mínima de qualidade
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Combinar filtros
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Pontuações de qualidade dos proxies
+### Índices de qualidade de proxy
 
-Cada proxy da 1proxy inclui metadados:
+Cada proxy 1proxy vem com metadados:
 
-| Campo           | Descrição                                             |
-| --------------- | ----------------------------------------------------- |
-| `qualityScore`  | Classificação de 0 a 100 da validação da 1proxy       |
-| `latencyMs`     | Latência de rede medida                               |
-| `anonymity`     | `transparent`, `anonymous` ou `elite`                 |
-| `googleAccess`  | Indica se o proxy consegue aceder aos serviços Google |
-| `countryCode`   | Código ISO de país com duas letras                    |
-| `lastValidated` | Carimbo de data/hora da última validação              |
+| Campo           | Descrição                                    |
+| --------------- | -------------------------------------------- |
+| `qualityScore`  | Classificação de 0 a 100 da validação 1proxy |
+| `latencyMs`     | Latência de rede medida                      |
+| `anonymity`     | `transparent`, `anonymous` ou `elite`        |
+| `googleAccess`  | Se o proxy pode aceder aos serviços Google   |
+| `countryCode`   | Código de país ISO de duas letras            |
+| `lastValidated` | Carimbo de data e hora da última validação   |
 
-As pontuações de qualidade são ajustadas dinamicamente:
+Os índices de qualidade são ajustados dinamicamente:
 
-- **Pedidos que falharam** reduzem a pontuação em 10 pontos
-- **A pontuação desce para ≤10** → o proxy é marcado como `inactive`
+- **Solicitações com falha** reduzir a pontuação em 10 pontos
+- **Pontuação desce para ≤ 10** O proxy → está marcado `inactive`
 - Os proxies inativos são excluídos da rotação
 
-### Estratégias de rotação
+### Estratégias de Rotação
 
 ```bash
-# Alternar por qualidade (o melhor proxy primeiro) — predefinição
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Rotação aleatória
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Sequencial (o validado há mais tempo primeiro)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
 ### Disjuntor
 
-A sincronização da 1proxy possui um disjuntor integrado:
+O 1proxy Sync possui um disjuntor integrado:
 
-- Após **5 falhas de sincronização consecutivas**, as tentativas de sincronização seguintes são bloqueadas
-- Reponha-o com: `resetOneproxyCircuitBreaker()` ou reinicie o servidor
-- O estado da sincronização está disponível em `GET /api/settings/oneproxy?action=status`
+- Depois** 5 falhas de sincronização consecutivas** , outras tentativas de sincronização serão bloqueadas
+- Reinicialize com: `resetOneproxyCircuitBreaker()` ou reinicie o servidor
+- O estado de sincronização está disponível em `GET /api/settings/oneproxy?action=status`
 
-### Limpar proxies da 1proxy
+### Limpeza de proxies 1proxy
 
 ```bash
-# Eliminar um único proxy da 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Limpar TODOS os proxies da 1proxy (os proxies manuais não são afetados)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Antideteção e Discrição
+## Antidetecção e furtividade
 
-O OmniRoute não se limita a encaminhar tráfego através de um proxy — também faz com que o tráfego pareça legítimo:
+OmniRoute não só direciona o tráfego através de um proxy — como faz com que o tráfego pareça legítimo:
 
-### Falsificação da impressão digital TLS
+### Falsificação de impressão digital TLS
 
-Utiliza `wreq-js` para gerar impressões digitais TLS semelhantes às dos navegadores, contornando sistemas de deteção de bots que sinalizam handshakes TLS que não sejam de navegadores.
+Utiliza `wreq-js` para gerar impressões digitais TLS semelhantes às do browser, ignorando os sistemas de deteção de bots que sinalizam handshakes TLS fora do browser.
 
-### Correspondência da impressão digital da CLI
+### Correspondência de impressão digital CLI
 
-O **Botão de impressão digital da CLI** (`Definições → Segurança`) reordena os cabeçalhos HTTP e os campos do corpo JSON para corresponder à assinatura exata dos binários CLI nativos (Claude Code, Codex, etc.). Isto funciona **em conjunto com** o proxy:
+O** Alternar impressão digital CLI** (`Settings → Security`) reordena os cabeçalhos HTTP e os campos do corpo JSON para corresponder à assinatura exata dos binários CLI nativos (Claude Code, Codex, etc.). Isso funciona** em cima de** o procurador:
 
 ```
-O seu IP (bloqueado) → IP do proxy (EUA) → API do fornecedor
-                        + falsificação TLS
-                        + impressão digital da CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Obtém simultaneamente **ocultação do IP** e **autenticidade dos pedidos**.
+Consegue os dois** mascaramento IP** e** solicitar autenticidade** simultaneamente.
 
-### Preservação do IP do proxy
+### Preservação de proxy IP
 
-Os emblemas codificados por cores no painel mostram qual o nível de proxy ativo:
+Os crachás codificados por cores no painel mostram qual o nível de proxy ativo:
 
-| Emblema | Nível      | Significado                                            |
-| ------- | ---------- | ------------------------------------------------------ |
-| 🟢      | Global     | Todo o tráfego passa por este proxy                    |
-| 🟡      | Fornecedor | Apenas o tráfego deste fornecedor passa por este proxy |
-| 🔵      | Ligação    | Esta chave/conta específica utiliza este proxy         |
+| Distintivo | Nível    | Significado                                |
+| ---------- | -------- | ------------------------------------------ |
+| 🟢         | Global   | Todo o tráfego passa por este proxy        |
+| 🟡         | Provedor | Apenas o tráfego deste fornecedor é proxy  |
+| 🔵         | Conexão  | Este key/account específico usa este proxy |
 
-O emblema também mostra o IP do proxy resolvido para verificação.
+O emblema também mostra o proxy IP resolvido para verificação.
 
 ---
 
-## Modos de proxy a montante
+## Modos de proxy upstream
 
-Para fornecedores que utilizam o padrão CLIProxyAPI, o OmniRoute suporta três modos de proxy a montante:
+Para os fornecedores que utilizam o padrão CLIProxyAPI, OmniRoute suporta três modos de proxy upstream:
 
-| Modo          | Descrição                                                             |
-| ------------- | --------------------------------------------------------------------- |
-| `native`      | O OmniRoute gere diretamente o encaminhamento do proxy (predefinição) |
-| `cliproxyapi` | Delega a uma instância CLIProxyAPI externa                            |
-| `fallback`    | Tenta primeiro o modo nativo e, se falhar, recorre à CLIProxyAPI      |
+| Modo          | Descrição                                                         |
+| ------------- | ----------------------------------------------------------------- |
+| `native`      | OmniRoute lida diretamente com o encaminhamento de proxy (padrão) |
+| `cliproxyapi` | Delega para uma instância externa CLIProxyAPI                     |
+| `fallback`    | Experimenta o nativo primeiro, volta para CLIProxyAPI             |
 
-Configure por fornecedor:
+Configurar por fornecedor:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Interface do painel
+## Painel UI
 
-### Definições → Separador Proxy
+### Configurações do separador proxy →
 
-- Configuração do **proxy global** (defina uma vez para todo o tráfego)
-- Substituições de proxy **por fornecedor**
-- Atribuições de proxy **por ligação**
+- **Procuração global** configuração (definida uma vez para todo o tráfego)
+- **Proxy por fornecedor** substituições
+- **Proxy por ligação** atribuições
 - **Teste de ligação** através do proxy configurado
-- **Emblemas codificados por cores** que mostram o nível de proxy ativo
+- **Emblemas codificados por cores** mostrando o nível de proxy ativo
 
-### Definições → Separador 1proxy
+### Separador Configurações → 1proxy
 
-- Botão **Sincronizar agora** para obter proxies gratuitos
-- **Cartões de estatísticas**: Total, Ativos, Qualidade média, Última sincronização
-- **Filtros**: Protocolo, Código de país, Qualidade mínima
-- **Tabela de proxies** com anfitrião, protocolo, país, classificação de qualidade, latência, anonimato e acesso ao Google
-- Painel de **estado da sincronização** com acompanhamento de sucessos/falhas e contagem de falhas consecutivas
-- **Limpar tudo** para remover todas as entradas do 1proxy
-
----
-
-## Referência da API
-
-### API de definições do proxy
-
-| Método   | Endpoint                                       | Descrição                              |
-| -------- | ---------------------------------------------- | -------------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Obter a configuração completa do proxy |
-| `GET`    | `/api/settings/proxy?level=global`             | Obter o proxy global                   |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Obter o proxy do fornecedor            |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Resolver o proxy efetivo               |
-| `PUT`    | `/api/settings/proxy`                          | Atualizar a configuração do proxy      |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Remover o proxy ao nível especificado  |
-
-### API do registo de proxies
-
-| Método   | Endpoint                                          | Descrição                          |
-| -------- | ------------------------------------------------- | ---------------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Listar todos os proxies            |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Obter o proxy por ID               |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Obter as atribuições do proxy      |
-| `POST`   | `/api/v1/management/proxies`                      | Criar proxy                        |
-| `PATCH`  | `/api/v1/management/proxies`                      | Atualizar proxy                    |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Eliminar proxy                     |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Forçar eliminação                  |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Atribuir em massa                  |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Listar atribuições                 |
-| `GET`    | `/api/v1/management/proxies/health`               | Estatísticas de estado dos proxies |
-
-### API de túneis
-
-Para expor a sua instância do OmniRoute à Internet pública (Cloudflare/ngrok/Tailscale), em vez de encaminhar o tráfego de saída através de um proxy, consulte [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). A API REST de túneis encontra-se em `/api/tunnels/{cloudflared,ngrok,tailscale}/*` e é independente da cadeia de proxies de saída documentada acima.
-
-### API do 1proxy
-
-| Método   | Endpoint                               | Descrição                                    |
-| -------- | -------------------------------------- | -------------------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | Listar proxies do 1proxy                     |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Obter estatísticas + estado da sincronização |
-| `GET`    | `/api/settings/oneproxy?action=status` | Obter apenas o estado da sincronização       |
-| `POST`   | `/api/settings/oneproxy`               | Acionar a sincronização                      |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Mudar para o proxy seguinte                  |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Eliminar um                                  |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Limpar tudo                                  |
-
-### API do proxy a montante
-
-| Método   | Endpoint                          | Descrição                                  |
-| -------- | --------------------------------- | ------------------------------------------ |
-| `GET`    | `/api/upstream-proxy/:providerId` | Obter a configuração do proxy a montante   |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Definir o modo do proxy a montante         |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Remover a configuração do proxy a montante |
+- **Sincronizar agora** botão para pesquisar proxies gratuitos
+- **Cartões de estatísticas** : Total, Ativo, Qualidade Média, Última Sincronização
+- **Filtros** : Protocolo, Código do País, Qualidade Mínima
+- **Tabela proxy** com host, protocolo, país, índice de qualidade, latência, anonimato, acesso Google
+- **Estado de sincronização** painel com seguimento success/failure e contagem consecutiva de falhas
+- **Limpar tudo** para remover todas as entradas 1proxy
 
 ---
 
-## Variáveis de Ambiente
+## Referência API
 
-| Variável              | Predefinição | Descrição                                                                  |
-| --------------------- | ------------ | -------------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`       | Ativar o suporte para proxy SOCKS5 (predefinição `true` em `.env.example`) |
+### Configurações de proxy API
+
+| Método   | Ponto final                                    | Descrição                                |
+| -------- | ---------------------------------------------- | ---------------------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Obtenha a configuração completa do proxy |
+| `GET`    | `/api/settings/proxy?level=global`             | Obter proxy global                       |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Obter proxy do fornecedor                |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Resolver proxy eficaz                    |
+| `PUT`    | `/api/settings/proxy`                          | Atualizar configuração de proxy          |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Remover proxy no nível                   |
+
+### Registo de proxy API
+
+| Método   | Ponto final                                       | Descrição                            |
+| -------- | ------------------------------------------------- | ------------------------------------ |
+| `GET`    | `/api/v1/management/proxies`                      | Listar todos os proxies              |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Obter proxy por ID                   |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Obter atribuições de proxy           |
+| `POST`   | `/api/v1/management/proxies`                      | Criar proxy                          |
+| `PATCH`  | `/api/v1/management/proxies`                      | Atualizar proxy                      |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Apagar proxy                         |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Forçar exclusão                      |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Atribuição em massa                  |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Listar tarefas                       |
+| `GET`    | `/api/v1/management/proxies/health`               | Estatísticas de integridade do proxy |
+
+### Túneis API
+
+Para expor a sua instância OmniRoute à Internet pública (Cloudflare/ngrok/Tailscale) em vez de encaminhar a saída através de um proxy, consulte [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). O túnel REST API reside em `/api/tunnels/{cloudflared,ngrok,tailscale}/*` e é ortogonal à cadeia de proxy de saída documentada acima.
+
+### 1proxy API
+
+| Método   | Ponto final                            | Descrição                                       |
+| -------- | -------------------------------------- | ----------------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Listar proxies 1proxy                           |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Obter estatísticas do estado de sincronização + |
+| `GET`    | `/api/settings/oneproxy?action=status` | Obter apenas o estado de sincronização          |
+| `POST`   | `/api/settings/oneproxy`               | Sincronização de disparo                        |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Rodar para o próximo proxy                      |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Apagar um                                       |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Limpar tudo                                     |
+
+### Proxy upstream API
+
+| Método   | Ponto final                       | Descrição                              |
+| -------- | --------------------------------- | -------------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Obter a configuração do proxy upstream |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Configurar o modo proxy upstream       |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Remover configuração de proxy upstream |
 
 ---
 
-## Resolução de Problemas
+## Variáveis de ambiente
+
+| Variável              | Predefinição | Descrição                                                           |
+| --------------------- | ------------ | ------------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`       | Activar o suporte do proxy SOCKS5 (padrão `true` em `.env.example`) |
+
+---
+
+## Solução de problemas
 
 ### "O proxy SOCKS5 está desativado"
 
 Defina `ENABLE_SOCKS5_PROXY=true` no seu ficheiro `.env` e reinicie.
 
-### Erros "socket hang up" através do proxy
+### Erros de "socket desligado" por meio de proxy
 
-Isto é normal com proxies baratos que interrompem ligações inativas. O OmniRoute já lida com esta situação ao:
+Isto é normal com proxies baratos que interrompem as ligações ociosas. OmniRoute já lida com isso:
 
-- Desativar o keep-alive nas ligações ao proxy (`keepAliveTimeout: 1`)
-- Desativar o pipelining (`pipelining: 0`)
-- Colocar dispatchers em cache para evitar handshakes repetidos
+- Desactivar o keep-alive nas ligações proxy (`keepAliveTimeout: 1`)
+- Desactivar pipeline (`pipelining: 0`)
+- Armazenar os despachantes em cache para evitar apertos de mão repetidos
 
-Se o problema persistir, experimente outro proxy ou utilize a funcionalidade de rotação do 1proxy.
+Se persistir, tente um proxy diferente ou utilize a funcionalidade de rotação 1proxy.
 
 ### "unsupported_country_region_territory" durante o OAuth
 
-Certifique-se de que o proxy está configurado **antes** de iniciar o fluxo OAuth. O OmniRoute encaminha a troca de tokens OAuth através do proxy configurado. Defina primeiro um proxy global ou ao nível do fornecedor e, em seguida, estabeleça a ligação.
+Certifique-se de que o proxy está configurado** antes** iniciando o fluxo OAuth. OmniRoute encaminha a troca de tokens OAuth através do proxy configurado. Defina primeiro um proxy global ou ao nível do fornecedor e depois ligue-se.
 
-### O proxy não está a ser utilizado
+### Proxy não está a ser usado
 
-Verifique a ordem de resolução:
+Confira a ordem de resolução:
 
 1. Verifique com `GET /api/settings/proxy?resolve=your-connection-id`
-2. Confirme se o `status` do proxy é `active` (e não `inactive`)
-3. Certifique-se de que o âmbito da atribuição do proxy corresponde à sua ligação
+2. Verifique se o proxy `status` é `active` (e não `inactive`)
+3. Certifique-se de que o âmbito de atribuição do proxy corresponde à sua ligação
 
-### Falha na sincronização do 1proxy
+### Falha na sincronização de 1proxy
 
 Verifique o estado da sincronização:
 
@@ -544,11 +555,11 @@ Verifique o estado da sincronização:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Se `consecutiveFailures >= 5`, o disjuntor foi acionado. Reinicie o servidor para o repor ou aguarde por uma reposição manual.
+Se `consecutiveFailures >= 5`, o disjuntor disparou. Reinicie o servidor para repor ou aguarde a reinicialização manual.
 
 ---
 
-## Esquema da Base de Dados
+## Esquema de base de dados
 
 ### Tabela `proxy_registry`
 
@@ -564,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' ou 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (apenas 1proxy)
-  latency_ms INTEGER,                        -- milissegundos (apenas 1proxy)
-  anonymity TEXT,                            -- transparente/anónimo/elite
-  google_access INTEGER DEFAULT 0,           -- consegue aceder ao Google? (1proxy)
-  last_validated TEXT,                       -- carimbo de data/hora ISO (1proxy)
-  country_code TEXT,                         -- código ISO de 2 letras (1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
+  anonymity TEXT,                            -- transparent/anonymous/elite
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -583,7 +594,7 @@ CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID do fornecedor, ID da ligação ou ID da combinação
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Verificação do Estado dos Proxies (v3.8.16+)
+## Verificação da integridade do proxy (v3.8.16 +)
 
-O mecanismo de **falha rápida de proxies** do OmniRoute (`src/lib/proxyHealth.ts`) deteta proxies inativos em <2s através de uma verificação rápida da ligação TCP e, em seguida, **coloca o resultado em cache** para evitar sobrecarga em cada pedido.
+OmniRoute** falha rápida do proxy** mecanismo (`src/lib/proxyHealth.ts`) deteta proxies mortos em < 2s através de uma verificação rápida da ligação TCP, em seguida,** armazena em cache o resultado** para evitar sobrecarga por pedido.
 
-### Como Funciona
+### Como funciona
 
 ```
-Pedido ──▶ ProxyHealthCache.get(url)
-           │
-           ├─ Resultado em cache + recente?  ──▶ devolver estado em cache
-           │
-           └─ Ausente da cache / expirado?    ──▶ ligação TCP ao host:porta
-                                                   (tempo limite: FAST_FAIL_TIMEOUT_MS)
-                                                   ──▶ guardar em cache durante HEALTH_CACHE_TTL_MS
-                                                   ──▶ devolver resultado
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Sem este mecanismo, um proxy inativo bloquearia todos os pedidos durante o valor completo de `PROXY_TIMEOUT_MS` (predefinição de 30s) antes de falhar.
+Sem isso, um proxy inativo bloquearia todos os pedidos do `PROXY_TIMEOUT_MS` completo (padrão 30s) antes de falhar.
 
-### Variáveis de Ambiente Ajustáveis
+### Variáveis de ambiente ajustáveis
 
-| Variável                     | Predefinição | Finalidade                                                |
-| ---------------------------- | ------------ | --------------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`       | Tempo limite da ligação TCP por verificação de estado     |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`      | Tempo durante o qual um resultado de estado fica em cache |
+| Variável                     | Predefinição | Finalidade                                                             |
+| ---------------------------- | ------------ | ---------------------------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`       | tempo limite de ligação TCP por verificação de integridade             |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`      | Durante quanto tempo um resultado de integridade é armazenado em cache |
 
 **Valores recomendados:**
 
-| Cenário                          | Tempo limite de falha rápida | TTL da cache | Justificação                                                                     |
-| -------------------------------- | ---------------------------- | ------------ | -------------------------------------------------------------------------------- |
-| Gateway de API de alto débito    | 1500ms                       | 60000ms      | Falha rápida agressiva e cache mais longa para reduzir as verificações           |
-| Nós distribuídos geograficamente | 3000ms                       | 15000ms      | Redes mais lentas precisam de mais tempo; cache mais curta para comutação rápida |
-| Desenvolvimento / testes         | 1000ms                       | 10000ms      | Iteração rápida em proxies locais                                                |
-| Discrição / ant deteção          | 2500ms                       | 45000ms      | Evita sondagens rápidas que possam acionar limites de frequência                 |
+| Cenário                          | Tempo limite de falha rápida | Cache TTL | Raciocínio                                                                        |
+| -------------------------------- | ---------------------------- | --------- | --------------------------------------------------------------------------------- |
+| Gateway API de alto rendimento   | 1500 ms                      | 60.000ms  | Cache mais longo e agressivo, com falha rápida para reduzir as verificações       |
+| Nós distribuídos geograficamente | 3000ms                       | 15.000ms  | Redes mais lentas necessitam de mais tempo; cache mais curto para failover rápido |
+| Desenvolvimento/teste            | 1000ms                       | 10.000ms  | Iteração rápida em proxies locais                                                 |
+| Furtivo / anti-detecção          | 2500ms                       | 45.000ms  | Evite sondagens rápidas que possam desencadear limites de taxa                    |
 
-### Inspecionar o Estado dos Proxies
+### Inspecionando a integridade do proxy
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Forçar uma nova verificação de um proxy específico
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-O indicador `stale` é `true` quando a entrada da cache excede `HEALTH_CACHE_TTL_MS` e o pedido seguinte acionará uma nova verificação.
+O sinalizador `stale` é `true` quando a entrada da cache excede `HEALTH_CACHE_TTL_MS` e o pedido seguinte irá desencadear uma nova verificação.
 
-### Predefinições por Tipo de Proxy
+### Padrões de tipo por proxy
 
-A verificação de estado utiliza predefinições adequadas com base no esquema do URL:
+A verificação de integridade utiliza padrões sensatos baseados no esquema URL :
 
-| Esquema                    | Porta predefinida |
-| -------------------------- | ----------------- |
-| `http://`                  | 8080              |
-| `https://`                 | 443               |
-| `socks5://` / `socks5h://` | 1080              |
+| Esquema                    | Porta padrão |
+| -------------------------- | ------------ |
+| `http://`                  | 8080         |
+| `https://`                 | 443          |
+| `socks5://` / `socks5h://` | 1080         |
 
-As portas personalizadas no URL (`http://host:9999`) têm sempre precedência sobre a predefinição do esquema.
+As portas personalizadas no URL (`http://host:9999`) têm sempre precedência sobre o esquema padrão.
 
 ---
 
-## Análise e Observabilidade de Proxies
+## Análise de proxy e observabilidade
 
-O OmniRoute monitoriza a utilização por proxy para ajudar os operadores a diagnosticar padrões de encaminhamento, picos de latência e falhas recorrentes.
+OmniRoute acompanha a utilização por proxy para ajudar os operadores a diagnosticar padrões de encaminhamento, picos de latência e falhas recorrentes.
 
-### O que é Monitorizado
+### O que é rastreado
 
-Para cada pedido efetuado através de um proxy configurado, o OmniRoute regista:
+Para cada pedido através de um proxy configurado, OmniRoute regista:
 
-| Métrica      | Descrição                                                         |
-| ------------ | ----------------------------------------------------------------- |
-| `proxy_url`  | URL completo do proxy (com credenciais de autenticação ocultadas) |
-| `provider`   | ID do fornecedor a montante (openai, anthropic, etc.)             |
-| `latency_ms` | Tempo total de ida e volta, incluindo a negociação com o proxy    |
-| `connect_ms` | Apenas o tempo de ligação TCP                                     |
-| `status`     | Código de estado HTTP devolvido pelo serviço a montante           |
-| `error`      | Classe do erro, caso o pedido tenha falhado                       |
-| `timestamp`  | UTC no formato ISO 8601                                           |
+| Métrica      | Descrição                                                       |
+| ------------ | --------------------------------------------------------------- |
+| `proxy_url`  | Proxy URL completo (com credenciais de autenticação mascaradas) |
+| `provider`   | Fornecedor upstream ID (openai, antrópico, etc.)                |
+| `latency_ms` | Tempo total de ida e volta, incluindo handshake de proxy        |
+| `connect_ms` | TCP ligar apenas tempo                                          |
+| `status`     | código de estado HTTP do upstream                               |
+| `error`      | Classe de erro se o pedido falhar                               |
+| `timestamp`  | ISO 8601 UTC                                                    |
 
 ### Aceder aos Dados
 
 ```bash
-# Eventos recentes de proxies
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-O endpoint real é `/api/usage/proxy-logs` (consulte `src/app/api/usage/proxy-logs/route.ts`). Este endpoint suporta:
+O ponto final real é `/api/usage/proxy-logs` (ver `src/app/api/usage/proxy-logs/route.ts`). Este ponto final suporta:
 
-- `GET /api/usage/proxy-logs` — obter registos de proxies
-- `DELETE /api/usage/proxy-logs` — limpar todos os registos de proxies
+- `GET /api/usage/proxy-logs` — recupera registos de proxy
+- `DELETE /api/usage/proxy-logs` — limpar todos os registos de proxy
 
-Se necessário, as estatísticas agregadas podem ser consultadas diretamente na tabela `proxy_logs` através de SQL. A interface do painel poderá disponibilizar vistas agregadas.
+As estatísticas agregadas podem ser consultadas diretamente da tabela `proxy_logs` através de SQL, se necessário. O painel UI pode oferecer visualizações agregadas.
 
 ### Padrões Comuns
 
-**Detetar um proxy instável** (alterna entre sucesso/falha):
+**Detetar um proxy oscilante** (alterna entre success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Encontrar proxies lentos** (latência p95 > 2 s):
+**Encontre proxies lentos** (latência p95 > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,96 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Árvore de Decisão da Estratégia de Rotação
+## Árvore de decisão da estratégia de rotação
 
-Quando vários proxies são atribuídos a um âmbito, o OmniRoute utiliza uma **estratégia de rotação** para escolher qual deles utilizar em cada pedido. A estratégia é configurada ao nível do âmbito (global, por fornecedor, por conta ou por combinação).
+Quando vários proxies são atribuídos a um âmbito, OmniRoute utiliza um** estratégia de rotação** para escolher qual utilizar para cada pedido. A estratégia é configurada ao nível do âmbito (global, por fornecedor, por conta, por combinação).
 
 ### Estratégias Disponíveis
 
-| Estratégia              | Quando utilizar                            | Compromisso                                                       |
-| ----------------------- | ------------------------------------------ | ----------------------------------------------------------------- |
-| `quality` (predefinida) | Produção com proxies de qualidade variável | Privilegia proxies bem classificados; pode excluir os restantes   |
-| `random`                | Distribuição de carga, privacidade         | Distribuição uniforme; ignora os indicadores de qualidade         |
-| `sequential`            | Depuração, testes determinísticos          | Percorre os proxies por ordem; comportamento fácil de compreender |
+| Estratégia         | Quando usar                             | Troca                                                                                |
+| ------------------ | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| `quality` (padrão) | Produção com proxies de qualidade mista | Favorece proxies de alta classificação; pode matar de fome os de baixa classificação |
+| `random`           | Distribuição de carga, privacidade      | Distribuição uniforme; ignora sinais de qualidade                                    |
+| `sequential`       | Depuração, testes determinísticos       | Percorre os proxies por ordem; fácil de raciocinar sobre                             |
 
-### Árvore de Decisão
+### Árvore de decisão
 
 ```
-                    Tem pontuações de qualidade para os seus proxies?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       SIM                     NÃO
+       YES                     NO
         │                       │
-   Todos os proxies            │
-   têm uma qualidade           │
-   semelhante?                 │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  SIM       NÃO              Utilize
+  YES       NO                Use
    │         │              `random`
-   │         │              (a distribuição
-   │         │              uniforme cria dados
-   │         │              de qualidade ao longo
-   │         │              do tempo)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Utilize `quality`
-   │    (ideal para
-   │    qualidade variável)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Utilize `random`
-(distribua a carga
-uniformemente)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Exclusão Automática de Falhas para os Seus Próprios Proxies
+## Exclusão automática de falhas para os seus próprios proxies
 
-O conjunto do marketplace 1proxy já despromove automaticamente os proxies com falhas (consulte
-[Pontuações de Qualidade dos Proxies](#proxy-quality-scores)). Para os
-proxies que **adicionou** ao registo, o agendador de verificações de estado em segundo plano
-(`src/lib/proxyHealth/scheduler.ts`) proporciona o mesmo comportamento de «excluir automaticamente
-da cadeia um membro inoperacional», sem eliminar nada:
+O pool de mercado 1proxy já degrada automaticamente os proxies com falhas por si só (consulte [Índices de qualidade do proxy](#proxy-quality-scores) ). Para proxies** tu** adicionado ao registo, o agendador de integridade de fundo (`src/lib/proxyHealth/scheduler.ts`) fornece o mesmo comportamento de "apagar automaticamente um membro morto da cadeia", sem apagar nada:
 
 ```bash
-# .env — desativar temporariamente um proxy após 3 sondagens consecutivas sem êxito e reativá-lo
-# automaticamente assim que voltar a responder às sondagens.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Como funciona numa cadeia com vários proxies:
+Como é que isto se encaixa numa cadeia multiproxy:
 
-1. O agendador testa cada proxy registado a cada `PROXY_HEALTH_INTERVAL_MS`
-   (predefinição: 10 min; mínimo: 1 min).
-2. Após `PROXY_AUTO_REMOVE_AFTER` falhas **conclusivas** consecutivas (uma falha
-   real de ligação — um tempo limite ou uma resposta 5xx do próprio destino da sondagem nunca são contabilizados; consulte
-   [Verificação do Estado dos Proxies](#proxy-health-checking-v3816)), o `status` do proxy é
-   definido como `dead`.
-3. `dead` é um dos estados excluídos pelo filtro de estados ativos utilizado pela resolução
-   de conjuntos/rotação, pelo que a rotação de um âmbito (round-robin / aleatória / persistente /
-   latência — consulte a [Árvore de Decisão da Estratégia de Rotação](#rotation-strategy-decision-tree))
-   deixa imediatamente de atribuir esse proxy a novos pedidos. Nenhum outro proxy do
-   conjunto é afetado e o conjunto completo nunca recorre silenciosamente a uma ligação
-   direta — consulte a proteção de falha fechada do
-   [Sistema de Proxies de 4 Níveis](#4-level-proxy-system).
-4. O agendador continua a testar os proxies `dead` no mesmo intervalo. A sondagem
-   seguinte bem-sucedida altera novamente o `status` para `active` e o proxy volta a entrar na rotação —
-   não é necessário voltar a adicioná-lo manualmente.
+1. O agendador investiga cada proxy registado a cada `PROXY_HEALTH_INTERVAL_MS` (padrão 10 min; mínimo 1 min).
+2. Depois de `PROXY_AUTO_REMOVE_AFTER` consecutivo** conclusivo** falhas (uma falha de ligação real — um tempo limite ou o próprio 5xx do alvo da sonda nunca conta, consulte [Verificação da integridade do proxy](#proxy-health-checking-v3816) ), o `status` do proxy é definido como `dead`.
+3. `dead` é um dos estados que o filtro de estado ativo utilizado pela resolução pool/rotation exclui, portanto, a rotação de um âmbito (round-robin/random/sticky/latency — ver [Rotation Strategy Decision Tree](#rotation-strategy-decision-tree) ) para imediatamente de entregar este proxy para novos pedidos. Nenhum outro proxie no pool é afetado, e todo o pool nunca volta silenciosamente para uma ligação direta — consulte a proteção contra falhas [do sistema proxy de 4 níveis](#4-level-proxy-system).
+4. O escalonador continua a investigar os proxies `dead` no mesmo intervalo. A próxima análise bem-sucedida muda `status` de volta para `active` e entra novamente na rotação — sem necessidade de adição manual.
 
-Isto é deliberadamente **opcional e não destrutivo**: por predefinição, o agendador apenas
-contabiliza e regista as falhas (consulte a política C em `decision.ts`), e
-`PROXY_AUTO_DISABLE` nunca elimina uma linha — essa é a função do sinalizador
-separado e mais agressivo `PROXY_AUTO_REMOVE`. Se ambos estiverem definidos como `true`,
-`PROXY_AUTO_REMOVE` prevalece (um proxy prestes a ser eliminado não beneficia de uma
-desativação temporária intermédia). Consulte a referência de
-[Configuração do Ambiente](../reference/ENVIRONMENT.md) para obter a lista completa
-de variáveis.
+Isto é deliberadamente** opt-in e não destrutivo** : por defeito, o agendador apenas conta e regista falhas (ver política C em `decision.ts`), e `PROXY_AUTO_DISABLE` nunca elimina uma linha —, é para isso que serve o sinalizador `PROXY_AUTO_REMOVE` separado e mais agressivo. Se ambos estiverem definidos como `true`, `PROXY_AUTO_REMOVE` ganha (um proxy prestes a ser eliminado não necessita de uma desativação suave no meio). Consulte a referência [do Environment Config](../reference/ENVIRONMENT.md) para obter a lista completa de variáveis.
 
 ---
 
-> 📖 **Documentação relacionada:**
+> 📖** Documentação relacionada:**
 >
-> - [Guia do Utilizador](../guides/USER_GUIDE.md) — Instalação e configuração gerais
-> - [Referência da API](../reference/API_REFERENCE.md) — Documentação completa da API
-> - [Configuração do Ambiente](../reference/ENVIRONMENT.md) — Todas as variáveis de ambiente
+> - [Guia do utilizador](../guides/USER_GUIDE.md) — Instalação e configuração geral - [API Referência](../reference/API_REFERENCE.md) — Documentação completa API - [Configuração do ambiente](../reference/ENVIRONMENT.md) — Todas as variáveis de ambiente

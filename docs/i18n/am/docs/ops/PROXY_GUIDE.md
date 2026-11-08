@@ -4,24 +4,24 @@
 
 ---
 
-> **የጂኦግራፊያዊ እገዳዎችን ይለፉ፣ ማንነትዎን ይጠብቁ፣ እና የAI ትራፊክን በማንኛውም ፕሮክሲ በኩል ያስተላልፉ — ያለምንም የውቅረት ውስብስብነት።**
+> **ጂኦግራፊያዊ ብሎኮችን ማለፍ፣ ማንነትዎን ይጠብቁ እና AI ትራፊክን በማንኛውም ፕሮክሲ — ከዜሮ ውቅር ውስብስብነት ጋር ያዙሩ።**
 
-OmniRoute ወደ ላይኛ ደረጃ የAI አቅራቢዎች የሚላከውን ትራፊክ በHTTP፣ HTTPS ወይም SOCKS5 ፕሮክሲዎች በኩል እንዲያስተላልፉ የሚያስችልዎትን ሙሉ ባህሪያት ያሉት የፕሮክሲ አስተዳደር ስርዓት ያካትታል። በታገደ ክልል ውስጥ ቢሆኑ፣ የIP ማዞር ቢያስፈልግዎት፣ ወይም ስውር የጣት አሻራ አጠቃቀምን ቢፈልጉ — ይህ መመሪያ ሁሉንም ይሸፍናል።
+OmniRoute HTTP፣ HTTPS ወይም SOCKS5 proxies በኩል ወደላይ AI አቅራቢ ትራፊክ እንዲሄዱ የሚያስችል ሙሉ-ተኪ አስተዳደር ስርዓትን ያካትታል። በታገደ ክልል ውስጥም ይሁኑ፣ IP ማሽከርከር ያስፈልጎታል፣ ወይም ስውር የጣት አሻራ — ይፈልጉ ይህ መመሪያ ሁሉንም ነገር ይሸፍናል።
 
 ---
 
-## የይዘት ማውጫ
+## ማውጫ
 
 - [ፕሮክሲዎችን ለምን ይጠቀማሉ?](#why-use-proxies)
-- [የአርክቴክቸር አጠቃላይ እይታ](#architecture-overview)
-- [ባለ4-ደረጃ የፕሮክሲ ስርዓት](#4-level-proxy-system)
-- [የፕሮክሲ መዝገብ (CRUD)](#proxy-registry-crud)
-- [የ1proxy ነጻ የገበያ ቦታ](#1proxy-free-proxy-marketplace)
-- [የፕሮክሲ ማዞር](#proxy-rotation)
-- [ፀረ-ማወቂያ እና ስውርነት](#anti-detection--stealth)
-- [ወደ ላይኛ ደረጃ የፕሮክሲ ሁነታዎች](#upstream-proxy-modes)
-- [የዳሽቦርድ UI](#dashboard-ui)
-- [የAPI ማጣቀሻ](#api-reference)
+- [የሕንፃ አጠቃላይ እይታ](#architecture-overview)
+- [ባለ4-ደረጃ ተኪ ስርዓት](#4-level-proxy-system)
+- [የተኪ መዝገብ ቤት (CRUD)](#proxy-registry-crud)
+- [1 ተኪ ነፃ የገበያ ቦታ](#1proxy-free-proxy-marketplace)
+- [ተኪ ማሽከርከር](#proxy-rotation)
+- [ፀረ-ማወቂያ እና ስርቆት።](#anti-detection--stealth)
+- [ወደላይ ተኪ ሁነታዎች](#upstream-proxy-modes)
+- [ዳሽቦርድ UI](#dashboard-ui)
+- [API ማጣቀሻ](#api-reference)
 - [የአካባቢ ተለዋዋጮች](#environment-variables)
 - [መላ መፈለግ](#troubleshooting)
 
@@ -29,125 +29,136 @@ OmniRoute ወደ ላይኛ ደረጃ የAI አቅራቢዎች የሚላከውን
 
 ## ፕሮክሲዎችን ለምን ይጠቀማሉ?
 
-ብዙ የAI አቅራቢዎች በጂኦግራፊያዊ ክልል መሠረት መዳረሻን ይገድባሉ። በ**ሩሲያ፣ ቻይና፣ ኢራን፣ ኩባ፣ ቱርክ** እና በሌሎች አገሮች ያሉ ገንቢዎች እንደሚከተለው ያሉ ስህተቶችን ያጋጥማቸዋል፦
+ብዙ AI አቅራቢዎች በጂኦግራፊያዊ ክልል መድረስን ይገድባሉ። ገንቢዎች በ** ሩሲያ, ቻይና, ኢራን, ኩባ, ቱርክ** እና ሌሎች አገሮች እንደዚህ ያሉ ስህተቶች ያጋጥሟቸዋል፡-
 
 ```
 unsupported_country_region_territory
 ```
 
-ከታገዱ ክልሎች ውጭም ቢሆን፣ ፕሮክሲዎች ለሚከተሉት ጠቃሚ ናቸው፦
+ከተከለከሉ ክልሎች ውጭም ቢሆን ፕሮክሲዎች ለሚከተሉት ይጠቅማሉ፡
 
-| የአጠቃቀም ሁኔታ            | መግለጫ                                                |
-| --------------------- | --------------------------------------------------- |
-| **የጂኦግራፊያዊ እገዳን ማለፍ** | ከታገዱ አገሮች OpenAI፣ Anthropic፣ Codex እና Copilotን መድረስ |
-| **የIP ማዞር**           | የፍጥነት ገደብን ለማስወገድ ጥያቄዎችን በበርካታ IPዎች ላይ ማሰራጨት        |
-| **ግላዊነት**             | እውነተኛ IPዎን ከወደ ላይኛ ደረጃ አቅራቢዎች መደበቅ                  |
-| **ተገዢነት**             | ትራፊክን በተወሰኑ የሕግ ስልጣን ክልሎች በኩል ማስተላለፍ                |
-| **ሙከራ**               | ከተለያዩ ክልሎች የሚመጡ ጥያቄዎችን ማስመሰል                        |
+| መያዣ ይጠቀሙ         | መግለጫ                                             |
+| ---------------- | ------------------------------------------------ |
+| **ጂኦግራፊያዊ ማለፊያ** | ከታገዱ አገሮች OpenAI, Anthropic, Codex, Copilot ይድረሱ |
+| **IP መዞር**       | የቁጥር ገደብን ለማስቀረት ጥያቄዎችን በበርካታ IPs ላይ ያሰራጩ        |
+| **ግላዊነት**        | እውነተኛውን IP ከወራጅ አቅራቢዎች ደብቅ                       |
+| **ተገዢነት**        | ትራፊክን በተወሰኑ ክልሎች ያካሂዱ                            |
+| **መሞከር**         | ከተለያዩ ክልሎች የመጡ ጥያቄዎችን አስመስለው                     |
 
 ---
 
-## የአርክቴክቸር አጠቃላይ እይታ
+## የሕንፃ አጠቃላይ እይታ
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       OmniRoute አገልጋይ                      │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ የፕሮክሲ     │    │ የፕሮክሲ      │    │ የፕሮክሲ          │  │
-│  │ መዝገብ       │───▶│ አከፋፋይ      │───▶│ Fetch (undici)   │  │
-│  │ (SQLite)    │    │ (የተሸጎጠ)    │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ የ1proxy     │                        │ ወደ ላይኛ ደረጃ   │  │
-│  │ ማመሳሰል     │                        │ የአቅራቢ API      │  │
-│  │ (ነጻ ስብስብ) │                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### ዋና ክፍሎች
+### ቁልፍ አካላት
 
-| ክፍል              | ፋይል                                          | ሚና                                             |
-| ---------------- | -------------------------------------------- | ---------------------------------------------- |
-| **የፕሮክሲ መዝገብ**   | `src/lib/db/proxies.ts`                      | ለፕሮክሲ ግቤቶች እና የወሰን ምደባዎች CRUD                  |
-| **የፕሮክሲ አከፋፋይ**  | `open-sse/utils/proxyDispatcher.ts`          | በመሸጎጥ የ`undici` ProxyAgent/SOCKS አከፋፋዮችን ይፈጥራል |
-| **የፕሮክሲ Fetch**  | `open-sse/utils/proxyFetch.ts`               | `fetch()`ን ከፕሮክሲ አከፋፋይ ማስገባት ጋር ይጠቀልላል         |
-| **የቅንብሮች መንገድ**  | `src/app/api/settings/proxy/route.ts`        | የቆየ የፕሮክሲ ውቅረት API (GET/PUT/DELETE)            |
-| **የአስተዳደር መንገድ** | `src/app/api/v1/management/proxies/route.ts` | የመዝገብ CRUD API (GET/POST/PATCH/DELETE)         |
-| **የ1proxy DB**   | `src/lib/db/oneproxy.ts`                     | የነጻ ፕሮክሲ የገበያ ቦታ ዘላቂ ማከማቻ                      |
-
----
-
-## ባለ 4-ደረጃ ፕሮክሲ ስርዓት
-
-OmniRoute በቅድሚያ ቅደም ተከተል የሚወሰኑ **አራት እርስ በርስ ገለልተኛ ወሰኖች** ላይ የፕሮክሲ ውቅርን ይደግፋል፦
-
-```
-የቅድሚያ አወሳሰን ቅደም ተከተል (ከከፍተኛ → ዝቅተኛ)፦
-
-  1. 🔵 የመለያ/ግንኙነት ፕሮክሲ  →  ለእያንዳንዱ API ቁልፍ / OAuth ግንኙነት
-  2. 🟡 የአቅራቢ ፕሮክሲ         →  ለእያንዳንዱ አቅራቢ (ለምሳሌ፣ ሁሉም የOpenAI ትራፊክ)
-  3. 🟠 የጥምረት ፕሮክሲ         →  ለእያንዳንዱ የጥምረት/ማስተላለፊያ ውቅር
-  4. 🟢 ዓለም አቀፍ ፕሮክሲ        →  ሁሉም ትራፊክ፣ ሁሉም አቅራቢዎች
-```
-
-### አወሳሰኑ እንዴት እንደሚሠራ
-
-OmniRoute ወደ ላይኛው አቅራቢ ጥያቄ ሲልክ፣ እያንዳንዱን ደረጃ በቅደም ተከተል የሚፈትሸውን `resolveProxyForConnectionFromRegistry()` ይጠራል፦
-
-1. **የመለያ ደረጃ** — ለዚህ የተወሰነ የግንኙነት ID ፕሮክሲ ተመድቧል?
-2. **የአቅራቢ ደረጃ** — ለዚህ አቅራቢ (ለምሳሌ፣ `openai`) ፕሮክሲ ተመድቧል?
-3. **ዓለም አቀፍ ደረጃ** — ዓለም አቀፍ ፕሮክሲ ተዋቅሯል?
-4. **ፕሮክሲ የለም** — ከአቅራቢው ጋር ቀጥተኛ ግንኙነት።
-
-የመጀመሪያው ተዛማጅ ይመረጣል። ይህም ዓለም አቀፍ ፕሮክሲን እንደ ተጠባባቂ እንዲያዘጋጁ፣ ነገር ግን ለተወሰኑ አቅራቢዎች ወይም ግንኙነቶች እንዲተኩት ያስችልዎታል።
-
-### በፕሮክሲ የሚያልፈው
-
-| የትራፊክ ዓይነት      | በፕሮክሲ ያልፋል? | ማስታወሻዎች                                      |
-| --------------- | ----------- | -------------------------------------------- |
-| የውይይት ማጠናቀቂያዎች  | ✅          | ሁሉም የ`/v1/chat/completions` ጥያቄዎች            |
-| ኢምቤዲንጎች         | ✅          | `/v1/embeddings`                             |
-| ምስል ማመንጨት       | ✅          | `/v1/images/generations`                     |
-| ድምፅ (TTS/STT)   | ✅          | `/v1/audio/*`                                |
-| የOAuth ቶከን ልውውጥ | ✅          | `unsupported_country_region_territory`ን ይፈታል |
-| የግንኙነት ሙከራዎች    | ✅          | "ግንኙነትን ሞክር" አዝራር ፕሮክሲን ይጠቀማል                |
-| የቶከን እድሳት       | ✅          | ከበስተጀርባ የሚከናወን የOAuth እድሳት                   |
-| የሞዴል ማመሳሰል      | ✅          | የሞዴል ዝርዝር እና ፍለጋ                             |
+| አካል              | ፋይል                                          | ሚና                                          |
+| ---------------- | -------------------------------------------- | ------------------------------------------- |
+| **የተኪ መዝገብ ቤት**  | `src/lib/db/proxies.ts`                      | CRUD ለፕሮክሲ ግቤቶች + ስፋት ምደባ                   |
+| **ተኪ ላኪ**        | `open-sse/utils/proxyDispatcher.ts`          | በመሸጎጥ `undici` ProxyAgent/SOCKS ላኪዎችን ይፈጥራል |
+| **ተኪ ፈልስ**       | `open-sse/utils/proxyFetch.ts`               | `fetch()` ከፕሮክሲ ሰጭ መርፌ ጋር ያጠቃልላል            |
+| **የቅንብሮች መስመር**  | `src/app/api/settings/proxy/route.ts`        | የቆየ ተኪ ውቅር API (GET/PUT/DELETE)             |
+| **የአስተዳደር መንገድ** | `src/app/api/v1/management/proxies/route.ts` | መዝጋቢ CRUD API (GET/POST/PATCH/DELETE)       |
+| **1 proxy DB**   | `src/lib/db/oneproxy.ts`                     | ነፃ ተኪ የገበያ ቦታ ጽናት                           |
 
 ---
 
-## የፕሮክሲ መዝገብ (CRUD)
+## ለአዲስ መለያዎች ነባሪ የተኪ ሁኔታ
 
-የፕሮክሲ መዝገቡ ሁሉንም ፕሮክሲዎችዎን የሚያከማች SQLite ሰንጠረዥ (`proxy_registry`) ነው። እያንዳንዱ ፕሮክሲ የሚከተሉት አሉት፦
+ውስጥ** ቅንብሮች → ተኪ → ዓለም አቀፍ ውቅር** ፣ ተጠቀም** ለአዲስ ግንኙነቶች በነባሪነት ተኪን አንቃ** አዲስ የተጨመሩ የአቅራቢ መለያዎች የመጀመሪያ ተኪ ሁኔታን ለመምረጥ።
 
-| መስክ        | ዓይነት   | መግለጫ                              |
-| ---------- | ------ | --------------------------------- |
-| `id`       | UUID   | ልዩ መለያ                            |
-| `name`     | ሕብረቁምፊ | ለሰው በቀላሉ የሚነበብ ስያሜ                |
-| `type`     | ሕብረቁምፊ | ፕሮቶኮል፦ `http`፣ `https`፣ `socks5`  |
-| `host`     | ሕብረቁምፊ | የፕሮክሲ አስተናጋጅ ስም ወይም IP            |
-| `port`     | ኢንቲጀር  | የፖርት ቁጥር                          |
-| `username` | ሕብረቁምፊ | የማረጋገጫ የተጠቃሚ ስም (በማከማቻ ላይ የተመሰጠረ) |
-| `password` | ሕብረቁምፊ | የማረጋገጫ የይለፍ ቃል (በማከማቻ ላይ የተመሰጠረ)  |
-| `region`   | ሕብረቁምፊ | የጂኦግራፊያዊ ክልል ስያሜ                  |
-| `notes`    | ሕብረቁምፊ | ነፃ-ጽሑፍ ማስታወሻዎች                    |
-| `status`   | ሕብረቁምፊ | `active` ወይም `inactive`           |
-| `source`   | ሕብረቁምፊ | `manual` ወይም `oneproxy`           |
+አዲሱ ቅንብር አዲስ የተጨመሩ የአቅራቢ መለያዎችን የመጀመሪያ ተኪ ሁኔታ ይቆጣጠራል። ያሉትን መለያዎች አይቀይርም ወይም የአለምአቀፍ ተኪ ማብሪያ / ማጥፊያን አይተካም። የእሱ የመጀመሪያ እሴት የቀደመውን ባህሪ ይጠብቃል. የወደፊት አካውንቶችን ለመፍጠር አንድ ጊዜ ያጥፉት ፕሮክሲ በነባሪነት ተሰናክሏል።
 
-### ፕሮክሲ መፍጠር
+ምርጫው አሁን ባለው ቅንጅቶች API በኩል እንደ `defaultNewConnectionProxyEnabled` ተቀምጧል። መቼም ሳይቀመጥ ወደ `true` ይቀይራል። `false` ማስቀመጥ እንደገና ሳይጀመር ለቀጣይ አዲስ መለያዎች ተግባራዊ ይሆናል። `POST /api/providers` የአማራጭ ጥብቅ ቡሊያን `proxyEnabled` ይቀበላል; ግልጽ የሆነ `true` ወይም `false` ከመፍጠር ነባሪ ይቀድማል። በተባዛ መለያ ላይ መቅረት ወይም OAuth እንደገና ማገናኘት የዚያ መለያ የተከማቸበትን ሁኔታ ይጠብቃል። የግለሰብ መለያዎች አሁንም ሊነቁ ወይም ከዚያ በኋላ ሊሰናከሉ ይችላሉ።
 
-**በዳሽቦርድ በኩል፦**
+የተመረጡ የአቅራቢዎች ዝውውሮች የመድረሻ ጭነት ነባሪ ለአዲስ መለያዎች ይጠቀማሉ እና ነባር መለያዎችን በሚተኩበት ጊዜ የመድረሻ ፖሊሲን ይጠብቃሉ። ተኪ መቀየሪያዎች ተንቀሳቃሽ የማስተላለፊያ መስኮች አይደሉም። ሙሉ ምትኬን ወደነበረበት መመለስ እና ታሪካዊ JSON/SQL ፍልሰት የተቀመጡ የመለያ እሴቶችን እና የቅርስ ንድፍ ነባሪዎችን ጨምሮ ነባሩን ወደነበረበት መመለስ ትርጉም ያቆያል። ሙሉ ቅንብሮችን ወደነበረበት መመለስ ይህንን ምርጫ ወደነበረበት መመለስ ይችላል።
 
-1. ወደ **ቅንብሮች → ፕሮክሲ** ይሂዱ
-2. **ፕሮክሲ ጨምር**ን ጠቅ ያድርጉ
-3. ዓይነቱን፣ አስተናጋጁን፣ ፖርቱን እና አማራጭ የማረጋገጫ መረጃዎችን ይሙሉ
-4. ያስቀምጡ
+ይህ ምርጫ ተኪ አይመደብም ወይም አንድ ሰው ጤናማ ወይም በአገልግሎት ላይ ያለ መሆኑን አያረጋግጥም። ትክክለኛው መስመር አሁንም በአለምአቀፍ ተኪ ማብሪያና በሚመለከተው ተኪ ውቅር ላይ ይወሰናል። ቀጣይነት ያለው መለያ የሌላቸው ሰራሽ አቅራቢዎች፣ ከመለያ መፈጠር በፊት OAuth ትራፊክ፣ environment/system ፕሮክሲዎች እና የውጪ ደጋፊዎች አውታረ መረብ ከአቅሙ ውጭ ናቸው።
 
-**በAPI በኩል፦**
+## ባለ4-ደረጃ ተኪ ስርዓት
+
+OmniRoute የተኪ ውቅርን በ** አራት ገለልተኛ ወሰኖች** ቅድሚያ በተሰጣቸው ቅደም ተከተል ተፈትቷል፡-
+
+```
+Priority Resolution Order (highest → lowest):
+
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
+```
+
+### ጥራት እንዴት እንደሚሰራ
+
+OmniRoute ወደ ላይ ለሚገኝ አገልግሎት አቅራቢ ጥያቄ ሲልክ `resolveProxyForConnectionFromRegistry()` ይደውላል ይህም እያንዳንዱን ደረጃ በቅደም ተከተል ይፈትሻል
+
+1. **የመለያ ደረጃ** — ለዚህ የተለየ ግንኙነት ID የተመደበ ፕሮክሲ አለ?
+2. **አቅራቢ-ደረጃ** — ለዚህ አቅራቢ (ለምሳሌ፣ `openai`) የተመደበ ፕሮክሲ አለ?
+3. **ዓለም አቀፍ ደረጃ** — የተዋቀረ ዓለም አቀፍ ፕሮክሲ አለ?
+4. **ምንም ተኪ** — ከአቅራቢው ጋር ቀጥተኛ ግንኙነት.
+
+የመጀመሪያው ግጥሚያ ያሸንፋል። ይህ ማለት አለምአቀፍ ፕሮክሲን እንደ ውድቀት ማቀናበር ይችላሉ ነገር ግን ለተወሰኑ አቅራቢዎች ወይም ግንኙነቶች ይሽሩት።
+
+### በተኪነት የሚቀርበው
+
+| የትራፊክ ዓይነት       | ተኪ? | ማስታወሻዎች                                     |
+| ---------------- | --- | ------------------------------------------- |
+| የውይይት መጠናቀቅ      | ✅  | ሁሉም `/v1/chat/completions` ጥያቄዎች            |
+| መክተቻዎች           | ✅  | `/v1/embeddings`                            |
+| ምስል ማመንጨት        | ✅  | `/v1/images/generations`                    |
+| ኦዲዮ (TTS/STT)    | ✅  | `/v1/audio/*`                               |
+| OAuth ማስመሰያ ልውውጥ | ✅  | `unsupported_country_region_territory` ይፈታል |
+| የግንኙነት ሙከራዎች     | ✅  | "የሙከራ ግንኙነት" አዝራር ተኪ ይጠቀማል                  |
+| ማስመሰያ አድስ        | ✅  | ዳራ OAuth እድሳት                               |
+| የሞዴል ማመሳሰል       | ✅  | የሞዴል ዝርዝር እና ግኝት                            |
+
+---
+
+## የተኪ መዝገብ ቤት (CRUD)
+
+የተኪ መዝገብ ቤት ሁሉንም ፕሮክሲዎችዎን የሚያከማች SQLite ሰንጠረዥ (`proxy_registry`) ነው። እያንዳንዱ ፕሮክሲ አለው፡-
+
+| መስክ        | ዓይነት   | መግለጫ                            |
+| ---------- | ------ | ------------------------------- |
+| `id`       | UUID   | ልዩ መለያ                          |
+| `name`     | ሕብረቁምፊ | በሰው ሊነበብ የሚችል መለያ               |
+| `type`     | ሕብረቁምፊ | ፕሮቶኮል `http`, `https`, `socks5` |
+| `host`     | ሕብረቁምፊ | የተኪ አስተናጋጅ ስም ወይም IP            |
+| `port`     | ኢንቲጀር  | የወደብ ቁጥር                        |
+| `username` | ሕብረቁምፊ | አረጋጋጭ የተጠቃሚ ስም (በእረፍት የተመሰጠረ)   |
+| `password` | ሕብረቁምፊ | የማረጋገጫ ይለፍ ቃል (በእረፍት የተመሰጠረ)    |
+| `region`   | ሕብረቁምፊ | የጂኦግራፊያዊ ክልል መለያ                |
+| `notes`    | ሕብረቁምፊ | ነፃ የጽሑፍ ማስታወሻዎች                 |
+| `status`   | ሕብረቁምፊ | `active` ወይም `inactive`         |
+| `source`   | ሕብረቁምፊ | `manual` ወይም `oneproxy`         |
+
+### ተኪ መፍጠር
+
+**በዳሽቦርድ በኩል፡**
+
+1. ወደ ሂድ** ቅንብሮች → ተኪ**
+2. ጠቅ ያድርጉ** ተኪ ጨምር**
+3. ዓይነት፣ አስተናጋጅ፣ ወደብ እና አማራጭ የማረጋገጫ ምስክርነቶችን ይሙሉ
+4. አስቀምጥ
+
+**በ API በኩል:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -163,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### ፕሮክሲን ማዘመን
+### ተኪ በማዘመን ላይ
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -175,56 +186,56 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **ማስታወሻ፦** ባዶ ያልሆኑ ምትኮችን በግልጽ ካልላኩ በስተቀር የማረጋገጫ መረጃዎቹ እንዳሉ ይቆያሉ። ለ`username`/`password` ባዶ ሕብረቁምፊዎችን መላክ የተከማቹትን እሴቶች እንዳሉ ያቆያል።
+> **ማስታወሻ፡-** ባዶ ያልሆኑ ተተኪዎችን በግልፅ ካልላኩ በስተቀር ምስክርነቶች ተጠብቀዋል። ለ `username`/`password` ባዶ ሕብረቁምፊዎችን መላክ የተከማቹ እሴቶችን ያስቀምጣል።
 
-### ፕሮክሲን መሰረዝ
+### ተኪን በመሰረዝ ላይ
 
 ```bash
-# ፕሮክሲው ለማንኛውም ወሰን ከተመደበ አይሳካም
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# በግድ ሰርዝ (ምደባዎችንም ያስወግዳል)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### ፕሮክሲዎችን መዘርዘር
+### ተኪዎችን መዘርዘር
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### ፕሮክሲዎችን ለወሰኖች መመደብ
+### ፕሮክሲዎችን ወደ ወሰን መመደብ
 
 ```bash
-# ለዓለም አቀፍ ወሰን መድብ
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# ለተወሰነ አቅራቢ መድብ
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# ለተወሰነ ግንኙነት/ቁልፍ መድብ
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### ተግባራዊውን ፕሮክሲ መወሰን
+### ውጤታማ ተኪ መፍታት
 
-ለአንድ የተወሰነ ግንኙነት የትኛው ፕሮክሲ ጥቅም ላይ እንደሚውል ያረጋግጡ፦
+ለአንድ የተወሰነ ግንኙነት የትኛው ተኪ ጥቅም ላይ እንደሚውል ያረጋግጡ፡
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-የተወሰነውን ፕሮክሲ ከደረጃው (`account`፣ `provider` ወይም `global`) እና ከምንጩ ጋር ይመልሳል።
+የተፈታውን ፕሮክሲ ከደረጃው (`account`፣ `provider` ወይም `global`) እና ምንጭ ጋር ይመልሳል።
 
-### በጅምላ መመደብ
+### የጅምላ ምደባ
 
-አንድን ፕሮክሲ በአንድ ጊዜ ለብዙ አቅራቢዎች ወይም ግንኙነቶች ይመድቡ፦
+አንድ ተኪ ለብዙ አቅራቢዎች ወይም ግንኙነቶች በአንድ ጊዜ መድብ፡
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### ማስመጣት/ላክ
+### Import/Export
 
-ፕሮክሲዎች በ**ምትኬ/መልሶ ማግኛ** ስርዓቱ ውስጥ ተካትተዋል። የOmniRoute ውቅርዎን ሲልኩ፦
+ፕሮክሲዎች በ ውስጥ ተካትተዋል።**Backup/Restore** ስርዓት. OmniRoute ውቅርህን ወደ ውጭ ስትልክ፡-
 
-1. ወደ **ዳሽቦርድ → ቅንብሮች → ምትኬ** ይሂዱ
-2. **ላክ**ን ጠቅ ያድርጉ — የፕሮክሲ መዝገቡ እና ምደባዎቹ ተካትተዋል
-3. መልሶ ለማግኘት፣ **አስመጣ**ን ጠቅ ያድርጉ እና የምትኬ ፋይሉን ይስቀሉ
+1. ወደ ሂድ** ዳሽቦርድ → ቅንብሮች → ምትኬ**
+2. ጠቅ ያድርጉ** ወደ ውጪ ላክ** — የተኪ መዝገብ እና ምደባዎች ተካትተዋል።
+3. ወደነበረበት ለመመለስ ጠቅ ያድርጉ** አስመጣ** እና የመጠባበቂያ ፋይሉን ይስቀሉ
 
-የፕሮክሲ መዝገቡ **በhost+port upsert**ንም ይደግፋል — ቀድሞ ያለን ፕሮክሲ (ተመሳሳይ አስተናጋጅ እና ፖርት) ካስመጡ፣ የተባዛ ከመፍጠር ይልቅ ያዘምነዋል።
+የተኪ መዝገቡም ይደግፋል** በአስተናጋጅ + ወደብ መሻሻል** — አስቀድሞ ያለውን ፕሮክሲ (ተመሳሳይ አስተናጋጅ እና ወደብ) ካስመጣችሁ ብዜት ከመፍጠር ይልቅ ይዘምናል።
 
-### ከድሮ ስርዓት ማዛወር
+### የቆየ ስደት
 
-በቀድሞ ስሪት (ከregistry በፊት) proxies ካዋቀሩ፣ OmniRoute በራስ-ሰር ያዛውራቸዋል፦
+ፕሮክሲዎችን በአሮጌው ስሪት (ቅድመ-ምዝገባ) ካዋቀሩ OmniRoute በራስ-ሰር ያፈልሳቸዋል።
 
 ```
-የቀድሞ key_value store → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-ይህ ከማሻሻያው በኋላ ለመጀመሪያ ጊዜ ሲጀመር አንድ ጊዜ ይከናወናል። እንደገና ለማስኬድ `migrateLegacyProxyConfigToRegistry({ force: true })`ን ይጠቀሙ።
+ይህ ከተሻሻለ በኋላ በመጀመሪያ ጅምር ላይ አንድ ጊዜ ይከሰታል። እንደገና ለማሄድ `migrateLegacyProxyConfigToRegistry({ force: true })` ይጠቀሙ።
 
 ---
 
-## 1proxy ነፃ ፕሮክሲ የገበያ ቦታ
+## 1 የተኪ ነፃ ተኪ የገበያ ቦታ
 
-> 🆕 **በ[@oyi77](https://github.com/oyi77) የተበረከተ** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (ጉዳይ [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** በ [@oyi77](https://github.com/oyi77) የተበረከተ** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (ጉዳይ [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute በዓለም ዙሪያ ያሉ **በመቶዎች የሚቆጠሩ ነፃና የተረጋገጡ ፕሮክሲዎችን** ለማግኘት ከ**[1proxy](https://1proxy-api.aitradepulse.com)** የማህበረሰብ መድረክ ጋር ይዋሃዳል። ይህ የራሳቸው የፕሮክሲ መሠረተ ልማት ለሌላቸው ተጠቃሚዎች እጅግ ተስማሚ ነው።
+OmniRoute ከ ጋር ይዋሃዳል** [1 ተኪ](https://1proxy-api.aitradepulse.com)** ተደራሽነትን ለማቅረብ የማህበረሰብ መድረክ** በመቶዎች የሚቆጠሩ ነፃ፣ የተረጋገጡ ፕሮክሲዎች** ከዓለም ዙሪያ. ይህ የራሳቸው የተኪ መሠረተ ልማት ለሌላቸው ተጠቃሚዎች ፍጹም ነው።
 
-### እንዴት እንደሚሠራ
+### እንዴት እንደሚሰራ
 
 ```
-┌─────────────┐   ማመሳሰል    ┌─────────────────┐   ማዞር      ┌──────────┐
-│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ አቅራቢ API │
-│   (ውጫዊ)    │ እስከ 500      │  source=oneproxy │ በጥራት       │           │
-└─────────────┘  ፕሮክሲዎች     └─────────────────┘               └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **ማመሳሰል** — OmniRoute ከ1proxy API የተረጋገጡ ፕሮክሲዎችን ያመጣል
-2. **ማከማቸት** — ፕሮክሲዎች `source = 'oneproxy'` በሚል በዚያው `proxy_registry` ሰንጠረዥ ውስጥ ይቀመጣሉ
-3. **ማጣራት** — በፕሮቶኮል፣ በአገር እና በጥራት ነጥብ ያጣሩ
-4. **ማዞር** — የጥራት፣ የዘፈቀደ ወይም ተከታታይ ስልቶችን በመጠቀም ምርጡን ፕሮክሲ ይምረጡ
-5. **ራስ-ሰር የጥራት ቅነሳ** — ያልተሳኩ ፕሮክሲዎች የጥራት ነጥባቸው ይቀነሳል፤ ከገደቡ በታች ሲሆን → እንደ ንቁ ያልሆነ ምልክት ይደረግበታል
+1. **አመሳስል** — OmniRoute ከ1ፕሮክሲ API የተረጋገጡ ፕሮክሲዎችን ያመጣል
+2. **ማከማቻ** — ፕሮክሲዎች `source = 'oneproxy'` ጋር በተመሳሳይ `proxy_registry` ሠንጠረዥ ውስጥ ይቀመጣሉ።
+3. **አጣራ** — በፕሮቶኮል፣ በአገር፣ በጥራት ነጥብ አጣራ
+4. **አሽከርክር** — የጥራት፣ የዘፈቀደ ወይም ተከታታይ ስልቶችን በመጠቀም ምርጡን ፕሮክሲ ይምረጡ
+5. **በራስ-አዋርዱ** — ያልተሳኩ ፕሮክሲዎች የጥራት ውጤታቸው ይቀንሳል; ከደፍ → በታች የቦዘነ ምልክት ተደርጎበታል።
 
-### ፕሮክሲዎችን ማመሳሰል
+### ፕሮክሲዎችን በማመሳሰል ላይ
 
-**በዳሽቦርድ በኩል፦**
+**በዳሽቦርድ በኩል፡**
 
-1. ወደ **ቅንብሮች → 1proxy** ትር ይሂዱ
-2. **"አሁን አመሳስል"** የሚለውን ጠቅ ያድርጉ
-3. ስታቲስቲክስን ይመልከቱ፦ ጠቅላላ ፕሮክሲዎች፣ የንቁ ፕሮክሲዎች ብዛት፣ አማካይ ጥራት እና በአገር የተከፋፈለ ዝርዝር
+1. ወደ ሂድ** ቅንብሮች → 1proxy** ትር
+2. ጠቅ ያድርጉ** "አሁን አስምር"**
+3. ስታቲስቲክስን ይመልከቱ፡ ጠቅላላ ፕሮክሲዎች፣ ገቢር ቆጠራ፣ አማካኝ ጥራት፣ በአገር መከፋፈል
 
-**በAPI በኩል፦**
+**በ API በኩል:**
 
 ```bash
-# ማመሳሰልን አስጀምር
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# ምላሽ፦
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### ፕሮክሲዎችን ማጣራት
+### ተኪዎችን በማጣራት ላይ
 
 ```bash
-# በፕሮቶኮል አጣራ
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# በአገር አጣራ
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# በዝቅተኛው የጥራት ነጥብ አጣራ
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# ማጣሪያዎችን አጣምር
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### የፕሮክሲ ጥራት ነጥቦች
+### የተኪ ጥራት ውጤቶች
 
-እያንዳንዱ የ1proxy ፕሮክሲ ከሜታዳታ ጋር ይመጣል፦
+እያንዳንዱ ፕሮክሲ ፕሮክሲ ከሜታዳታ ጋር ነው የሚመጣው፡-
 
-| መስክ             | መግለጫ                                   |
-| --------------- | -------------------------------------- |
-| `qualityScore`  | ከ1proxy ማረጋገጫ የተገኘ የ0-100 ደረጃ          |
-| `latencyMs`     | የተለካ የአውታረ መረብ መዘግየት                   |
-| `anonymity`     | `transparent`፣ `anonymous` ወይም `elite` |
-| `googleAccess`  | ፕሮክሲው የGoogle አገልግሎቶችን ማግኘት መቻሉን       |
-| `countryCode`   | ባለሁለት ፊደል ISO የአገር ኮድ                  |
-| `lastValidated` | የመጨረሻው ማረጋገጫ የጊዜ ማህተም                  |
+| መስክ             | መግለጫ                                    |
+| --------------- | --------------------------------------- |
+| `qualityScore`  | 0-100 ደረጃ ከ 1ፕሮክሲ ማረጋገጫ                 |
+| `latencyMs`     | የሚለካው የአውታረ መረብ መዘግየት                   |
+| `anonymity`     | `transparent`, `anonymous`, ወይም `elite` |
+| `googleAccess`  | ተኪው Google አገልግሎቶችን ማግኘት ይችል እንደሆነ      |
+| `countryCode`   | ባለ ሁለት ፊደል ISO የአገር ኮድ                  |
+| `lastValidated` | የመጨረሻው የማረጋገጫ ጊዜ ማህተም                   |
 
-የጥራት ነጥቦች በተለዋዋጭ ሁኔታ ይስተካከላሉ፦
+የጥራት ውጤቶች በተለዋዋጭ ተስተካክለዋል፡-
 
-- **ያልተሳኩ ጥያቄዎች** ነጥቡን በ10 ይቀንሳሉ
-- **ነጥቡ ወደ ≤10 ይወርዳል** → ፕሮክሲው `inactive` ተብሎ ምልክት ይደረግበታል
-- ንቁ ያልሆኑ ፕሮክሲዎች ከማዞሪያው ይገለላሉ
+- **ያልተሳኩ ጥያቄዎች** ውጤቱን በ 10 ነጥብ ይቀንሱ
+- **ነጥብ ወደ ≤ 10 ዝቅ ይላል።** → ተኪ `inactive` ምልክት ተደርጎበታል።
+- የቦዘኑ ፕሮክሲዎች ከመሽከርከር የተገለሉ ናቸው።
 
 ### የማዞሪያ ስልቶች
 
 ```bash
-# በጥራት አዙር (ምርጡ ፕሮክሲ መጀመሪያ) — ነባሪ
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# የዘፈቀደ ማዞሪያ
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# ተከታታይ (በቅርቡ ያልተረጋገጠው መጀመሪያ)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### የወረዳ ተቋራጭ
+### የወረዳ ሰባሪ
 
-የ1proxy ማመሳሰል አብሮገነብ የወረዳ ተቋራጭ አለው፦
+የ1ፕሮክሲ ማመሳሰል አብሮ የተሰራ የወረዳ የሚላተም አለው፡-
 
-- **5 ተከታታይ የማመሳሰል አለመሳካቶች** ካጋጠሙ በኋላ፣ ተጨማሪ የማመሳሰል ሙከራዎች ይታገዳሉ
-- በዚህ ዳግም ያስጀምሩ፦ `resetOneproxyCircuitBreaker()` ወይም አገልጋዩን ዳግም ያስጀምሩ
-- የማመሳሰል ሁኔታ በ`GET /api/settings/oneproxy?action=status` ይገኛል
+- በኋላ** 5 ተከታታይ የማመሳሰል አለመሳካቶች** , ተጨማሪ የማመሳሰል ሙከራዎች ታግደዋል
+- በ `resetOneproxyCircuitBreaker()` ዳግም ያስጀምሩ ወይም አገልጋዩን እንደገና ያስጀምሩ
+- የማመሳሰል ሁኔታ `GET /api/settings/oneproxy?action=status` ላይ ይገኛል።
 
-### የ1proxy ፕሮክሲዎችን ማጽዳት
+### 1 ተኪ ፕሮክሲዎችን በማጽዳት ላይ
 
 ```bash
-# አንድ የ1proxy ፕሮክሲ ሰርዝ
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# ሁሉንም የ1proxy ፕሮክሲዎች አጽዳ (በእጅ የተጨመሩ ፕሮክሲዎች አይነኩም)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## ፀረ-ማወቂያ እና ስውርነት
+## ፀረ-ማወቂያ እና ስርቆት።
 
-OmniRoute ትራፊክን በፕሮክሲ በኩል ብቻ አያስተላልፍም — ትራፊኩ ሕጋዊ እንዲመስልም ያደርገዋል፦
+OmniRoute ትራፊክን በተኪ — ብቻ አያዞርም ትራፊኩን ህጋዊ ያደርገዋል።
 
-### የTLS አሻራ ማስመሰል
+### TLS የጣት አሻራ ስፖፊንግ
 
-ከአሳሽ ያልሆኑ የTLS ግንኙነት ልውውጦችን የሚጠቁሙ የቦት ማወቂያ ስርዓቶችን ለማለፍ፣ አሳሽ-መሰል የTLS አሻራዎችን ለማመንጨት `wreq-js`ን ይጠቀማል።
+አሳሽ የሚመስሉ TLS የጣት አሻራዎችን ለማመንጨት `wreq-js` ይጠቀማል፣ የአሳሽ ያልሆኑ TLS መጨባበጥን የሚጠቁሙ የቦት ማወቂያ ስርዓቶችን በማለፍ።
 
-### የCLI አሻራ ማዛመድ
+### CLI የጣት አሻራ ማዛመድ
 
-**የCLI አሻራ መቀየሪያው** (`Settings → Security`) ከቤተኛ CLI ባይነሪዎች (Claude Code፣ Codex፣ ወዘተ) ትክክለኛ ፊርማ ጋር እንዲዛመዱ የHTTP ራስጌዎችን እና የJSON የውሂብ አካል መስኮችን እንደገና ያደራጃል። ይህ ከፕሮክሲው **በተጨማሪ** ይሰራል፦
+የ**CLI የጣት አሻራ መቀያየር** (`Settings → Security`) HTTP ራስጌዎችን እና JSON የሰውነት መስኮችን ከትክክለኛው የቤተኛ CLI ሁለትዮሾች ፊርማ ጋር እንዲዛመድ ያዛል (Claude ኮድ፣ Codex፣ ወዘተ.)። ይህ ይሰራል** ከላይ** ተኪ፡
 
 ```
-የእርስዎ IP (የታገደ) → የፕሮክሲ IP (US) → የአቅራቢ API
-                               + የTLS ማስመሰል
-                               + የCLI አሻራ
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-ሁለቱንም **የIP መደበቅ** እና **የጥያቄ ትክክለኛነት** በአንድ ጊዜ ያገኛሉ።
+ሁለቱንም ያገኛሉ**IP ጭምብል** እና** ትክክለኛነትን ጠይቅ** በአንድ ጊዜ.
 
-### የፕሮክሲ IP ጥበቃ
+### የተኪ IP ጥበቃ
 
-በዳሽቦርዱ ውስጥ ያሉ በቀለም የተለዩ ባጆች የትኛው የፕሮክሲ ደረጃ ንቁ እንደሆነ ያሳያሉ፦
+በዳሽቦርዱ ውስጥ ባለ ቀለም ኮድ የተደረገባቸው ባጆች የትኛው የተኪ ደረጃ ገቢር እንደሆነ ያሳያሉ፡-
 
-| ባጅ  | ደረጃ     | ትርጉም                            |
-| --- | ------- | ------------------------------- |
-| 🟢  | ዓለም አቀፍ | ሁሉም ትራፊክ በዚህ ፕሮክሲ በኩል ያልፋል      |
-| 🟡  | አቅራቢ    | የዚህ አቅራቢ ትራፊክ ብቻ በፕሮክሲ ይተላለፋል   |
-| 🔵  | ግንኙነት   | ይህ የተወሰነ ቁልፍ/መለያ ይህን ፕሮክሲ ይጠቀማል |
+| ባጅ  | ደረጃ     | ትርጉም                                 |
+| --- | ------- | ------------------------------------ |
+| 🟢  | ዓለም አቀፍ | ሁሉም ትራፊክ በዚህ ፕሮክሲ በኩል ያልፋል           |
+| 🟡  | አቅራቢ    | የዚህ አቅራቢ ትራፊክ ብቻ ተኪ ነው።              |
+| 🔵  | ግንኙነት   | ይህ የተወሰነ key/account ይህንን ፕሮክሲ ይጠቀማል |
 
-ባጁ ለማረጋገጫ የተፈታውን የፕሮክሲ IPም ያሳያል።
+ባጁ እንዲሁም የተረጋገጠውን ፕሮክሲ IP ለማረጋገጫ ያሳያል።
 
 ---
 
-## የላይኛው ዥረት ፕሮክሲ ሁነታዎች
+## ወደላይ ተኪ ሁነታዎች
 
-የCLIProxyAPI ንድፍን ለሚጠቀሙ አቅራቢዎች፣ OmniRoute ሦስት የላይኛው ዥረት ፕሮክሲ ሁነታዎችን ይደግፋል፦
+CLIProxyAPI ስርዓተ-ጥለትን ለሚጠቀሙ አቅራቢዎች፣ OmniRoute ሶስት የወጪ ተኪ ሁነታዎችን ይደግፋል
 
-| ሁነታ           | መግለጫ                                          |
-| ------------- | --------------------------------------------- |
-| `native`      | OmniRoute የፕሮክሲ ማስተላለፍን በቀጥታ ያስተናግዳል (ነባሪ)    |
-| `cliproxyapi` | ወደ ውጫዊ CLIProxyAPI ኢንስታንስ ውክልና ይሰጣል           |
-| `fallback`    | መጀመሪያ ቤተኛውን ይሞክራል፣ ካልተሳካ ወደ CLIProxyAPI ይመለሳል |
+| ሁነታ           | መግለጫ                                   |
+| ------------- | -------------------------------------- |
+| `native`      | OmniRoute የተኪ ማዘዋወርን በቀጥታ ይቆጣጠራል (ነባሪ) |
+| `cliproxyapi` | ወደ ውጫዊ CLIProxyAPI ምሳሌ ልዑካን            |
+| `fallback`    | መጀመሪያ ቤተኛን ይሞክራል፣ ወደ CLIProxyAPI ይመለሳል |
 
-ለእያንዳንዱ አቅራቢ ያዋቅሩ፦
+በአቅራቢው አዋቅር፡
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,126 +436,126 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## የዳሽቦርድ UI
+## ዳሽቦርድ UI
 
-### Settings → Proxy ትር
+### ቅንብሮች → ተኪ ትር
 
-- **ዓለም አቀፍ ፕሮክሲ** ውቅር (ለሁሉም ትራፊክ አንድ ጊዜ ያዋቅሩ)
-- **ለእያንዳንዱ አቅራቢ ፕሮክሲ** መሻሮች
-- **ለእያንዳንዱ ግንኙነት ፕሮክሲ** ምደባዎች
-- በተዋቀረው ፕሮክሲ በኩል **የግንኙነት ሙከራ**
-- ንቁውን የፕሮክሲ ደረጃ የሚያሳዩ **በቀለም የተለዩ ባጆች**
+- **ዓለም አቀፍ ተኪ** ውቅረት (ለሁሉም ትራፊክ አንድ ጊዜ ተዘጋጅቷል)
+- **በአቅራቢው ፕሮክሲ** ይሽራል
+- **በግንኙነት ተኪ** ምደባዎች
+- **የግንኙነት ሙከራ** በተዋቀረ ፕሮክሲ በኩል
+- **ባለቀለም ባጆች** ንቁ የተኪ ደረጃን ያሳያል
 
-### Settings → 1proxy ትር
+### ቅንብሮች → 1proxy ትር
 
-- ነፃ ፕሮክሲዎችን ለማምጣት **አሁን አመሳስል** አዝራር
-- **የስታቲስቲክስ ካርዶች**፦ ጠቅላላ፣ ንቁ፣ አማካይ ጥራት፣ የመጨረሻ ማመሳሰል
-- **ማጣሪያዎች**፦ ፕሮቶኮል፣ የአገር ኮድ፣ ዝቅተኛ ጥራት
-- አስተናጋጅ፣ ፕሮቶኮል፣ አገር፣ የጥራት ውጤት፣ መዘግየት፣ ማንነት መደበቅ እና የGoogle መዳረሻ ያለው **የፕሮክሲ ሰንጠረዥ**
-- የስኬት/ውድቀት ክትትል እና ተከታታይ የውድቀት ብዛት ያለው **የማመሳሰል ሁኔታ** ፓነል
-- ሁሉንም የ1proxy ግቤቶች ለማስወገድ **ሁሉንም አጽዳ**
+- **አሁን አስምር** ነፃ ፕሮክሲዎችን ለማምጣት አዝራር
+- **የስታቲስቲክስ ካርዶች** ጠቅላላ፣ ገባሪ፣ አማካኝ ጥራት፣ የመጨረሻ አመሳስል።
+- **ማጣሪያዎች** ፕሮቶኮል፣ የአገር ኮድ፣ አነስተኛ ጥራት
+- **የተኪ ጠረጴዛ** በአስተናጋጅ፣ ፕሮቶኮል፣ ሀገር፣ የጥራት ነጥብ፣ መዘግየት፣ ማንነትን መደበቅ፣ Google መዳረሻ
+- **የማመሳሰል ሁኔታ** ፓነል በ success/failure ክትትል እና ተከታታይ ውድቀት ቆጠራ
+- **ሁሉንም አጽዳ** ሁሉንም የ1proxy ግቤቶችን ለማስወገድ
 
 ---
 
-## የAPI ማጣቀሻ
+## API ማጣቀሻ
 
-### የፕሮክሲ ቅንብሮች API
+### የተኪ ቅንብሮች API
 
-| ዘዴ       | መጨረሻ ነጥብ                                       | መግለጫ                     |
-| -------- | ---------------------------------------------- | ------------------------ |
-| `GET`    | `/api/settings/proxy`                          | ሙሉውን የፕሮክሲ ውቅር ያግኙ       |
-| `GET`    | `/api/settings/proxy?level=global`             | ዓለም አቀፍ ፕሮክሲውን ያግኙ       |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | የአቅራቢውን ፕሮክሲ ያግኙ         |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | ተግባራዊውን ፕሮክሲ ይፍቱ         |
-| `PUT`    | `/api/settings/proxy`                          | የፕሮክሲ ውቅሩን ያዘምኑ          |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | በደረጃው ላይ ያለውን ፕሮክሲ ያስወግዱ |
+| ዘዴ       | የመጨረሻ ነጥብ                                      | መግለጫ             |
+| -------- | ---------------------------------------------- | ---------------- |
+| `GET`    | `/api/settings/proxy`                          | ሙሉ የተኪ ውቅር ያግኙ   |
+| `GET`    | `/api/settings/proxy?level=global`             | ዓለም አቀፍ ተኪ ያግኙ   |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | የአቅራቢ ተኪ ያግኙ     |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | ውጤታማ ተኪ መፍታት     |
+| `PUT`    | `/api/settings/proxy`                          | የተኪ ውቅረትን ያዘምኑ   |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | ፕሮክሲን በደረጃ ያስወግዱ |
 
-### የፕሮክሲ መዝገብ API
+### የተኪ ምዝገባ API
 
-| ዘዴ       | መጨረሻ ነጥብ                                          | መግለጫ             |
-| -------- | ------------------------------------------------- | ---------------- |
-| `GET`    | `/api/v1/management/proxies`                      | ሁሉንም ፕሮክሲዎች ዘርዝሩ |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | ፕሮክሲውን በID ያግኙ   |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | የፕሮክሲ ምደባዎችን ያግኙ |
-| `POST`   | `/api/v1/management/proxies`                      | ፕሮክሲ ይፍጠሩ        |
-| `PATCH`  | `/api/v1/management/proxies`                      | ፕሮክሲውን ያዘምኑ      |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | ፕሮክሲውን ይሰርዙ      |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | በግድ ይሰርዙ         |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | በጅምላ ይመድቡ        |
-| `GET`    | `/api/v1/management/proxies/assignments`          | ምደባዎችን ዘርዝሩ      |
-| `GET`    | `/api/v1/management/proxies/health`               | የፕሮክሲ ጤና ስታቲስቲክስ |
+| ዘዴ       | የመጨረሻ ነጥብ                                         | መግለጫ              |
+| -------- | ------------------------------------------------- | ----------------- |
+| `GET`    | `/api/v1/management/proxies`                      | ሁሉንም ፕሮክሲዎች ይዘርዝሩ |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | በ ID ተኪ ያግኙ       |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | የተኪ ስራዎችን ያግኙ     |
+| `POST`   | `/api/v1/management/proxies`                      | ተኪ ፍጠር            |
+| `PATCH`  | `/api/v1/management/proxies`                      | ተኪ ያዘምኑ           |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | ተኪ ሰርዝ            |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | መሰረዝን አስገድድ       |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | በጅምላ መመደብ         |
+| `GET`    | `/api/v1/management/proxies/assignments`          | ስራዎችን ዘርዝር        |
+| `GET`    | `/api/v1/management/proxies/health`               | የተኪ የጤና ስታቲስቲክስ   |
 
-### የቱነሎች API
+### ዋሻዎች API
 
-OmniRoute ኢንስታንስዎን ወጪ ትራፊክን በፕሮክሲ በኩል ከማስተላለፍ ይልቅ ለሕዝባዊ ኢንተርኔት (Cloudflare/ngrok/Tailscale) ለማጋለጥ፣ [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md)ን ይመልከቱ። የቱነሉ REST API በ`/api/tunnels/{cloudflared,ngrok,tailscale}/*` ስር ይገኛል፣ እና ከላይ ከተመዘገበው የወጪ ፕሮክሲ ሰንሰለት ነጻ ነው።
+OmniRoute ምሳሌዎን ለህዝብ በይነመረብ (Cloudflare/ngrok/Tailscale) በማጋለጥ ወደ ውጪ በፕሮክሲ በኩል ከማስተላለፍ ይልቅ [TUNNELS_GUIDE.md ን](./TUNNELS_GUIDE.md) ይመልከቱ። መሿለኪያ REST API የሚኖረው `/api/tunnels/{cloudflared,ngrok,tailscale}/*` ስር ነው እና ከላይ በሰነድ ወደ ውጭ ለሚወጣው የፕሮክሲ ሰንሰለት ቀጥተኛ ነው።
 
-### 1proxy API
+### 1 proxy API
 
-| ዘዴ       | መጨረሻ ነጥብ                               | መግለጫ                      |
+| ዘዴ       | የመጨረሻ ነጥብ                              | መግለጫ                      |
 | -------- | -------------------------------------- | ------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | የ1proxy ፕሮክሲዎችን ዘርዝሩ      |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | ስታቲስቲክስ + የማመሳሰል ሁኔታን ያግኙ |
+| `GET`    | `/api/settings/oneproxy`               | 1 የተኪ ፕሮክሲዎችን ይዘርዝሩ       |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | የስታቲስቲክስ + ማመሳሰል ሁኔታን ያግኙ |
 | `GET`    | `/api/settings/oneproxy?action=status` | የማመሳሰል ሁኔታን ብቻ ያግኙ        |
-| `POST`   | `/api/settings/oneproxy`               | ማመሳሰልን ያስጀምሩ              |
-| `POST`   | `/api/settings/oneproxy/rotate`        | ወደ ቀጣዩ ፕሮክሲ ያዙሩ           |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | አንዱን ይሰርዙ                 |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | ሁሉንም ያጽዱ                  |
+| `POST`   | `/api/settings/oneproxy`               | አመሳስል ቀስቅሴ                |
+| `POST`   | `/api/settings/oneproxy/rotate`        | ወደ ቀጣዩ ፕሮክሲ አሽከርክር        |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | አንዱን ሰርዝ                  |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | ሁሉንም አጽዳ                  |
 
-### የላይኛው ዥረት ፕሮክሲ API
+### ወደላይ ተኪ API
 
-| ዘዴ       | መጨረሻ ነጥብ                          | መግለጫ                      |
-| -------- | --------------------------------- | ------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | የላይኛውን ዥረት ፕሮክሲ ውቅር ያግኙ   |
-| `PUT`    | `/api/upstream-proxy/:providerId` | የላይኛውን ዥረት ፕሮክሲ ሁነታ ያዋቅሩ  |
-| `DELETE` | `/api/upstream-proxy/:providerId` | የላይኛውን ዥረት ፕሮክሲ ውቅር ያስወግዱ |
+| ዘዴ       | የመጨረሻ ነጥብ                         | መግለጫ                 |
+| -------- | --------------------------------- | -------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | ወደላይ ተኪ ውቅር ያግኙ      |
+| `PUT`    | `/api/upstream-proxy/:providerId` | ወደላይ የተኪ ሁነታን ያቀናብሩ  |
+| `DELETE` | `/api/upstream-proxy/:providerId` | ወደላይ የተኪ ውቅረትን ያስወግዱ |
 
 ---
 
 ## የአካባቢ ተለዋዋጮች
 
-| ተለዋዋጭ                 | ነባሪ    | መግለጫ                                                       |
-| --------------------- | ------ | ---------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true` | የSOCKS5 ፕሮክሲ ድጋፍን ያንቁ (በ`.env.example` ውስጥ ነባሪው `true` ነው) |
+| ተለዋዋጭ                 | ነባሪ    | መግለጫ                                               |
+| --------------------- | ------ | -------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true` | SOCKS5 ፕሮክሲ ድጋፍን አንቃ (ነባሪ `true` በ `.env.example`) |
 
 ---
 
-## ችግር ፈቺ
+## መላ መፈለግ
 
-### "SOCKS5 ፕሮክሲ ተሰናክሏል"
+### "SOCKS5 ተኪ ተሰናክሏል"
 
-በ`.env` ፋይልዎ ውስጥ `ENABLE_SOCKS5_PROXY=true` ያዘጋጁና እንደገና ያስጀምሩ።
+በ `.env` ፋይልዎ ውስጥ `ENABLE_SOCKS5_PROXY=true` ያዘጋጁ እና እንደገና ያስጀምሩ።
 
-### በፕሮክሲ በኩል የሚከሰቱ የ"socket hang up" ስህተቶች
+### በፕሮክሲ በኩል የ"socket hang up" ስህተቶች
 
-የስራ ፈት ግንኙነቶችን በሚያቋርጡ ርካሽ ፕሮክሲዎች ላይ ይህ የተለመደ ነው። OmniRoute ይህን ቀድሞውኑ በሚከተሉት መንገዶች ይቆጣጠራል፦
+የስራ ፈት ግንኙነቶችን በሚጥሉ ርካሽ ፕሮክሲዎች ይህ የተለመደ ነው። OmniRoute ይህንን አስቀድሞ በ:
 
-- በፕሮክሲ ግንኙነቶች ላይ keep-aliveን በማሰናከል (`keepAliveTimeout: 1`)
-- pipeliningን በማሰናከል (`pipelining: 0`)
-- ተደጋጋሚ የhandshake ሂደቶችን ለማስወገድ dispatchersን በመሸጎጥ
+- በፕሮክሲ ግንኙነቶች (`keepAliveTimeout: 1`) ላይ በሕይወት መቆየትን ማሰናከል
+- የቧንቧ መስመር ዝርጋታ ማሰናከል (`pipelining: 0`)
+- ተደጋጋሚ የእጅ መጨባበጥን ለማስወገድ ላኪዎችን መሸጎጥ
 
-ችግሩ ከቀጠለ፣ ሌላ ፕሮክሲ ይሞክሩ ወይም የ1proxy rotation ባህሪን ይጠቀሙ።
+ከቀጠለ፣ የተለየ ፕሮክሲ ይሞክሩ ወይም 1proxy rotation ባህሪን ይጠቀሙ።
 
-### በOAuth ወቅት "unsupported_country_region_territory"
+### "የማይደገፍ_ሀገር_ክልል_ግዛት" OAuth ወቅት
 
-የOAuth ፍሰትን ከመጀመርዎ **በፊት** ፕሮክሲው መዋቀሩን ያረጋግጡ። OmniRoute የOAuth token exchangeን በተዋቀረው ፕሮክሲ በኩል ያስተላልፋል። መጀመሪያ ዓለም አቀፍ ወይም በአቅራቢ ደረጃ ያለ ፕሮክሲ ያዘጋጁ፣ ከዚያ ይገናኙ።
+ተኪው መዋቀሩን ያረጋግጡ** ከዚህ በፊት** የ OAuth ፍሰት መጀመር. OmniRoute መንገዶች OAuth token በተዋቀረው ፕሮክሲ በኩል ይለዋወጣል። መጀመሪያ አለምአቀፋዊ ወይም የአቅራቢ ደረጃ ፕሮክሲ ያቀናብሩ፣ ከዚያ ይገናኙ።
 
-### ፕሮክሲው ጥቅም ላይ አለመዋሉ
+### ፕሮክሲ ጥቅም ላይ እየዋለ አይደለም።
 
-የመፍትሔ ቅደም ተከተሉን ያረጋግጡ፦
+የመፍትሄውን ቅደም ተከተል ያረጋግጡ፡
 
-1. በ`GET /api/settings/proxy?resolve=your-connection-id` ያረጋግጡ
-2. የፕሮክሲው `status` `active` መሆኑን ያረጋግጡ (`inactive` አለመሆኑን)
-3. የፕሮክሲ ምደባው ወሰን ከግንኙነትዎ ጋር መዛመዱን ያረጋግጡ
+1. በ `GET /api/settings/proxy?resolve=your-connection-id` ያረጋግጡ
+2. ተኪ `status` `active` ( `inactive` ሳይሆን) መሆኑን ያረጋግጡ
+3. የተኪ ምደባ ወሰን ከግንኙነትዎ ጋር መዛመዱን ያረጋግጡ
 
-### የ1proxy ማመሳሰል አለመሳካት
+### 1 ተኪ ማመሳሰል አልተሳካም።
 
-የማመሳሰል ሁኔታውን ያረጋግጡ፦
+የማመሳሰል ሁኔታን ያረጋግጡ፡-
 
 ```bash
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-`consecutiveFailures >= 5` ከሆነ፣ circuit breaker ተነስቷል። ዳግም ለማስጀመር አገልጋዩን እንደገና ያስጀምሩ፣ ወይም በእጅ እስኪጀመር ይጠብቁ።
+`consecutiveFailures >= 5` ከሆነ፣ የወረዳ ተላላፊው ተበላሽቷል። ዳግም ለማስጀመር አገልጋዩን እንደገና ያስጀምሩት ወይም በእጅ ዳግም ለማስጀመር ይጠብቁ።
 
 ---
 
@@ -564,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' ወይም 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (ለ1proxy ብቻ)
-  latency_ms INTEGER,                        -- ሚሊሰከንዶች (ለ1proxy ብቻ)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- Googleን ማግኘት ይችላል? (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
   last_validated TEXT,                       -- ISO timestamp (1proxy)
-  country_code TEXT,                         -- ISO ባለ2-ፊደል ኮድ (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -583,7 +594,7 @@ CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- የአቅራቢ ID፣ የግንኙነት ID ወይም የcombo ID
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## የፕሮክሲ ጤንነት ማረጋገጥ (v3.8.16+)
+## የተኪ ጤና ማረጋገጥ (v3.8.16 +)
 
-የOmniRoute **proxy fast-fail** ዘዴ (`src/lib/proxyHealth.ts`) ፈጣን የTCP ግንኙነት ማረጋገጫን በመጠቀም የማይሰሩ ፕሮክሲዎችን በ<2s ውስጥ ይለያል፤ ከዚያም በእያንዳንዱ ጥያቄ ላይ የሚፈጠረውን ተጨማሪ ወጪ ለማስወገድ **ውጤቱን ይሸጉጣል**።
+OmniRoute's** ተኪ ፈጣን - ውድቀት** ሜካኒካል (`src/lib/proxyHealth.ts`) በ < 2s ውስጥ የሞቱ ፕሮክሲዎችን በፍጥነት በ TCP ግንኙነት ፍተሻ ያገኛል፣ ከዚያ** ውጤቱን ይሸፍናል** የጥያቄ ክፍያን ለማስቀረት።
 
 ### እንዴት እንደሚሰራ
 
 ```
-ጥያቄ ──▶ ProxyHealthCache.get(url)
+Request ──▶ ProxyHealthCache.get(url)
              │
-             ├─ በመሸጎጫ ተገኝቷል + አዲስ ነው?  ──▶ የተሸጎጠውን ሁኔታ መልስ
+             ├─ Cache hit + fresh?  ──▶ return cached status
              │
-             └─ በመሸጎጫ አልተገኘም / ያረጀ ነው?  ──▶ የTCP ግንኙነት ወደ host:port
-                                          (ጊዜ ገደብ፦ FAST_FAIL_TIMEOUT_MS)
-                                          ──▶ ለHEALTH_CACHE_TTL_MS ሸጉጥ
-                                          ──▶ ውጤቱን መልስ
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-ያለዚህ፣ የማይሰራ ፕሮክሲ ከመክሸፉ በፊት እያንዳንዱን ጥያቄ ለሙሉ `PROXY_TIMEOUT_MS` (ነባሪ 30s) ያግዳል።
+ያለዚህ፣ የሞተ ፕሮክሲ ሁሉንም የሙሉ `PROXY_TIMEOUT_MS` (ነባሪ 30ዎች) ጥያቄ ከመሳካቱ በፊት ያግዳል።
 
-### ሊስተካከሉ የሚችሉ የአካባቢ ተለዋዋጮች
+### ሊስተካከል የሚችል የአካባቢ ተለዋዋጮች
 
-| ተለዋዋጭ                        | ነባሪ     | ዓላማ                                   |
-| ---------------------------- | ------- | ------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | ለእያንዳንዱ የጤንነት ማረጋገጫ የTCP ግንኙነት ጊዜ ገደብ |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | የጤንነት ውጤት በመሸጎጫ የሚቆይበት ጊዜ             |
+| ተለዋዋጭ                        | ነባሪ     | ዓላማ                       |
+| ---------------------------- | ------- | ------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | TCP ግንኙነት ጊዜ አለቀ በጤና ምርመራ |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | የጤና ውጤት ለምን ያህል ጊዜ ተደብቋል  |
 
-**የሚመከሩ እሴቶች፦**
+**የሚመከሩ እሴቶች፡-**
 
-| ሁኔታ                            | የFast-fail ጊዜ ገደብ | የመሸጎጫ TTL | ምክንያት                                                   |
-| ------------------------------ | ----------------- | --------- | ------------------------------------------------------- |
-| ከፍተኛ ፍሰት ያለው የAPI gateway      | 1500ms            | 60000ms   | ኃይለኛ fail-fast፣ ማረጋገጫዎችን ለመቀነስ ረዘም ያለ መሸጎጫ              |
-| በተለያዩ ጂኦግራፊያዊ ቦታዎች የተሰራጩ nodes | 3000ms            | 15000ms   | ቀርፋፋ አውታረ መረቦች ተጨማሪ ጊዜ ያስፈልጋቸዋል፤ ለፈጣን failover አጭር መሸጎጫ |
-| ልማት / ሙከራ                      | 1000ms            | 10000ms   | በአካባቢያዊ ፕሮክሲዎች ላይ ፈጣን ድግግሞሽ                             |
-| ድብቅነት / ፀረ-ማግኘት                | 2500ms            | 45000ms   | የrate limit ገደቦችን ሊያስነሳ የሚችል ፈጣን ፍተሻን ለማስወገድ            |
+| ሁኔታ             | ፈጣን-ውድቀት ጊዜ አልቋል | መሸጎጫ TTL | ማመዛዘን                                                |
+| --------------- | ---------------- | -------- | ---------------------------------------------------- |
+| ከፍተኛ-የዝቃ API በር | 1500 ሚሴ          | 60000 ሚሴ | ጨካኝ ፈጣን አለመሳካት፣ ቼኮችን ለመቀነስ ረጅም መሸጎጫ                  |
+| ጂኦ-የተከፋፈሉ አንጓዎች | 3000 ሚሴ          | 15000 ሚሴ | ዘገምተኛ አውታረ መረቦች ተጨማሪ ጊዜ ያስፈልጋቸዋል; ለፈጣን ውድቀት አጭር መሸጎጫ |
+| Dev / ሙከራ       | 1000 ሚሴ          | 10000 ሚሴ | በአካባቢያዊ ፕሮክሲዎች ላይ ፈጣን ድግግሞሽ                          |
+| ስውር / ፀረ-ማወቂያ   | 2500 ሚሴ          | 45000 ሚሴ | የፍጥነት ገደቦችን ሊያስነሳ የሚችል ፈጣን ምርመራን ያስወግዱ               |
 
-### የፕሮክሲ ጤንነትን መመርመር
+### የተኪ ጤናን መመርመር
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// የተወሰነ ፕሮክሲ እንደገና እንዲፈተሽ አስገድድ
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-የመሸጎጫ ግቤቱ `HEALTH_CACHE_TTL_MS`ን ሲያልፍ የ`stale` ምልክት `true` ይሆናል፣ ቀጣዩም ጥያቄ አዲስ ማረጋገጫ ያስነሳል።
+`stale` ግቤት `HEALTH_CACHE_TTL_MS` ሲያልፍ የዝቃ ባንዲራ `true` ነው እና ቀጣዩ ጥያቄ አዲስ ቼክ ያስነሳል።
 
-### በፕሮክሲ ዓይነት የተመሰረቱ ነባሪዎች
+### በፕሮክሲ አይነት ነባሪዎች
 
-የጤንነት ማረጋገጫው በURL scheme ላይ የተመሰረቱ አግባብነት ያላቸውን ነባሪዎች ይጠቀማል፦
+የጤና ፍተሻው በ URL እቅድ ላይ በመመስረት ምክንያታዊ የሆኑ ነባሪዎችን ይጠቀማል፡-
 
-| Scheme                     | ነባሪ port |
-| -------------------------- | -------- |
-| `http://`                  | 8080     |
-| `https://`                 | 443      |
-| `socks5://` / `socks5h://` | 1080     |
+| እቅድ                        | ነባሪ ወደብ |
+| -------------------------- | ------- |
+| `http://`                  | 8080    |
+| `https://`                 | 443     |
+| `socks5://` / `socks5h://` | 1080    |
 
-በURL ውስጥ ያሉ ብጁ ports (`http://host:9999`) ሁልጊዜ ከscheme ነባሪው ቅድሚያ ይሰጣቸዋል።
+በ URL (`http://host:9999`) ውስጥ ያሉ ብጁ ወደቦች ሁልጊዜ ከእቅድ ነባሪ ይቀድማሉ።
 
 ---
 
-## የፕሮክሲ ትንታኔ እና ታዛቢነት
+## ተኪ ትንታኔ እና ታዛቢነት
 
-OmniRoute ኦፕሬተሮች የማዘዋወር ስርዓተ ጥለቶችን፣ ድንገተኛ የመዘግየት ጭማሪዎችን እና ተደጋጋሚ ብልሽቶችን እንዲመረምሩ ለማገዝ የእያንዳንዱን ፕሮክሲ አጠቃቀም ይከታተላል።
+OmniRoute ኦፕሬተሮች የማዞሪያ ቅጦችን፣ የቆይታ ጊዜ ፍንጮችን እና ተደጋጋሚ አለመሳካቶችን እንዲመረምሩ ለመርዳት በፕሮክሲ አጠቃቀምን ይከታተላል።
 
-### የሚከታተሉ መረጃዎች
+### ምን እየተከታተለ ነው።
 
-በተዋቀረ ፕሮክሲ በኩል ለሚያልፍ እያንዳንዱ ጥያቄ፣ OmniRoute የሚከተሉትን ይመዘግባል፦
+በተዋቀረ ፕሮክሲ በኩል ለሚደረግ ለእያንዳንዱ ጥያቄ፣ OmniRoute ይመዘግባል፡-
 
-| መለኪያ         | መግለጫ                                        |
-| ------------ | ------------------------------------------- |
-| `proxy_url`  | ሙሉ የፕሮክሲ URL (የማረጋገጫ መረጃዎች ተሸፍነው)           |
-| `provider`   | የላይኛው ዥረት አቅራቢ መለያ (openai, anthropic, ወዘተ) |
-| `latency_ms` | የፕሮክሲ የግንኙነት ማቋቋሚያን ጨምሮ ጠቅላላ የደርሶ መልስ ጊዜ    |
-| `connect_ms` | የTCP ግንኙነት ጊዜ ብቻ                            |
-| `status`     | ከላይኛው ዥረት የተመለሰ የHTTP ሁኔታ ኮድ                |
-| `error`      | ጥያቄው ካልተሳካ የስህተት ክፍል                        |
-| `timestamp`  | ISO 8601 UTC                                |
+| መለኪያ         | መግለጫ                                  |
+| ------------ | ------------------------------------- |
+| `proxy_url`  | ሙሉ ተኪ URL (የእውነት ምስክርነቶችን ጭንብል በማድረግ) |
+| `provider`   | ወደላይ አቅራቢ ID (openai፣ anthropic፣ ወዘተ) |
+| `latency_ms` | የተኪ እጅ መጨባበጥን ጨምሮ አጠቃላይ የጉዞ ጊዜ        |
+| `connect_ms` | TCP የግንኙነት ጊዜ ብቻ                      |
+| `status`     | HTTP የሁኔታ ኮድ ከላይ                      |
+| `error`      | ጥያቄው ካልተሳካ ክፍል ላይ ስህተት                |
+| `timestamp`  | ISO 8601 UTC                          |
 
-### ውሂቡን ማግኘት
+### ውሂቡን መድረስ
 
 ```bash
-# የቅርብ ጊዜ የፕሮክሲ ክስተቶች
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-ትክክለኛው የመጨረሻ ነጥብ `/api/usage/proxy-logs` ነው (`src/app/api/usage/proxy-logs/route.ts`ን ይመልከቱ)። ይህ የመጨረሻ ነጥብ የሚከተሉትን ይደግፋል፦
+ትክክለኛው የመጨረሻ ነጥብ `/api/usage/proxy-logs` ነው ( `src/app/api/usage/proxy-logs/route.ts` ይመልከቱ)። ይህ የመጨረሻ ነጥብ የሚከተሉትን ይደግፋል:
 
-- `GET /api/usage/proxy-logs` — የፕሮክሲ ምዝግቦችን ሰርስሮ ማውጣት
-- `DELETE /api/usage/proxy-logs` — ሁሉንም የፕሮክሲ ምዝግቦች ማጽዳት
+- `GET /api/usage/proxy-logs` — የተኪ ምዝግብ ማስታወሻዎችን ሰርስሮ ማውጣት
+- `DELETE /api/usage/proxy-logs` — ሁሉንም የተኪ ምዝግብ ማስታወሻዎች ያጽዱ
 
-ካስፈለገ፣ የተጠቃለሉ ስታቲስቲክሶችን በSQL በኩል በቀጥታ ከ`proxy_logs` ሰንጠረዥ መጠየቅ ይቻላል። የዳሽቦርዱ UI የተጠቃለሉ እይታዎችን ሊያቀርብ ይችላል።
+የድምር ስታቲስቲክስ አስፈላጊ ከሆነ በቀጥታ ከ `proxy_logs` ሰንጠረዥ በ SQL ሊጠየቁ ይችላሉ። ዳሽቦርዱ UI ድምር እይታዎችን ሊያቀርብ ይችላል።
 
-### የተለመዱ ስርዓተ ጥለቶች
+### የተለመዱ ቅጦች
 
-**በስኬትና በውድቀት መካከል የሚፈራረቅ ፕሮክሲን ለይቶ ማወቅ**፦
+**የሚታጠፍ ተኪ ያግኙ** (በ success/failure መካከል ተለዋጭ)
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**ዘገምተኛ ፕሮክሲዎችን ማግኘት** (የp95 መዘግየት > 2s)፦
+**ዘገምተኛ ፕሮክሲዎችን ያግኙ** (p95 መዘግየት > 2s)
 
 ```sql
 WITH ranked AS (
@@ -723,94 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## የማፈራረቅ ስልት የውሳኔ ዛፍ
+## የማዞሪያ ስትራቴጂ ውሳኔ ዛፍ
 
-በርካታ ፕሮክሲዎች ለአንድ ወሰን ሲመደቡ፣ OmniRoute ለእያንዳንዱ ጥያቄ የትኛውን መጠቀም እንዳለበት ለመምረጥ **የማፈራረቅ ስልት** ይጠቀማል። ስልቱ በወሰን ደረጃ ይዋቀራል (ዓለም አቀፍ፣ ለእያንዳንዱ አቅራቢ፣ ለእያንዳንዱ መለያ፣ ለእያንዳንዱ ጥምረት)።
+ብዙ ፕሮክሲዎች ለአንድ ወሰን ሲመደቡ OmniRoute ሀ** የማሽከርከር ስልት** ለእያንዳንዱ ጥያቄ የትኛውን እንደሚጠቀሙ ለመምረጥ. ስልቱ በወሰን ደረጃ (አለምአቀፍ፣ በአቅራቢ፣ በሂሳብ፣ በኮምቦ) የተዋቀረ ነው።
 
 ### የሚገኙ ስልቶች
 
-| ስልት             | መቼ መጠቀም እንደሚገባ                        | የጥቅምና ጉዳት ሚዛን                                             |
-| --------------- | ------------------------------------- | --------------------------------------------------------- |
-| `quality` (ነባሪ) | የተለያየ ጥራት ያላቸው ፕሮክሲዎች በሚጠቀም የምርት አካባቢ | ከፍተኛ ደረጃ የተሰጣቸውን ፕሮክሲዎች ይመርጣል፤ ዝቅተኛ ደረጃ ያላቸውን ላያገለግል ይችላል |
-| `random`        | የጭነት ስርጭት፣ ግላዊነት                      | እኩል ስርጭት፤ የጥራት ምልክቶችን ችላ ይላል                              |
-| `sequential`    | ስህተት ማረም፣ ውጤቱ አስቀድሞ የሚወሰን ሙከራ         | ፕሮክሲዎችን በቅደም ተከተል ያፈራርቃል፤ ለመረዳት ቀላል ነው                    |
+| ስልት             | መቼ መጠቀም             | መነገድ                                                      |
+| --------------- | ------------------- | --------------------------------------------------------- |
+| `quality` (ነባሪ) | ጥራት ባለው ፕሮክሲዎች ማምረት | ከፍተኛ ደረጃ የተሰጣቸው ፕሮክሲዎችን ይደግፋል; ዝቅተኛ ደረጃ የተሰጣቸውን ሊራብ ይችላል። |
+| `random`        | ጭነት ስርጭት፣ ግላዊነት     | እንኳን ስርጭት; የጥራት ምልክቶችን ችላ ይላል።                            |
+| `sequential`    | ማረም, ቆራጥ ሙከራ        | በቅደም ተከተል በፕሮክሲዎች በኩል ዑደቶች; ለማመዛዘን ቀላል                    |
 
 ### የውሳኔ ዛፍ
 
 ```
-                    ለፕሮክሲዎችዎ የጥራት ውጤቶች አሉዎት?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       አዎ                     የለም
+       YES                     NO
         │                       │
-   ሁሉም ፕሮክሲዎች             │
-   በጥራት በግምት                │
-   እኩል ናቸው?                  │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  አዎ       አይደሉም          ይጠቀሙ
+  YES       NO                Use
    │         │              `random`
-   │         │              (እኩል ስርጭት
-   │         │              ከጊዜ በኋላ የጥራት
-   │         │              ውሂብን ያከማቻል)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    `quality`ን ይጠቀሙ
-   │    (ለተለያየ ጥራት
-   │    ምርጥ ነው)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-`random`ን ይጠቀሙ
-(ጭነቱን በእኩልነት
-ያሰራጩ)
+Use `random`
+(spread load
+evenly)
 ```
 
-## ለራስዎ ፕሮክሲዎች ራስ-ሰር የብልሽት ማግለል
+## በራስ-ሰር አለመሳካት ለእራስዎ ፕሮክሲዎች
 
-የ1proxy የገበያ ቦታ ፑል ያልተሳኩ ፕሮክሲዎችን በራሱ ቀስ በቀስ ከአገልግሎት ያወጣል (ይመልከቱ
-[የፕሮክሲ ጥራት ውጤቶች](#proxy-quality-scores))። ወደ መዝገቡ **እርስዎ** ላከሏቸው
-ፕሮክሲዎች፣ የበስተጀርባ ጤና መርሐግብር አስኪያጁ
-(`src/lib/proxyHealth/scheduler.ts`) ምንም ነገር ሳይሰርዝ፣ ተመሳሳይ የሆነውን
-«የማይሰራ አባልን ከሰንሰለቱ በራስ-ሰር የማግለል» ባህሪ ያቀርባል፦
+የ1ፕሮክሲ የገበያ ቦታ ገንዳ ያልተሳኩ ፕሮክሲዎችን በራሱ አዋርዷል ( [የተኪ የጥራት ውጤቶች](#proxy-quality-scores) ይመልከቱ)። ለፕሮክሲዎች** አንተ** በመዝገቡ ውስጥ የተጨመረው የበስተጀርባ የጤና መርሐግብር (`src/lib/proxyHealth/scheduler.ts`) ምንም ነገር ሳይሰርዝ "የሞተ አባልን ከሰንሰለቱ ውስጥ በራስ-ሰር ማግለል" ተመሳሳይ ባህሪ ያቀርባል.
 
 ```bash
-# .env — አንድን ፕሮክሲ ከ3 ተከታታይ ያልተሳኩ ምርመራዎች በኋላ ለስላሳ በሆነ መንገድ ያሰናክሉ፤
-# እንደገና ለምርመራዎች ምላሽ መስጠት ሲጀምር በራስ-ሰር ያንቁት።
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-በባለብዙ-ፕሮክሲ ሰንሰለት ውስጥ የሚሠራበት መንገድ፦
+ከአንድ ባለ ብዙ ፕሮክሲ ሰንሰለት ጋር እንዴት እንደሚገጣጠም፡-
 
-1. መርሐግብር አስኪያጁ እያንዳንዱን የተመዘገበ ፕሮክሲ በየ`PROXY_HEALTH_INTERVAL_MS`
-   ይመረምራል (ነባሪው 10 ደቂቃ፤ ዝቅተኛው 1 ደቂቃ)።
-2. ከ`PROXY_AUTO_REMOVE_AFTER` ተከታታይ **አሳማኝ** ብልሽቶች በኋላ (እውነተኛ
-   የግንኙነት ብልሽት — የጊዜ ማብቃት ወይም የምርመራ ኢላማው የራሱ 5xx በፍጹም አይቆጠርም፤
-   [የፕሮክሲ ጤና ምርመራ](#proxy-health-checking-v3816)ን ይመልከቱ)፣ የፕሮክሲው `status`
-   ወደ `dead` ይቀየራል።
-3. `dead` በፑል/ሽክርክር መፍቻ የሚጠቀምበት የንቁ-ሁኔታ ማጣሪያ
-   ከሚያገላቸው ሁኔታዎች አንዱ ነው፤ ስለዚህ የአንድ ወሰን ሽክርክር (round-robin / random / sticky /
-   latency — [የሽክርክር ስልት ውሳኔ ዛፍ](#rotation-strategy-decision-tree)ን ይመልከቱ)
-   ያንን ፕሮክሲ ለአዳዲስ ጥያቄዎች መስጠቱን ወዲያውኑ ያቆማል። በፑሉ ውስጥ ያሉ ሌሎች ፕሮክሲዎች
-   አይነኩም፣ እንዲሁም መላው ፑል ያለማስጠንቀቂያ ወደ ቀጥተኛ ግንኙነት
-   ፈጽሞ አይመለስም — የ[ባለ4-ደረጃ ፕሮክሲ ስርዓት](#4-level-proxy-system)ን የዝግ-ብልሽት
-   መከላከያ ይመልከቱ።
-4. መርሐግብር አስኪያጁ `dead` ፕሮክሲዎችን በተመሳሳይ ክፍተተ-ጊዜ መመርመሩን ይቀጥላል። ቀጣዩ
-   የተሳካ ምርመራ `status`ን መልሶ ወደ `active` ይቀይረዋል፣ እናም ፕሮክሲው እንደገና ወደ ሽክርክሩ ይገባል —
-   እንደገና በእጅ ማከል አያስፈልግም።
+1. መርሐግብር አውጪው እያንዳንዱን የተመዘገበ ፕሮክሲ በየ `PROXY_HEALTH_INTERVAL_MS` ይመረምራል (ነባሪ 10 ደቂቃ፣ ቢያንስ 1 ደቂቃ)።
+2. `PROXY_AUTO_REMOVE_AFTER` በኋላ በተከታታይ** መደምደሚያ** አለመሳካቶች (እውነተኛ የግንኙነት አለመሳካት — የጊዜ ማብቂያ ወይም የፍተሻ ኢላማው 5xx በጭራሽ አይቆጠርም ፣ [የተኪ ጤና ማረጋገጥን](#proxy-health-checking-v3816) ይመልከቱ) የተኪ `status` ወደ `dead` ተቀናብሯል።
+3. `dead` በ pool/rotation ጥራት የሚጠቀመው የሕያው-ሁኔታ ማጣሪያ አያካትትም ካሉት ሁኔታዎች ውስጥ አንዱ ነው፣ስለዚህ የስኮፕ ማሽከርከር (ዙር-ሮቢን / random / sticky/latency — ይመልከቱ [የማዞሪያ ስትራቴጂ ውሳኔ ዛፍ](#rotation-strategy-decision-tree) ) ወዲያውኑ ያንን ተኪ ለአዳዲስ ጥያቄዎች መስጠት ያቆማል። በመዋኛ ገንዳ ውስጥ ሌላ ምንም ፕሮክሲዎች አይነኩም፣ እና ገንዳው በሙሉ በዝምታ ወደ ቀጥታ ግንኙነት አይመለስም — ባለ [4-ደረጃ ተኪ ስርዓት](#4-level-proxy-system) ያልተዘጋ ጥበቃን ይመልከቱ።
+4. መርሐግብር አውጪው በተመሳሳይ ጊዜ `dead` ፕሮክሲዎችን መፈተሽ ይቀጥላል። የሚቀጥለው የተሳካ ፍተሻ `status` ወደ `active` ይመለሳል እና እንደገና ወደ ማሽከርከር — ያስገባል ምንም በእጅ እንደገና መጨመር አያስፈልግም።
 
-ይህ ሆን ተብሎ **በምርጫ የሚነቃ እና አጥፊ ያልሆነ** ነው፦ በነባሪነት መርሐግብር አስኪያጁ
-ብልሽቶችን ብቻ ይቆጥራል እና ይመዘግባል (`decision.ts` ውስጥ ያለውን ፖሊሲ C ይመልከቱ)፤
-እንዲሁም `PROXY_AUTO_DISABLE` አንድንም ረድፍ ፈጽሞ አይሰርዝም — ለዚያ የተለየውና ይበልጥ ጥብቅ የሆነው
-`PROXY_AUTO_REMOVE` ጠቋሚ አለ። ሁለቱም `true` ከተደረጉ፣ `PROXY_AUTO_REMOVE`
-ቅድሚያ ያገኛል (ሊሰረዝ ለተቃረበ ፕሮክሲ በመካከል ለስላሳ ማሰናከል ምንም ጥቅም የለውም)።
-ለተሟላው የተለዋዋጮች ዝርዝር የ[አካባቢ ውቅር](../reference/ENVIRONMENT.md) ማጣቀሻን
-ይመልከቱ።
+ይህ ሆን ተብሎ ነው።** መርጦ መግባት እና አጥፊ ያልሆነ** : በነባሪ መርሐግብር አውጪው ይቆጥራል እና ውድቀቶችን ይመዘግባል (መመሪያውን በ `decision.ts` ይመልከቱ) እና `PROXY_AUTO_DISABLE` በጭራሽ አይሰርዘውም ረድፍ — የተለየ ፣ የበለጠ ጠበኛ `PROXY_AUTO_REMOVE` ባንዲራ ነው። ሁለቱም ወደ `true` ከተዋቀሩ `PROXY_AUTO_REMOVE` ያሸንፋል (ሊሰረዝ ያለው ፕሮክሲ በመካከላቸው ለስላሳ ማሰናከል ምንም ጥቅም የለውም)። ለሙሉ ተለዋዋጭ ዝርዝር [የአካባቢ ውቅር](../reference/ENVIRONMENT.md) ማጣቀሻን ይመልከቱ።
 
 ---
 
-> 📖 **ተዛማጅ ሰነዶች፦**
+> 📖** ተዛማጅ ሰነዶች፡**
 >
-> - [የተጠቃሚ መመሪያ](../guides/USER_GUIDE.md) — አጠቃላይ ማዋቀር እና ውቅር
-> - [የAPI ማጣቀሻ](../reference/API_REFERENCE.md) — ሙሉ የAPI ሰነድ
-> - [የአካባቢ ውቅር](../reference/ENVIRONMENT.md) — ሁሉም የአካባቢ ተለዋዋጮች
+> - [የተጠቃሚ መመሪያ](../guides/USER_GUIDE.md) — አጠቃላይ ማዋቀር እና ማዋቀር - [API ማጣቀሻ](../reference/API_REFERENCE.md) — ሙሉ API ሰነድ - [የአካባቢ ውቅር](../reference/ENVIRONMENT.md) — ሁሉም የአካባቢ ተለዋዋጮች

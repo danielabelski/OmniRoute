@@ -4,46 +4,46 @@
 
 ---
 
-> **Pita vizuizi vya kijiografia, linda utambulisho wako, na pitisha trafiki ya AI kupitia proksi yoyote — bila utata wowote wa usanidi.**
+> **Bypass vizuizi vya kijiografia, linda utambulisho wako, na upitishe trafiki AI kupitia — yoyote ya proksi isiyo na utata wa usanidi.**
 
-OmniRoute inajumuisha mfumo kamili wa usimamizi wa proksi unaokuwezesha kupitisha trafiki ya watoa huduma wa AI wa upande wa juu kupitia proksi za HTTP, HTTPS, au SOCKS5. Iwe uko katika eneo lililozuiwa, unahitaji ubadilishaji wa IP, au unataka ufichaji wa alama za utambulisho — mwongozo huu unashughulikia kila kitu.
+OmniRoute inajumuisha mfumo kamili wa usimamizi wa proksi ambao hukuruhusu kuelekeza trafiki ya mtoaji wa AI kupitia HTTP, HTTPS, au SOCKS5 proksi. Iwe uko katika eneo ambalo limezuiwa, unahitaji mzunguko wa IP, au unataka alama ya vidole vya siri — mwongozo huu unashughulikia kila kitu.
 
 ---
 
-## Yaliyomo
+## Jedwali la Yaliyomo
 
-- [Kwa Nini Utumie Proksi?](#why-use-proxies)
+- [Kwa Nini Utumie Wakala?](#why-use-proxies)
 - [Muhtasari wa Usanifu](#architecture-overview)
-- [Mfumo wa Proksi wa Viwango 4](#4-level-proxy-system)
-- [Rejista ya Proksi (CRUD)](#proxy-registry-crud)
-- [Soko Lisilolipishwa la 1proxy](#1proxy-free-proxy-marketplace)
-- [Ubadilishaji wa Proksi](#proxy-rotation)
-- [Kuzuia Ugunduzi na Ufichaji](#anti-detection--stealth)
-- [Hali za Proksi ya Upande wa Juu](#upstream-proxy-modes)
-- [Kiolesura cha Dashibodi](#dashboard-ui)
-- [Marejeleo ya API](#api-reference)
+- [Mfumo wa Wakala wa Ngazi 4](#4-level-proxy-system)
+- [Usajili wa Wakala (CRUD)](#proxy-registry-crud)
+- [Wakala 1 Soko Huria](#1proxy-free-proxy-marketplace)
+- [Mzunguko wa Wakala](#proxy-rotation)
+- [Kupambana na Kugundua & Kuficha](#anti-detection--stealth)
+- [Njia za Seva za Mkondo za Juu](#upstream-proxy-modes)
+- [Dashibodi UI](#dashboard-ui)
+- [API Rejea](#api-reference)
 - [Vigezo vya Mazingira](#environment-variables)
-- [Utatuzi wa Matatizo](#troubleshooting)
+- [Kutatua matatizo](#troubleshooting)
 
 ---
 
-## Kwa Nini Utumie Proksi?
+## Kwa Nini Utumie Wakala?
 
-Watoa huduma wengi wa AI huzuia ufikiaji kulingana na eneo la kijiografia. Wasanidi programu nchini **Urusi, Uchina, Iran, Kuba, Uturuki**, na nchi nyingine hukumbana na hitilafu kama:
+Watoa huduma wengi AI huzuia ufikiaji kwa eneo la kijiografia. Watengenezaji ndani** Urusi, Uchina, Iran, Cuba, Uturuki** , na nchi zingine hukutana na makosa kama vile:
 
 ```
 unsupported_country_region_territory
 ```
 
-Hata nje ya maeneo yaliyozuiwa, proksi zinafaa kwa:
+Hata nje ya maeneo yaliyozuiwa, proksi ni muhimu kwa:
 
-| Hali ya Matumizi                   | Maelezo                                                                      |
-| ---------------------------------- | ---------------------------------------------------------------------------- |
-| **Kupita vizuizi vya kijiografia** | Fikia OpenAI, Anthropic, Codex, Copilot kutoka nchi zilizozuiwa              |
-| **Ubadilishaji wa IP**             | Sambaza maombi kwenye IP nyingi ili kuepuka vizuizi vya kiwango cha matumizi |
-| **Faragha**                        | Ficha IP yako halisi dhidi ya watoa huduma wa upande wa juu                  |
-| **Uzingatiaji**                    | Pitisha trafiki kupitia maeneo mahususi ya mamlaka                           |
-| **Majaribio**                      | Iga maombi kutoka maeneo tofauti                                             |
+| Tumia Kesi              | Maelezo                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| **Njia ya kijiografia** | Fikia OpenAI, Anthropic, Codex, Copilot kutoka nchi zilizozuiwa |
+| **mzunguko wa IP**      | Sambaza maombi katika IPs nyingi ili kuepuka kikomo cha viwango |
+| **Faragha**             | Ficha IP yako halisi kutoka kwa watoa huduma wa juu             |
+| **Kuzingatia**          | Njia ya trafiki kupitia mamlaka maalum                          |
+| **Kupima**              | Iga maombi kutoka maeneo mbalimbali                             |
 
 ---
 
@@ -51,101 +51,111 @@ Hata nje ya maeneo yaliyozuiwa, proksi zinafaa kwa:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Seva ya OmniRoute                       │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Rejista ya  │    │ Kisambazaji  │    │ Uchotaji         │  │
-│  │ Proksi      │───▶│ cha Proksi   │───▶│ (undici)         │  │
-│  │ (SQLite)    │    │ (akiba)      │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Ulandanishi │                        │ API ya Mtoa      │  │
-│  │ wa 1proxy   │                        │ Huduma wa Juu    │  │
-│  │ (hazina ya  │                        │                  │  │
-│  │  bure)      │                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 ### Vipengele Muhimu
 
-| Kipengele                  | Faili                                        | Jukumu                                                             |
-| -------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
-| **Rejista ya Proksi**      | `src/lib/db/proxies.ts`                      | CRUD ya maingizo ya proksi pamoja na ugawaji wa mawanda            |
-| **Kisambazaji cha Proksi** | `open-sse/utils/proxyDispatcher.ts`          | Huunda visambazaji vya `undici` ProxyAgent/SOCKS kwa kutumia akiba |
-| **Uchotaji wa Proksi**     | `open-sse/utils/proxyFetch.ts`               | Hufunika `fetch()` kwa kuingiza kisambazaji cha proksi             |
-| **Njia ya Mipangilio**     | `src/app/api/settings/proxy/route.ts`        | API ya usanidi wa proksi ya zamani (GET/PUT/DELETE)                |
-| **Njia ya Usimamizi**      | `src/app/api/v1/management/proxies/route.ts` | API ya CRUD ya rejista (GET/POST/PATCH/DELETE)                     |
-| **DB ya 1proxy**           | `src/lib/db/oneproxy.ts`                     | Uhifadhi endelevu wa soko la proksi lisilolipishwa                 |
+| Sehemu                   | Faili                                        | Jukumu                                                              |
+| ------------------------ | -------------------------------------------- | ------------------------------------------------------------------- |
+| **Usajili wa Wakala**    | `src/lib/db/proxies.ts`                      | CRUD kwa maingizo ya wakala + wigo wa kazi                          |
+| **Mtangazaji wa Wakala** | `open-sse/utils/proxyDispatcher.ts`          | Huunda visafirishaji vya `undici` ProxyAgent/SOCKS kwa kuweka akiba |
+| **Kuleta Wakala**        | `open-sse/utils/proxyFetch.ts`               | Hukunja `fetch()` kwa sindano ya kisambaza proksi                   |
+| **Njia ya Mipangilio**   | `src/app/api/settings/proxy/route.ts`        | Usanidi wa wakala wa urithi API (GET/PUT/DELETE)                    |
+| **Njia ya Usimamizi**    | `src/app/api/v1/management/proxies/route.ts` | Usajili CRUD API (GET/POST/PATCH/DELETE)                            |
+| **wakala 1 DB**          | `src/lib/db/oneproxy.ts`                     | Uendelevu wa soko la wakala wa bure                                 |
 
 ---
 
-## Mfumo wa Proksi wa Ngazi 4
+## Hali chaguo-msingi ya seva mbadala kwa akaunti mpya
 
-OmniRoute inasaidia usanidi wa proksi katika **mawanda manne huru**, yanayotatuliwa kulingana na mpangilio wa kipaumbele:
+Katika** Mipangilio → Proksi → usanidi wa Global** , tumia** Washa proksi kwa chaguo-msingi kwa miunganisho mipya** kuchagua hali ya awali ya seva mbadala ya akaunti mpya za watoa huduma.
+
+Mipangilio mpya inadhibiti hali ya awali ya seva mbadala ya akaunti mpya za watoa huduma. Haibadilishi akaunti zilizopo au kuchukua nafasi ya swichi ya kimataifa ya wakala. Thamani yake ya awali huhifadhi tabia ya awali. Kizime mara moja ili kuunda akaunti za baadaye huku seva mbadala ikiwa imezimwa kwa chaguomsingi.
+
+Upendeleo huhifadhiwa kama `defaultNewConnectionProxyEnabled` kupitia Mipangilio iliyopo API. Inabadilika kuwa `true` ikiwa haijahifadhiwa kamwe. Kuhifadhi `false` kutaanza kutumika kwa akaunti mpya zinazofuata bila kuanzisha upya. `POST /api/providers` inakubali boolean kali ya hiari `proxyEnabled`; `true` au `false` dhahiri huchukua nafasi ya kwanza juu ya chaguo-msingi la uundaji. Kutokuwepo kwa nakala ya akaunti au OAuth kuunganisha upya huhifadhi hali ya akaunti hiyo iliyohifadhiwa. Akaunti za kibinafsi bado zinaweza kuwezeshwa au kuzimwa baadaye.
+
+Uhamisho wa watoa huduma mahususi hutumia chaguomsingi la usakinishaji lengwa kwa akaunti mpya na kuhifadhi sera lengwa wakati wa kubadilisha akaunti zilizopo. Vigezo vya seva mbadala si sehemu za uhamishaji zinazobebeka. Urejeshaji kamili wa nakala rudufu na uhamishaji wa kihistoria JSON/SQL huhifadhi semantiki zao za urejeshaji zilizopo, ikijumuisha thamani za akaunti zilizohifadhiwa na chaguomsingi za taratibu za urithi; urejeshaji kamili wa mipangilio pia unaweza kurejesha upendeleo huu.
+
+Upendeleo huu hauwakabidhi seva mbadala au kuthibitisha kuwa ni mzima au anatumika. Uelekezaji halisi bado unategemea swichi ya proksi ya kimataifa na usanidi unaotumika wa seva mbadala. Watoa huduma za syntetisk bila akaunti endelevu, trafiki OAuth kabla ya kuunda akaunti, proksi za environment/system, na uungaji mkono wa nje wa mitandao ziko nje ya upeo wake.
+
+## Mfumo wa Wakala wa Ngazi 4
+
+OmniRoute inasaidia usanidi wa proksi katika** mawanda manne ya kujitegemea** , kutatuliwa kwa mpangilio wa kipaumbele:
 
 ```
-Mpangilio wa Utatuzi wa Kipaumbele (cha juu zaidi → cha chini zaidi):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Proksi ya Akaunti/Muunganisho  →  kwa kila ufunguo wa API / muunganisho wa OAuth
-  2. 🟡 Proksi ya Mtoa Huduma          →  kwa kila mtoa huduma (k.m., trafiki yote ya OpenAI)
-  3. 🟠 Proksi ya Mchanganyiko         →  kwa kila usanidi wa mchanganyiko/uelekezaji
-  4. 🟢 Proksi ya Kimataifa            →  trafiki yote, watoa huduma wote
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Jinsi Utatuzi Unavyofanya Kazi
+### Jinsi Azimio Linavyofanya Kazi
 
-OmniRoute inapotuma ombi kwa mtoa huduma wa nje, huita `resolveProxyForConnectionFromRegistry()` ambayo hukagua kila ngazi kwa mpangilio:
+Wakati OmniRoute inatuma ombi kwa mtoa huduma wa juu, huita `resolveProxyForConnectionFromRegistry()` ambayo hukagua kila ngazi kwa mpangilio:
 
-1. **Ngazi ya akaunti** — Je, kuna proksi iliyokabidhiwa kwa kitambulisho hiki mahususi cha muunganisho?
-2. **Ngazi ya mtoa huduma** — Je, kuna proksi iliyokabidhiwa kwa mtoa huduma huyu (k.m., `openai`)?
-3. **Ngazi ya kimataifa** — Je, kuna proksi ya kimataifa iliyosanidiwa?
-4. **Hakuna proksi** — Muunganisho wa moja kwa moja kwa mtoa huduma.
+1. **Kiwango cha hesabu** —, kuna proksi iliyopewa muunganisho huu maalum ID?
+2. **Kiwango cha mtoaji** — Je, kuna proksi iliyokabidhiwa kwa mtoaji huyu (km, `openai`)?
+3. **Kiwango cha kimataifa** — kuna proksi ya kimataifa iliyosanidiwa?
+4. **Hakuna proksi** — Muunganisho wa moja kwa moja kwa mtoaji.
 
-Ya kwanza inayolingana ndiyo hutumika. Hii inamaanisha unaweza kuweka proksi ya kimataifa kama chaguo mbadala lakini ukaibatilisha kwa watoa huduma au miunganisho mahususi.
+Mechi ya kwanza inashinda. Hii inamaanisha kuwa unaweza kuweka seva mbadala ya kimataifa kama njia mbadala lakini uifute kwa watoa huduma au miunganisho mahususi.
 
-### Kinachopitishwa Kupitia Proksi
+### Nini Anapata Proxied
 
-| Aina ya Trafiki                   | Inapitishwa Kupitia Proksi? | Maelezo                                        |
-| --------------------------------- | --------------------------- | ---------------------------------------------- |
-| Ukamilishaji wa gumzo             | ✅                          | Maombi yote ya `/v1/chat/completions`          |
-| Uwakilishaji wa vekta             | ✅                          | `/v1/embeddings`                               |
-| Uzalishaji wa picha               | ✅                          | `/v1/images/generations`                       |
-| Sauti (TTS/STT)                   | ✅                          | `/v1/audio/*`                                  |
-| Ubadilishanaji wa tokeni za OAuth | ✅                          | Hutatua `unsupported_country_region_territory` |
-| Majaribio ya muunganisho          | ✅                          | Kitufe cha "Jaribu Muunganisho" hutumia proksi |
-| Uonyeshaji upya wa tokeni         | ✅                          | Usasishaji wa OAuth wa chinichini              |
-| Usawazishaji wa modeli            | ✅                          | Uorodheshaji na ugunduzi wa modeli             |
+| Aina ya Trafiki                 | Je! | Vidokezo                                             |
+| ------------------------------- | --- | ---------------------------------------------------- |
+| Ukamilishaji wa gumzo           | ✅  | Maombi yote `/v1/chat/completions`                   |
+| Upachikaji                      | ✅  | `/v1/embeddings`                                     |
+| Uzalishaji wa picha             | ✅  | `/v1/images/generations`                             |
+| Sauti (TTS/STT)                 | ✅  | `/v1/audio/*`                                        |
+| ubadilishaji wa ishara ya OAuth | ✅  | Inatatua `unsupported_country_region_territory`      |
+| Vipimo vya uunganisho           | ✅  | Kitufe cha "Muunganisho wa Jaribio" kinatumia proksi |
+| Onyesha upya ishara             | ✅  | Usasishaji OAuth usuli                               |
+| Usawazishaji wa mfano           | ✅  | Uorodheshaji wa mfano na ugunduzi                    |
 
 ---
 
-## Sajili ya Proksi (CRUD)
+## Usajili wa Wakala (CRUD)
 
-Sajili ya proksi ni jedwali la SQLite (`proxy_registry`) linalohifadhi proksi zako zote. Kila proksi ina:
+Usajili wa wakala ni jedwali SQLite (`proxy_registry`) ambalo huhifadhi proksi zako zote. Kila proksi ina:
 
-| Sehemu     | Aina    | Maelezo                                                                            |
-| ---------- | ------- | ---------------------------------------------------------------------------------- |
-| `id`       | UUID    | Kitambulisho cha kipekee                                                           |
-| `name`     | String  | Lebo inayoeleweka na binadamu                                                      |
-| `type`     | String  | Itifaki: `http`, `https`, `socks5`                                                 |
-| `host`     | String  | Jina la mwenyeji au IP ya proksi                                                   |
-| `port`     | Integer | Nambari ya kituo                                                                   |
-| `username` | String  | Jina la mtumiaji la uthibitishaji (limesimbwa kwa njia fiche wakati limehifadhiwa) |
-| `password` | String  | Nenosiri la uthibitishaji (limesimbwa kwa njia fiche wakati limehifadhiwa)         |
-| `region`   | String  | Lebo ya eneo la kijiografia                                                        |
-| `notes`    | String  | Madokezo ya maandishi huru                                                         |
-| `status`   | String  | `active` au `inactive`                                                             |
-| `source`   | String  | `manual` au `oneproxy`                                                             |
+| Shamba     | Aina           | Maelezo                                                                           |
+| ---------- | -------------- | --------------------------------------------------------------------------------- |
+| `id`       | UUID           | Kitambulisho cha kipekee                                                          |
+| `name`     | Kamba          | Lebo inayoweza kusomeka na binadamu                                               |
+| `type`     | Kamba          | Itifaki: `http`, `https`, `socks5`                                                |
+| `host`     | Kamba          | Jina la mwenyeji wa seva mbadala au IP                                            |
+| `port`     | Nambari kamili | Nambari ya bandari                                                                |
+| `username` | Kamba          | Jina la mtumiaji la uthibitishaji (limesimbwa kwa njia fiche wakati wa mapumziko) |
+| `password` | Kamba          | Nenosiri la kuthibitisha (limesimbwa kwa njia fiche wakati wa mapumziko)          |
+| `region`   | Kamba          | Lebo ya eneo la kijiografia                                                       |
+| `notes`    | Kamba          | Vidokezo vya maandishi bila malipo                                                |
+| `status`   | Kamba          | `active` au `inactive`                                                            |
+| `source`   | Kamba          | `manual` au `oneproxy`                                                            |
 
-### Kuunda Proksi
+### Kuunda Wakala
 
 **Kupitia Dashibodi:**
 
-1. Nenda kwenye **Mipangilio → Proksi**
-2. Bofya **Ongeza Proksi**
-3. Jaza aina, mwenyeji, kituo, na vitambulisho vya hiari vya uthibitishaji
+1. Nenda kwa** Mipangilio → Wakala**
+2. Bofya** Ongeza Proksi**
+3. Jaza aina, seva pangishi, mlango na vitambulisho vya hiari vya uthibitishaji
 4. Hifadhi
 
 **Kupitia API:**
@@ -164,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Kusasisha Proksi
+### Inasasisha Proksi
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -176,56 +186,56 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Kumbuka:** Vitambulisho huhifadhiwa isipokuwa utume vibadala visivyo tupu kwa njia ya wazi. Kutuma mifuatano tupu kwa `username`/`password` kutahifadhi thamani zilizopo.
+> **Kumbuka:** Vitambulisho huhifadhiwa isipokuwa utume kwa uwazi vibadilishaji visivyo tupu. Kutuma kamba tupu kwa `username`/`password` kutahifadhi maadili yaliyohifadhiwa.
 
-### Kufuta Proksi
+### Inafuta Wakala
 
 ```bash
-# Hushindwa ikiwa proksi imekabidhiwa kwa wigo wowote
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Lazimisha kufuta (huondoa pia makabidhiano)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Kuorodhesha Proksi
+### Wawakilishi wa Kuorodhesha
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Kukabidhi Proksi kwa Mawanda
+### Kukabidhi Proksi kwa Wigo
 
 ```bash
-# Kabidhi kwa wigo wa kimataifa
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Kabidhi kwa mtoa huduma mahususi
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Kabidhi kwa muunganisho/ufunguo mahususi
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Kutatua Proksi Inayotumika
+### Kutatua Wakala Ufanisi
 
-Angalia ni proksi ipi itakayotumika kwa muunganisho fulani:
+Angalia ni proksi gani itatumika kwa muunganisho fulani:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Hurejesha proksi iliyotatuliwa pamoja na ngazi yake (`account`, `provider`, au `global`) na chanzo.
+Hurejesha seva mbadala iliyotatuliwa pamoja na kiwango chake (`account`, `provider`, au `global`) na chanzo.
 
-### Ukabidhianaji kwa Wingi
+### Mgawo wa Wingi
 
-Kabidhi proksi moja kwa watoa huduma au miunganisho mingi kwa wakati mmoja:
+Agiza proksi moja kwa watoa huduma wengi au miunganisho kwa wakati mmoja:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -237,187 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Uingizaji/Uhamishaji
+### Import/Export
 
-Proksi zinajumuishwa katika mfumo wa **Hifadhi Nakala/Rejesha**. Unapohamisha usanidi wako wa OmniRoute:
+Wakala wamejumuishwa kwenye**Backup/Restore** mfumo. Unaposafirisha usanidi wako OmniRoute :
 
-1. Nenda kwenye **Dashibodi → Mipangilio → Hifadhi Nakala**
-2. Bofya **Hamisha** — sajili ya proksi na makabidhiano yanajumuishwa
-3. Ili kurejesha, bofya **Ingiza** na upakie faili ya hifadhi nakala
+1. Nenda kwa** Dashibodi → Mipangilio → Hifadhi Nakala**
+2. Bofya** Hamisha** Usajili wa wakala wa — na kazi zimejumuishwa
+3. Ili kurejesha, bofya** Ingiza** na upakie faili ya chelezo
 
-Sajili ya proksi pia inasaidia **upsert kwa host+port** — ukiingiza proksi ambayo tayari ipo (mwenyeji na kituo sawa), huisasisha badala ya kuunda nakala nyingine.
+Usajili wa wakala pia inasaidia** kufadhaishwa na bandari mwenyeji +** — ukiingiza proksi ambayo tayari ipo (mwenyeji na mlango sawa), inasasisha badala ya kuunda nakala.
 
-### Uhamishaji kutoka Mfumo wa Zamani
+### Uhamiaji wa Urithi
 
-Ikiwa ulisanidi proksi katika toleo la zamani (kabla ya registry), OmniRoute huzihamisha kiotomatiki:
+Ikiwa ulisanidi seva mbadala katika toleo la zamani (kusajili mapema), OmniRoute huzihamisha kiotomatiki:
 
 ```
-Hifadhi ya zamani ya key_value → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Hili hutokea mara moja wakati wa uanzishaji wa kwanza baada ya kusasisha. Tumia `migrateLegacyProxyConfigToRegistry({ force: true })` ili kuiendesha tena.
+Hii hufanyika mara moja kwenye uanzishaji wa kwanza baada ya kusasisha. Tumia `migrateLegacyProxyConfigToRegistry({ force: true })` kuendesha tena.
 
 ---
 
-## Soko la Proksi Bila Malipo la 1proxy
+## Wakala 1 Soko la Wakala Huru
 
-> 🆕 **Imechangiwa na [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Suala [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Imechangiwa na [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Toleo [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute huunganishwa na jukwaa la jumuiya la **[1proxy](https://1proxy-api.aitradepulse.com)** ili kutoa ufikiaji wa **mamia ya proksi zisizolipishwa na zilizothibitishwa** kutoka kote ulimwenguni. Hii ni bora kwa watumiaji ambao hawana miundombinu yao wenyewe ya proksi.
+OmniRoute inaunganishwa na** [wakala 1](https://1proxy-api.aitradepulse.com)** jukwaa la jamii kutoa ufikiaji** mamia ya proksi zisizolipishwa, zilizothibitishwa** kutoka duniani kote. Hii ni sawa kwa watumiaji ambao hawana miundombinu yao ya seva mbadala.
 
 ### Jinsi Inavyofanya Kazi
 
 ```
-┌─────────────┐  Usawazishaji  ┌─────────────────┐  Mzunguko   ┌──────────┐
-│  API ya     │ ─────────────▶ │  proxy_registry  │ ──────────▶ │ Mtoa     │
-│  1proxy     │  hadi proksi   │  source=oneproxy │ kwa ubora   │ huduma   │
-│  (ya nje)   │      500       │                  │             │ wa API   │
-└─────────────┘                └─────────────────┘              └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Usawazishaji** — OmniRoute hupakua proksi zilizothibitishwa kutoka API ya 1proxy
-2. **Uhifadhi** — Proksi huhifadhiwa kwenye jedwali lilelile la `proxy_registry` zikiwa na `source = 'oneproxy'`
-3. **Uchujaji** — Chuja kulingana na itifaki, nchi na alama ya ubora
-4. **Mzunguko** — Chagua proksi bora kwa kutumia mikakati ya ubora, nasibu au mfuatano
-5. **Upunguzaji wa kiotomatiki** — Proksi zilizoshindwa hupunguziwa alama ya ubora; zikishuka chini ya kiwango → huwekwa alama ya kutotumika
+1. **Sawazisha** — OmniRoute huleta proksi zilizoidhinishwa kutoka kwa wakala 1 API
+2. **Hifadhi** — Proksi zimehifadhiwa katika jedwali moja `proxy_registry` na `source = 'oneproxy'`
+3. **Chuja** — Chuja kwa itifaki, nchi, alama ya ubora
+4. **Zungusha** — Chagua proksi bora zaidi kwa kutumia mikakati ya ubora, nasibu, au mfuatano
+5. **Punguza kiotomatiki** — Wakala walioshindwa hupunguzwa alama zao za ubora; chini ya kizingiti → imetiwa alama isiyotumika
 
-### Kusawazisha Proksi
+### Inasawazisha Proksi
 
 **Kupitia Dashibodi:**
 
-1. Nenda kwenye kichupo cha **Settings → 1proxy**
-2. Bofya **"Sync Now"**
-3. Tazama takwimu: jumla ya proksi, idadi inayotumika, wastani wa ubora na mgawanyo kulingana na nchi
+1. Nenda kwa** Mipangilio → 1 proksi** kichupo
+2. Bofya** "Sawazisha Sasa"**
+3. Tazama takwimu: jumla ya seva mbadala, hesabu inayotumika, ubora wa wastani, maelezo ya nchi
 
 **Kupitia API:**
 
 ```bash
-# Anzisha usawazishaji
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Jibu:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Kuchuja Proksi
 
 ```bash
-# Chuja kulingana na itifaki
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Chuja kulingana na nchi
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Chuja kulingana na alama ya chini kabisa ya ubora
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Unganisha vichujio
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Alama za Ubora wa Proksi
+### Alama za Ubora wa Wakala
 
-Kila proksi ya 1proxy huja na metadata:
+Kila proksi 1 inakuja na metadata:
 
-| Sehemu          | Maelezo                                            |
-| --------------- | -------------------------------------------------- |
-| `qualityScore`  | Ukadiriaji wa 0-100 kutoka uthibitishaji wa 1proxy |
-| `latencyMs`     | Ucheleweshaji wa mtandao uliopimwa                 |
-| `anonymity`     | `transparent`, `anonymous`, au `elite`             |
-| `googleAccess`  | Ikiwa proksi inaweza kufikia huduma za Google      |
-| `countryCode`   | Msimbo wa nchi wa ISO wenye herufi mbili           |
-| `lastValidated` | Muhuri wa muda wa uthibitishaji wa mwisho          |
+| Shamba          | Maelezo                                    |
+| --------------- | ------------------------------------------ |
+| `qualityScore`  | 0-100 kutoka kwa uthibitishaji wa wakala 1 |
+| `latencyMs`     | Muda wa kusubiri wa mtandao uliopimwa      |
+| `anonymity`     | `transparent`, `anonymous`, au `elite`     |
+| `googleAccess`  | Ikiwa proksi inaweza kufikia huduma Google |
+| `countryCode`   | Msimbo wa nchi ISO wenye herufi mbili      |
+| `lastValidated` | Muhuri wa muda wa uthibitishaji wa mwisho  |
 
-Alama za ubora hurekebishwa kwa mabadiliko:
+Alama za ubora hurekebishwa kwa nguvu:
 
-- **Maombi yaliyoshindwa** hupunguza alama kwa pointi 10
-- **Alama ikishuka hadi ≤10** → proksi huwekwa alama ya `inactive`
-- Proksi zisizotumika huondolewa kwenye mzunguko
+- **Maombi yaliyoshindikana** kupunguza alama kwa pointi 10
+- **Alama imeshuka hadi ≤ 10** proksi → imewekwa alama `inactive`
+- Proksi zisizotumika hazijajumuishwa kwenye mzunguko
 
 ### Mikakati ya Mzunguko
 
 ```bash
-# Zungusha kulingana na ubora (proksi bora kwanza) — chaguo-msingi
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Mzunguko wa nasibu
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Mfuatano (iliyoidhinishwa zamani zaidi kwanza)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Kivunja Mzunguko
+### Mvunjaji wa mzunguko
 
-Usawazishaji wa 1proxy una kivunja mzunguko kilichojengewa ndani:
+Usawazishaji wa wakala 1 una kivunja mzunguko kilichojengwa ndani:
 
-- Baada ya **kushindwa kwa usawazishaji mara 5 mfululizo**, majaribio zaidi ya kusawazisha huzuiwa
-- Weka upya kwa kutumia: `resetOneproxyCircuitBreaker()` au anzisha seva upya
-- Hali ya usawazishaji inapatikana kupitia `GET /api/settings/oneproxy?action=status`
+- Baada ya** Hitilafu 5 mfululizo za usawazishaji** , majaribio zaidi ya kusawazisha yamezuiwa
+- Weka upya kwa: `resetOneproxyCircuitBreaker()` au anzisha upya seva
+- Hali ya usawazishaji inapatikana katika `GET /api/settings/oneproxy?action=status`
 
-### Kufuta Proksi za 1proxy
+### Inafuta Wakala 1
 
 ```bash
-# Futa proksi moja ya 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Futa proksi ZOTE za 1proxy (proksi zilizowekwa mwenyewe haziguswi)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Kuzuia Utambuzi na Kuficha Utambulisho
+## Kupambana na Kugundua & Kuficha
 
-OmniRoute haipitishi tu trafiki kupitia proksi — huifanya trafiki ionekane halali:
+OmniRoute haiongoi tu trafiki kupitia proksi — inafanya trafiki ionekane kuwa halali:
 
-### Uigaji wa Alama ya Utambulisho ya TLS
+### TLS Kunyunyiza kwa Alama ya vidole
 
-Hutumia `wreq-js` kutengeneza alama za utambulisho za TLS zinazofanana na za kivinjari, hivyo kukwepa mifumo ya utambuzi wa roboti inayotambua miunganisho ya TLS isiyotoka kwenye kivinjari.
+Hutumia `wreq-js` kutengeneza alama za vidole zinazofanana na kivinjari TLS, kwa kupita mifumo ya utambuzi wa roboti inayoripoti kupeana mikono TLS zisizo na kivinjari.
 
-### Ulinganishaji wa Alama ya Utambulisho ya CLI
+### CLI Kulinganisha Alama za vidole
 
-**Kibadilishaji cha Alama ya Utambulisho ya CLI** (`Mipangilio → Usalama`) hupanga upya vichwa vya HTTP na sehemu za mwili wa JSON ili zilingane na saini kamili ya faili asilia za kutekelezwa za CLI (Claude Code, Codex, n.k.). Hii hufanya kazi **juu ya** proksi:
+The**CLI Kugeuza Alama ya vidole** (`Settings → Security`) hupanga upya vichwa vya HTTP na sehemu za mwili JSON ili kuendana na saini halisi ya jozi asili CLI (Claude Code, Codex, n.k.). Hii inafanya kazi** juu ya** wakala:
 
 ```
-IP yako (imezuiwa) → IP ya proksi (Marekani) → API ya mtoa huduma
-                     + uigaji wa TLS
-                     + alama ya utambulisho ya CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Unapata **ufichaji wa IP** na **uhalisi wa ombi** kwa wakati mmoja.
+Unapata zote mbili**IP masking** na** omba uhalisi** kwa wakati mmoja.
 
-### Uhifadhi wa IP ya Proksi
+### Wakala IP Uhifadhi
 
-Beji zenye rangi tofauti katika dashibodi huonyesha kiwango cha proksi kinachotumika:
+Beji zenye msimbo wa rangi katika dashibodi zinaonyesha ni kiwango gani cha seva mbadala kinatumika:
 
-| Beji | Kiwango     | Maana                                                             |
-| ---- | ----------- | ----------------------------------------------------------------- |
-| 🟢   | Kimataifa   | Trafiki yote hupitia proksi hii                                   |
-| 🟡   | Mtoa huduma | Trafiki ya mtoa huduma huyu pekee ndiyo hupitishwa kupitia proksi |
-| 🔵   | Muunganisho | Ufunguo/akaunti hii mahususi hutumia proksi hii                   |
+| Beji | Kiwango     | Maana                                                      |
+| ---- | ----------- | ---------------------------------------------------------- |
+| 🟢   | Ulimwenguni | Trafiki yote hupitia proksi hii                            |
+| 🟡   | Mtoa huduma | Trafiki ya mtoa huduma huyu pekee ndiyo iliyowekewa proksi |
+| 🔵   | Muunganisho | key/account hii maalum hutumia proksi hii                  |
 
-Beji pia huonyesha IP ya proksi iliyotambuliwa kwa ajili ya uthibitishaji.
+Beji pia inaonyesha proksi IP iliyotatuliwa kwa uthibitishaji.
 
 ---
 
-## Modi za Proksi ya Juu
+## Njia za Seva za Mkondo za Juu
 
-Kwa watoa huduma wanaotumia muundo wa CLIProxyAPI, OmniRoute inasaidia modi tatu za proksi ya juu:
+Kwa watoa huduma wanaotumia muundo CLIProxyAPI, OmniRoute inaauni hali tatu za proksi za juu:
 
-| Modi          | Maelezo                                                                         |
-| ------------- | ------------------------------------------------------------------------------- |
-| `native`      | OmniRoute hushughulikia moja kwa moja upitishaji kupitia proksi (chaguo-msingi) |
-| `cliproxyapi` | Hukabidhi jukumu kwa instansi ya nje ya CLIProxyAPI                             |
-| `fallback`    | Hujaribu modi asilia kwanza, kisha hutumia CLIProxyAPI ikishindikana            |
+| Hali          | Maelezo                                                                    |
+| ------------- | -------------------------------------------------------------------------- |
+| `native`      | OmniRoute hushughulikia uelekezaji wa proksi moja kwa moja (chaguo-msingi) |
+| `cliproxyapi` | Wajumbe kwa mfano wa CLIProxyAPI wa nje                                    |
+| `fallback`    | Inajaribu asili kwanza, inarudi kwa CLIProxyAPI                            |
 
-Sanidi kwa kila mtoa huduma:
+Sanidi kwa kila mtoaji:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -427,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Kiolesura cha Dashibodi
+## Dashibodi UI
 
-### Mipangilio → Kichupo cha Proksi
+### Mipangilio kwa → cha Wakala
 
-- Usanidi wa **proksi ya kimataifa** (weka mara moja kwa trafiki yote)
-- Mipangilio mbadala ya **proksi kwa kila mtoa huduma**
-- Ugawaji wa **proksi kwa kila muunganisho**
-- **Jaribio la muunganisho** kupitia proksi iliyosanidiwa
-- **Beji zenye rangi tofauti** zinazoonyesha kiwango cha proksi kinachotumika
+- **Wakala wa kimataifa** usanidi (weka mara moja kwa trafiki yote)
+- **Wakala wa kila mtoaji** inabatilisha
+- **Wakala wa kila muunganisho** kazi
+- **Mtihani wa uunganisho** kupitia seva mbadala iliyosanidiwa
+- **Beji zilizo na alama za rangi** kuonyesha kiwango cha proksi amilifu
 
-### Mipangilio → Kichupo cha 1proxy
+### Mipangilio → 1proksi Tab
 
-- Kitufe cha **Sawazisha Sasa** ili kupata proksi zisizolipishwa
-- **Kadi za takwimu**: Jumla, Zinazotumika, Wastani wa Ubora, Usawazishaji wa Mwisho
-- **Vichujio**: Itifaki, Msimbo wa Nchi, Ubora wa Chini Zaidi
-- **Jedwali la proksi** lenye seva mwenyeji, itifaki, nchi, alama ya ubora, ucheleweshaji, kutotambulika, ufikiaji wa Google
-- Paneli ya **hali ya usawazishaji** yenye ufuatiliaji wa kufanikiwa/kushindwa na idadi ya kushindwa mfululizo
-- **Futa Zote** ili kuondoa maingizo yote ya 1proxy
+- **Sawazisha Sasa** kitufe cha kuleta seva mbadala bila malipo
+- **Kadi za takwimu** : Jumla, Inayotumika, Ubora wa Wastani, Usawazishaji wa Mwisho
+- **Vichujio** : Itifaki, Msimbo wa Nchi, Ubora mdogo
+- **Jedwali la wakala** na mwenyeji, itifaki, nchi, alama ya ubora, muda wa kusubiri, kutokujulikana, ufikiaji wa Google
+- **Hali ya kusawazisha** paneli yenye ufuatiliaji wa success/failure na hesabu ya kutofaulu mfululizo
+- **Futa Zote** kuondoa maingizo yote ya wakala 1
 
 ---
 
-## Marejeleo ya API
+## API Rejea
 
-### API ya Mipangilio ya Proksi
+### Mipangilio ya Wakala API
 
-| Mbinu    | Endpoint                                       | Maelezo                          |
-| -------- | ---------------------------------------------- | -------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Pata usanidi kamili wa proksi    |
-| `GET`    | `/api/settings/proxy?level=global`             | Pata proksi ya kimataifa         |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Pata proksi ya mtoa huduma       |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Tambua proksi inayotumika        |
-| `PUT`    | `/api/settings/proxy`                          | Sasisha usanidi wa proksi        |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Ondoa proksi katika kiwango hiki |
+| Mbinu    | Mwisho                                         | Maelezo                             |
+| -------- | ---------------------------------------------- | ----------------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Pata usanidi kamili wa seva mbadala |
+| `GET`    | `/api/settings/proxy?level=global`             | Pata wakala wa kimataifa            |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Pata wakala wa mtoa huduma          |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Suluhisha seva mbadala inayofaa     |
+| `PUT`    | `/api/settings/proxy`                          | Sasisha usanidi wa proksi           |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Ondoa proksi kwa kiwango            |
 
-### API ya Sajili ya Proksi
+### Usajili wa Wakala API
 
-| Mbinu    | Endpoint                                          | Maelezo                   |
+| Mbinu    | Mwisho                                            | Maelezo                   |
 | -------- | ------------------------------------------------- | ------------------------- |
 | `GET`    | `/api/v1/management/proxies`                      | Orodhesha proksi zote     |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Pata proksi kwa ID        |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Pata migawo ya proksi     |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Pata wakala kwa ID        |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Pata kazi za wakala       |
 | `POST`   | `/api/v1/management/proxies`                      | Unda proksi               |
-| `PATCH`  | `/api/v1/management/proxies`                      | Sasisha proksi            |
+| `PATCH`  | `/api/v1/management/proxies`                      | Sasisha seva mbadala      |
 | `DELETE` | `/api/v1/management/proxies?id=uuid`              | Futa proksi               |
 | `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Lazimisha kufuta          |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Gawa kwa wingi            |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Orodhesha migawo          |
-| `GET`    | `/api/v1/management/proxies/health`               | Takwimu za afya ya proksi |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Wingi hawawajui           |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Orodhesha kazi            |
+| `GET`    | `/api/v1/management/proxies/health`               | Takwimu za afya za wakala |
 
-### API ya Tunnels
+### Vichungi API
 
-Kwa kuweka instansi yako ya OmniRoute wazi kwenye intaneti ya umma (Cloudflare/ngrok/Tailscale) badala ya kuelekeza trafiki ya kutoka kupitia proksi, angalia [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). API ya REST ya tunnel inapatikana chini ya `/api/tunnels/{cloudflared,ngrok,tailscale}/*` na inajitegemea kutoka kwenye mnyororo wa proksi ya trafiki inayotoka uliofafanuliwa hapo juu.
+Kwa kufichua mfano wako OmniRoute kwenye mtandao wa umma (Cloudflare/ngrok/Tailscale) badala ya kuelekeza nje kupitia proksi, angalia [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Njia ya REST API inaishi chini ya `/api/tunnels/{cloudflared,ngrok,tailscale}/*` na ina mnyororo wa mnyororo wa proksi unaotoka nje ulioandikwa hapo juu.
 
-### API ya 1proxy
+### wakala 1 API
 
-| Mbinu    | Endpoint                               | Maelezo                             |
-| -------- | -------------------------------------- | ----------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | Orodhesha proksi za 1proxy          |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Pata takwimu + hali ya usawazishaji |
-| `GET`    | `/api/settings/oneproxy?action=status` | Pata hali ya usawazishaji pekee     |
-| `POST`   | `/api/settings/oneproxy`               | Anzisha usawazishaji                |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Hamia kwenye proksi inayofuata      |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Futa moja                           |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Futa zote                           |
+| Mbinu    | Mwisho                                 | Maelezo                               |
+| -------- | -------------------------------------- | ------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Orodhesha proksi 1                    |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Pata hali ya usawazishaji +           |
+| `GET`    | `/api/settings/oneproxy?action=status` | Pata hali ya usawazishaji pekee       |
+| `POST`   | `/api/settings/oneproxy`               | Anzisha usawazishaji                  |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Zungusha hadi seva mbadala inayofuata |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Futa moja                             |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Futa zote                             |
 
-### API ya Proksi ya Juu
+### Wakala wa Mto API
 
-| Mbinu    | Endpoint                          | Maelezo                        |
-| -------- | --------------------------------- | ------------------------------ |
-| `GET`    | `/api/upstream-proxy/:providerId` | Pata usanidi wa proksi ya juu  |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Weka modi ya proksi ya juu     |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Ondoa usanidi wa proksi ya juu |
+| Mbinu    | Mwisho                            | Maelezo                                 |
+| -------- | --------------------------------- | --------------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Pata usanidi wa proksi ya mkondo wa juu |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Weka hali ya juu ya seva mbadala        |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Ondoa usanidi wa proksi ya juu          |
 
 ---
 
 ## Vigezo vya Mazingira
 
-| Kigezo                | Chaguo-msingi | Maelezo                                                                            |
-| --------------------- | ------------- | ---------------------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`        | Washa usaidizi wa proksi ya SOCKS5 (chaguo-msingi ni `true` katika `.env.example`) |
+| Inaweza kubadilika    | Chaguomsingi | Maelezo                                                                      |
+| --------------------- | ------------ | ---------------------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`       | Washa usaidizi wa proksi SOCKS5 ( `true` chaguomsingi katika `.env.example`) |
 
 ---
 
-## Utatuzi wa Matatizo
+## Kutatua matatizo
 
-### "Proksi ya SOCKS5 imezimwa"
+### "SOCKS5 proksi imezimwa"
 
-Weka `ENABLE_SOCKS5_PROXY=true` katika faili yako ya `.env` kisha uanzishe upya.
+Weka `ENABLE_SOCKS5_PROXY=true` kwenye faili yako `.env` na uanze upya.
 
-### Hitilafu za "socket hang up" kupitia proksi
+### "soketi hutegemea" makosa kupitia proksi
 
-Hili ni jambo la kawaida kwa proksi za bei nafuu ambazo hukata miunganisho isiyotumika. OmniRoute tayari hushughulikia hili kwa:
+Hii ni kawaida na proksi za bei nafuu ambazo huacha miunganisho isiyo na kazi. OmniRoute tayari inashughulikia hii kwa:
 
-- Kuzima keep-alive kwenye miunganisho ya proksi (`keepAliveTimeout: 1`)
-- Kuzima pipelining (`pipelining: 0`)
-- Kuhifadhi dispatchers kwenye akiba ili kuepuka handshakes zinazojirudia
+- Inalemaza kuendelea kuwa hai kwenye miunganisho ya seva mbadala (`keepAliveTimeout: 1`)
+- Inalemaza uwekaji mabomba (`pipelining: 0`)
+- Kuhifadhi wasafirishaji ili kuzuia kupeana mikono mara kwa mara
 
-Ikiwa tatizo litaendelea, jaribu proksi tofauti au utumie kipengele cha kubadilisha proksi cha 1proxy.
+Ikiendelea, jaribu seva mbadala au tumia kipengele cha kuzungusha proksi 1.
 
-### "unsupported_country_region_territory" wakati wa OAuth
+### "eneo_la_nchi_isiyotumika" wakati wa OAuth
 
-Hakikisha proksi imesanidiwa **kabla** ya kuanzisha mtiririko wa OAuth. OmniRoute hupitisha ubadilishanaji wa tokeni za OAuth kupitia proksi iliyosanidiwa. Weka kwanza proksi ya kimataifa au ya kiwango cha mtoa huduma, kisha unganisha.
+Hakikisha kuwa proksi imesanidiwa** kabla** kuanza mtiririko OAuth. OmniRoute hupitisha ubadilishaji wa tokeni OAuth kupitia proksi iliyosanidiwa. Weka seva mbadala ya kimataifa au ya mtoa huduma kwanza, kisha uunganishe.
 
-### Proksi haitumiki
+### Wakala haitumiki
 
-Angalia mpangilio wa utatuzi:
+Angalia mpangilio wa azimio:
 
 1. Thibitisha kwa `GET /api/settings/proxy?resolve=your-connection-id`
-2. Angalia ikiwa `status` ya proksi ni `active` (si `inactive`)
-3. Hakikisha upeo wa ugawaji wa proksi unalingana na muunganisho wako
+2. Angalia ikiwa proksi `status` ni `active` (sio `inactive`)
+3. Hakikisha upeo wa ugawaji wa seva mbadala unalingana na muunganisho wako
 
-### Usawazishaji wa 1proxy unashindwa
+### Usawazishaji wa seva mbadala 1 umeshindwa
 
 Angalia hali ya usawazishaji:
 
@@ -546,11 +555,11 @@ Angalia hali ya usawazishaji:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Ikiwa `consecutiveFailures >= 5`, circuit breaker imewashwa. Anzisha seva upya ili kuiweka upya, au subiri iwekwe upya mwenyewe.
+Ikiwa `consecutiveFailures >= 5`, kivunja mzunguko kimejikwaa. Anzisha tena seva ili kuweka upya, au subiri uwekaji upya mwenyewe.
 
 ---
 
-## Muundo wa Hifadhidata
+## Schema ya Hifadhidata
 
 ### Jedwali la `proxy_registry`
 
@@ -566,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' au 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (1proxy pekee)
-  latency_ms INTEGER,                        -- milisekunde (1proxy pekee)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- inaweza kufikia Google? (1proxy)
-  last_validated TEXT,                       -- muhuri wa muda wa ISO (1proxy)
-  country_code TEXT,                         -- msimbo wa ISO wenye herufi 2 (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -585,7 +594,7 @@ CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- kitambulisho cha mtoa huduma, kitambulisho cha muunganisho, au kitambulisho cha combo
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -594,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Ukaguzi wa Afya ya Proksi (v3.8.16+)
+## Ukaguzi wa Afya ya Wakala (v3.8.16 +)
 
-Utaratibu wa **kushindwa haraka kwa proksi** wa OmniRoute (`src/lib/proxyHealth.ts`) hutambua proksi zisizofanya kazi ndani ya <2s kupitia ukaguzi wa haraka wa muunganisho wa TCP, kisha **huhifadhi matokeo kwenye akiba** ili kuepuka gharama ya ziada kwa kila ombi.
+OmniRoute** wakala haraka-kushindwa** utaratibu (`src/lib/proxyHealth.ts`) hugundua proksi zilizokufa katika < 2s kupitia ukaguzi wa haraka wa unganisho TCP, kisha** huhifadhi matokeo** ili kuepuka ombi moja kwa moja.
 
-### Jinsi Unavyofanya Kazi
+### Jinsi Inavyofanya Kazi
 
 ```
-Ombi ──▶ ProxyHealthCache.get(url)
-          │
-          ├─ Imepatikana kwenye akiba + ni mpya?  ──▶ rudisha hali iliyohifadhiwa
-          │
-          └─ Haipo kwenye akiba / imepitwa na wakati?  ──▶ unganisha TCP kwenye host:port
-                                                            (muda wa kuisha: FAST_FAIL_TIMEOUT_MS)
-                                                            ──▶ hifadhi kwenye akiba kwa HEALTH_CACHE_TTL_MS
-                                                            ──▶ rudisha matokeo
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Bila hili, proksi isiyofanya kazi ingezuia kila ombi kwa muda wote wa `PROXY_TIMEOUT_MS` (chaguo-msingi ni 30s) kabla ya kushindwa.
+Bila hii, wakala aliyekufa angezuia kila ombi la `PROXY_TIMEOUT_MS` kamili (default 30s) kabla ya kushindwa.
 
-### Vigezo vya Mazingira Vinavyoweza Kurekebishwa
+### Vigezo vya Mazingira Tunable
 
-| Kigezo                       | Chaguo-msingi | Kusudi                                                        |
-| ---------------------------- | ------------- | ------------------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`        | Muda wa kuisha wa muunganisho wa TCP kwa kila ukaguzi wa afya |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`       | Muda ambao matokeo ya afya huhifadhiwa kwenye akiba           |
+| Inaweza kubadilika           | Chaguomsingi | Kusudi                                              |
+| ---------------------------- | ------------ | --------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`       | muda wa muunganisho wa TCP kwa kila ukaguzi wa afya |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`      | Matokeo ya afya yanahifadhiwa kwa muda gani         |
 
-**Thamani zinazopendekezwa:**
+**Maadili yaliyopendekezwa:**
 
-| Hali                             | Muda wa kushindwa haraka | TTL ya akiba | Sababu                                                                      |
-| -------------------------------- | ------------------------ | ------------ | --------------------------------------------------------------------------- |
-| Lango la API lenye trafiki kubwa | 1500ms                   | 60000ms      | Kushindwa haraka kwa ukali, akiba ndefu zaidi ili kupunguza ukaguzi         |
-| Nodi zilizosambazwa kijiografia  | 3000ms                   | 15000ms      | Mitandao ya polepole huhitaji muda zaidi; akiba fupi kwa uhamisho wa haraka |
-| Uendelezaji / majaribio          | 1000ms                   | 10000ms      | Marudio ya haraka kwenye proksi za ndani                                    |
-| Usiri / kuzuia utambuzi          | 2500ms                   | 45000ms      | Epuka uchunguzi wa mara kwa mara unaoweza kuanzisha vikomo vya kasi         |
+| Mazingira                          | Muda wa kutofaulu kwa haraka | Cache TTL | Kutoa hoja                                                                 |
+| ---------------------------------- | ---------------------------- | --------- | -------------------------------------------------------------------------- |
+| Lango la API la upitishaji wa juu  | 1500ms                       | 60000ms   | Ukali wa kushindwa haraka, akiba ndefu ili kupunguza ukaguzi               |
+| Nodi za kusambazwa kwa kijiografia | 3000ms                       | 15000ms   | Mitandao ya polepole inahitaji muda zaidi; akiba fupi kwa kushindwa haraka |
+| Dev / majaribio                    | 1000ms                       | 10000ms   | Marudio ya haraka kwenye seva mbadala za ndani                             |
+| Siri / anti-kugundua               | 2500ms                       | 45000ms   | Epuka uchunguzi wa haraka ambao unaweza kusababisha viwango vya juu        |
 
-### Kukagua Afya ya Proksi
+### Kukagua Afya ya Wakala
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -639,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Lazimisha ukaguzi upya wa proksi maalum
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Alama ya `stale` huwa `true` wakati ingizo la akiba limezidi `HEALTH_CACHE_TTL_MS`, na ombi linalofuata litaanzisha ukaguzi mpya.
+Bendera `stale` ni `true` wakati ingizo la akiba limezidi `HEALTH_CACHE_TTL_MS` na ombi linalofuata litaanzisha ukaguzi mpya.
 
-### Chaguo-msingi kwa Kila Aina ya Proksi
+### Chaguo-msingi za Aina ya Per-Proksi
 
-Ukaguzi wa afya hutumia chaguo-msingi zinazofaa kulingana na mpangilio wa URL:
+Ukaguzi wa afya hutumia chaguo-msingi za busara kulingana na mpango wa URL :
 
-| Mpangilio                  | Porti chaguo-msingi |
+| Mpango                     | Mlango chaguomsingi |
 | -------------------------- | ------------------- |
 | `http://`                  | 8080                |
 | `https://`                 | 443                 |
 | `socks5://` / `socks5h://` | 1080                |
 
-Porti maalum katika URL (`http://host:9999`) hupewa kipaumbele kila wakati kuliko chaguo-msingi la mpangilio.
+Lango maalum katika URL (`http://host:9999`) kila mara huchukua nafasi ya kwanza kuliko chaguo-msingi la mpango.
 
 ---
 
-## Uchanganuzi na Uangalizi wa Proksi
+## Uchanganuzi wa Wakala na Kuzingatiwa
 
-OmniRoute hufuatilia matumizi ya kila proksi ili kuwasaidia waendeshaji kutambua mifumo ya uelekezaji, ongezeko la ghafla la ucheleweshaji, na hitilafu zinazojirudia.
+OmniRoute hufuatilia matumizi ya kila seva mbadala ili kusaidia waendeshaji kutambua mifumo ya uelekezaji, miisho ya muda wa kusubiri, na matatizo yanayojirudia.
 
-### Kinachofuatiliwa
+### Nini Kinafuatiliwa
 
-Kwa kila ombi linalopitia proksi iliyosanidiwa, OmniRoute hurekodi:
+Kwa kila ombi kupitia proksi iliyosanidiwa, OmniRoute inarekodi:
 
-| Kipimo       | Maelezo                                                                       |
-| ------------ | ----------------------------------------------------------------------------- |
-| `proxy_url`  | URL kamili ya proksi (vitambulisho vya uthibitishaji vimefichwa)              |
-| `provider`   | Kitambulisho cha mtoa huduma wa juu (openai, anthropic, n.k.)                 |
-| `latency_ms` | Jumla ya muda wa kwenda na kurudi, ikijumuisha mawasiliano ya awali ya proksi |
-| `connect_ms` | Muda wa kuunganisha TCP pekee                                                 |
-| `status`     | Msimbo wa hali wa HTTP kutoka kwa huduma ya juu                               |
-| `error`      | Aina ya hitilafu ikiwa ombi halikufaulu                                       |
-| `timestamp`  | ISO 8601 UTC                                                                  |
+| Kipimo       | Maelezo                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| `proxy_url`  | Wakala kamili URL (yenye vitambulisho vya uthibitishaji vimefichwa)    |
+| `provider`   | Mtoa huduma ID (openai, anthropic, n.k.)                               |
+| `latency_ms` | Jumla ya muda wa kwenda na kurudi ikijumuisha kupeana mkono kwa wakala |
+| `connect_ms` | TCP kuunganisha muda tu                                                |
+| `status`     | msimbo wa hali ya HTTP kutoka juu ya mkondo                            |
+| `error`      | Darasa la hitilafu ikiwa ombi halikufaulu                              |
+| `timestamp`  | ISO 8601 UTC                                                           |
 
 ### Kufikia Data
 
 ```bash
-# Matukio ya hivi karibuni ya proksi
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Endpoint halisi ni `/api/usage/proxy-logs` (angalia `src/app/api/usage/proxy-logs/route.ts`). Endpoint hii inasaidia:
+Mwisho halisi ni `/api/usage/proxy-logs` (tazama `src/app/api/usage/proxy-logs/route.ts`). Mwisho huu unasaidia:
 
-- `GET /api/usage/proxy-logs` — kupata kumbukumbu za proksi
-- `DELETE /api/usage/proxy-logs` — kufuta kumbukumbu zote za proksi
+- `GET /api/usage/proxy-logs` — pata kumbukumbu za wakala
+- `DELETE /api/usage/proxy-logs` — futa kumbukumbu zote za wakala
 
-Ikihitajika, takwimu zilizojumlishwa zinaweza kuulizwa moja kwa moja kutoka kwenye jedwali la `proxy_logs` kupitia SQL. Kiolesura cha dashibodi kinaweza kutoa mionekano ya takwimu zilizojumlishwa.
+Takwimu za jumla zinaweza kuulizwa moja kwa moja kutoka kwa jedwali `proxy_logs` kupitia SQL ikihitajika. Dashibodi UI inaweza kutoa maoni ya jumla.
 
-### Mifumo ya Kawaida
+### Miundo ya Kawaida
 
-**Tambua proksi inayobadilika-badilika** (hubadilishana kati ya kufaulu/kutofaulu):
+**Tambua proksi inayopiga** (hubadilisha kati ya success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -708,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Tafuta proksi zenye kasi ndogo** (ucheleweshaji wa p95 > sekunde 2):
+**Tafuta proksi za polepole** (p95 latency > 2s):
 
 ```sql
 WITH ranked AS (
@@ -725,93 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Mti wa Maamuzi wa Mkakati wa Mzunguko
+## Mti wa Uamuzi wa Mkakati wa Mzunguko
 
-Proksi nyingi zinapowekwa kwenye mawanda fulani, OmniRoute hutumia **mkakati wa mzunguko** kuchagua proksi ya kutumia kwa kila ombi. Mkakati husanidiwa katika kiwango cha mawanda (kimataifa, kwa kila mtoa huduma, kwa kila akaunti, kwa kila mchanganyiko).
+Wakati proksi nyingi zimekabidhiwa kwa upeo, OmniRoute hutumia a** mkakati wa mzunguko** kuchagua ni ipi ya kutumia kwa kila ombi. Mkakati umesanidiwa katika kiwango cha mawanda (kimataifa, kwa kila mtoaji, kwa kila akaunti, kwa muunganisho).
 
 ### Mikakati Inayopatikana
 
-| Mkakati                   | Wakati wa kutumia                                    | Faida na hasara                                                                                              |
-| ------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `quality` (chaguo-msingi) | Uzalishaji wenye proksi za viwango tofauti vya ubora | Hupendelea proksi zilizopewa ukadiriaji wa juu; huenda zisizipe nafasi proksi zilizopewa ukadiriaji wa chini |
-| `random`                  | Usambazaji wa mzigo, faragha                         | Usambazaji sawa; hupuuza viashiria vya ubora                                                                 |
-| `sequential`              | Utatuzi, majaribio yanayoweza kutabirika             | Hupitia proksi kwa mpangilio; ni rahisi kuelewa                                                              |
+| Mkakati                   | Wakati wa kutumia                          | Biashara-off                                                                              |
+| ------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `quality` (chaguo-msingi) | Uzalishaji na proksi za ubora mchanganyiko | Inapendelea proksi zenye viwango vya juu; wanaweza kufa njaa wale wenye viwango vya chini |
+| `random`                  | Usambazaji wa mzigo, faragha               | Hata usambazaji; hupuuza ishara za ubora                                                  |
+| `sequential`              | Debugging, deterministic kupima            | Mizunguko kupitia proksi kwa mpangilio; rahisi kufikiria                                  |
 
-### Mti wa Maamuzi
+### Mti wa Uamuzi
 
 ```
-                    Je, una alama za ubora za proksi zako?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       NDIYO                   HAPANA
+       YES                     NO
         │                       │
-   Je, proksi zote             │
-   zina ubora unaokaribiana?   │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
- NDIYO     HAPANA             Tumia
+  YES       NO                Use
    │         │              `random`
-   │         │              (usambazaji sawa
-   │         │              hujenga data ya
-   │         │              ubora kadiri ya muda)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Tumia `quality`
-   │    (bora zaidi kwa
-   │    ubora mchanganyiko)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Tumia `random`
-(sambaza mzigo
-kwa usawa)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Kutenga Kiotomatiki Proksi Zako Mwenyewe Zinaposhindwa
+## Utengaji wa Kushindwa Kiotomatiki kwa Wakala Wako Mwenyewe
 
-Kundi la soko la 1proxy tayari hupunguza kiotomatiki matumizi ya proksi zilizoshindwa lenyewe (angalia
-[Alama za Ubora wa Proksi](#proxy-quality-scores)). Kwa
-proksi ambazo **wewe** umeongeza kwenye rejista, kipanga-ratiba cha ukaguzi wa afya kinachofanya kazi chinichini
-(`src/lib/proxyHealth/scheduler.ts`) hutoa tabia ileile ya "kumwondoa mwanakikundi aliyekufa
-kwenye mnyororo kiotomatiki", bila kufuta chochote:
+Dimbwi la soko la wakala 1 tayari linaharibu kiotomatiki seva mbadala zilizoshindwa kivyake (angalia [Alama za Ubora wa Wakala](#proxy-quality-scores) ). Kwa wakala** wewe** imeongezwa kwenye sajili, kipanga ratiba cha afya ya usuli (`src/lib/proxyHealth/scheduler.ts`) hutoa tabia ile ile ya "kutenga mwanachama aliyekufa kutoka kwa mnyororo kiotomatiki", bila kufuta chochote:
 
 ```bash
-# .env — zima proksi kwa muda baada ya ukaguzi 3 mfululizo kushindwa, kisha uiwashe tena
-# kiotomatiki mara tu inapoanza kujibu ukaguzi tena.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Jinsi inavyofanya kazi ndani ya mnyororo wa proksi nyingi:
+Jinsi inavyoingia kwenye mnyororo wa wakala wengi:
 
-1. Kipanga-ratiba hukagua kila proksi iliyosajiliwa kila baada ya `PROXY_HEALTH_INTERVAL_MS`
-   (chaguo-msingi dakika 10; kiwango cha chini dakika 1).
-2. Baada ya kushindwa mara `PROXY_AUTO_REMOVE_AFTER` mfululizo kwa njia **thabiti** (hitilafu halisi ya
-   muunganisho — kuisha kwa muda au hitilafu ya 5xx ya lengo lenyewe la ukaguzi hazihesabiwi kamwe, angalia
-   [Ukaguzi wa Afya ya Proksi](#proxy-health-checking-v3816)), `status` ya proksi
-   huwekwa kuwa `dead`.
-3. `dead` ni mojawapo ya hali zinazotengwa na kichujio cha hali hai kinachotumiwa na utatuzi wa kundi/mzunguko,
-   kwa hivyo mzunguko wa upeo husika (round-robin / nasibu / thabiti /
-   muda wa kusubiri — angalia [Mti wa Maamuzi wa Mkakati wa Mzunguko](#rotation-strategy-decision-tree))
-   huacha mara moja kuipa proksi hiyo maombi mapya. Hakuna proksi nyingine kwenye
-   kundi inayoathiriwa, na kundi lote halirudi kimyakimya kutumia muunganisho wa moja kwa moja —
-   angalia kinga ya kufunga mfumo unaposhindwa katika
-   [Mfumo wa Proksi wa Viwango 4](#4-level-proxy-system).
-4. Kipanga-ratiba huendelea kukagua proksi zenye hali ya `dead` kwa kipindi kilekile. Ukaguzi unaofuata
-   uliofanikiwa hubadilisha `status` kuwa `active` na proksi hiyo huingia tena kwenye mzunguko —
-   hakuna haja ya kuiongeza tena mwenyewe.
+1. Kipanga ratiba huchunguza kila seva mbadala iliyosajiliwa kila `PROXY_HEALTH_INTERVAL_MS` (chaguo-msingi ni dakika 10; kima cha chini cha dakika 1).
+2. Baada ya `PROXY_AUTO_REMOVE_AFTER` mfululizo** kuhitimisha** kushindwa (hitilafu halisi ya muunganisho — kuisha kwa muda au 5xx ya mlengwa mwenyewe haihesabiki kamwe, angalia [Ukaguzi wa Afya ya Wakala](#proxy-health-checking-v3816) ), `status` ya proksi imewekwa `dead`.
+3. `dead` ni mojawapo ya hali ya kichujio cha hali-hai inayotumiwa na azimio la pool/rotation haijumuishi, kwa hivyo mzunguko wa wigo (duara-robin / random / sticky / latency — angalia [Mti wa Uamuzi wa Mkakati wa Kuzunguka](#rotation-strategy-decision-tree) ) huacha mara moja kutoa seva mbadala kwa maombi mapya. Hakuna washirika wengine kwenye bwawa walioathirika, na bwawa lote halirudi nyuma kwa muunganisho wa moja kwa moja kimyakimya — tazama Mlinzi [wa Mfumo wa Wakala wa Ngazi 4](#4-level-proxy-system).
+4. Kipanga ratiba kinaendelea kuchunguza proksi `dead` kwa muda sawa. Uchunguzi unaofuata unaofaulu unarudisha `status` hadi `active` na unaingia tena katika mzunguko — hakuna kuongeza tena kwa mikono kunahitajika.
 
-Hii imeundwa kimakusudi kuwa ya **hiari na isiyoharibu**: kwa chaguo-msingi, kipanga-ratiba
-huhesabu na kuweka kumbukumbu za hitilafu pekee (angalia sera C katika `decision.ts`), na `PROXY_AUTO_DISABLE`
-haifuti kamwe safu — hilo ndilo lengo la alama tofauti na kali zaidi ya
-`PROXY_AUTO_REMOVE`. Ikiwa zote zimewekwa kuwa `true`, `PROXY_AUTO_REMOVE`
-hutangulia (proksi inayokaribia kufutwa haina haja ya kuzimwa kwa muda katikati). Angalia
-marejeleo ya [Usanidi wa Mazingira](../reference/ENVIRONMENT.md) kwa orodha kamili
-ya vigezo.
+Hii ni kwa makusudi** chagua kuingia na isiyo ya uharibifu** : kwa chaguo-msingi kipanga ratiba huhesabu na kuweka makosa pekee (angalia sera C katika `decision.ts`), na `PROXY_AUTO_DISABLE` kamwe haifuti safu mlalo — ambayo ndiyo bendera ya `PROXY_AUTO_REMOVE` tofauti na ya ukali zaidi. Iwapo zote mbili zimewekwa kuwa `true`, `PROXY_AUTO_REMOVE` itashinda (proksi inayokaribia kufutwa haina matumizi ya kuzima laini katikati). Tazama rejeleo la [Usanidi wa Mazingira](../reference/ENVIRONMENT.md) kwa orodha kamili ya kutofautisha.
 
 ---
 
-> 📖 **Nyaraka zinazohusiana:**
+> 📖** Nyaraka zinazohusiana:**
 >
-> - [Mwongozo wa Mtumiaji](../guides/USER_GUIDE.md) — Usanidi na urekebishaji wa jumla
-> - [Marejeleo ya API](../reference/API_REFERENCE.md) — Nyaraka kamili za API
-> - [Usanidi wa Mazingira](../reference/ENVIRONMENT.md) — Vigezo vyote vya mazingira
+> - [Mwongozo wa Mtumiaji](../guides/USER_GUIDE.md) — Usanidi na usanidi wa jumla - [API Rejea](../reference/API_REFERENCE.md) — Nyaraka kamili API - [Mazingira Config](../reference/ENVIRONMENT.md) — Vigezo vyote vya mazingira

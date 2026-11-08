@@ -4,46 +4,46 @@
 
 ---
 
-> **Obcházejte geografická omezení, chraňte svou identitu a směrujte provoz AI přes libovolný proxy server — bez složité konfigurace.**
+> **Obejít geografické bloky, chránit svou identitu a směrovat provoz AI přes jakýkoli proxy — s nulovou složitostí konfigurace.**
 
-OmniRoute obsahuje plnohodnotný systém pro správu proxy serverů, který umožňuje směrovat provoz k poskytovatelům AI přes proxy servery HTTP, HTTPS nebo SOCKS5. Ať už se nacházíte v blokované oblasti, potřebujete rotaci IP adres nebo chcete skrýt svůj digitální otisk — tato příručka pokrývá vše.
+OmniRoute obsahuje plně vybavený systém správy proxy, který vám umožňuje směrovat provoz poskytovatele AI směrem nahoru přes proxy HTTP, HTTPS nebo SOCKS5. Ať už jste v zablokované oblasti, potřebujete rotaci IP nebo chcete tajné snímání otisků prstů — tato příručka pokryje vše.
 
 ---
 
 ## Obsah
 
-- [Proč používat proxy servery?](#why-use-proxies)
+- [Proč používat proxy?](#why-use-proxies)
 - [Přehled architektury](#architecture-overview)
-- [Čtyřúrovňový systém proxy serverů](#4-level-proxy-system)
-- [Registr proxy serverů (CRUD)](#proxy-registry-crud)
-- [Bezplatné tržiště 1proxy](#1proxy-free-proxy-marketplace)
-- [Rotace proxy serverů](#proxy-rotation)
-- [Ochrana před detekcí a utajení](#anti-detection--stealth)
-- [Režimy proxy serveru pro odchozí provoz](#upstream-proxy-modes)
-- [Uživatelské rozhraní řídicího panelu](#dashboard-ui)
-- [Referenční dokumentace API](#api-reference)
+- [4úrovňový proxy systém](#4-level-proxy-system)
+- [Proxy registr (CRUD)](#proxy-registry-crud)
+- [1 proxy Free Marketplace](#1proxy-free-proxy-marketplace)
+- [Proxy rotace](#proxy-rotation)
+- [Anti-Detection & Stealth](#anti-detection--stealth)
+- [Upstream proxy režimy](#upstream-proxy-modes)
+- [Palubní deska UI](#dashboard-ui)
+- [API Reference](#api-reference)
 - [Proměnné prostředí](#environment-variables)
-- [Řešení problémů](#troubleshooting)
+- [Odstraňování problémů](#troubleshooting)
 
 ---
 
-## Proč používat proxy servery?
+## Proč používat proxy?
 
-Mnoho poskytovatelů AI omezuje přístup podle geografické oblasti. Vývojáři v **Rusku, Číně, Íránu, na Kubě, v Turecku** a dalších zemích se setkávají s chybami, jako je:
+Mnoho poskytovatelů AI omezuje přístup podle zeměpisné oblasti. Vývojáři v** Rusko, Čína, Írán, Kuba, Turecko** a další země se setkávají s chybami jako:
 
 ```
 unsupported_country_region_territory
 ```
 
-Proxy servery jsou užitečné i mimo blokované oblasti:
+Dokonce i mimo blokované oblasti jsou proxy užitečné pro:
 
-| Případ použití                    | Popis                                                                     |
-| --------------------------------- | ------------------------------------------------------------------------- |
-| **Obejití geografických omezení** | Přístup k OpenAI, Anthropic, Codex a Copilot z blokovaných zemí           |
-| **Rotace IP adres**               | Rozložení požadavků mezi více IP adres, aby se předešlo omezení frekvence |
-| **Soukromí**                      | Skrytí vaší skutečné IP adresy před poskytovateli                         |
-| **Dodržování předpisů**           | Směrování provozu přes konkrétní jurisdikce                               |
-| **Testování**                     | Simulace požadavků z různých oblastí                                      |
+| Use Case                | Popis                                                                     |
+| ----------------------- | ------------------------------------------------------------------------- |
+| **Geografický obchvat** | Přístup k OpenAI, Anthropic, Codex, Copilot z blokovaných zemí            |
+| **IP rotace**           | Distribuujte požadavky mezi více IPs, abyste se vyhnuli omezení rychlosti |
+| **Soukromí**            | Skryjte své skutečné IP před upstream poskytovateli                       |
+| **Dodržování**          | Směrujte provoz přes konkrétní jurisdikce                                 |
+| **Testování**           | Simulujte požadavky z různých regionů                                     |
 
 ---
 
@@ -51,103 +51,114 @@ Proxy servery jsou užitečné i mimo blokované oblasti:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Server OmniRoute                        │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Registr     │    │ Dispečer     │    │ Fetch (undici)   │  │
-│  │ proxy       │───▶│ proxy        │───▶│                  │  │
-│  │ (SQLite)    │    │ (v mezipaměti)│   │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Synchronizace│                       │ API externího    │  │
-│  │ 1proxy      │                        │ poskytovatele    │  │
-│  │ (bezplatný fond)                     │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 ### Klíčové komponenty
 
-| Komponenta                 | Soubor                                       | Úloha                                                                          |
-| -------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| **Registr proxy serverů**  | `src/lib/db/proxies.ts`                      | Operace CRUD pro záznamy proxy serverů a přiřazení rozsahů                     |
-| **Dispečer proxy serverů** | `open-sse/utils/proxyDispatcher.ts`          | Vytváří dispečery ProxyAgent/SOCKS knihovny `undici` s ukládáním do mezipaměti |
-| **Proxy Fetch**            | `open-sse/utils/proxyFetch.ts`               | Obaluje `fetch()` a vkládá dispečer proxy serveru                              |
-| **Trasa nastavení**        | `src/app/api/settings/proxy/route.ts`        | Starší API pro konfiguraci proxy serverů (GET/PUT/DELETE)                      |
-| **Trasa správy**           | `src/app/api/v1/management/proxies/route.ts` | API registru pro operace CRUD (GET/POST/PATCH/DELETE)                          |
-| **Databáze 1proxy**        | `src/lib/db/oneproxy.ts`                     | Trvalé ukládání dat bezplatného tržiště proxy serverů                          |
+| Komponent            | Soubor                                       | Role                                                                  |
+| -------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| **Proxy registr**    | `src/lib/db/proxies.ts`                      | CRUD pro položky proxy přiřazení rozsahu +                            |
+| **Proxy dispečer**   | `open-sse/utils/proxyDispatcher.ts`          | Vytváří dispečery `undici` ProxyAgent/SOCKS s ukládáním do mezipaměti |
+| **Načítání proxy**   | `open-sse/utils/proxyFetch.ts`               | Zabalí `fetch()` pomocí vložení proxy dispečera                       |
+| **Nastavení Trasa**  | `src/app/api/settings/proxy/route.ts`        | Starší konfigurace proxy API (GET/PUT/DELETE)                         |
+| **Manažerská cesta** | `src/app/api/v1/management/proxies/route.ts` | Registr CRUD API (GET/POST/PATCH/DELETE)                              |
+| **1 proxy DB**       | `src/lib/db/oneproxy.ts`                     | Trvanlivost na trhu proxy zdarma                                      |
 
 ---
 
-## Čtyřúrovňový systém proxy
+## Výchozí stav proxy pro nové účty
 
-OmniRoute podporuje konfiguraci proxy na **čtyřech nezávislých úrovních**, které se vyhodnocují podle priority:
+V** Nastavení → Proxy → Globální konfigurace** , použití** Ve výchozím nastavení povolit pro nová připojení proxy** vyberte počáteční stav proxy nově přidaných účtů poskytovatelů.
+
+Nové nastavení řídí počáteční stav proxy nově přidaných účtů poskytovatelů. Nemění stávající účty ani nenahrazuje globální přepínač proxy. Jeho počáteční hodnota zachovává předchozí chování. Jednou jej vypněte, chcete-li vytvářet budoucí účty se serverem proxy ve výchozím nastavení vypnutým.
+
+Předvolba je uložena jako `defaultNewConnectionProxyEnabled` prostřednictvím existujících Nastavení API. Výchozí hodnota je `true`, když se nikdy neuloží. Uložení `false` se projeví pro další nové účty bez restartu. `POST /api/providers` přijímá volitelný přísný booleovský `proxyEnabled`; explicitní `true` nebo `false` má přednost před výchozím nastavením vytvoření. Vynechání duplicitního účtu nebo opětovné připojení OAuth zachová uložený stav tohoto účtu. Jednotlivé účty lze povolit nebo zakázat i poté.
+
+Převody selektivních poskytovatelů používají výchozí nastavení cílové instalace pro nové účty a zachovávají zásady cíle při nahrazování stávajících účtů. Přepínače proxy nejsou přenosná pole přenosu. Úplné obnovení zálohy a historická migrace JSON/SQL si zachovají svou stávající sémantiku obnovení, včetně uložených hodnot účtů a výchozích výchozích nastavení schémat; úplné obnovení nastavení může také obnovit tuto předvolbu.
+
+Tato předvolba nepřiřazuje proxy ani neurčuje, že je v pořádku nebo se používá. Skutečné směrování stále závisí na globálním přepínači proxy a příslušné konfiguraci proxy. Syntetičtí poskytovatelé bez trvalého účtu, provoz OAuth před vytvořením účtu, proxy servery environment/system a síťování externích backendů jsou mimo jeho rozsah.
+
+## 4úrovňový proxy systém
+
+OmniRoute podporuje konfiguraci proxy na** čtyři nezávislé obory** , vyřešeno v pořadí priority:
 
 ```
-Pořadí vyhodnocování priorit (od nejvyšší → po nejnižší):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Proxy účtu/připojení  →  pro jednotlivý klíč API / připojení OAuth
-  2. 🟡 Proxy poskytovatele   →  pro jednotlivého poskytovatele (např. veškerý provoz OpenAI)
-  3. 🟠 Proxy kombinace       →  pro jednotlivou kombinaci / konfiguraci směrování
-  4. 🟢 Globální proxy        →  veškerý provoz, všichni poskytovatelé
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Jak vyhodnocování funguje
+### Jak rozlišení funguje
 
-Když OmniRoute odešle požadavek nadřazenému poskytovateli, zavolá `resolveProxyForConnectionFromRegistry()`, která postupně zkontroluje jednotlivé úrovně:
+Když OmniRoute odešle požadavek upstreamovému poskytovateli, zavolá `resolveProxyForConnectionFromRegistry()`, který zkontroluje každou úroveň v pořadí:
 
-1. **Úroveň účtu** — Je tomuto konkrétnímu ID připojení přiřazena proxy?
-2. **Úroveň poskytovatele** — Je tomuto poskytovateli (např. `openai`) přiřazena proxy?
-3. **Globální úroveň** — Je nakonfigurována globální proxy?
-4. **Bez proxy** — Přímé připojení k poskytovateli.
+1. **Na úrovni účtu** — Je k tomuto konkrétnímu připojení přiřazen proxy ID?
+2. **Úroveň poskytovatele** — Je tomuto poskytovateli přiřazen proxy (např. `openai`)?
+3. **Globální úroveň** — Je nakonfigurován globální proxy?
+4. **Žádný proxy** — Přímé připojení k poskytovateli.
 
-Použije se první shoda. To znamená, že můžete nastavit globální proxy jako záložní možnost, ale přepsat ji pro konkrétní poskytovatele nebo připojení.
+První zápas vyhrává. To znamená, že můžete nastavit globální proxy jako záložní, ale přepsat jej pro konkrétní poskytovatele nebo připojení.
 
-### Co je směrováno přes proxy
+### Co se prodlouží
 
-| Typ provozu            | Přes proxy? | Poznámky                                    |
-| ---------------------- | ----------- | ------------------------------------------- |
-| Dokončování chatu      | ✅          | Všechny požadavky `/v1/chat/completions`    |
-| Vektorové reprezentace | ✅          | `/v1/embeddings`                            |
-| Generování obrázků     | ✅          | `/v1/images/generations`                    |
-| Zvuk (TTS/STT)         | ✅          | `/v1/audio/*`                               |
-| Výměna tokenů OAuth    | ✅          | Řeší `unsupported_country_region_territory` |
-| Testy připojení        | ✅          | Tlačítko „Test Connection“ používá proxy    |
-| Obnovení tokenu        | ✅          | Obnovení OAuth na pozadí                    |
-| Synchronizace modelů   | ✅          | Výpis a zjišťování modelů                   |
+| Typ provozu          | Proxed? | Poznámky                                    |
+| -------------------- | ------- | ------------------------------------------- |
+| Dokončení chatu      | ✅      | Všechny požadavky `/v1/chat/completions`    |
+| Vložení              | ✅      | `/v1/embeddings`                            |
+| Generování obrazu    | ✅      | `/v1/images/generations`                    |
+| Zvuk (TTS/STT)       | ✅      | `/v1/audio/*`                               |
+| výměna tokenů OAuth  | ✅      | Řeší `unsupported_country_region_territory` |
+| Testy připojení      | ✅      | Tlačítko "Test připojení" používá proxy     |
+| Obnovení tokenu      | ✅      | Obnovení pozadí OAuth                       |
+| Synchronizace modelu | ✅      | Výpis modelu a objev                        |
 
 ---
 
-## Registr proxy (CRUD)
+## Proxy registr (CRUD)
 
-Registr proxy je tabulka SQLite (`proxy_registry`), která ukládá všechny vaše proxy. Každá proxy obsahuje:
+Registr proxy je tabulka SQLite (`proxy_registry`), která ukládá všechny vaše proxy. Každý proxy má:
 
-| Pole       | Typ        | Popis                                                 |
-| ---------- | ---------- | ----------------------------------------------------- |
-| `id`       | UUID       | Jedinečný identifikátor                               |
-| `name`     | Řetězec    | Popisek srozumitelný pro člověka                      |
-| `type`     | Řetězec    | Protokol: `http`, `https`, `socks5`                   |
-| `host`     | Řetězec    | Název hostitele nebo IP adresa proxy                  |
-| `port`     | Celé číslo | Číslo portu                                           |
-| `username` | Řetězec    | Uživatelské jméno pro ověření (šifrované při uložení) |
-| `password` | Řetězec    | Heslo pro ověření (šifrované při uložení)             |
-| `region`   | Řetězec    | Označení geografické oblasti                          |
-| `notes`    | Řetězec    | Volné textové poznámky                                |
-| `status`   | Řetězec    | `active` nebo `inactive`                              |
-| `source`   | Řetězec    | `manual` nebo `oneproxy`                              |
+| Pole       | Typ        | Popis                                        |
+| ---------- | ---------- | -------------------------------------------- |
+| `id`       | UUID       | Jedinečný identifikátor                      |
+| `name`     | Řetězec    | Lidsky čitelný štítek                        |
+| `type`     | Řetězec    | Protokol: `http`, `https`, `socks5`          |
+| `host`     | Řetězec    | Proxy název hostitele nebo IP                |
+| `port`     | Celé číslo | Číslo portu                                  |
+| `username` | Řetězec    | Auth uživatelské jméno (zašifrováno v klidu) |
+| `password` | Řetězec    | Ověřovací heslo (zašifrováno v klidu)        |
+| `region`   | Řetězec    | Štítek zeměpisné oblasti                     |
+| `notes`    | Řetězec    | Poznámky s volným textem                     |
+| `status`   | Řetězec    | `active` nebo `inactive`                     |
+| `source`   | Řetězec    | `manual` nebo `oneproxy`                     |
 
 ### Vytvoření proxy
 
 **Prostřednictvím řídicího panelu:**
 
-1. Přejděte do **Settings → Proxy**
-2. Klikněte na **Add Proxy**
-3. Vyplňte typ, hostitele, port a případné přihlašovací údaje
-4. Uložte změny
+1. Přejít na** Nastavení → Proxy**
+2. Klikněte** Přidat proxy**
+3. Vyplňte typ, hostitele, port a volitelné autentizační údaje
+4. Uložit
 
-**Prostřednictvím API:**
+**Přes API:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -175,15 +186,15 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Poznámka:** Přihlašovací údaje zůstanou zachovány, pokud výslovně neodešlete neprázdné náhrady. Odesláním prázdných řetězců pro `username`/`password` zůstanou uložené hodnoty zachovány.
+> **Poznámka:** Pověření jsou zachována, pokud výslovně nepošlete neprázdné náhrady. Odeslání prázdných řetězců pro `username`/`password` zachová uložené hodnoty.
 
 ### Odstranění proxy
 
 ```bash
-# Selže, pokud je proxy přiřazena k libovolné úrovni
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Vynucené odstranění (odstraní také přiřazení)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
@@ -193,38 +204,38 @@ curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&f
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Přiřazení proxy k úrovním
+### Přiřazení proxy k oborům
 
 ```bash
-# Přiřazení ke globální úrovni
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Přiřazení ke konkrétnímu poskytovateli
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Přiřazení ke konkrétnímu připojení/klíči
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Určení výsledné proxy
+### Řešení efektivního proxy
 
-Zjistěte, která proxy by byla použita pro dané připojení:
+Zkontrolujte, který proxy by byl použit pro dané připojení:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Vrátí vyhodnocenou proxy spolu s její úrovní (`account`, `provider` nebo `global`) a zdrojem.
+Vrátí vyřešený proxy s jeho úrovní (`account`, `provider` nebo `global`) a zdrojem.
 
 ### Hromadné přiřazení
 
-Přiřaďte jednu proxy více poskytovatelům nebo připojením najednou:
+Přiřazení jednoho proxy více poskytovatelům nebo připojením najednou:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Import/export
+### Import/Export
 
-Proxy jsou součástí systému **zálohování/obnovení**. Při exportu konfigurace OmniRoute:
+Proxy jsou součástí**Backup/Restore** systém. Když exportujete konfiguraci OmniRoute :
 
-1. Přejděte do **Dashboard → Settings → Backup**
-2. Klikněte na **Export** — registr proxy a přiřazení jsou zahrnuty
-3. Pro obnovení klikněte na **Import** a nahrajte soubor zálohy
+1. Přejít na** Dashboard → Settings → Backup**
+2. Klikněte** Vývozní** — proxy registr a přiřazení jsou zahrnuty
+3. Pro obnovení klikněte** Importovat** a nahrajte záložní soubor
 
-Registr proxy podporuje také **upsert podle hostitele a portu** — pokud importujete proxy, která již existuje (stejný hostitel a port), aktualizuje se namísto vytvoření duplikátu.
+Registr proxy také podporuje** upsert by host + port** — pokud importujete proxy, která již existuje (stejný hostitel a port), aktualizuje se namísto vytvoření duplikátu.
 
-### Migrace ze starší verze
+### Legacy Migration
 
-Pokud jste nakonfigurovali proxy v dřívější verzi (před zavedením registru), OmniRoute je automaticky migruje:
+Pokud jste nakonfigurovali proxy ve starší verzi (předběžný registr), OmniRoute je automaticky migruje:
 
 ```
-Starší úložiště key_value → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-K tomu dojde jednou při prvním spuštění po upgradu. Pro opětovné spuštění použijte `migrateLegacyProxyConfigToRegistry({ force: true })`.
+To se stane jednou při prvním spuštění po upgradu. Pro opětovné spuštění použijte `migrateLegacyProxyConfigToRegistry({ force: true })`.
 
 ---
 
-## 1proxy Tržiště bezplatných proxy serverů
+## 1proxy Free Proxy Marketplace
 
-> 🆕 **Přispěl [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Problém [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Přispěl [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (vydání [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute se integruje s komunitní platformou **[1proxy](https://1proxy-api.aitradepulse.com)** a poskytuje přístup ke **stovkám bezplatných, ověřených proxy serverů** z celého světa. To je ideální pro uživatele, kteří nemají vlastní proxy infrastrukturu.
+OmniRoute se integruje s** [1 proxy](https://1proxy-api.aitradepulse.com)** komunitní platforma, ke které má být přístup** stovky bezplatných, ověřených proxy** z celého světa. To je ideální pro uživatele, kteří nemají vlastní infrastrukturu proxy.
 
 ### Jak to funguje
 
 ```
-┌─────────────┐  Synchronizace  ┌─────────────────┐    Rotace     ┌──────────┐
-│  1proxy API │ ───────────────▶ │  proxy_registry  │ ────────────▶ │ Poskytov.│
-│  (externí)  │   až 500 proxy   │  source=oneproxy │  dle kvality │   API    │
-└─────────────┘                  └─────────────────┘               └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Synchronizace** — OmniRoute načítá ověřené proxy servery z API 1proxy
-2. **Uložení** — Proxy servery se ukládají do stejné tabulky `proxy_registry` s hodnotou `source = 'oneproxy'`
-3. **Filtrování** — Filtrování podle protokolu, země a skóre kvality
-4. **Rotace** — Výběr nejlepšího proxy serveru pomocí strategie založené na kvalitě, náhodném nebo sekvenčním výběru
-5. **Automatické snížení hodnocení** — Neúspěšným proxy serverům se sníží skóre kvality; při poklesu pod prahovou hodnotu → jsou označeny jako neaktivní
+1. **Synchronizovat** — OmniRoute načte ověřené proxy z 1 proxy API
+2. **Obchod** — Proxy jsou uloženy ve stejné tabulce `proxy_registry` jako `source = 'oneproxy'`
+3. **Filtr** — Filtrujte podle protokolu, země, skóre kvality
+4. **Střídat** — Vyberte nejlepší proxy pomocí kvalitních, náhodných nebo sekvenčních strategií
+5. **Autodegradace** — Neúspěšným proxy se sníží skóre kvality; pod prahem → označeno jako neaktivní
 
-### Synchronizace proxy serverů
+### Synchronizace proxy
 
-**Prostřednictvím ovládacího panelu:**
+**Prostřednictvím řídicího panelu:**
 
-1. Přejděte na kartu **Nastavení → 1proxy**
-2. Klikněte na **„Synchronizovat nyní“**
-3. Zobrazte statistiky: celkový počet proxy serverů, počet aktivních, průměrná kvalita a rozdělení podle zemí
+1. Přejít na** Nastavení → 1proxy** tab
+2. Klikněte** "Synchronizovat nyní"**
+3. Zobrazit statistiky: celkový počet proxy, aktivní počet, průměrná kvalita, rozdělení podle zemí
 
-**Prostřednictvím API:**
+**Přes API:**
 
 ```bash
-# Spuštění synchronizace
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Odpověď:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### Filtrování proxy serverů
+### Filtrování proxy
 
 ```bash
-# Filtrování podle protokolu
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Filtrování podle země
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Filtrování podle minimálního skóre kvality
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Kombinace filtrů
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Skóre kvality proxy serverů
+### Skóre kvality proxy
 
-Každý proxy server 1proxy obsahuje metadata:
+Každý 1 proxy server je dodáván s metadaty:
 
-| Pole            | Popis                                    |
-| --------------- | ---------------------------------------- |
-| `qualityScore`  | Hodnocení 0–100 z ověření službou 1proxy |
-| `latencyMs`     | Naměřená latence sítě                    |
-| `anonymity`     | `transparent`, `anonymous` nebo `elite`  |
-| `googleAccess`  | Zda má proxy přístup ke službám Google   |
-| `countryCode`   | Dvoupísmenný kód země ISO                |
-| `lastValidated` | Časové razítko posledního ověření        |
+| Pole            | Popis                                        |
+| --------------- | -------------------------------------------- |
+| `qualityScore`  | Hodnocení 0-100 od ověření 1 proxy           |
+| `latencyMs`     | Změřená latence sítě                         |
+| `anonymity`     | `transparent`, `anonymous` nebo `elite`      |
+| `googleAccess`  | Zda může proxy přistupovat ke službám Google |
+| `countryCode`   | Dvoupísmenný kód země ISO                    |
+| `lastValidated` | Časové razítko posledního ověření            |
 
-Skóre kvality se dynamicky upravuje:
+Skóre kvality se dynamicky upravují:
 
-- **Neúspěšné požadavky** snižují skóre o 10 bodů
-- **Skóre klesne na ≤10** → proxy server je označen jako `inactive`
-- Neaktivní proxy servery jsou z rotace vyloučeny
+- **Neúspěšné požadavky** snížit skóre o 10 bodů
+- **Skóre klesá na ≤ 10** → proxy je označena `inactive`
+- Neaktivní proxy jsou z rotace vyloučeny
 
 ### Strategie rotace
 
 ```bash
-# Rotace podle kvality (nejlepší proxy jako první) — výchozí
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Náhodná rotace
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Sekvenční rotace (nejdříve nejdéle neověřený proxy server)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
 ### Jistič
 
-Synchronizace 1proxy obsahuje integrovaný jistič:
+1proxy synchronizace má vestavěný jistič:
 
-- Po **5 po sobě jdoucích selháních synchronizace** jsou další pokusy o synchronizaci zablokovány
-- Resetujte jej pomocí `resetOneproxyCircuitBreaker()` nebo restartujte server
-- Stav synchronizace je dostupný na adrese `GET /api/settings/oneproxy?action=status`
+- Po** 5 po sobě jdoucích selhání synchronizace** , další pokusy o synchronizaci jsou blokovány
+- Resetujte pomocí: `resetOneproxyCircuitBreaker()` nebo restartujte server
+- Stav synchronizace je k dispozici na `GET /api/settings/oneproxy?action=status`
 
-### Vymazání proxy serverů 1proxy
+### Vymazání 1 proxy proxy
 
 ```bash
-# Odstranění jednoho proxy serveru 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Vymazání VŠECH proxy serverů 1proxy (ručně přidané proxy zůstanou nedotčeny)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Ochrana proti detekci a utajení
+## Anti-Detection & Stealth
 
-OmniRoute nesměruje provoz pouze přes proxy — zároveň zajišťuje, aby provoz vypadal legitimně:
+OmniRoute nejen směruje provoz přes proxy — ale provoz vypadá legitimně:
 
-### Napodobení otisku TLS
+### TLS Falšování otisků prstů
 
-Používá `wreq-js` ke generování otisků TLS podobných prohlížečům, čímž obchází systémy detekce botů, které označují navazování spojení TLS nepocházející z prohlížečů.
+Využívá `wreq-js` ke generování otisků prstů TLS podobných prohlížeči, čímž obchází systémy detekce botů, které signalizují handshake TLS bez prohlížeče.
 
-### Napodobení otisku CLI
+### CLI Porovnání otisků prstů
 
-**Přepínač otisku CLI** (`Nastavení → Zabezpečení`) mění pořadí hlaviček HTTP a polí v těle JSON tak, aby přesně odpovídalo signatuře nativních binárních souborů CLI (Claude Code, Codex atd.). Tato funkce pracuje **nad rámec** proxy:
+The**CLI Přepínání otisků prstů** (`Settings → Security`) změní pořadí hlaviček HTTP a těles těla JSON tak, aby odpovídaly přesnému podpisu nativních binárních souborů CLI (kód Claude, Codex atd.). Tohle funguje** na vrcholu** proxy:
 
 ```
-Vaše IP (blokovaná) → IP proxy (USA) → API poskytovatele
-                       + napodobení TLS
-                       + otisk CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Získáte tak současně **maskování IP adresy** i **autenticitu požadavků**.
+Dostanete obojí**IP maskování** a** požadovat pravost** zároveň.
 
-### Zachování IP adresy proxy
+### Zachování proxy IP
 
-Barevně odlišené štítky na řídicím panelu ukazují, která úroveň proxy je aktivní:
+Barevně odlišené odznaky na řídicím panelu ukazují, která úroveň proxy je aktivní:
 
-| Štítek | Úroveň       | Význam                                                |
-| ------ | ------------ | ----------------------------------------------------- |
-| 🟢     | Globální     | Veškerý provoz prochází přes tuto proxy               |
-| 🟡     | Poskytovatel | Přes proxy prochází pouze provoz tohoto poskytovatele |
-| 🔵     | Připojení    | Tuto proxy používá konkrétní klíč nebo účet           |
+| Odznak | Úroveň       | Význam                                                  |
+| ------ | ------------ | ------------------------------------------------------- |
+| 🟢     | Globální     | Veškerý provoz prochází tímto proxy serverem            |
+| 🟡     | Poskytovatel | Přes proxy se používá pouze provoz tohoto poskytovatele |
+| 🔵     | Spojení      | Tento konkrétní key/account používá tento proxy         |
 
-Štítek pro ověření zobrazuje také zjištěnou IP adresu proxy.
+Odznak také zobrazuje vyřešený proxy IP pro ověření.
 
 ---
 
-## Režimy nadřazené proxy
+## Upstream proxy režimy
 
-U poskytovatelů používajících vzor CLIProxyAPI podporuje OmniRoute tři režimy nadřazené proxy:
+Pro poskytovatele, kteří používají vzor CLIProxyAPI, OmniRoute podporuje tři upstream proxy režimy:
 
-| Režim         | Popis                                                     |
-| ------------- | --------------------------------------------------------- |
-| `native`      | OmniRoute zpracovává směrování přes proxy přímo (výchozí) |
-| `cliproxyapi` | Deleguje zpracování externí instanci CLIProxyAPI          |
-| `fallback`    | Nejprve zkusí nativní režim a poté přejde na CLIProxyAPI  |
+| Režim         | Popis                                                |
+| ------------- | ---------------------------------------------------- |
+| `native`      | OmniRoute zpracovává směrování proxy přímo (výchozí) |
+| `cliproxyapi` | Deleguje na externí instanci CLIProxyAPI             |
+| `fallback`    | Nejprve zkusí nativní, spadne zpět na CLIProxyAPI    |
 
-Konfigurace pro jednotlivé poskytovatele:
+Konfigurace podle poskytovatele:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Uživatelské rozhraní řídicího panelu
+## Palubní deska UI
 
-### Nastavení → Karta Proxy
+### Nastavení → Záložka Proxy
 
-- Konfigurace **globální proxy** (nastavuje se jednou pro veškerý provoz)
-- Přepsání proxy **pro jednotlivé poskytovatele**
-- Přiřazení proxy **pro jednotlivá připojení**
-- **Test připojení** přes nakonfigurovanou proxy
-- **Barevně odlišené štítky** zobrazující aktivní úroveň proxy
+- **Globální proxy** konfigurace (nastavit jednou pro veškerý provoz)
+- **Proxy podle poskytovatele** přepíše
+- **Proxy podle připojení** úkoly
+- **Test připojení** přes nakonfigurovaný proxy
+- **Barevně odlišené odznaky** zobrazující aktivní úroveň proxy
 
-### Nastavení → Karta 1proxy
+### Nastavení → 1proxy Tab
 
-- Tlačítko **Synchronizovat nyní** pro načtení bezplatných proxy
-- **Karty statistik**: Celkem, Aktivní, Průměrná kvalita, Poslední synchronizace
-- **Filtry**: Protokol, Kód země, Minimální kvalita
-- **Tabulka proxy** s hostitelem, protokolem, zemí, hodnocením kvality, latencí, anonymitou a přístupem ke službám Google
-- Panel **stavu synchronizace** se sledováním úspěchů, selhání a počtu po sobě jdoucích selhání
-- **Vymazat vše** pro odstranění všech záznamů 1proxy
+- **Synchronizovat nyní** tlačítko pro načtení bezplatných proxy
+- **Karty statistik** : Celkem, Aktivní, Prům. kvalita, Poslední synchronizace
+- **Filtry** : Protokol, Kód země, Min. kvalita
+- **Proxy tabulka** s hostitelem, protokolem, zemí, skóre kvality, latencí, anonymitou, Google přístupem
+- **Stav synchronizace** panel se sledováním success/failure a počtem po sobě jdoucích poruch
+- **Vymazat vše** pro odstranění všech 1 proxy záznamů
 
 ---
 
-## Referenční příručka API
+## API Reference
 
-### API nastavení proxy
+### Nastavení proxy API
 
-| Metoda   | Koncový bod                                    | Popis                           |
-| -------- | ---------------------------------------------- | ------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Získat úplnou konfiguraci proxy |
-| `GET`    | `/api/settings/proxy?level=global`             | Získat globální proxy           |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Získat proxy poskytovatele      |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Zjistit výslednou proxy         |
-| `PUT`    | `/api/settings/proxy`                          | Aktualizovat konfiguraci proxy  |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Odebrat proxy na dané úrovni    |
+| Metoda   | Koncový bod                                    | Popis                             |
+| -------- | ---------------------------------------------- | --------------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Získejte úplnou konfiguraci proxy |
+| `GET`    | `/api/settings/proxy?level=global`             | Získejte globální proxy           |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Získejte proxy poskytovatele      |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Vyřešte efektivní proxy           |
+| `PUT`    | `/api/settings/proxy`                          | Aktualizujte konfiguraci proxy    |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Odebrat proxy na úrovni           |
 
-### API registru proxy
+### Proxy registr API
 
-| Metoda   | Koncový bod                                       | Popis                  |
-| -------- | ------------------------------------------------- | ---------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Vypsat všechny proxy   |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Získat proxy podle ID  |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Získat přiřazení proxy |
-| `POST`   | `/api/v1/management/proxies`                      | Vytvořit proxy         |
-| `PATCH`  | `/api/v1/management/proxies`                      | Aktualizovat proxy     |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Odstranit proxy        |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Vynutit odstranění     |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Hromadně přiřadit      |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Vypsat přiřazení       |
-| `GET`    | `/api/v1/management/proxies/health`               | Statistiky stavu proxy |
+| Metoda   | Koncový bod                                       | Popis                      |
+| -------- | ------------------------------------------------- | -------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | Vypsat všechny proxy       |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Získejte proxy od ID       |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Získejte přiřazení proxy   |
+| `POST`   | `/api/v1/management/proxies`                      | Vytvořit proxy             |
+| `PATCH`  | `/api/v1/management/proxies`                      | Aktualizovat proxy         |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Smazat proxy               |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Vynutit smazání            |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Hromadné přiřazení         |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Seznam úkolů               |
+| `GET`    | `/api/v1/management/proxies/health`               | Zdravotní statistiky proxy |
 
-### API tunelů
+### Tunely API
 
-Informace o zpřístupnění instance OmniRoute veřejnému internetu (Cloudflare/ngrok/Tailscale) namísto směrování odchozího provozu přes proxy naleznete v souboru [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). REST API tunelů se nachází pod `/api/tunnels/{cloudflared,ngrok,tailscale}/*` a je nezávislé na výše zdokumentovaném řetězci odchozích proxy.
+Informace o vystavení instance OmniRoute veřejnému internetu (Cloudflare/ngrok/Tailscale) namísto směrování odchozích zpráv přes proxy naleznete v [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunel REST API žije pod `/api/tunnels/{cloudflared,ngrok,tailscale}/*` a je ortogonální k odchozímu proxy řetězci popsanému výše.
 
-### API 1proxy
+### 1 proxy API
 
-| Metoda   | Koncový bod                            | Popis                                  |
-| -------- | -------------------------------------- | -------------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | Vypsat proxy 1proxy                    |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Získat statistiky a stav synchronizace |
-| `GET`    | `/api/settings/oneproxy?action=status` | Získat pouze stav synchronizace        |
-| `POST`   | `/api/settings/oneproxy`               | Spustit synchronizaci                  |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Přepnout na další proxy                |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Odstranit jednu proxy                  |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Vymazat vše                            |
+| Metoda   | Koncový bod                            | Popis                                   |
+| -------- | -------------------------------------- | --------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Seznam 1 proxy proxy                    |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Získejte stav synchronizace statistik + |
+| `GET`    | `/api/settings/oneproxy?action=status` | Získat pouze stav synchronizace         |
+| `POST`   | `/api/settings/oneproxy`               | Spustit synchronizaci                   |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Otočit na další proxy                   |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Smazat jednu                            |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Vymazat vše                             |
 
-### API nadřazené proxy
+### Upstream proxy API
 
 | Metoda   | Koncový bod                       | Popis                               |
 | -------- | --------------------------------- | ----------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Získat konfiguraci nadřazené proxy  |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Nastavit režim nadřazené proxy      |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Odebrat konfiguraci nadřazené proxy |
+| `GET`    | `/api/upstream-proxy/:providerId` | Získejte konfiguraci upstream proxy |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Nastavte upstream proxy režim       |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Odebrat konfiguraci upstream proxy  |
 
 ---
 
 ## Proměnné prostředí
 
-| Proměnná              | Výchozí hodnota | Popis                                                                  |
-| --------------------- | --------------- | ---------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`          | Povolit podporu proxy SOCKS5 (výchozí hodnota `true` v `.env.example`) |
+| Variabilní            | Výchozí | Popis                                                          |
+| --------------------- | ------- | -------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`  | Povolit podporu proxy SOCKS5 (výchozí `true` v `.env.example`) |
 
 ---
 
-## Řešení problémů
+## Odstraňování problémů
 
-### „Proxy SOCKS5 je zakázána“
+### "SOCKS5 proxy je zakázáno"
 
-Nastavte `ENABLE_SOCKS5_PROXY=true` v souboru `.env` a restartujte aplikaci.
+Nastavte `ENABLE_SOCKS5_PROXY=true` v souboru `.env` a restartujte.
 
-### Chyby „socket hang up“ při použití proxy
+### chyby "zavěšení zásuvky" prostřednictvím serveru proxy
 
-U levných proxy, které ukončují neaktivní připojení, je to běžné. OmniRoute to již řeší následujícími způsoby:
+To je normální u levných serverů proxy, které přeruší nečinná připojení. OmniRoute to již řeší takto:
 
-- Zakázáním udržování připojení na proxy spojeních (`keepAliveTimeout: 1`)
-- Zakázáním pipeliningu (`pipelining: 0`)
-- Ukládáním dispatcherů do mezipaměti, aby se předešlo opakovaným handshakeům
+- Zakázání udržování naživu u připojení proxy (`keepAliveTimeout: 1`)
+- Deaktivace zřetězení (`pipelining: 0`)
+- Ukládání dispečerů do mezipaměti, aby se zabránilo opakovanému podání ruky
 
-Pokud problém přetrvává, zkuste jinou proxy nebo použijte funkci rotace 1proxy.
+Pokud přetrvává, zkuste jiný proxy nebo použijte funkci rotace 1 proxy.
 
-### „unsupported_country_region_territory“ během OAuth
+### "unsupported_country_region_territory" během OAuth
 
-Před zahájením procesu OAuth se ujistěte, že je proxy nakonfigurována. OmniRoute směruje výměnu tokenů OAuth přes nakonfigurovanou proxy. Nejprve nastavte globální proxy nebo proxy na úrovni poskytovatele a poté se připojte.
+Ujistěte se, že je nakonfigurován proxy** před** spuštění toku OAuth. OmniRoute směruje výměnu tokenů OAuth přes nakonfigurovaný proxy server. Nejprve nastavte globální proxy nebo proxy na úrovni poskytovatele a poté se připojte.
 
 ### Proxy se nepoužívá
 
-Zkontrolujte pořadí vyhodnocování:
+Zkontrolujte pořadí rozlišení:
 
-1. Ověřte jej pomocí `GET /api/settings/proxy?resolve=your-connection-id`
-2. Zkontrolujte, zda je `status` proxy nastaven na `active` (nikoli `inactive`)
+1. Ověřte pomocí `GET /api/settings/proxy?resolve=your-connection-id`
+2. Zkontrolujte, zda je proxy `status` `active` (ne `inactive`)
 3. Ujistěte se, že rozsah přiřazení proxy odpovídá vašemu připojení
 
-### Synchronizace 1proxy selhává
+### 1 synchronizace proxy se nezdařila
 
 Zkontrolujte stav synchronizace:
 
@@ -544,7 +555,7 @@ Zkontrolujte stav synchronizace:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Pokud je `consecutiveFailures >= 5`, byl aktivován jistič. Restartujte server, čímž jej resetujete, nebo počkejte na ruční resetování.
+Pokud `consecutiveFailures >= 5`, jistič se vypnul. Restartujte server pro resetování nebo počkejte na ruční reset.
 
 ---
 
@@ -564,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' nebo 'oneproxy'
-  quality_score INTEGER,                     -- 0–100 (pouze 1proxy)
-  latency_ms INTEGER,                        -- milisekundy (pouze 1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- má přístup ke Googlu? (1proxy)
-  last_validated TEXT,                       -- časové razítko ISO (1proxy)
-  country_code TEXT,                         -- dvoupísmenný kód ISO (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -583,7 +594,7 @@ CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID poskytovatele, ID připojení nebo ID kombinace
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,40 +603,40 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Kontrola stavu proxy (v3.8.16+)
+## Kontrola stavu serveru proxy (v3.8.16 +)
 
-Mechanismus **rychlého selhání proxy** v OmniRoute (`src/lib/proxyHealth.ts`) detekuje nefunkční proxy za méně než 2 s pomocí rychlé kontroly připojení TCP a poté **uloží výsledek do mezipaměti**, aby se předešlo režii u každého požadavku.
+OmniRoute's** proxy rychlé selhání** mechanismus (`src/lib/proxyHealth.ts`) detekuje mrtvé proxy v < 2s pomocí rychlé kontroly připojení TCP, poté** uloží výsledek do mezipaměti** abyste se vyhnuli režii na žádost.
 
 ### Jak to funguje
 
 ```
-Požadavek ──▶ ProxyHealthCache.get(url)
-               │
-               ├─ Nález v mezipaměti + aktuální?  ──▶ vrátit stav z mezipaměti
-               │
-               └─ Nenalezeno v mezipaměti / zastaralé?  ──▶ připojit se přes TCP k host:port
-                                                            (časový limit: FAST_FAIL_TIMEOUT_MS)
-                                                            ──▶ uložit do mezipaměti na dobu HEALTH_CACHE_TTL_MS
-                                                            ──▶ vrátit výsledek
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Bez tohoto mechanismu by nefunkční proxy blokovala každý požadavek po celou dobu `PROXY_TIMEOUT_MS` (ve výchozím nastavení 30 s), než by došlo k selhání.
+Bez toho by mrtvý proxy blokoval každý požadavek na plnou `PROXY_TIMEOUT_MS` (výchozí 30s), než by selhal.
 
-### Nastavitelné proměnné prostředí
+### Laditelné proměnné prostředí
 
-| Proměnná                     | Výchozí hodnota | Účel                                                 |
-| ---------------------------- | --------------- | ---------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`          | Časový limit připojení TCP pro každou kontrolu stavu |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`         | Doba uložení výsledku kontroly stavu do mezipaměti   |
+| Variabilní                   | Výchozí | Účel                                              |
+| ---------------------------- | ------- | ------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | časový limit připojení TCP na kontrolu stavu      |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Jak dlouho je výsledek stavu uložen do mezipaměti |
 
 **Doporučené hodnoty:**
 
-| Scénář                                   | Časový limit rychlého selhání | TTL mezipaměti | Odůvodnění                                                                                  |
-| ---------------------------------------- | ----------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
-| Brána API s vysokou propustností         | 1500ms                        | 60000ms        | Agresivní rychlé selhání, delší mezipaměť pro omezení kontrol                               |
-| Geograficky distribuované uzly           | 3000ms                        | 15000ms        | Pomalejší sítě potřebují více času; kratší mezipaměť pro rychlé převzetí služeb při selhání |
-| Vývoj / testování                        | 1000ms                        | 10000ms        | Rychlá iterace na místních proxy                                                            |
-| Nenápadný provoz / ochrana proti detekci | 2500ms                        | 45000ms        | Zabraňuje rychlému testování, které by mohlo aktivovat omezení rychlosti                    |
+| Scénář                    | Časový limit rychlého selhání | Cache TTL | Uvažování                                                                                   |
+| ------------------------- | ----------------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| Vysokokapacitní brána API | 1500 ms                       | 60 000 ms | Agresivní rychlost při selhání, delší mezipaměť pro snížení počtu kontrol                   |
+| Geo-distribuované uzly    | 3000 ms                       | 15 000 ms | Pomalejší sítě potřebují více času; kratší mezipaměť pro rychlé převzetí služeb při selhání |
+| Vývoj / testování         | 1000 ms                       | 10 000 ms | Rychlá iterace na lokálních proxy                                                           |
+| Stealth / anti-detekce    | 2500 ms                       | 45 000 ms | Vyhněte se rychlému snímání, které by mohlo spustit limity frekvence                        |
 
 ### Kontrola stavu proxy
 
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Vynutit opětovnou kontrolu konkrétní proxy
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Příznak `stale` má hodnotu `true`, pokud záznam v mezipaměti překročil dobu `HEALTH_CACHE_TTL_MS`; následující požadavek pak spustí novou kontrolu.
+Příznak `stale` je `true`, když záznam mezipaměti překročí `HEALTH_CACHE_TTL_MS` a další požadavek spustí novou kontrolu.
 
-### Výchozí hodnoty podle typu proxy
+### Výchozí nastavení typu Per-Proxy
 
-Kontrola stavu používá rozumné výchozí hodnoty podle schématu URL:
+Kontrola stavu používá rozumné výchozí hodnoty založené na schématu URL :
 
-| Schéma                     | Výchozí port |
+| Systém                     | Výchozí port |
 | -------------------------- | ------------ |
 | `http://`                  | 8080         |
 | `https://`                 | 443          |
 | `socks5://` / `socks5h://` | 1080         |
 
-Vlastní porty uvedené v URL (`http://host:9999`) mají vždy přednost před výchozím portem daného schématu.
+Vlastní porty v URL (`http://host:9999`) mají vždy přednost před výchozím schématem.
 
 ---
 
-## Analytika a pozorovatelnost proxy serverů
+## Proxy Analytics a pozorovatelnost
 
-OmniRoute sleduje využití jednotlivých proxy serverů, aby operátorům pomohl diagnostikovat vzorce směrování, nárůsty latence a opakující se selhání.
+OmniRoute sleduje využití per-proxy a pomáhá operátorům diagnostikovat vzory směrování, špičky latence a opakující se selhání.
 
-### Co se sleduje
+### Co je sledováno
 
-Pro každý požadavek směrovaný přes nakonfigurovaný proxy server zaznamenává OmniRoute následující údaje:
+Pro každý požadavek prostřednictvím nakonfigurovaného proxy zaznamená OmniRoute :
 
-| Metrika      | Popis                                                        |
-| ------------ | ------------------------------------------------------------ |
-| `proxy_url`  | Úplná URL proxy serveru (s maskovanými přihlašovacími údaji) |
-| `provider`   | ID poskytovatele nadřazené služby (openai, anthropic atd.)   |
-| `latency_ms` | Celková doba odezvy včetně navázání spojení s proxy serverem |
-| `connect_ms` | Pouze doba navázání TCP spojení                              |
-| `status`     | Stavový kód HTTP z nadřazené služby                          |
-| `error`      | Třída chyby, pokud požadavek selhal                          |
-| `timestamp`  | ISO 8601 UTC                                                 |
+| Metrický     | Popis                                                |
+| ------------ | ---------------------------------------------------- |
+| `proxy_url`  | Úplný proxy URL (s maskovanými přihlašovacími údaji) |
+| `provider`   | Upstream poskytovatel ID (openai, antropický atd.)   |
+| `latency_ms` | Celková doba zpáteční cesty včetně handshake proxy   |
+| `connect_ms` | pouze čas připojení TCP                              |
+| `status`     | stavový kód HTTP z upstreamu                         |
+| `error`      | Chybová třída, pokud požadavek selhal                |
+| `timestamp`  | ISO 8601 UTC                                         |
 
 ### Přístup k datům
 
 ```bash
-# Nedávné události proxy serverů
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
 Skutečný koncový bod je `/api/usage/proxy-logs` (viz `src/app/api/usage/proxy-logs/route.ts`). Tento koncový bod podporuje:
 
-- `GET /api/usage/proxy-logs` — načtení protokolů proxy serverů
-- `DELETE /api/usage/proxy-logs` — vymazání všech protokolů proxy serverů
+- `GET /api/usage/proxy-logs` — načte protokoly proxy
+- `DELETE /api/usage/proxy-logs` — vymazat všechny protokoly proxy
 
-V případě potřeby lze agregované statistiky získat přímo z tabulky `proxy_logs` pomocí SQL. Uživatelské rozhraní řídicího panelu může nabízet agregovaná zobrazení.
+Souhrnné statistiky lze v případě potřeby dotazovat přímo z tabulky `proxy_logs` prostřednictvím SQL. Řídicí panel UI může nabízet souhrnná zobrazení.
 
-### Běžné vzorce
+### Společné vzory
 
-**Detekce nestabilního proxy serveru** (střídá úspěšné a neúspěšné požadavky):
+**Zjistěte flapping proxy** (střídá se mezi success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Vyhledání pomalých proxy serverů** (latence p95 > 2 s):
+**Najděte pomalé proxy** (p95 latence > 2s):
 
 ```sql
 WITH ranked AS (
@@ -725,93 +736,68 @@ ORDER BY latency_ms DESC;
 
 ## Rozhodovací strom strategie rotace
 
-Pokud je k jednomu rozsahu přiřazeno více proxy serverů, OmniRoute používá **strategii rotace**, pomocí které vybírá proxy server pro každý požadavek. Strategie se konfiguruje na úrovni rozsahu (globálně, pro jednotlivé poskytovatele, účty nebo kombinace).
+Když je k oboru přiřazeno více proxy, OmniRoute používá a** rotační strategie** vybrat, který z nich použít pro každý požadavek. Strategie je nakonfigurována na úrovni rozsahu (globální, na poskytovatele, na účet, na kombinaci).
 
 ### Dostupné strategie
 
-| Strategie           | Kdy ji použít                                     | Kompromis                                                                         |
-| ------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `quality` (výchozí) | Produkční prostředí s proxy servery různé kvality | Upřednostňuje vysoce hodnocené proxy servery; méně hodnocené nemusí být využívány |
-| `random`            | Rozložení zátěže, ochrana soukromí                | Rovnoměrné rozložení; ignoruje ukazatele kvality                                  |
-| `sequential`        | Ladění, deterministické testování                 | Prochází proxy servery postupně v daném pořadí; snadno pochopitelné chování       |
+| Strategie           | Kdy použít                        | Kompromis                                                                   |
+| ------------------- | --------------------------------- | --------------------------------------------------------------------------- |
+| `quality` (výchozí) | Výroba se smíšenou kvalitou proxy | Upřednostňuje vysoce hodnocené proxy; mohou hladovět ty s nízkým hodnocením |
+| `random`            | Rozložení zátěže, soukromí        | Rovnoměrné rozložení; ignoruje signály kvality                              |
+| `sequential`        | Ladění, deterministické testování | Cykluje přes proxy v pořadí; snadno uvažovat                                |
 
 ### Rozhodovací strom
 
 ```
-                    Máte pro své proxy servery skóre kvality?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       ANO                     NE
+       YES                     NO
         │                       │
-   Mají všechny proxy          │
-   servery přibližně             │
-   stejnou kvalitu?              │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  ANO       NE                Použijte
+  YES       NO                Use
    │         │              `random`
-   │         │              (rovnoměrné
-   │         │              rozložení postupně
-   │         │              vytváří data
-   │         │              o kvalitě)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Použijte `quality`
-   │    (nejlepší pro
-   │    různou kvalitu)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Použijte `random`
-(rovnoměrně
-rozloží zátěž)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Automatické vyřazování vlastních nefunkčních proxy serverů
+## Automatické vyloučení selhání pro vaše vlastní proxy
 
-Fond tržiště 1proxy již sám automaticky snižuje hodnocení nefunkčních proxy serverů (viz
-[Skóre kvality proxy serverů](#proxy-quality-scores)). Pro proxy servery, které jste
-do registru přidali **vy**, poskytuje plánovač kontrol na pozadí
-(`src/lib/proxyHealth/scheduler.ts`) stejné chování spočívající v „automatickém
-vyřazení nefunkčního člena z řetězce“, aniž by cokoli odstraňoval:
+Fond tržiště 1proxy již sám o sobě automaticky degraduje neúspěšné proxy (viz [Skóre kvality proxy](#proxy-quality-scores) ). Pro proxy** Vy** přidaný do registru, plánovač stavu na pozadí (`src/lib/proxyHealth/scheduler.ts`) poskytuje stejné chování „vyloučit mrtvého člena z řetězce automaticky“, aniž by se cokoli smazalo:
 
 ```bash
-# .env — po 3 po sobě jdoucích neúspěšných kontrolách proxy server dočasně deaktivuje
-# a automaticky jej znovu aktivuje, jakmile začne na kontroly opět odpovídat.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Jak to funguje v řetězci více proxy serverů:
+Jak to zapadá do multi-proxy řetězce:
 
-1. Plánovač kontroluje každý registrovaný proxy server každých
-   `PROXY_HEALTH_INTERVAL_MS` (výchozí hodnota je 10 min; minimum je 1 min).
-2. Po `PROXY_AUTO_REMOVE_AFTER` po sobě jdoucích **průkazných** selháních (skutečné
-   selhání připojení — časový limit ani vlastní odpověď 5xx cíle kontroly se nikdy
-   nezapočítávají, viz [Kontrola stavu proxy serverů](#proxy-health-checking-v3816))
-   se `status` proxy serveru nastaví na `dead`.
-3. `dead` je jedním ze stavů, které filtr aktivních stavů používaný při vyhodnocování
-   fondu/rotace vyřazuje, takže rotace daného rozsahu (round-robin / náhodná / sticky /
-   podle latence — viz [Rozhodovací strom strategie rotace](#rotation-strategy-decision-tree))
-   okamžitě přestane tento proxy server přidělovat novým požadavkům. Ostatní proxy
-   servery ve fondu nejsou nijak ovlivněny a celý fond nikdy bez upozornění nepřejde
-   na přímé připojení — viz pojistka fail-closed v
-   [4úrovňovém systému proxy serverů](#4-level-proxy-system).
-4. Plánovač pokračuje v kontrolování proxy serverů se stavem `dead` ve stejném
-   intervalu. Při další úspěšné kontrole přepne `status` zpět na `active` a proxy
-   server se znovu zařadí do rotace — není nutné jej ručně znovu přidávat.
+1. Plánovač testuje každý registrovaný proxy každých `PROXY_HEALTH_INTERVAL_MS` (výchozí 10 min; minimálně 1 min).
+2. Po `PROXY_AUTO_REMOVE_AFTER` po sobě** přesvědčivé** selhání (skutečné selhání připojení — časový limit nebo vlastní 5xx cíle sondy se nikdy nepočítá, viz [Kontrola stavu proxy](#proxy-health-checking-v3816) ), `status` proxy je nastaveno na `dead`.
+3. `dead` je jedním ze stavů, které filtr živého stavu používaný rozlišením pool/rotation vylučuje, takže rotace rozsahu (cyklus/náhodné / lepivé / latence — viz [strom rozhodnutí o strategii rotace](#rotation-strategy-decision-tree) ) okamžitě přestane poskytovat proxy novým požadavkům. Nejsou ovlivněny žádné další proxy ve fondu a celý fond se nikdy tiše nevrátí zpět k přímému připojení — viz [4úrovňový systém proxy](#4-level-proxy-system) proti selhání zavření.
+4. Plánovač udržuje sondování `dead` proxy ve stejném intervalu. Další úspěšná sonda převrátí `status` zpět na `active` a znovu vstoupí do rotace — bez nutnosti ručního opětovného přidání.
 
-Tato funkce je záměrně **volitelná a nedestruktivní**: ve výchozím nastavení
-plánovač selhání pouze počítá a zaznamenává (viz zásada C v `decision.ts`) a
-`PROXY_AUTO_DISABLE` nikdy neodstraní žádný řádek — k tomu slouží samostatný,
-agresivnější příznak `PROXY_AUTO_REMOVE`. Pokud jsou oba nastaveny na `true`,
-má přednost `PROXY_AUTO_REMOVE` (u proxy serveru, který má být odstraněn, nemá
-mezilehlá dočasná deaktivace smysl). Úplný seznam proměnných naleznete v referenční
-dokumentaci [Konfigurace prostředí](../reference/ENVIRONMENT.md).
+To je schválně** opt-in a nedestruktivní** : ve výchozím nastavení plánovač počítá a zaznamenává pouze selhání (viz zásada C v `decision.ts`) a `PROXY_AUTO_DISABLE` nikdy neodstraní řádek — k čemuž slouží samostatný agresivnější příznak `PROXY_AUTO_REMOVE`. Pokud jsou oba nastaveny na `true`, vyhraje `PROXY_AUTO_REMOVE` (proxy, který má být smazán, nemá využití pro měkké vypnutí mezi tím). Úplný seznam proměnných naleznete v Referenční příručce [konfigurace prostředí](../reference/ENVIRONMENT.md).
 
 ---
 
-> 📖 **Související dokumentace:**
+> 📖** Související dokumentace:**
 >
-> - [Uživatelská příručka](../guides/USER_GUIDE.md) — Obecné nastavení a konfigurace
-> - [Referenční příručka API](../reference/API_REFERENCE.md) — Úplná dokumentace API
-> - [Konfigurace prostředí](../reference/ENVIRONMENT.md) — Všechny proměnné prostředí
+> - [Uživatelská příručka](../guides/USER_GUIDE.md) — Obecné nastavení a konfigurace - [API Reference](../reference/API_REFERENCE.md) — Úplná dokumentace API - [Konfigurace prostředí](../reference/ENVIRONMENT.md) — Všechny proměnné prostředí

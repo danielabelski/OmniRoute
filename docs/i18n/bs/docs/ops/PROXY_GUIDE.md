@@ -4,48 +4,46 @@
 
 ---
 
-# 🌐 Vodič za OmniRoute Proxy
+> **Zaobiđite geografske blokove, zaštitite svoj identitet i usmjerite AI promet kroz bilo koji proxy — sa nultom složenošću konfiguracije.**
 
-> **Zaobiđite geografske blokade, zaštitite svoj identitet i usmjerite AI saobraćaj kroz bilo koji proxy — bez složenosti konfiguracije.**
-
-OmniRoute uključuje sistem za upravljanje proxy-jima sa svim funkcijama koji vam omogućava da usmjerite saobraćaj ka AI provajderima kroz HTTP, HTTPS ili SOCKS5 proxy-je. Bez obzira da li se nalazite u blokiranoj regiji, trebate rotaciju IP adresa ili želite prikriveno "fingerprinting" (otisak uređaja) — ovaj vodič pokriva sve.
+OmniRoute uključuje potpuno opremljen sistem upravljanja proxyjem koji vam omogućava da usmjerite uzvodni promet AI provajdera kroz HTTP, HTTPS ili SOCKS5 proxy. Bilo da se nalazite u blokiranoj regiji, trebate IP rotaciju ili želite prikriveno uzimanje otisaka prstiju — ovaj vodič pokriva sve.
 
 ---
 
 ## Sadržaj
 
-- [Zašto koristiti proxy-je?](#zašto-koristiti-proxy-je)
-- [Pregled arhitekture](#pregled-arhitekture)
-- [Proxy sistem na 4 nivoa](#proxy-sistem-na-4-nivoa)
-- [Proxy registar (CRUD)](#proxy-registar-crud)
-- [1proxy besplatna tržnica](#1proxy-besplatna-tržnica)
-- [Rotacija proxy-ja](#rotacija-proxy-ja)
-- [Anti-detekcija i prikrivanje](#anti-detekcija-i-prikrivanje)
-- [Režimi uzvodnog (upstream) proxy-ja](#režimi-uzvodnog-upstream-proxy-ja)
+- [Zašto koristiti proksije?](#why-use-proxies)
+- [Pregled arhitekture](#architecture-overview)
+- [Proxy sistem na 4 nivoa](#4-level-proxy-system)
+- [Proxy registar (CRUD)](#proxy-registry-crud)
+- [1proxy Free Marketplace](#1proxy-free-proxy-marketplace)
+- [Proxy Rotation](#proxy-rotation)
+- [Anti-Detection & Stealth](#anti-detection--stealth)
+- [Upstream Proxy Modes](#upstream-proxy-modes)
 - [Dashboard UI](#dashboard-ui)
-- [API referenca](#api-referenca)
-- [Environment varijable](#environment-varijable)
-- [Rješavanje problema](#rješavanje-problema)
+- [API Reference](#api-reference)
+- [Varijable okruženja](#environment-variables)
+- [Rješavanje problema](#troubleshooting)
 
 ---
 
-## Zašto koristiti proxy-je?
+## Zašto koristiti proksije?
 
-Mnogi AI provajderi ograničavaju pristup prema geografskoj regiji. Programeri u **Rusiji, Kini, Iranu, Kubi, Turskoj** i drugim zemljama nailaze na greške poput:
+Mnogi AI provajderi ograničavaju pristup prema geografskoj regiji. Programeri u** Rusija, Kina, Iran, Kuba, Turska** , a druge zemlje nailaze na greške kao što su:
 
 ```
 unsupported_country_region_territory
 ```
 
-Čak i izvan blokiranih regija, proxy-ji su korisni za:
+Čak i izvan blokiranih regija, proksiji su korisni za:
 
-| Slučaj upotrebe             | Opis                                                                                           |
-| --------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Geografsko zaobilaženje** | Pristup OpenAI, Anthropic, Codex, Copilot servisima iz blokiranih zemalja                      |
-| **Rotacija IP adresa**      | Distribucija zahtjeva kroz više IP adresa radi izbjegavanja ograničenja brzine (rate limiting) |
-| **Privatnost**              | Sakrivanje vaše stvarne IP adrese od uzvodnih (upstream) provajdera                            |
-| **Usklađenost**             | Usmjeravanje saobraćaja kroz specifične jurisdikcije                                           |
-| **Testiranje**              | Simulacija zahtjeva iz različitih regija                                                       |
+| Slučaj upotrebe           | Opis                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| **Geografska obilaznica** | Pristupite OpenAI, Anthropic, Codex, Copilot iz blokiranih zemalja           |
+| **IP rotacija**           | Distribuirajte zahtjeve na više IPs kako biste izbjegli ograničavanje brzine |
+| **Privatnost**            | Sakrijte svoju pravu IP od upstream provajdera                               |
+| **Usklađenost**           | Usmjerite promet kroz određene jurisdikcije                                  |
+| **Testiranje**            | Simulirajte zahtjeve iz različitih regija                                    |
 
 ---
 
@@ -71,84 +69,96 @@ unsupported_country_region_territory
 
 ### Ključne komponente
 
-| Komponenta          | Fajl                                         | Uloga                                                    |
-| ------------------- | -------------------------------------------- | -------------------------------------------------------- |
-| **Proxy registar**  | `src/lib/db/proxies.ts`                      | CRUD za proxy unose + dodjeljivanje opsega               |
-| **Proxy dispečer**  | `open-sse/utils/proxyDispatcher.ts`          | Kreira `undici` ProxyAgent/SOCKS dispečere sa keširanjem |
-| **Proxy Fetch**     | `open-sse/utils/proxyFetch.ts`               | Omotava `fetch()` sa injekcijom proxy dispečera          |
-| **Settings ruta**   | `src/app/api/settings/proxy/route.ts`        | Naslijeđeni proxy config API (GET/PUT/DELETE)            |
-| **Management ruta** | `src/app/api/v1/management/proxies/route.ts` | Registar CRUD API (GET/POST/PATCH/DELETE)                |
-| **1proxy DB**       | `src/lib/db/oneproxy.ts`                     | Perzistencija besplatne proxy tržnice                    |
+| Komponenta           | File                                         | Uloga                                                    |
+| -------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| **Proxy Registry**   | `src/lib/db/proxies.ts`                      | CRUD za proxy unose + dodjele opsega                     |
+| **Proxy Dispatcher** | `open-sse/utils/proxyDispatcher.ts`          | Kreira `undici` ProxyAgent/SOCKS dispečere sa keširanjem |
+| **Proxy Fetch**      | `open-sse/utils/proxyFetch.ts`               | Omotava `fetch()` sa injekcijom proxy dispečera          |
+| **Postavke Ruta**    | `src/app/api/settings/proxy/route.ts`        | Naslijeđena proxy konfiguracija API (GET/PUT/DELETE)     |
+| **Ruta upravljanja** | `src/app/api/v1/management/proxies/route.ts` | Registar CRUD API (GET/POST/PATCH/DELETE)                |
+| **1proxy DB**        | `src/lib/db/oneproxy.ts`                     | Postojanost besplatnog proxy tržišta                     |
 
 ---
 
-## Sistem proxy-ja na 4 nivoa
+## Zadano stanje proxyja za nove račune
 
-OmniRoute podržava konfiguraciju proxy-ja na **četiri nezavisna opsega**, koji se razrješavaju po prioritetu:
+U** Postavke → Proxy → Globalna konfiguracija** , koristiti** Omogući proxy prema zadanim postavkama za nove veze** da odaberete početno stanje proxyja novododatih naloga provajdera.
+
+Nova postavka kontrolira početno stanje proxyja novododatih računa provajdera. Ne mijenja postojeće račune niti zamjenjuje globalni proxy prekidač. Njegova početna vrijednost čuva prethodno ponašanje. Isključite ga jednom da kreirate buduće naloge s proxy onemogućenim prema zadanim postavkama.
+
+Preference se pohranjuju kao `defaultNewConnectionProxyEnabled` kroz postojeće postavke API. Podrazumevano je `true` kada se nikada ne sačuva. Čuvanje `false` stupa na snagu za sljedeće nove račune bez ponovnog pokretanja. `POST /api/providers` prihvata opcioni strogi boolean `proxyEnabled`; eksplicitni `true` ili `false` ima prednost nad zadanim za kreiranje. Izostavljanje duplikata naloga ili OAuth ponovno povezivanje čuva pohranjeno stanje tog naloga. Pojedinačni računi se i dalje mogu omogućiti ili onemogućiti nakon toga.
+
+Selektivni prijenosi provajdera koriste zadane postavke odredišne instalacije za nove račune i čuvaju politiku odredišta kada zamjenjuju postojeće račune. Proxy prekidači nisu prenosiva polja za prijenos. Potpuno obnavljanje sigurnosne kopije i historijska migracija JSON/SQL zadržavaju svoju postojeću semantiku vraćanja, uključujući sačuvane vrijednosti naloga i zadane postavke za naslijeđene šeme; potpuno vraćanje postavki također može vratiti ovu preferenciju.
+
+Ova postavka ne dodjeljuje proxy niti utvrđuje da li je on zdrav ili u upotrebi. Stvarno usmjeravanje i dalje ovisi o globalnom proxy prekidaču i primjenjivoj proxy konfiguraciji. Sintetički provajderi bez trajnog naloga, OAuth saobraćaj pre kreiranja naloga, environment/system proksiji i spoljna pozadinska mreža su van njegovog delokruga.
+
+## Proxy sistem na 4 nivoa
+
+OmniRoute podržava proxy konfiguraciju na** četiri nezavisna opsega** , riješeno po prioritetu:
 
 ```
-Redoslijed razrješavanja prioriteta (najviši → najniži):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Proxy za nalog/konekciju  →  po API ključu / OAuth konekciji
-  2. 🟡 Proxy provajdera          →  po provajderu (npr. sav OpenAI saobraćaj)
-  3. 🟠 Combo proxy               →  po combo/routing konfiguraciji
-  4. 🟢 Globalni proxy            →  sav saobraćaj, svi provajderi
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Kako funkcionira razrješavanje
+### Kako Rezolucija radi
 
-Kada OmniRoute pošalje zahtjev upstream provajderu, poziva `resolveProxyForConnectionFromRegistry()` koji provjerava svaki nivo redom:
+Kada OmniRoute pošalje zahtjev upstream provajderu, on poziva `resolveProxyForConnectionFromRegistry()` koji provjerava svaki nivo po redu:
 
-1. **Nivo naloga** — Da li postoji proxy dodijeljen ovom specifičnom ID-u konekcije?
-2. **Nivo provajdera** — Da li postoji proxy dodijeljen ovom provajderu (npr. `openai`)?
+1. **Na nivou naloga** — Postoji li proxy dodijeljen ovoj specifičnoj vezi ID?
+2. **Nivo provajdera** — Postoji li proxy dodijeljen ovom provajderu (npr. `openai`)?
 3. **Globalni nivo** — Da li je konfigurisan globalni proxy?
-4. **Bez proxy-ja** — Direktna konekcija ka provajderu.
+4. **Nema proxyja** — Direktna veza sa provajderom.
 
-Prvo podudaranje pobjeđuje. To znači da možete postaviti globalni proxy kao rezervnu opciju (fallback), ali ga nadjačati za specifične provajdere ili konekcije.
+Prvi meč pobjeđuje. To znači da možete postaviti globalni proxy kao rezervni, ali ga nadjačati za određene dobavljače ili veze.
 
-### Šta se propušta kroz proxy
+### Šta se proksira
 
-| Tip saobraćaja        | Proksirano? | Napomene                                       |
-| --------------------- | ----------- | ---------------------------------------------- |
-| Chat completions      | ✅          | Svi `/v1/chat/completions` zahtjevi            |
-| Embeddings            | ✅          | `/v1/embeddings`                               |
-| Generisanje slika     | ✅          | `/v1/images/generations`                       |
-| Audio (TTS/STT)       | ✅          | `/v1/audio/*`                                  |
-| Razmjena OAuth tokena | ✅          | Rješava `unsupported_country_region_territory` |
-| Testovi konekcije     | ✅          | "Test Connection" dugme koristi proxy          |
-| Osvježavanje tokena   | ✅          | Pozadinsko obnavljanje OAuth-a                 |
-| Sinhronizacija modela | ✅          | Listanje i otkrivanje modela                   |
+| Vrsta saobraćaja      | Proksi? | Bilješke                                       |
+| --------------------- | ------- | ---------------------------------------------- |
+| Završetak ćaskanja    | ✅      | Svi `/v1/chat/completions` zahtjevi            |
+| Embeddings            | ✅      | `/v1/embeddings`                               |
+| Generisanje slike     | ✅      | `/v1/images/generations`                       |
+| audio (TTS/STT)       | ✅      | `/v1/audio/*`                                  |
+| OAuth razmjena tokena | ✅      | Rješava `unsupported_country_region_territory` |
+| Testovi veze          | ✅      | Dugme "Test Connection" koristi proxy          |
+| Osvježavanje tokena   | ✅      | Pozadinska obnova OAuth                        |
+| Sinhronizacija modela | ✅      | Popis modela i otkriće                         |
 
 ---
 
 ## Proxy registar (CRUD)
 
-Proxy registar je SQLite tabela (`proxy_registry`) koja pohranjuje sve vaše proxy-je. Svaki proxy ima:
+Proxy registar je SQLite tabela (`proxy_registry`) koja pohranjuje sve vaše proxy servere. Svaki proxy ima:
 
-| Polje      | Tip     | Opis                                                      |
-| ---------- | ------- | --------------------------------------------------------- |
-| `id`       | UUID    | Jedinstveni identifikator                                 |
-| `name`     | String  | Čitljiva oznaka                                           |
-| `type`     | String  | Protokol: `http`, `https`, `socks5`                       |
-| `host`     | String  | Proxy hostname ili IP adresa                              |
-| `port`     | Integer | Broj porta                                                |
-| `username` | String  | Korisničko ime za autentifikaciju (šifrovano pri pohrani) |
-| `password` | String  | Lozinka za autentifikaciju (šifrovana pri pohrani)        |
-| `region`   | String  | Oznaka geografskog regiona                                |
-| `notes`    | String  | Bilješke u slobodnom tekstu                               |
-| `status`   | String  | `active` ili `inactive`                                   |
-| `source`   | String  | `manual` ili `oneproxy`                                   |
+| Polje      | Tip     | Opis                                               |
+| ---------- | ------- | -------------------------------------------------- |
+| `id`       | UUID    | Jedinstveni identifikator                          |
+| `name`     | String  | Ljudski čitljiva etiketa                           |
+| `type`     | String  | Protokol: `http`, `https`, `socks5`                |
+| `host`     | String  | Proxy hostname ili IP                              |
+| `port`     | Integer | Broj porta                                         |
+| `username` | String  | Auth korisničko ime (šifrirano u mirovanju)        |
+| `password` | String  | Lozinka za autentifikaciju (šifrirana u mirovanju) |
+| `region`   | String  | Oznaka geografske regije                           |
+| `notes`    | String  | Bilješke u slobodnom tekstu                        |
+| `status`   | String  | `active` ili `inactive`                            |
+| `source`   | String  | `manual` ili `oneproxy`                            |
 
-### Kreiranje proxy-ja
+### Kreiranje proxyja
 
-**Putem kontrolne table (Dashboard):**
+**Preko kontrolne table:**
 
-1. Idite na **Settings → Proxy**
-2. Kliknite na **Add Proxy**
-3. Popunite tip, host, port i opcione akreditive za autentifikaciju
-4. Sačuvajte
+1. Idi na** Postavke → Proxy**
+2. Kliknite** Dodaj proxy**
+3. Popunite tip, host, port i opcionalne vjerodajnice
+4. Sačuvaj
 
-**Putem API-ja:**
+**Preko API:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -164,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Ažuriranje proxy-ja
+### Ažuriranje proxyja
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -176,56 +186,56 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Napomena:** Akreditivi se čuvaju osim ako eksplicitno ne pošaljete zamjene koje nisu prazne. Slanje praznih stringova za `username`/`password` će zadržati pohranjene vrijednosti.
+> **Napomena:** Akreditivi se čuvaju osim ako eksplicitno ne pošaljete neprazne zamjene. Slanje praznih stringova za `username`/`password` će zadržati pohranjene vrijednosti.
 
-### Brisanje proxy-ja
+### Brisanje proxyja
 
 ```bash
-# Neuspješno ako je proxy dodijeljen bilo kojem opsegu
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Prisilno brisanje (uklanja i dodjele)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Listanje proxy-ja
+### Listing Proxies
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Dodjeljivanje proxy-ja opsezima
+### Dodjeljivanje proksija opsegima
 
 ```bash
-# Dodijeli globalnom opsegu
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Dodijeli specifičnom provajderu
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Dodijeli specifičnoj konekciji/ključu
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Razrješavanje efektivnog proxy-ja
+### Rješavanje efektivnog proxyja
 
-Provjerite koji proxy bi se koristio za datu konekciju:
+Provjerite koji proxy bi se koristio za datu vezu:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Vraća razriješeni proxy sa njegovim nivoom (`account`, `provider` ili `global`) i izvorom.
+Vraća razriješeni proxy s njegovim nivoom (`account`, `provider` ili `global`) i izvorom.
 
-### Masovno dodjeljivanje
+### Bulk Assignment
 
-Dodijelite jedan proxy više provajdera ili konekcija odjednom:
+Dodijelite jedan proxy za više provajdera ili veza odjednom:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -237,152 +247,152 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Uvoz/Izvoz
+### Import/Export
 
-Proxy-ji su uključeni u sistem **Backup/Restore**. Kada izvozite svoju OmniRoute konfiguraciju:
+Proksiji su uključeni u**Backup/Restore** sistem. Kada izvezete svoju OmniRoute konfiguraciju:
 
-1. Idite na **Dashboard → Settings → Backup**
-2. Kliknite na **Export** — proxy registar i dodjele su uključeni
-3. Za vraćanje (restore), kliknite na **Import** i otpremite backup datoteku
+1. Idi na** Kontrolna tabla → Postavke → Backup**
+2. Kliknite** Izvoz** — proxy registar i dodjela su uključeni
+3. Za vraćanje kliknite** Uvoz** i otpremite datoteku sigurnosne kopije
 
-Proxy registar također podržava **upsert po host+portu** — ako uvezete proxy koji već postoji (isti host i port), on se ažurira umjesto kreiranja duplikata.
+Proxy registar također podržava** upsert by host + port** — ako uvezete proxy koji već postoji (isti host i port), on se ažurira umjesto da kreira duplikat.
 
-### Migracija naslijeđenih konfiguracija
+### Naslijeđene migracije
 
-Ako ste konfigurirali proxyje u starijoj verziji (prije registra), OmniRoute ih automatski migrira:
+Ako ste konfigurirali proxy servere u starijoj verziji (pre-registry), OmniRoute ih automatski migrira:
 
 ```
 Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Ovo se dešava jednom pri prvom pokretanju nakon nadogradnje. Koristite `migrateLegacyProxyConfigToRegistry({ force: true })` za ponovno pokretanje.
+Ovo se dešava jednom prilikom prvog pokretanja nakon nadogradnje. Koristite `migrateLegacyProxyConfigToRegistry({ force: true })` za ponovno pokretanje.
 
 ---
 
-## 1proxy besplatno tržište proxyja
+## 1proxy Free Proxy Marketplace
 
-> 🆕 **Doprinio [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Problem [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Priložio [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Izdanje [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute se integriše sa **[1proxy](https://1proxy-api.aitradepulse.com)** platformom zajednice kako bi omogućio pristup **stotinama besplatnih, validiranih proxyja** iz cijelog svijeta. Ovo je savršeno za korisnike koji nemaju vlastitu proxy infrastrukturu.
+OmniRoute se integriše sa** [1proxy](https://1proxy-api.aitradepulse.com)** platforma zajednice kojoj treba omogućiti pristup** stotine besplatnih, provjerenih proksija** iz celog sveta. Ovo je savršeno za korisnike koji nemaju vlastitu proxy infrastrukturu.
 
-### Kako to radi
+### Kako radi
 
 ```
-┌─────────────┐   Sinhronizacija  ┌─────────────────┐   Rotacija    ┌──────────┐
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
 │  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
-│  (vanjski)  │   do 500      │  source=oneproxy │  po kvalitetu │   API    │
-└─────────────┘   proxyja     └─────────────────┘               └──────────┘
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Sinhronizacija** — OmniRoute preuzima validirane proxyje sa 1proxy API-ja
-2. **Pohrana** — Proxyji se spremaju u istu `proxy_registry` tabelu sa `source = 'oneproxy'`
-3. **Filtriranje** — Filtrirajte po protokolu, državi, ocjeni kvaliteta
-4. **Rotacija** — Odaberite najbolji proxy koristeći strategije kvaliteta, nasumičnog ili sekvencijalnog odabira
-5. **Automatsko degradiranje** — Neuspješnim proxyjima se smanjuje ocjena kvaliteta; ispod praga → označeni kao neaktivni
+1. **Sync** — OmniRoute dohvaća validirane proksije iz 1proxy API
+2. **Store** — Proksiji se pohranjuju u istoj `proxy_registry` tabeli sa `source = 'oneproxy'`
+3. **Filter** — Filtriraj po protokolu, zemlji, ocjeni kvalitete
+4. **Rotiraj** — Odaberite najbolji proxy koristeći kvalitetne, nasumične ili sekvencijalne strategije
+5. **Auto-degrade** — Neuspješnim proksijima se smanjuje ocjena kvaliteta; ispod praga → označen kao neaktivan
 
-### Sinhronizacija proxyja
+### Sinhronizacija proksija
 
-**Putem kontrolne ploče:**
+**Preko kontrolne table:**
 
-1. Idite na karticu **Settings → 1proxy**
-2. Kliknite **"Sync Now"**
-3. Pregledajte statistiku: ukupan broj proxyja, broj aktivnih, prosječan kvalitet, pregled po državama
+1. Idi na** Postavke → 1proxy** tab
+2. Kliknite** "Sinhroniziraj sada"**
+3. Pregledajte statistiku: ukupni proksiji, aktivni broj, prosječan kvalitet, raščlamba po zemljama
 
-**Putem API-ja:**
+**Preko API:**
 
 ```bash
-# Pokreni sinhronizaciju
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Odgovor:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### Filtriranje proxyja
+### Filtriranje proksija
 
 ```bash
-# Filtriraj po protokolu
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Filtriraj po državi
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Filtriraj po minimalnoj ocjeni kvaliteta
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Kombinuj filtere
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Ocjene kvaliteta proxyja
+### Proxy ocjene kvalitete
 
-Svaki 1proxy proxy dolazi sa metapodacima:
+Svaki 1proxy proxy dolazi s metapodacima:
 
-| Polje           | Opis                                         |
-| --------------- | -------------------------------------------- |
-| `qualityScore`  | Ocjena 0-100 od 1proxy validacije            |
-| `latencyMs`     | Izmjerena mrežna latencija                   |
-| `anonymity`     | `transparent`, `anonymous` ili `elite`       |
-| `googleAccess`  | Da li proxy može pristupiti Google servisima |
-| `countryCode`   | ISO kod države od dva slova                  |
-| `lastValidated` | Vremenska oznaka posljednje validacije       |
+| Polje           | Opis                                     |
+| --------------- | ---------------------------------------- |
+| `qualityScore`  | 0-100 ocjena od 1proxy validacije        |
+| `latencyMs`     | Izmjereno kašnjenje mreže                |
+| `anonymity`     | `transparent`, `anonymous` ili `elite`   |
+| `googleAccess`  | Može li proxy pristupiti uslugama Google |
+| `countryCode`   | Dvoslovni ISO kod zemlje                 |
+| `lastValidated` | Vremenska oznaka posljednje validacije   |
 
-Ocjene kvaliteta se dinamički prilagođavaju:
+Ocene kvaliteta se dinamički prilagođavaju:
 
-- **Neuspješni zahtjevi** smanjuju ocjenu za 10 bodova
-- **Ocjena pada na ≤10** → proxy se označava kao `inactive`
-- Neaktivni proxyji su isključeni iz rotacije
+- **Neuspjeli zahtjevi** smanjiti rezultat za 10 poena
+- **Rezultat pada na ≤ 10** → proxy je označen `inactive`
+- Neaktivni proksiji su isključeni iz rotacije
 
 ### Strategije rotacije
 
 ```bash
-# Rotiraj po kvalitetu (prvo najbolji proxy) — zadano
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Nasumična rotacija
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Sekvencijalno (prvo onaj koji je najdavnije validiran)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Circuit Breaker
+### Prekidač
 
-1proxy sinhronizacija ima ugrađen Circuit Breaker:
+1proxy sync ima ugrađeni prekidač:
 
-- Nakon **5 uzastopnih neuspjeha sinhronizacije**, dalji pokušaji sinhronizacije se blokiraju
+- Poslije** 5 uzastopnih grešaka u sinhronizaciji** , daljnji pokušaji sinhronizacije su blokirani
 - Resetujte sa: `resetOneproxyCircuitBreaker()` ili ponovo pokrenite server
 - Status sinhronizacije je dostupan na `GET /api/settings/oneproxy?action=status`
 
-### Brisanje 1proxy proxyja
+### Brisanje 1proxy proksija
 
 ```bash
-# Obriši jedan 1proxy proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Obriši SVE 1proxy proxyje (ručni proxyji ostaju netaknuti)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Anti-detekcija i prikrivanje
+## Anti-Detection & Stealth
 
-OmniRoute ne usmjerava promet samo kroz proxy — on čini promet legitimnim:
+OmniRoute ne usmjerava samo promet kroz proxy — već čini da promet izgleda legitimno:
 
-### TLS Fingerprint Spoofing
+### TLS Prevara otiska prsta
 
-Koristi `wreq-js` za generisanje TLS otisaka sličnih pretraživaču, zaobilazeći sisteme za detekciju botova koji označavaju TLS rukovanja koja nisu iz pretraživača.
+Koristi `wreq-js` za generiranje TLS otisaka prstiju poput pretraživača, zaobilazeći sisteme za detekciju botova koji označavaju TLS rukovanje koje nije pretraživač.
 
-### CLI Fingerprint Matching
+### CLI Uparivanje otiska prsta
 
-**CLI Fingerprint Toggle** (`Settings → Security`) mijenja redoslijed HTTP zaglavlja i polja JSON tijela kako bi odgovarao tačnom potpisu izvornih CLI binarnih datoteka (Claude Code, Codex, itd.). Ovo radi **povrh** proxyja:
+The**CLI Prebacivanje otiska prsta** (`Settings → Security`) preuređuje HTTP zaglavlja i JSON polja tijela kako bi odgovarali tačnom potpisu izvornih CLI binarnih datoteka (Claude kod, Codex, itd.). Ovo radi** na vrhu** proxy:
 
 ```
 Your IP (blocked) → Proxy IP (US) → Provider API
@@ -390,33 +400,33 @@ Your IP (blocked) → Proxy IP (US) → Provider API
                     + CLI fingerprint
 ```
 
-Dobijate i **maskiranje IP adrese** i **autentičnost zahtjeva** istovremeno.
+Dobijate oboje**IP masking** i** zatražiti autentičnost** istovremeno.
 
-### Očuvanje Proxy IP adrese
+### Proxy IP Preservation
 
-Oznake u boji na kontrolnoj tabli pokazuju koji nivo proxyja je aktivan:
+Značke označene bojama na kontrolnoj tabli pokazuju koji je proxy nivo aktivan:
 
-| Oznaka | Nivo       | Značenje                                       |
-| ------ | ---------- | ---------------------------------------------- |
-| 🟢     | Global     | Sav promet prolazi kroz ovaj proxy             |
-| 🟡     | Provider   | Samo promet ovog provajdera se usmjerava       |
-| 🔵     | Connection | Ovaj specifični ključ/nalog koristi ovaj proxy |
+| Značka | Nivo      | Značenje                                       |
+| ------ | --------- | ---------------------------------------------- |
+| 🟢     | Global    | Sav promet ide kroz ovaj proxy                 |
+| 🟡     | Provajder | Samo promet ovog provajdera je proksi          |
+| 🔵     | Veza      | Ovaj specifični key/account koristi ovaj proxy |
 
-Oznaka također prikazuje razriješenu proxy IP adresu radi verifikacije.
+Značka također prikazuje riješeni proxy IP za verifikaciju.
 
 ---
 
-## Upstream Proxy režimi
+## Upstream Proxy Modes
 
-Za provajdere koji koriste CLIProxyAPI obrazac, OmniRoute podržava tri upstream proxy režima:
+Za provajdere koji koriste CLIProxyAPI obrazac, OmniRoute podržava tri upstream proxy načina:
 
-| Režim         | Opis                                                              |
-| ------------- | ----------------------------------------------------------------- |
-| `native`      | OmniRoute direktno upravlja proxy usmjeravanjem (podrazumijevano) |
-| `cliproxyapi` | Delegira vanjskoj CLIProxyAPI instanci                            |
-| `fallback`    | Prvo pokušava native, zatim prelazi na CLIProxyAPI                |
+| Mode          | Opis                                                            |
+| ------------- | --------------------------------------------------------------- |
+| `native`      | OmniRoute upravlja proxy usmjeravanjem direktno (podrazumevano) |
+| `cliproxyapi` | Delegati na eksternu CLIProxyAPI instancu                       |
+| `fallback`    | Prvo pokušava native, vraća se na CLIProxyAPI                   |
 
-Konfigurišite po provajderu:
+Konfigurirajte po provajderu:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -426,86 +436,86 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## UI kontrolne table
+## Dashboard UI
 
-### Settings → Proxy kartica
+### Postavke → Proxy Tab
 
-- **Globalna proxy** konfiguracija (podesite jednom za sav promet)
-- **Zamjene proxyja** po provajderu
-- **Dodjeljivanje proxyja** po vezi
-- **Test veze** kroz konfigurisan proxy
-- **Oznake u boji** koje pokazuju aktivan nivo proxyja
+- **Globalni proxy** konfiguracija (podesite jednom za sav promet)
+- **Proxy po provajderu** nadjačava
+- **Proxy po konekciji** zadaci
+- **Test veze** preko konfigurisanog proxyja
+- **Značke označene bojama** prikazuje aktivni proxy nivo
 
-### Settings → 1proxy kartica
+### Postavke → 1proxy Tab
 
-- **Dugme Sync Now** za preuzimanje besplatnih proxyja
-- **Kartice statistike**: Ukupno, Aktivno, Prosječan kvalitet, Posljednja sinhronizacija
-- **Filteri**: Protokol, Kod države, Minimalni kvalitet
-- **Proxy tabela** sa hostom, protokolom, državom, ocjenom kvaliteta, latencijom, anonimnošću, Google pristupom
-- **Panel statusa sinhronizacije** sa praćenjem uspjeha/neuspjeha i brojačem uzastopnih neuspjeha
-- **Clear All** za uklanjanje svih 1proxy unosa
+- **Sync Now** dugme za preuzimanje besplatnih proksija
+- **Statistike kartice** : Ukupno, Aktivno, Pros. kvalitet, Zadnja sinhronizacija
+- **Filteri** : Protokol, kod zemlje, minimalni kvalitet
+- **Proxy table** sa domaćinom, protokolom, državom, ocjenom kvalitete, kašnjenjem, anonimnošću, Google pristupom
+- **Status sinhronizacije** panel sa success/failure praćenjem i brojanjem uzastopnih kvarova
+- **Obriši sve** da uklonite sve 1proxy unose
 
 ---
 
-## API referenca
+## API Reference
 
-### API za proxy postavke
+### Proxy postavke API
 
-| Metoda   | Krajnja tačka                                  | Opis                               |
-| -------- | ---------------------------------------------- | ---------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Dobijanje pune proxy konfiguracije |
-| `GET`    | `/api/settings/proxy?level=global`             | Dobijanje globalnog proxyja        |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Dobijanje proxyja provajdera       |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Razrješavanje efektivnog proxyja   |
-| `PUT`    | `/api/settings/proxy`                          | Ažuriranje proxy konfiguracije     |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Uklanjanje proxyja na nivou        |
+| Metoda   | Krajnja tačka                                  | Opis                                 |
+| -------- | ---------------------------------------------- | ------------------------------------ |
+| `GET`    | `/api/settings/proxy`                          | Preuzmite punu konfiguraciju proxyja |
+| `GET`    | `/api/settings/proxy?level=global`             | Nabavite globalni proxy              |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Nabavite proxy provajdera            |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Riješite efektivni proxy             |
+| `PUT`    | `/api/settings/proxy`                          | Ažurirajte proxy konfiguraciju       |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Uklonite proxy na nivou              |
 
-### API za registar proxyja
+### Proxy registar API
 
-| Metoda   | Krajnja tačka                                     | Opis                        |
-| -------- | ------------------------------------------------- | --------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Lista svih proxyja          |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Dobijanje proxyja po ID-u   |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Dobijanje dodjela proxyja   |
-| `POST`   | `/api/v1/management/proxies`                      | Kreiranje proxyja           |
-| `PATCH`  | `/api/v1/management/proxies`                      | Ažuriranje proxyja          |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Brisanje proxyja            |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Prisilno brisanje           |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Masovna dodjela             |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Lista dodjela               |
-| `GET`    | `/api/v1/management/proxies/health`               | Statistika zdravlja proxyja |
+| Metoda   | Krajnja tačka                                     | Opis                         |
+| -------- | ------------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | Navedite sve proksije        |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Nabavite proxy od ID         |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Dobijte proxy zadatke        |
+| `POST`   | `/api/v1/management/proxies`                      | Kreirajte proxy              |
+| `PATCH`  | `/api/v1/management/proxies`                      | Ažurirajte proxy             |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Izbriši proxy                |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Prisilno brisanje            |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Bulk assign                  |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Navedite zadatke             |
+| `GET`    | `/api/v1/management/proxies/health`               | Proxy zdravstvene statistike |
 
-### API za tunele
+### Tuneli API
 
-Za izlaganje vaše OmniRoute instance javnom internetu (Cloudflare/ngrok/Tailscale) umjesto usmjeravanja odlaznog prometa kroz proxy, pogledajte [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunnel REST API se nalazi pod `/api/tunnels/{cloudflared,ngrok,tailscale}/*` i ortogonalan je na odlazni proxy lanac dokumentovan iznad.
+Za izlaganje vaše OmniRoute instance javnom internetu (Cloudflare/ngrok/Tailscale) umjesto odlaznog rutiranja kroz proxy, pogledajte [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunel REST API živi pod `/api/tunnels/{cloudflared,ngrok,tailscale}/*` i ortogonan je na izlazni proxy lanac dokumentiran gore.
 
 ### 1proxy API
 
-| Metoda   | Krajnja tačka                          | Opis                                          |
-| -------- | -------------------------------------- | --------------------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | Lista 1proxy proxyja                          |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Dobijanje statistike + statusa sinhronizacije |
-| `GET`    | `/api/settings/oneproxy?action=status` | Dobijanje samo statusa sinhronizacije         |
-| `POST`   | `/api/settings/oneproxy`               | Pokretanje sinhronizacije                     |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Rotacija na sljedeći proxy                    |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Brisanje jednog                               |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Brisanje svih                                 |
+| Metoda   | Krajnja tačka                          | Opis                                       |
+| -------- | -------------------------------------- | ------------------------------------------ |
+| `GET`    | `/api/settings/oneproxy`               | Navedite 1proxy proxy                      |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Dobijte statistiku status sinhronizacije + |
+| `GET`    | `/api/settings/oneproxy?action=status` | Dobijte samo status sinhronizacije         |
+| `POST`   | `/api/settings/oneproxy`               | Sinhronizacija okidača                     |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Rotirajte na sljedeći proxy                |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Izbriši jednu                              |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Obriši sve                                 |
 
 ### Upstream Proxy API
 
-| Metoda   | Endpoint                          | Opis                                    |
+| Metoda   | Krajnja tačka                     | Opis                                    |
 | -------- | --------------------------------- | --------------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Dohvati konfiguraciju upstream proxy-ja |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Postavi režim upstream proxy-ja         |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Ukloni konfiguraciju upstream proxy-ja  |
+| `GET`    | `/api/upstream-proxy/:providerId` | Nabavite konfiguraciju upstream proxyja |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Postavite upstream proxy način rada     |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Uklonite upstream proxy konfiguraciju   |
 
 ---
 
 ## Varijable okruženja
 
-| Varijabla             | Zadano | Opis                                                               |
-| --------------------- | ------ | ------------------------------------------------------------------ |
-| `ENABLE_SOCKS5_PROXY` | `true` | Omogućite podršku za SOCKS5 proxy (zadano `true` u `.env.example`) |
+| Varijabilna           | Default | Opis                                                             |
+| --------------------- | ------- | ---------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`  | Omogući podršku za SOCKS5 proxy (zadani `true` u `.env.example`) |
 
 ---
 
@@ -513,31 +523,31 @@ Za izlaganje vaše OmniRoute instance javnom internetu (Cloudflare/ngrok/Tailsca
 
 ### "SOCKS5 proxy je onemogućen"
 
-Postavite `ENABLE_SOCKS5_PROXY=true` u vašu `.env` datoteku i ponovo pokrenite.
+Postavite `ENABLE_SOCKS5_PROXY=true` u svoju `.env` datoteku i ponovo pokrenite.
 
 ### "socket hang up" greške kroz proxy
 
-Ovo je normalno kod jeftinih proxyja koji prekidaju neaktivne veze. OmniRoute ovo već rješava tako što:
+Ovo je normalno sa jeftinim proksijima koji isključuju neaktivne veze. OmniRoute već rješava ovo na sljedeći način:
 
-- Onemogućava keep-alive na proxy vezama (`keepAliveTimeout: 1`)
-- Onemogućava pipelining (`pipelining: 0`)
-- Kešira dispatchere kako bi izbjegao ponovljena rukovanja (handshakes)
+- Onemogućavanje održavanja na proxy vezama (`keepAliveTimeout: 1`)
+- Onemogućavanje cjevovoda (`pipelining: 0`)
+- Keširanje dispečera radi izbjegavanja ponovljenih rukovanja
 
-Ako se problem nastavi, pokušajte s drugim proxyjem ili koristite 1proxy funkciju rotacije.
+Ako se nastavi, pokušajte s drugim proxyjem ili upotrijebite funkciju rotacije 1 proxy.
 
-### "unsupported_country_region_territory" tokom OAuth-a
+### "unsupported_country_region_territory" tokom OAuth
 
-Provjerite je li proxy konfigurisan **prije** pokretanja OAuth toka. OmniRoute usmjerava razmjenu OAuth tokena kroz konfigurisani proxy. Prvo postavite globalni ili proxy na nivou provajdera, a zatim se povežite.
+Provjerite je li proxy konfiguriran** prije** pokretanje OAuth toka. OmniRoute usmjerava OAuth razmjenu tokena kroz konfigurirani proxy. Prvo postavite globalni proxy ili proxy na nivou provajdera, a zatim se povežite.
 
 ### Proxy se ne koristi
 
-Provjerite redoslijed razrješenja:
+Provjerite redoslijed rješavanja:
 
-1. Provjerite sa `GET /api/settings/proxy?resolve=your-connection-id`
-2. Provjerite je li status proxyja `active` (ne `inactive`)
-3. Osigurajte da se opseg dodjele proxyja podudara s vašom vezom
+1. Potvrdite sa `GET /api/settings/proxy?resolve=your-connection-id`
+2. Provjerite je li proxy `status` `active` (ne `inactive`)
+3. Uvjerite se da opseg dodjele proxyja odgovara vašoj vezi
 
-### 1proxy sinhronizacija neuspješna
+### 1proxy sinhronizacija nije uspjela
 
 Provjerite status sinhronizacije:
 
@@ -545,13 +555,13 @@ Provjerite status sinhronizacije:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Ako je `consecutiveFailures >= 5`, osigurač (circuit breaker) se aktivirao. Ponovo pokrenite server za resetovanje ili sačekajte ručni reset.
+Ako je `consecutiveFailures >= 5`, isključio se prekidač. Ponovo pokrenite server za resetovanje ili sačekajte ručno resetovanje.
 
 ---
 
 ## Šema baze podataka
 
-### Tabela `proxy_registry`
+### `proxy_registry` Table
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -565,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' ili 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (samo 1proxy)
-  latency_ms INTEGER,                        -- milisekunde (samo 1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- može pristupiti Google-u? (1proxy)
-  last_validated TEXT,                       -- ISO vremenska oznaka (1proxy)
-  country_code TEXT,                         -- ISO kôd od 2 slova (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### Tabela `proxy_assignments`
+### `proxy_assignments` Table
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID provajdera, ID veze ili ID kombinacije
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -593,11 +603,11 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Provjera ispravnosti proxyja (v3.8.16+)
+## Provjera ispravnosti proxyja (v3.8.16 +)
 
-OmniRoute-ov mehanizam za brzo otkazivanje proxyja (`src/lib/proxyHealth.ts`) detektuje neaktivne proxyje za <2s putem brze provjere TCP veze, a zatim **kešira rezultat** kako bi izbjegao opterećenje po zahtjevu.
+OmniRoute's** proxy brzi neuspjeh** mehanizam (`src/lib/proxyHealth.ts`) otkriva mrtve proxy servere u < 2s putem brze provjere TCP veze, a zatim** kešira rezultat** kako bi se izbjegla dodatna opterećenja po zahtjevu.
 
-### Kako to radi
+### Kako radi
 
 ```
 Request ──▶ ProxyHealthCache.get(url)
@@ -610,25 +620,25 @@ Request ──▶ ProxyHealthCache.get(url)
                                           ──▶ return result
 ```
 
-Bez ovoga, neaktivan proxy bi blokirao svaki zahtjev tokom punog trajanja `PROXY_TIMEOUT_MS` (zadano 30s) prije nego što otkaže.
+Bez ovoga, mrtvi proxy bi blokirao svaki zahtjev za puni `PROXY_TIMEOUT_MS` (podrazumevano 30s) prije nego što ne uspije.
 
 ### Podesive varijable okruženja
 
-| Varijabla                    | Zadano  | Svrha                                                  |
-| ---------------------------- | ------- | ------------------------------------------------------ |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | Vremensko ograničenje TCP veze po provjeri ispravnosti |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Koliko dugo se kešira rezultat ispravnosti             |
+| Varijabilna                  | Default | Svrha                                                   |
+| ---------------------------- | ------- | ------------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | TCP vremensko ograničenje veze po zdravstvenoj provjeri |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Koliko dugo se zdravstveni rezultat sprema              |
 
 **Preporučene vrijednosti:**
 
-| Scenario                        | Vremensko ograničenje brzog otkazivanja | Cache TTL | Obrazloženje                                                                |
-| ------------------------------- | --------------------------------------- | --------- | --------------------------------------------------------------------------- |
-| API gateway sa visokim protokom | 1500ms                                  | 60000ms   | Agresivno brzo otkazivanje, duži cache za smanjenje provjera                |
-| Geo-distribuirani čvorovi       | 3000ms                                  | 15000ms   | Sporije mreže trebaju više vremena; kraći cache za brzi prelazak na rezervu |
-| Razvoj / testiranje             | 1000ms                                  | 10000ms   | Brza iteracija na lokalnim proxyjima                                        |
-| Stealth / anti-detekcija        | 2500ms                                  | 45000ms   | Izbjegavajte brzo sondiranje koje bi moglo aktivirati ograničenja brzine    |
+| Scenario                    | Fast-fail timeout | Cache TTL | Reasoning                                                                                |
+| --------------------------- | ----------------- | --------- | ---------------------------------------------------------------------------------------- |
+| Visoko propusni API gateway | 1500ms            | 60000ms   | Agresivni brzi, duži keš za smanjenje provjera                                           |
+| Geo-distribuirani čvorovi   | 3000ms            | 15000ms   | Sporijim mrežama je potrebno više vremena; kraća keš memorija za brzi prelazak na grešku |
+| Dev / testiranje            | 1000ms            | 10000ms   | Brza iteracija na lokalnim proksijima                                                    |
+| Stealth / anti-detekcija    | 2500ms            | 45000ms   | Izbjegavajte brzo ispitivanje koje bi moglo pokrenuti ograničenja brzine                 |
 
-### Provjera ispravnosti proxyja
+### Provjera zdravlja proxyja
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -642,11 +652,11 @@ for (const s of statuses) {
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Zastavica `stale` je `true` kada je unos u cacheu premašio `HEALTH_CACHE_TTL_MS` i sljedeći zahtjev će pokrenuti novu provjeru.
+Oznaka `stale` je `true` kada je unos u keš memoriju premašio `HEALTH_CACHE_TTL_MS` i sljedeći zahtjev će pokrenuti novu provjeru.
 
-### Zadane vrijednosti po tipu proxyja
+### Zadane postavke tipa po proksiju
 
-Provjera ispravnosti koristi razumne zadane vrijednosti na osnovu URL šeme:
+Provjera zdravlja koristi razumne zadane postavke na osnovu URL šeme:
 
 | Šema                       | Zadani port |
 | -------------------------- | ----------- |
@@ -654,46 +664,46 @@ Provjera ispravnosti koristi razumne zadane vrijednosti na osnovu URL šeme:
 | `https://`                 | 443         |
 | `socks5://` / `socks5h://` | 1080        |
 
-Prilagođeni portovi u URL-u (`http://host:9999`) uvijek imaju prednost nad zadanim portom šeme.
+Prilagođeni portovi u URL (`http://host:9999`) uvijek imaju prednost u odnosu na zadanu šemu.
 
 ---
 
-## Analitika i opservabilnost proxyja
+## Analitika proxyja i uočljivost
 
-OmniRoute prati upotrebu po proxyju kako bi pomogao operaterima u dijagnosticiranju obrazaca usmjeravanja, skokova u latenciji i ponavljajućih grešaka.
+OmniRoute prati upotrebu po proxy serveru kako bi pomogao operaterima da dijagnosticiraju obrasce rutiranja, skokove kašnjenja i ponavljajuće greške.
 
 ### Šta se prati
 
-Za svaki zahtjev kroz konfigurirani proxy, OmniRoute bilježi:
+Za svaki zahtjev preko konfiguriranog proxyja, OmniRoute bilježi:
 
-| Metrika      | Opis                                                                        |
-| ------------ | --------------------------------------------------------------------------- |
-| `proxy_url`  | Puni proxy URL (sa maskiranim vjerodajnicama za autentifikaciju)            |
-| `provider`   | ID upstream provajdera (openai, anthropic, itd.)                            |
-| `latency_ms` | Ukupno vrijeme povratnog putovanja (round-trip) uključujući proxy handshake |
-| `connect_ms` | Samo vrijeme TCP povezivanja                                                |
-| `status`     | HTTP statusni kod od upstream-a                                             |
-| `error`      | Klasa greške ako zahtjev nije uspio                                         |
-| `timestamp`  | ISO 8601 UTC                                                                |
+| Metric       | Opis                                                               |
+| ------------ | ------------------------------------------------------------------ |
+| `proxy_url`  | Potpuni proxy URL (sa maskiranim vjerodajnicama)                   |
+| `provider`   | Upstream provajder ID (openai, anthropic, itd.)                    |
+| `latency_ms` | Ukupno vrijeme povratnog puta uključujući rukovanje proxy serverom |
+| `connect_ms` | samo vrijeme povezivanja TCP                                       |
+| `status`     | HTTP statusni kod od uzvodno                                       |
+| `error`      | Klasa greške ako zahtjev nije uspio                                |
+| `timestamp`  | ISO 8601 UTC                                                       |
 
 ### Pristup podacima
 
 ```bash
-# Nedavni proxy događaji
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Stvarni endpoint je `/api/usage/proxy-logs` (pogledajte `src/app/api/usage/proxy-logs/route.ts`). Ovaj endpoint podržava:
+Prava krajnja tačka je `/api/usage/proxy-logs` (vidi `src/app/api/usage/proxy-logs/route.ts`). Ova krajnja tačka podržava:
 
-- `GET /api/usage/proxy-logs` — dohvaćanje proxy logova
-- `DELETE /api/usage/proxy-logs` — brisanje svih proxy logova
+- `GET /api/usage/proxy-logs` — preuzima proxy logove
+- `DELETE /api/usage/proxy-logs` — obrišite sve proxy dnevnike
 
-Agregirane statistike se mogu direktno upitati iz `proxy_logs` tabele putem SQL-a ako je potrebno. UI dashboarda može ponuditi agregirane prikaze.
+Agregatne statistike mogu se tražiti direktno iz `proxy_logs` tablice preko SQL ako je potrebno. Kontrolna tabla UI može ponuditi zbirne prikaze.
 
-### Uobičajeni obrasci
+### Common Patterns
 
-**Otkrivanje nestabilnog proxyja** (flapping) (izmjenjuje se između uspjeha/neuspjeha):
+**Otkrijte proxy koji se kreće** (naizmenično između success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -707,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Pronalaženje sporih proxyja** (p95 latencija > 2s):
+**Pronađite spore proxy servere** (latencija p95 > 2s):
 
 ```sql
 WITH ranked AS (
@@ -726,70 +736,68 @@ ORDER BY latency_ms DESC;
 
 ## Stablo odlučivanja o strategiji rotacije
 
-Kada je više proxyja dodijeljeno opsegu (scope), OmniRoute koristi **strategiju rotacije** za odabir onog koji će se koristiti za svaki zahtjev. Strategija se konfigurira na nivou opsega (globalno, po provajderu, po računu, po kombinaciji).
+Kada je više proksija dodijeljeno opsegu, OmniRoute koristi a** strategija rotacije** da odaberete koju ćete koristiti za svaki zahtjev. Strategija je konfigurisana na nivou opsega (globalno, po provajderu, po nalogu, po kombinaciji).
 
 ### Dostupne strategije
 
-| Strategija          | Kada koristiti                               | Kompromis                                                                    |
-| ------------------- | -------------------------------------------- | ---------------------------------------------------------------------------- |
-| `quality` (default) | Produkcija sa proxyjima mješovitog kvaliteta | Favorizira visoko ocijenjene proxyje; može zapostaviti one sa niskom ocjenom |
-| `random`            | Distribucija opterećenja, privatnost         | Ravnomjerna distribucija; ignorira signale kvaliteta                         |
-| `sequential`        | Debugging, determinističko testiranje        | Kruži kroz proxyje redom; lako za razumjeti                                  |
+| Strategija         | Kada koristiti                                  | Kompromis                                                                    |
+| ------------------ | ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| `quality` (zadano) | Proizvodnja s proksijima mješovitog kvaliteta   | Favorizira proksije visoke ocjene; mogu izgladnjivati one sa niskim ocjenama |
+| `random`           | Distribucija opterećenja, privatnost            | Ravnomjerna distribucija; ignoriše signale kvaliteta                         |
+| `sequential`       | Otklanjanje grešaka, determinističko testiranje | Ciklusi kroz proxy po redu; lako rasuđivati                                  |
 
-### Stablo odlučivanja
+### Decision Tree
 
 ```
-                    Imate li ocjene kvaliteta za svoje proxyje?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-        DA                      NE
+       YES                     NO
         │                       │
-   Jesu li svi proxyji          │
-   otprilike jednaki            │
-   po kvalitetu?                │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-   DA        NE               Koristite
+  YES       NO                Use
    │         │              `random`
-   │         │              (ravnomjerno širenje
-   │         │              gradi podatke o kvalitetu
-   │         │              tokom vremena)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Koristite `quality`
-   │    (najbolje za
-   │    mješoviti kvalitet)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Koristite `random`
-(ravnomjerno rasporedite
-opterećenje)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Automatsko isključivanje neuspjelih proxyja za vaše vlastite proxyje
+## Automatsko isključivanje grešaka za vaše vlastite proksije
 
-1proxy marketplace pool već samostalno automatski degradira neuspjele proxyje (pogledajte [Proxy Quality Scores](#proxy-quality-scores)). Za proxyje koje ste **vi** dodali u registar, pozadinski planer zdravlja (`src/lib/proxyHealth/scheduler.ts`) pruža isto ponašanje "automatskog isključivanja neaktivnog člana iz lanca", bez brisanja ičega:
+1proxy marketplace pool već sam automatski degradira neuspjele proxy servere (pogledajte [ocjene kvaliteta proxy servera](#proxy-quality-scores) ). Za punomoćnike** ti** dodan u registar, planer zdravlja u pozadini (`src/lib/proxyHealth/scheduler.ts`) pruža isto ponašanje "automatski isključi mrtvog člana iz lanca", bez brisanja bilo čega:
 
 ```bash
-# .env — soft-disable proxy nakon 3 uzastopna neuspjela ispitivanja, ponovo ga omogućite
-# automatski čim ponovo počne odgovarati na ispitivanja.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Kako se ovo uklapa u multi-proxy lanac:
+Kako se uklapa u multi-proxy lanac:
 
-1. Planer ispituje svaki registrovani proxy svakih `PROXY_HEALTH_INTERVAL_MS` (zadano 10 min; minimum 1 min).
-2. Nakon `PROXY_AUTO_REMOVE_AFTER` uzastopnih **konačnih** neuspjeha (stvarni neuspjeh povezivanja — timeout ili 5xx greška samog cilja ispitivanja se nikada ne računa, pogledajte [Proxy Health Checking](#proxy-health-checking-v3816)), `status` proxyja se postavlja na `dead`.
-3. `dead` je jedan od statusa koje filter statusa "živ" (alive-status), koji koristi pool/rotation rezolucija, isključuje, tako da rotacija opsega (round-robin / random / sticky / latency — pogledajte [Rotation Strategy Decision Tree](#rotation-strategy-decision-tree)) odmah prestaje dodjeljivati taj proxy novim zahtjevima. Nijedan drugi proxy u poolu nije pogođen, i cijeli pool nikada ne prelazi tiho na direktnu vezu — pogledajte [4-Level Proxy System](#4-level-proxy-system) fail-closed zaštitu.
-4. Planer nastavlja ispitivati `dead` proxyje u istom intervalu. Sljedeće uspješno ispitivanje vraća `status` na `active` i on se ponovo uključuje u rotaciju — nije potrebno ručno ponovno dodavanje.
+1. Planer ispituje svaki registrovani proxy svaki `PROXY_HEALTH_INTERVAL_MS` (podrazumevano 10 min; minimalno 1 min).
+2. Nakon `PROXY_AUTO_REMOVE_AFTER` uzastopno** konačan** kvarovi (stvarni neuspjeh veze — a timeout ili vlastiti 5xx ciljne sonde se nikada ne računa, pogledajte [Provjera zdravlja proksija](#proxy-health-checking-v3816) ), `status` proxyja je postavljen na `dead`.
+3. `dead` je jedan od statusa koji filter statusa uživo koji koristi pool/rotation rezolucija isključuje, tako da rotacija opsega (round-robin / random / sticky / latency — vidi [Stablo strategije rotacije](#rotation-strategy-decision-tree) ) odmah prestaje da predaje taj proxy novim zahtjevima. Nije pogođen nijedan drugi proksi u grupi, a cijeli bazen se nikada ne vraća tiho na direktnu vezu — pogledajte [4-nivo proxy sistem](#4-level-proxy-system) koji se zatvara od greške.
+4. Planer nastavlja da ispituje `dead` proksije u istom intervalu. Sljedeća uspješna sonda okreće `status` natrag na `active` i ponovo ulazi u rotaciju — nije potrebno ručno ponovno dodavanje.
 
-Ovo je namjerno **opt-in i nedestruktivno**: po defaultu planer samo broji i bilježi neuspjehe (pogledajte politiku C u `decision.ts`), a `PROXY_AUTO_DISABLE` nikada ne briše red — tome služi zaseban, agresivniji `PROXY_AUTO_REMOVE` flag. Ako su oba postavljena na `true`, `PROXY_AUTO_REMOVE` pobjeđuje (proxy koji će biti obrisan nema koristi od soft-disable opcije između). Pogledajte [Environment Config](../reference/ENVIRONMENT.md) referencu za potpunu listu varijabli.
+Ovo je namerno** opt-in i nedestruktivni** : prema zadanim postavkama planer samo broji i evidentira greške (pogledajte politiku C u `decision.ts`), a `PROXY_AUTO_DISABLE` nikada ne briše red — čemu služi posebna, agresivnija `PROXY_AUTO_REMOVE` zastavica. Ako su oba postavljena na `true`, `PROXY_AUTO_REMOVE` pobjeđuje (proxy koji će biti obrisan nema koristi za soft-disable između). Pogledajte referencu [Environment Config](../reference/ENVIRONMENT.md) za punu listu varijabli.
 
 ---
 
-> 📖 **Povezana dokumentacija:**
+> 📖** Povezana dokumentacija:**
 >
-> - [User Guide](../guides/USER_GUIDE.md) — Opće podešavanje i konfiguracija
-> - [API Reference](../reference/API_REFERENCE.md) — Puna API dokumentacija
-> - [Environment Config](../reference/ENVIRONMENT.md) — Sve varijable okruženja
+> - [Korisnički vodič](../guides/USER_GUIDE.md) — Opće postavke i konfiguracija - [API Referenca](../reference/API_REFERENCE.md) — Kompletna API dokumentacija - [Konfiguracija okruženja](../reference/ENVIRONMENT.md) — Sve varijable okruženja

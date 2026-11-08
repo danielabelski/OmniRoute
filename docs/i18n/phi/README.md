@@ -21,19 +21,19 @@
 
 <div align="center">
 
-## 💰 ~1.62B Token / Buwan sa Mga Libreng Tier ng Third-Party
+## 💰 ~ 1.62B Token / Buwan sa Mga Third-Party Free Tier
 
 </div>
 
-> **Gamitin ang sarili mong mga account ng provider.** Tinatayang pinagsama-samang halaga ito mula sa magkakahiwalay at kwalipikadong libreng tier ng third-party, hindi token grant mula sa OmniRoute. Mag-sign up, kumuha ng mga kredensyal kung kinakailangan, at ikonekta ang mga provider na magagamit mo; bawat provider ang kumokontrol sa mga limitasyon, availability, at tuntunin nito.
+> **Dalhin ang iyong sariling provider account.** Ito ay isang tinantyang pinagsama-samang magkakahiwalay na kwalipikadong third-party na mga libreng tier, hindi isang token grant mula sa OmniRoute. Mag-sign up, kumuha ng mga kredensyal kung saan kinakailangan, at ikonekta ang mga provider na magagamit mo; kinokontrol ng bawat provider ang mga limitasyon, kakayahang magamit, at mga tuntunin nito.
 >
-> Masakit pagsama-samahin nang mano-mano ang mga libreng tier — dose-dosenang SDK, dose-dosenang rate limit, at walang ideya kung gaano karami talaga ang mayroon ka. Itinatala ng OmniRoute ang **485 entry ng libreng tier sa 34 na paulit-ulit na pool key** at kinukuwenta ang pangunahing bilang ng token mula sa **17 pool na may nailathalang positibong buwanang budget at limang per-model na cap ng Groq**, na inaalis ang mga duplicate batay sa magkakaparehong pool. Ang mga quota na nagbubukas lamang pagkatapos ng regional identity check (sa kasalukuyan: ModelScope) ay hiwalay na ipinapakita, +~6M matapos ang regional identity verification, at hindi kailanman isinasama sa pangunahing bilang. Nananatiling nakikita ang resulta sa dashboard (`/dashboard/free-tiers`).
+> Ang pag-stack ng mga libreng tier sa pamamagitan ng kamay ay masakit — dose-dosenang SDKs, dose-dosenang mga limitasyon sa rate, at walang ideya kung magkano talaga ang mayroon ka. mga katalogo OmniRoute** 465 free-tier na entry sa 34 na umuulit na pool key** at kinukuwenta ang token headline mula sa** 17 pool na may na-publish na positibong buwanang badyet at limang bawat modelong Groq cap** , na-deduplicate ng shared pool. Ang mga quota na nagbubukas lamang pagkatapos ng pagsusuri sa pagkakakilanlan ng rehiyon (ngayon: ModelScope) ay ipinapakita nang magkakahiwalay, +~ 6M sa likod ng pag-verify ng pagkakakilanlan ng rehiyon, at hindi kailanman naisa-isa sa headline. Ang resulta ay nananatiling nakikita sa dashboard (`/dashboard/free-tiers`).
 
-<img src="./docs/diagrams/free-tier-budget.svg" width="100%" alt="Card ng libreng tier budget ng OmniRoute: ~1.62B libreng token bawat buwan nang tuloy-tuloy, hanggang ~2.22B sa unang buwan gamit ang signup credit, mula sa 34 na dokumentadong paulit-ulit na pool key na sumasaklaw sa 485 nakatalang entry ng libreng tier sa ilalim ng isang endpoint. Tapat na matematikang inalis ang mga duplicate ng pool — bawat magkakaparehong pool ay binilang nang isang beses, kabilang ang 17 paulit-ulit na pool na may nailathalang positibong buwanang budget ng token at limang per-model na cap ng Groq; 12 provider ang minarkahang iwasan sa catalog ng panganib sa tuntunin kaya ikaw ang nagpapasya. Kasama sa budget bar ang Mistral 1B, Nara 210M, LLM7 150M, xKiro 150M, Groq 30M (limang per-model na cap) at mas maliliit na pool, pati ang signup credit sa unang buwan at mga provider na permanenteng libre at walang token cap na ipinapakita nang hiwalay upang hindi nila mapalaki ang pangunahing bilang. Live na nagagamit/natitira sa /dashboard/free-tiers."/>
+<img src="./docs/diagrams/free-tier-budget.svg" width="100%" alt="OmniRoute free-tier budget card: ~1.62B free tokens per month steady, up to ~2.22B in the first month with signup credits, from 34 documented recurring pool keys covering 465 cataloged free-tier entries behind one endpoint. Honest pool-deduped math — each shared pool counted once, including 17 recurring pools with a published positive monthly token budget plus five per-model Groq caps; 12 providers are marked avoid in the terms-risk catalog so you decide. Budget bar includes Mistral 1B, Nara 210M, LLM7 150M, xKiro 150M, Groq 30M (five per-model caps) and smaller pools, plus first-month signup credits and permanently-free no-token-cap providers surfaced separately so they never inflate the headline. Live used/remaining on /dashboard/free-tiers."/>
 
-> Animated na buod ng live na pahina ng `/dashboard/free-tiers`. Buong pamamaraan (pool dedupe, credit tier, tuntunin ng provider): **[docs/reference/FREE_TIERS.md](docs/reference/FREE_TIERS.md)**.
+> Animated na buod ng live `/dashboard/free-tiers` page. Buong pamamaraan (pool dedupe, credit tier, mga tuntunin ng provider):** [docs/reference/FREE_TIERS.md](docs/reference/FREE_TIERS.md)** .
 >
-> <sub>Muling ina-audit ang mga bilang na ito kada dalawang linggo laban sa live catalog at **umaandar sa parehong direksiyon** — kapag tinapos ng isang provider ang libreng tier nito, bumababa ang bilang; kapag may bagong provider na dumating, tumataas ito. Inilalathala namin ang aktuwal na kinakalkula ng catalog, hindi kailanman ang isang best case na pinataas at ni-round up.</sub>
+> <sub> Ang mga bilang na ito ay muling sinusuri bawat dalawang linggo laban sa live na catalog at** ilipat ang parehong paraan** — isang provider ay nagtatapos sa isang libreng antas at bumaba ang bilang; ang isang bago ay lumapag at ito ay umakyat. Ini-publish namin kung ano talaga ang kino-compute ng catalog, hindi kailanman isang round-up na pinakamahusay na kaso.</sub>
 
 <br/>
 
@@ -41,49 +41,43 @@
 
 <h3>
 
-⭐ I-star ang repo kung nakatulong ang OMNIROUTE na makatipid ka at mapadali ang iyong trabaho.
+⭐ Lagyan ng star ang repo kung tinulungan ka OMNIROUTE na makatipid ng pera at gawing mas madali ang iyong trabaho.
 
 </h3>
 
-[![Stars](https://img.shields.io/github/stars/diegosouzapw/OmniRoute?style=social)](https://github.com/diegosouzapw/OmniRoute)
+[![Mga Bituin](https://img.shields.io/github/stars/diegosouzapw/OmniRoute?style=social) ](https://github.com/diegosouzapw/OmniRoute)
 <a href="https://trendshift.io/repositories/23589" target="_blank"><img src="https://trendshift.io/api/badge/repositories/23589" alt="diegosouzapw%2FOmniRoute | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-[![Star History Rank](https://api.star-history.com/badge?repo=diegosouzapw/OmniRoute&theme=dark)](https://www.star-history.com/diegosouzapw/omniroute)
-[![olud.ai](https://olud.ai/badge.php?tool=diegosouzapw-omniroute)](https://olud.ai/project/diegosouzapw-omniroute.html)
+[![Ranggo ng Star History](https://api.star-history.com/badge?repo=diegosouzapw/OmniRoute&theme=dark) ](https://www.star-history.com/diegosouzapw/omniroute) [![olud.ai](https://olud.ai/badge.php?tool=diegosouzapw-omniroute) ](https://olud.ai/project/diegosouzapw-omniroute.html)
 
 ### 💬 Sumali sa komunidad
 
-**👋 Sundan ang maintainer — maunang makakuha ng mga bagong provider, release at tip:**
+**👋 Sundin ang maintainer — kumuha muna ng mga bagong provider, release at tip:**
 
-[![Follow Diego on LinkedIn](https://img.shields.io/badge/Follow_Diego_on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/diegosouzapw/)
-[![Follow @diegosouzapw on GitHub](https://img.shields.io/github/followers/diegosouzapw?style=for-the-badge&logo=github&logoColor=white&label=Follow%20on%20GitHub&color=181717)](https://github.com/diegosouzapw)
+[![Sundan si Diego sa LinkedIn](https://img.shields.io/badge/Follow_Diego_on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white) ](https://www.linkedin.com/in/diegosouzapw/) [![Sundan si @diegosouzapw sa GitHub](https://img.shields.io/github/followers/diegosouzapw?style=for-the-badge&logo=github&logoColor=white&label=Follow%20on%20GitHub&color=181717) ](https://github.com/diegosouzapw)
 
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/U47eFqAXCn)
-[![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/omnirouteOficial)
-[![WhatsApp Global](https://img.shields.io/badge/WhatsApp_Global-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4)
-[![WhatsApp Brasil](https://img.shields.io/badge/WhatsApp_Brasil-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4)
-[![Website](https://img.shields.io/badge/Website-omniroute.online-blue?logo=google-chrome&logoColor=white)](https://omniroute.online)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white) ](https://discord.gg/U47eFqAXCn) [![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) ](https://t.me/omnirouteOficial) [![WhatsApp Global](https://img.shields.io/badge/WhatsApp_Global-25D366?style=for-the-badge&logo=whatsapp&logoColor=white) ](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4) [![WhatsApp Brasil](https://img.shields.io/badge/WhatsApp_Brasil-25D366?style=for-the-badge&logo=whatsapp&logoColor=white) ](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4) [![Website](https://img.shields.io/badge/Website-omniroute.online-blue?logo=google-chrome&logoColor=white) ](https://omniroute.online)
 
-**Mga tanong, tip tungkol sa provider, roadmap at suporta → [Discord](https://discord.gg/U47eFqAXCn) · [Telegram](https://t.me/omnirouteOficial) · WhatsApp [🌍 Global](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4) / [🇧🇷 Brasil](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4) / [Portal](https://portal.sthub.com.br/communities/groups/st-hub/channels/Omniroute-World-8kRjmK)**
+**Mga tanong, tip sa provider, roadmap at suporta → [Discord](https://discord.gg/U47eFqAXCn) · [Telegram](https://t.me/omnirouteOficial) · WhatsApp [🌍 Global](https://chat.whatsapp.com/FvuCbrpZmQ6I85n2vW5QIC?s=cl&p=a&mlu=4) / [🇧🇷 Brasil](https://chat.whatsapp.com/KWgatljAjmbELQory59Oti?s=cl&p=a&mlu=4) / [Portal](https://portal.sthub.com.br/communities/groups/st-hub/channels/Omniroute-World-8kRjmK)**
 
 <br/>
 
-## 📈 Patuloy na Lumalaki ang Gateway
+## 📈 Patuloy na Lumalago ang Gateway
 
 <div align="center">
 
-|                                            |          v3.8.50          | **v3.8.51** |        `v3.8.54+`         |
-| ------------------------------------------ | :-----------------------: | :---------: | :-----------------------: |
-| 🌐 Mga provider                            |            352            |   **358**   |            380            |
-| 🧠 Mga natatanging ID ng modelo ng chat    |           1320            |  **1374**   |           1491            |
-| 🖼️ Tulay ng modality                       | 🆕 vision + audio + video |      ✓      |             ✓             |
-| 📡 Libreng katalogo ng Radar               |         🆕 opt-in         |      ✓      |             ✓             |
-| ⚖️ Pag-iiskedyul na may kamalayan sa quota |      🆕 Quota-Share       |      ✓      |             ✓             |
-| 📊 Telemetry ng quota                      |          🆕 live          |      ✓      |             ✓             |
-| 🧰 Headless mode                           |             —             |      —      |   🆕 `serve --headless`   |
-| 🛤️ Imprastraktura ng LTS rail              |             —             |      —      | 🆕 mga channel ng release |
-| 🔎 API para sa pagtuklas ng modelo         |             —             |      —      |   🆕 `/v1/models/query`   |
+|                                   |          v3.8.50          | **v3.8.51** |      `v3.8.54+`       |
+| --------------------------------- | :-----------------------: | :---------: | :-------------------: |
+| Mga Tagabigay 🌐                  |            352            |   **358**   |          380          |
+| 🧠 Natatanging modelo ng chat IDs |           1320            |  **1374**   |         1491          |
+| 🖼️ Modality Bridge                | 🆕 vision + audio + video |      ✓      |           ✓           |
+| 📡 Radar libreng catalog          |         🆕 opt-in         |      ✓      |           ✓           |
+| ⚖️ Quota-aware na pag-iiskedyul   |      🆕 Quota-Share       |      ✓      |           ✓           |
+| 📊 Quota telemetry                |          🆕 live          |      ✓      |           ✓           |
+| 🧰 Headless mode                  |             —             |      —      | 🆕 `serve --headless` |
+| 🛤️ LTS rail infra                 |             —             |      —      |  🆕 release channels  |
+| 🔎 Pagtuklas ng modelo API        |             —             |      —      | 🆕 `/v1/models/query` |
 
-**→ [Roadmap](ROADMAP.md) — sumabay sa rail patungo sa `v3.9.0 LTS`**
+**→ [Roadmap](ROADMAP.md) — na nakasakay sa riles patungong `v3.9.0 LTS`**
 
 </div>
 
@@ -224,23 +218,23 @@
 
 <a id="first-run"></a>
 
-## 🆓 Mag-install, magkonekta ng provider, pagkatapos ay mag-route sa pamamagitan ng isang endpoint
+## 🆓 I-install, ikonekta ang isang provider, pagkatapos ay ruta sa isang endpoint
 
 </div>
 
-<img src="./docs/diagrams/works-zero-config.svg" width="100%" alt="Tatlong hakbang: i-install at simulan ang OmniRoute, magkonekta ng kwalipikadong provider gamit ang sarili mong account o API key, pagkatapos ay ituro ang iyong tool sa localhost:20128/v1 gamit ang isang OmniRoute API key at model auto. Nakadepende ang routing sa mga available na kwalipikadong koneksyon at limitasyon ng provider."/>
+<img src="./docs/diagrams/works-zero-config.svg" width="100%" alt="Three steps: install and start OmniRoute, connect an eligible provider with your own account or API key, then point your tool at localhost:20128/v1 using an OmniRoute API key and model auto. Routing depends on available eligible connections and provider limits."/>
 
 ```bash
-# Pagkatapos magkonekta ng provider, kopyahin ang iyong OmniRoute key mula sa Dashboard → Endpoints:
+# After connecting a provider, copy your OmniRoute key from Dashboard → Endpoints:
 curl http://localhost:20128/v1/chat/completions \
   -H "Authorization: Bearer YOUR_OMNIROUTE_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
-<sub>Nangangailangan ang `auto` ng kwalipikadong route. Maaaring walang kwalipikadong keyless target ang bagong installation, at maaaring tanggihan ng isang keyless provider ang mga third-party client. Ang mga provider na may markang `tos: avoid`, kabilang ang Kiro, ay hindi isinasaalang-alang sa automatic routing bilang default; hindi binabago ng pagkonekta ng account ang setting na iyon. Tingnan ang [Gabay sa Libreng Tier](docs/getting-started/FREE-TIERS-GUIDE.md) bago pumili ng provider.</sub>
+<sub>`auto` ay nangangailangan ng isang karapat-dapat na ruta. Ang isang bagong pag-install ay maaaring walang karapat-dapat na keyless na mga target, at ang isang keyless provider ay maaaring tanggihan ang mga third-party na kliyente. Ang mga provider na may markang `tos: avoid`, kabilang Kiro, ay hindi kasama sa awtomatikong pagruruta bilang default; ang pagkonekta sa isang account ay hindi override ang setting na iyon. Tingnan ang [Free Tiers Guide](docs/getting-started/FREE-TIERS-GUIDE.md) bago pumili ng provider.</sub>
 
-<sub>📦 Mga quickstart script na maaaring i-copy-paste para sa **Python, Node.js, PHP, at cURL** → [`examples/quickstart/`](examples/quickstart/)</sub>
+<sub>📦 Copy-paste quickstart script para sa** Python, Node.js, PHP, at cURL** → [`examples/quickstart/`](examples/quickstart/)</sub>
 
 <br/>
 
@@ -250,7 +244,7 @@ curl http://localhost:20128/v1/chat/completions \
 
 </div>
 
-<img src="./docs/diagrams/promise-pillars.svg" width="100%" alt="Ang Pangako — Isang endpoint at 380 provider. Pinananatili ng automatic fallback ang routing habang may available na isa pang maayos na target. Anim na haligi: matatag na fallback sa 380 provider · hanggang 95% pagtitipid sa token para sa mga kwalipikadong workload · $0 para magsimula na may 150+ libreng tier at 54 na paulit-ulit/keyless na provider na libre magpakailanman · 39 CLI/agent integration sa pamamagitan ng iisang config · compatibility sa OpenAI, Claude, Gemini at Responses API sa /v1 · mga production control kabilang ang circuit breaker, TLS stealth, MCP na may 110 tool, A2A, memory, guardrail, eval at 56,000+ static test declaration sa 7,800+ sinusubaybayang test file."/>
+<img src="./docs/diagrams/promise-pillars.svg" width="100%" alt="The Promise — One endpoint and 380 providers. Automatic fallback keeps routing while another healthy target is available. Six pillars: resilient fallback across 380 providers · up to 95% token savings on eligible workloads · $0 to start with 150+ free tiers and 52 recurring/keyless free-forever providers · 39 CLI/agent integrations through one config · OpenAI, Claude, Gemini and Responses API compatibility at /v1 · production controls including circuit breakers, TLS stealth, MCP 110 tools, A2A, memory, guardrails, evals and 56,000+ static test declarations across 7,800+ tracked test files."/>
 
 <br/>
 <br/>
@@ -261,11 +255,11 @@ curl http://localhost:20128/v1/chat/completions \
 
 </div>
 
-<img src="./docs/diagrams/why-pain-fix.svg" width="100%" alt="Bakit OmniRoute — tigilan ang pag-aasikaso ng 10 dashboard, patay na API key at mga biglaang singil. Sampung pang-araw-araw na problema kumpara sa mga solusyon: quota na nag-e-expire nang hindi nagagamit → sulitin ang mga subscription; rate limit sa kalagitnaan ng pag-code → 4-tier na automatic fallback (Subscription → API → Cheap → Free); mga output ng tool na umuubos ng token → RTK + Caveman compression (15–95%); mamahaling API → routing na in-optimize ayon sa gastos; bawat tool ay may sariling setup → isang endpoint, isang dashboard; naka-block ang AI → 3-level proxy + TLS stealth; patay na key → 3-layer resilience (circuit breaker, key cooldown, model lockout); team na gumagamit ng iisang subscription → mga key pool na may patas na quota; mga prompt na dumadaan sa cloud ng ibang tao → local-first na may AES-256-GCM encrypted key; walang visibility sa gastos → live analytics (usage, quota, savings, p95 latency)."/>
+<img src="./docs/diagrams/why-pain-fix.svg" width="100%" alt="Why OmniRoute — stop juggling 10 dashboards, dead API keys and surprise bills. Ten daily pains vs fixes: quota expiring unused → maximize subscriptions; rate limits mid-coding → 4-tier auto-fallback (Subscription → API → Cheap → Free); tool outputs burning tokens → RTK + Caveman compression (15–95%); expensive APIs → cost-optimized routing; every tool its own setup → one endpoint, one dashboard; AI blocked → 3-level proxy + TLS stealth; dead keys → 3-layer resilience (circuit breakers, key cooldown, model lockout); team sharing one subscription → key pools with fair-share quotas; prompts through someone's cloud → local-first with AES-256-GCM encrypted keys; no spend visibility → live analytics (usage, quota, savings, p95 latency)."/>
 
 <div align="center">
 
-<img src="./docs/diagrams/tier-cascade.svg" width="100%" alt="Daloy ng request sa OmniRoute: tumatawag ang iyong IDE o CLI (Claude Code, Cursor, Cline…) sa isang lokal na endpoint (http://localhost:20128/v1); maaaring mag-fallback ang OmniRoute Smart Router (RTK + Caveman compression, 20 routing strategy, circuit breaker, TLS stealth, MCP, A2A, guardrail) sa 4 na tier ng provider habang may nananatiling kwalipikado at maayos na target — Tier 1 Subscription, Tier 2 API Key, Tier 3 Cheap at Tier 4 Free."/>
+<img src="./docs/diagrams/tier-cascade.svg" width="100%" alt="OmniRoute request flow: your IDE or CLI (Claude Code, Cursor, Cline…) calls one local endpoint (http://localhost:20128/v1); the OmniRoute Smart Router (RTK + Caveman compression, 20 routing strategies, circuit breakers, TLS stealth, MCP, A2A, guardrails) can fall back across 4 provider tiers while an eligible healthy target remains — Tier 1 Subscription, Tier 2 API Key, Tier 3 Cheap and Tier 4 Free."/>
 
 </div>
 
@@ -580,35 +574,35 @@ Ang Radar ay opt-in at GET-only. Hindi nag-a-upload ang OmniRoute client ng mga 
 
 </div>
 
-> Mga kamakailang highlight mula **v3.8.20 → v3.8.54**. Kumpletong kasaysayan sa [`CHANGELOG.md`](CHANGELOG.md).
+> Mga kamakailang highlight mula sa** v3.8.20 → v3.8.54** . Buong kasaysayan sa [`CHANGELOG.md`](CHANGELOG.md).
 
-- **⚖️ `quota-weighted` routing** — ang ika-20 na combo strategy ay nilalaktawan ang mga ubos na account, pagkatapos ay pumipili sa natitira batay sa natitirang quota ÷ kasalukuyang load, habang pinananatili ang mga kasalukuyang pag-uusap na naka-pin. → [Auto-Combo](docs/routing/AUTO-COMBO.md)
-- **🧰 Headless mode** — `omniroute serve --headless` (o `OMNIROUTE_HEADLESS=1`) ay nagpapatakbo lamang ng `/v1/*` proxy engine, naka-off ang dashboard at mga subsystem na para lang sa dashboard. → [Headless Mode](docs/guides/HEADLESS.md)
-- **🔎 Model discovery** — `/v1/models` ay nagsasala batay sa kakayahan, konteksto, uri at teksto, at ang `POST /v1/models/query` ay nagbabalik ng maikling deterministic shortlist na may parehong per-key visibility. → [API Reference](docs/reference/API_REFERENCE.md)
-- **🔑 Per-key routing control** — i-pin ang isang API key sa isang model o combo gamit ang `forcedModel`, at magdagdag o mag-alis ng mga model at combo ng isang key nang sabay-sabay (`/api/keys/{id}/access`). → [API Reference](docs/reference/API_REFERENCE.md) · [OpenAPI](docs/openapi.yaml)
-- **🛡️ Mas pinong PII controls** — per-type na pagpili, hanggang 20 validated na custom masking pattern at per-type detection counters; ang mismong masking ay nananatiling opt-in. → [Guardrails](docs/security/GUARDRAILS.md)
-- **🌍 67 wika** — dashboard, docs mirrors at CLI, na may `npm run i18n:add-locale` para magdagdag ng wika kahit saan sa isang utos lang. → [i18n Guide](docs/guides/I18N.md)
-- **🎛️ OmniConductor** — inbound A2A delegation sa iyong agent fleet, Conductor skills sa Agent Card, at isang dashboard panel na may Faro push-to-talk voice chat. → [A2A Server](docs/frameworks/A2A-SERVER.md)
-- **🛂 Adaptive admission & overload protection** — ang mabibigat na chat request ay pumipila imbes na mag-503, na may atomic RPM rolling leases bawat koneksyon. → [Resilience Guide](docs/architecture/RESILIENCE_GUIDE.md)
-- **🗂️ Canonical `/v1/models` ordering** — isang tuloy-tuloy na provider-grouped block bawat provider (combo muna ang naka-pin), matatag sa bawat catalog source. → [API Reference](docs/reference/API_REFERENCE.md)
-- **🗜️ Compression hardening** — default-on inflation guard, Caveman packs para sa DE / FR / JA + Chinese (wényán), RTK filters para sa Gradle & .NET. → [Compression](docs/compression/COMPRESSION_ENGINES.md)
-- **💸 Tapat na flat-rate cost** — subscription / coding-plan providers ay nagpapakita ng **$0** sa cost analytics; patuloy pa rin ang pagtatantya ng budget, quota & routing. → [API Reference](docs/reference/API_REFERENCE.md)
-- **⚖️ Quota-Share routing** — patas na hinahati ang quota ng shared account sa pooled keys, work-conserving kaya ang mga idle na bahagi ay ipinapahiram. → [Resilience Guide](docs/architecture/RESILIENCE_GUIDE.md)
-- **🤖 One-command CLI/agent setup** — 15 rehistradong `setup-*` na utos; `omniroute run` ay nagpapalunsad ng 7 CLI (Claude Code, Codex, Aider, Goose, OpenCode, Qwen Code, Gemini CLI); sinusuportahan ng `omniroute configure` ang 11 target na may interactive provider+model picker at per-context favorites. → [CLI Integrations](docs/guides/CLI-INTEGRATIONS.md)
-- **🛰️ Remote mode** — kontrolin ang remote OmniRoute gamit ang scoped tokens (`connect` / `contexts` / `tokens`) + isang `antigravity` OAuth helper para sa VPS installs. → [Remote Mode](docs/guides/REMOTE-MODE.md)
-- **🧭 Mas matalinong auto-routing** — `auto/<category>:<tier>` combos, **Fusion** (model panel + judge), task-aware routing, per-request model / mode / USD-budget overrides. → [Auto-Combo](docs/routing/AUTO-COMBO.md)
+- **⚖️ `quota-weighted` pagruruta** — ang ika-20 combo na diskarte ay nilaktawan ang mga naubos na account, pagkatapos ay gumuhit sa iba pa ayon sa proporsyon sa natitirang quota ÷ in-flight load, na pinapanatili ang mga kasalukuyang pag-uusap na naka-pin. → [Auto-Combo](docs/routing/AUTO-COMBO.md)
+- **🧰 Headless mode** — `omniroute serve --headless` (o `OMNIROUTE_HEADLESS=1`) ay nagpapatakbo lamang ng `/v1/*` proxy engine, nang naka-off ang dashboard at dashboard-only na mga subsystem. → [Headless Mode](docs/guides/HEADLESS.md)
+- **🔎 Pagtuklas ng modelo** — `/v1/models` filter ayon sa kakayahan, konteksto, uri at teksto, at `POST /v1/models/query` ay nagbabalik ng maikling deterministikong shortlist na may parehong per-key visibility. → [API Sanggunian](docs/reference/API_REFERENCE.md)
+- **🔑 Per-key na kontrol sa pagruruta** — i-pin ang isang API key sa isang modelo o combo na may `forcedModel`, at magdagdag o mag-alis ng mga modelo at combo ng key sa atomically (`/api/keys/{id}/access`). → [API Sanggunian](docs/reference/API_REFERENCE.md) · [OpenAPI](docs/openapi.yaml)
+- **🛡️ Mas pinong mga kontrol PII** — per-type na seleksyon, hanggang 20 validated custom masking patterns at per-type detection counter; nananatiling pag-opt-in ang masking mismo. → [Guardrails](docs/security/GUARDRAILS.md)
+- **🌍 67 wika** — dashboard, docs mirrors at CLI, na may `npm run i18n:add-locale` na nagdaragdag ng wika kahit saan sa isang command. → [i18n Gabay](docs/guides/I18N.md)
+- **🎛️ OmniConductor** — inbound A2A delegation sa iyong agent fleet, mga kasanayan sa konduktor sa Agent Card, at isang panel ng dashboard na may Faro push-to-talk voice chat. → [A2A Server](docs/frameworks/A2A-SERVER.md)
+- **🛂 Adaptive admission at overload na proteksyon** — heavyweight chat ay humihiling ng queue sa halip na 503ing, na may atomic RPM rolling leases sa bawat koneksyon. → [Gabay sa Katatagan](docs/architecture/RESILIENCE_GUIDE.md)
+- **🗂️ Canonical `/v1/models` na pag-order** — isang magkadikit na provider-grouped block bawat provider (naka-pin muna ang mga combo), stable sa bawat source ng catalog. → [API Sanggunian](docs/reference/API_REFERENCE.md)
+- **🗜️ Pagpapatigas ng compression** — default-on inflation guard, Caveman pack para sa DE / FR / JA + Chinese (wényán), RTK filter para sa Gradle & .NET. → [Compression](docs/compression/COMPRESSION_ENGINES.md)
+- **💸 Matapat na flat-rate na gastos** Nabasa ng mga nagbibigay ng subscription — / coding-plan** $0** sa analytics ng gastos; ang badyet, quota at pagruruta ay patuloy na nagtataya. → [API Sanggunian](docs/reference/API_REFERENCE.md)
+- **⚖️ Quota-Ibahagi ang pagruruta** Hinahati — ang quota ng isang nakabahaging account nang patas sa mga pinagsama-samang key, nakakatipid sa trabaho kaya naipahiram ang mga idle slice. → [Gabay sa Katatagan](docs/architecture/RESILIENCE_GUIDE.md)
+- **🤖 One-command CLI/agent setup** — 15 nakarehistrong `setup-*` command; inilunsad `omniroute run` ang 7 CLIs (Claude Code, Codex, Aider, Goose, OpenCode, Qwen Code, Gemini CLI); Sinusuportahan `omniroute configure` ang 11 target na may isang interactive na provider na tagapili ng modelo + at mga paborito sa bawat konteksto. → [CLI Mga Pagsasama](docs/guides/CLI-INTEGRATIONS.md)
+- **🛰️ Remote mode** — drive ng remote OmniRoute na may mga saklaw na token (`connect` / `contexts` / `tokens`) + isang `antigravity` OAuth helper para sa VPS installs. → [Remote Mode](docs/guides/REMOTE-MODE.md)
+- **🧭 Mas matalinong auto-routing** — `auto/<category>:<tier>` combos,** Fusion** (model panel + judge), task-aware routing, per-request model / mode / USD-budget overrides. → [Auto-Combo](docs/routing/AUTO-COMBO.md)
 - **🗜️ Pluggable compression** — 12 composable engines + Compression Studios: LLMLingua-2, two-tier Ultra, omniglyph, per-step fidelity gate, GCF v3.2, drag-reorder editor. → [Compression](docs/compression/COMPRESSION_ENGINES.md)
-- **🕵️ Transparent MITM decrypt (TPROXY)** — mahuli ang mga CLI na hindi sumusunod sa proxy env vars, na may per-SNI CA + trust-store installer. → [MITM/TPROXY](docs/security/MITM-TPROXY-DECRYPT.md)
-- **💸 Cost telemetry kahit saan** — `X-OmniRoute-*` cost/usage headers sa bawat endpoint, cache-HIT savings header, per-key USD spend quotas. → [API Reference](docs/reference/API_REFERENCE.md)
-- **🧠 Memory na ikaw ang may kontrol** — naka-off bilang default, opt-in int8 vector quantization + typed decay, per-request `x-omniroute-no-memory`. → [Memory](docs/frameworks/MEMORY.md)
-- **🛡️ Seguridad** — prompt-injection guard sa bawat LLM route (red-team suite), opt-in credential-masking guardrail (nagtatago ng leaked API keys/secrets sa parehong direksyon), libreng DuckDuckGo last-resort web search, at optional OIDC login gate para sa dashboard (laging available ang password login). → [Guardrails](docs/security/GUARDRAILS.md)
-- **🖼️ Mga bagong endpoint** — `/v1/ocr` (Mistral OCR) at `/v1/audio/translations` (Whisper-style) ay kumukumpleto sa media surface. → [API Reference](docs/reference/API_REFERENCE.md)
-- **🎨 Image / video / audio generation** — isang API para sa media: xAI Grok Imagine & Novita AI video, ComfyUI, Magnific, Adobe Firefly, Segmind, at mga speech provider gaya ng ElevenLabs. → [API Reference](docs/reference/API_REFERENCE.md)
-- **🌍 Deployment & ops** — reverse-proxy `basePath`, browser-language auto-detect, per-key device tracking, root-less MITM trust, zh-TW localization. → [Environment](docs/reference/ENVIRONMENT.md)
-- **🤝 Mas maraming provider & agent** — cloud agents (Codex Cloud, Cursor, Devin, Jules), Grok Build (xAI) na may browser + OAuth login, Ollama first-class card, Claude Opus 5 & Sonnet 5, Kimi opisyal na partnership (Code/Web/Moonshot), Zed, Requesty, SenseNova, Yuanbao, Agnes AI… at isang na-update na **380-provider catalog**. → [Providers](docs/reference/PROVIDER_REFERENCE.md)
-- **📡 Routing transparency** — bawat tugon ay may `X-OmniRoute-Decision` header na nagsasaad ng strategy/provider/latency na naghatid nito, bagong `cache-optimized` combo strategy + Auto-Combo `cacheAffinity` factor ay nagre-route ng repeat requests pabalik sa koneksyong may cached prefix, at isang read-only `/v1/auto-combo/{channel}/candidates` endpoint ay nagpapakita ng live candidate pool ng isang `auto/*` channel. → [Auto-Combo](docs/routing/AUTO-COMBO.md)
-- **⚡ Lokal na performance at imprastraktura** — isang-click na lokal na Redis, Cloudflare Workers / Deno Deploy relay deployers, Bifrost at Mux bilang supervised embedded services. → [Embedded Services](docs/frameworks/EMBEDDED-SERVICES.md)
-- **🧩 Kasama rin sa package** — plugin framework + marketplace, Omni/Agent/GitHub skills frameworks, Obsidian vault integration (22 MCP tools), OpenAI-compatible Batch & Files APIs, semantic response cache, gamification na may leaderboards, ACP agent discovery (15 built-in agents), scheduled log export sa BigQuery, `auto/chaos` parallel multi-model fan-out, isang Telegram bot bridge, isang in-app version manager at LMArena-ELO free-provider rankings. → [Docs](docs/README.md)
+- **🕵️ Transparent MITM decrypt (TPROXY)** — capture CLIs na binabalewala ang mga proxy env vars, na may per-SNI CA + trust-store installer. → [MITM/TPROXY](docs/security/MITM-TPROXY-DECRYPT.md)
+- **💸 Gastos ng telemetry sa lahat ng dako** — `X-OmniRoute-*` cost/usage header sa bawat endpoint, cache-HIT savings header, per-key USD spend quota. → [API Sanggunian](docs/reference/API_REFERENCE.md)
+- **🧠 Memory na kinokontrol mo** — off bilang default, opt-in int8 vector quantization + typed decay, per-request `x-omniroute-no-memory`. → [Memory](docs/frameworks/MEMORY.md)
+- **🛡️ Seguridad** — prompt-injection guard sa bawat LLM route (red-team suite), opt-in credential-masking guardrail (redacts leaked API keys/secrets sa parehong direksyon), libreng DuckDuckGo last-resort web search, at isang opsyonal na OIDC login gate para sa dashboard (palaging available ang password login). → [Guardrails](docs/security/GUARDRAILS.md)
+- **🖼️ Mga bagong endpoint** — `/v1/ocr` (Mistral OCR) at `/v1/audio/translations` (Whisper-style) bilugan ang ibabaw ng media. → [API Sanggunian](docs/reference/API_REFERENCE.md)
+- **🎨 Pagbuo ng imahe / video / audio** — one API para sa media: xAI Grok Imagine & Novita AI video, ComfyUI, Magnific, Adobe Firefly, Segmind, at speech provider gaya ng ElevenLabs. → [API Sanggunian](docs/reference/API_REFERENCE.md)
+- **🌍 Deployment at ops** — reverse-proxy `basePath`, browser-language auto-detect, per-key device tracking, root-less MITM trust, zh-TW localization. → [Kapaligiran](docs/reference/ENVIRONMENT.md)
+- **🤝 Higit pang provider at ahente** — cloud agents (Codex Cloud, Cursor, Devin, Jules), Grok Build (xAI) na may browser + OAuth login, Ollama first-class card, Claude Opus 5 & Sonnet 5, Kimi official partnership (Code/Web/Moonshot), Zed, Requesty, SenseNova, AI… at a refreshed** 380-catalog ng provider** . [Mga nagbibigay](docs/reference/PROVIDER_REFERENCE.md) →
+- **📡 Transparency ng pagruruta** — bawat tugon ay may `X-OmniRoute-Decision` header na pinangalanan ang strategy/provider/latency na nagsilbi dito, isang bagong `cache-optimized` combo strategy + Auto-Combo `cacheAffinity` factor route repeat requests pabalik sa koneksyon na may hawak na naka-cache na prefix, at isang read-only `/v1/auto-combo/{channel}/candidates` endpoint ang naglalantad sa live candidate pool ng `auto/*` channel. → [Auto-Combo](docs/routing/AUTO-COMBO.md)
+- **⚡ Lokal na pagganap at infra** — one-click local Redis, Cloudflare Workers / Deno Deploy relay deployers, Bifrost & Mux bilang pinangangasiwaang naka-embed na mga serbisyo. → [Mga Serbisyong Naka-embed](docs/frameworks/EMBEDDED-SERVICES.md)
+- **🧩 Gayundin sa kahon** — plugin framework + marketplace, Omni/Agent/GitHub skills frameworks, Obsidian vault integration (22 MCP tools), OpenAI-compatible Batch & Files APIs, semantic response cache, gamification na may mga leaderboard, ACP agent discovery (15 built-in na ahente), naka-iskedyul na log export sa BigQuery, `auto/chaos` parallel na bersyon, Telegram parallel na bersyon ng fan manager at LMArena-ELO free-provider rankings. → [Docs](docs/README.md)
 
 <br/>
 
@@ -689,15 +683,15 @@ mula sa iyong shell history. → [CLI Integrations](docs/guides/CLI-INTEGRATIONS
 
 <div align="center">
 
-## 🌐 380 AI Provider — 153 Libreng Minarkahan sa Catalog
+## 🌐 380 AI Mga Provider — 153 Namarkahan ng Catalog na Libre
 
 </div>
 
-> **380 nakarehistrong provider** sa mga canonical na koleksyon ng chat, media, search, local, cloud-agent at system, kabilang ang **153 na may `hasFree: true` na discovery metadata**. Saklaw ng chat model registry ang **239 provider / 3,059 natatanging pares ng provider-model / 1,475 raw model ID**; ang hiwalay na catalog ng libreng budget ay may **471 row bawat modelo**, **34 recurring pool** at **54 provider na paulit-ulit/keyless at libre magpakailanman**. Magkakaiba ang mga denominator na ito ayon sa disenyo; makikita ang mga depinisyon at kalkulasyong deduplicated ayon sa pool sa [Sanggunian ng Provider](docs/reference/PROVIDER_REFERENCE.md) at [Mga Libreng Tier](docs/reference/FREE_TIERS.md).
+> **380 rehistradong provider** sa buong canonical chat, media, paghahanap, lokal, cloud-agent at mga koleksyon ng system, kasama ang** 153 na nagdadala ng `hasFree: true` discovery metadata** . Sinasaklaw ng rehistro ng modelo ng chat** 239 provider / 3,059 natatanging provider-model pairs / 1,475 raw model IDs** ; ang hiwalay na katalogo ng libreng badyet ay mayroon** 471 bawat modelong hilera** ,** 34 na paulit-ulit na pool** at** 52 recurring/keyless free-forever provider** . Ito ay iba't ibang denominator ayon sa disenyo; mga kahulugan at mga kalkulasyon na na-deduup ng pool ay nakatira sa [Reference ng Provider](docs/reference/PROVIDER_REFERENCE.md) at [Mga Libreng Tier](docs/reference/FREE_TIERS.md).
 
 <div align="center">
 
-### 🏢 Bawat pangunahing lab — sa iisang endpoint
+### 🏢 Bawat major lab — sa isang endpoint
 
 <table>
   <tr>
@@ -717,7 +711,7 @@ mula sa iyong shell history. → [CLI Integrations](docs/guides/CLI-INTEGRATIONS
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/cohere-color.svg" width="40" alt="Cohere"/><br/><sub>Cohere</sub><br/><sub>                           </sub></td>
   </tr>
   <tr>
-    <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/perplexity-color.svg" width="40" alt="Perplexity"/><br/><sub>Perplexity</sub><br/><sub>                           </sub></td>
+    <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/perplexity-color.svg" width="40" alt="Perplexity"/><br/><sub>Pagkalito</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/huggingface-color.svg" width="40" alt="Hugging Face"/><br/><sub>HuggingFace</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/together-color.svg" width="40" alt="Together"/><br/><sub>Together</sub><br/><sub>                           </sub></td>
     <td align="center" width="80"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/fireworks-color.svg" width="40" alt="Fireworks"/><br/><sub>Fireworks</sub><br/><sub>                           </sub></td>
@@ -726,15 +720,15 @@ mula sa iyong shell history. → [CLI Integrations](docs/guides/CLI-INTEGRATIONS
   </tr>
 </table>
 
-<sub>…at 350+ pa — bawat icon ay live na nire-resolve mula sa catalog ng provider ng dashboard. 📖 [Sanggunian ng Provider](docs/reference/PROVIDER_REFERENCE.md)</sub>
+<sub>…at 350 + higit pang — bawat icon ay nareresolba nang live mula sa catalog ng provider ng dashboard. 📖 [Sanggunian ng Provider](docs/reference/PROVIDER_REFERENCE.md)</sub>
 
 <br/>
 
-### 🆓 Libre Magpakailanman — $0, walang card
+### 🆓 Libreng Forever — $0, walang card
 
 <table>
   <tr>
-    <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="OpenCode Zen"/><br/><b>OpenCode Zen</b><br/><sub>DeepSeek V4, Nemotron 3<br/>Walang limitasyon sa token</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="OpenCode Zen"/><br/><b>OpenCode Zen</b><br/><sub>DeepSeek V4, Nemotron 3<br/>Walang token cap</sub></td>
     <td align="center" width="150"><img src="./public/providers/cli-generic.svg" width="42" alt="Kilo Code"/><br/><b>Kilo Code</b><br/><sub>Auto-router, Tencent Hy3<br/>Libre magpakailanman</sub></td>
     <td align="center" width="150"><img src="./public/providers/requesty.svg" width="42" alt="Requesty"/><br/><b>Requesty</b><br/><sub>GPT-OSS 120B, Nemotron<br/>Libre magpakailanman</sub></td>
     <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/siliconcloud-color.svg" width="42" alt="SiliconFlow"/><br/><b>SiliconFlow</b><br/><sub>DeepSeek V3.2 / R1<br/>Libreng tier</sub></td>
@@ -742,16 +736,16 @@ mula sa iyong shell history. → [CLI Integrations](docs/guides/CLI-INTEGRATIONS
     <td align="center" width="150"><img src="./public/providers/baidu.svg" width="42" alt="Baidu ERNIE"/><br/><b>Baidu ERNIE</b><br/><sub>ERNIE 4.0<br/>Libre magpakailanman</sub></td>
   </tr>
   <tr>
-    <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/qoder-color.svg" width="42" alt="Qoder AI"/><br/><b>Qoder AI</b><br/><sub>Qwen3-Max, Kimi-K2<br/>WALANG LIMITASYONG LIBRE</sub></td>
-    <td align="center" width="150"><img src="./public/providers/pollinations.svg" width="42" alt="Pollinations"/><br/><b>Pollinations</b><br/><sub>GPT, Llama, Claude<br/>Hindi kailangan ng key</sub></td>
-    <td align="center" width="150"><img src="./public/providers/cloudflare.svg" width="42" alt="Cloudflare AI"/><br/><b>Cloudflare AI</b><br/><sub>50+ modelo<br/>10K neuron/araw</sub></td>
-    <td align="center" width="150"><img src="./public/providers/nvidia.svg" width="42" alt="NVIDIA NIM"/><br/><b>NVIDIA NIM</b><br/><sub>GLM, MiniMax<br/>~40 RPM na libre</sub></td>
-    <td align="center" width="150"><img src="./public/providers/cerebras.svg" width="42" alt="Cerebras"/><br/><b>Cerebras</b><br/><sub>GLM 4.7, GPT-OSS<br/>Isahang $5 credit; kailangan ng card</sub></td>
-    <td align="center" width="150"><img src="./public/providers/openrouter.svg" width="42" alt="OpenRouter"/><br/><b>OpenRouter</b><br/><sub>:free models<br/>+$10 → mas mataas na RPM</sub></td>
+    <td align="center" width="150"><img src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.91.0/icons/qoder-color.svg" width="42" alt="Qoder AI"/><br/><b>Qoder AI</b><br/><sub>Qwen3-Max, Kimi-K2<br/>Walang limitasyong FREE</sub></td>
+    <td align="center" width="150"><img src="./public/providers/pollinations.svg" width="42" alt="Pollinations"/><br/><b>Mga polinasyon</b><br/><sub>GPT, Llama, Claude<br/>Hindi kailangan ng susi</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cloudflare.svg" width="42" alt="Cloudflare AI"/><br/><b>Cloudflare AI</b><br/><sub>50 + na mga modelo<br/>10K neurons/day</sub></td>
+    <td align="center" width="150"><img src="./public/providers/nvidia.svg" width="42" alt="NVIDIA NIM"/><br/><b>NVIDIA NIM</b><br/><sub>GLM, MiniMax<br/>~ 40 RPM libre</sub></td>
+    <td align="center" width="150"><img src="./public/providers/cerebras.svg" width="42" alt="Cerebras"/><br/><b>Cerebras</b><br/><sub>GLM 4.7, GPT-OSS<br/>Isang beses na $5 na kredito; kailangan ng card</sub></td>
+    <td align="center" width="150"><img src="./public/providers/openrouter.svg" width="42" alt="OpenRouter"/><br/><b>OpenRouter</b><br/><sub>:mga libreng modelo<br/>+$10 → mas mataas RPM</sub></td>
   </tr>
 </table>
 
-📖 Buong catalog na nababasa ng machine → [`docs/reference/PROVIDER_REFERENCE.md`](docs/reference/PROVIDER_REFERENCE.md)
+📖 Buong nababasa ng makina na katalogo → [`docs/reference/PROVIDER_REFERENCE.md`](docs/reference/PROVIDER_REFERENCE.md)
 
 <br/>
 </div>
@@ -912,15 +906,15 @@ claude mcp add-server omniroute --type http --url http://localhost:20128/api/mcp
 
 <div align="center">
 
-## 🗜️ Makatipid ng 15–95% na Token — Awtomatiko
+## 🗜️ Makatipid ng 15–95% Token — Awtomatikong
 
 </div>
 
-### 📖 Paano ito gumagana — pipeline, arkitektura at matematika ng pagtitipid
+### 📖 Paano ito gumagana — pipeline, arkitektura at matematika sa pagtitipid
 
-<img src="./docs/diagrams/compression-pipeline.svg" width="100%" alt="OmniRoute compression pipeline: isang ilustratibong 10,000-token na kahilingan ng client ang dumadaan sa 12 na composable engine — Session-Dedup, CCR, Lite, RTK, Responses Tool Output, Headroom, Relevance, Caveman, Aggressive, LLMLingua-2, Ultra at OmniGlyph — at maaaring umabot sa provider sa humigit-kumulang 1,080 token sa dokumentadong stacked na halimbawa. Ang structured na nilalaman ay pinoprotektahan ng preservation guards at per-step fidelity gates; ang tahasang lossy o experimental na mga mode ay maaaring mag-transform ng karapat-dapat na nilalaman."/>
+<img src="./docs/diagrams/compression-pipeline.svg" width="100%" alt="OmniRoute compression pipeline: an illustrative 10,000-token client request passes through 12 composable engines — Session-Dedup, CCR, Lite, RTK, Responses Tool Output, Headroom, Relevance, Caveman, Aggressive, LLMLingua-2, Ultra and OmniGlyph — and can reach the provider at about 1,080 tokens in the documented stacked example. Structured content is protected by preservation guards and per-step fidelity gates; explicit lossy or experimental modes may transform eligible content."/>
 
-Ang default na stacked combo ay nagpapatakbo ng `RTK → Caveman`. Kapag pareho silang gumagana sa parehong tool/context payload, nagpapatong ang pagtitipid:
+Ang default na stacked combo ay tumatakbo `RTK → Caveman`. Kapag parehong kumilos sa parehong tool/context payload, savings compound:
 
 ```txt
 combined = 1 − (1 − RTK) × (1 − Caveman_input)
@@ -928,74 +922,74 @@ average  = 1 − (1 − 0.80) × (1 − 0.46) = 89.2%
 range    = 78.4 – 94.6%
 ```
 
-Ang mga code block, URL, JSON at structured data ay **laging protektado** ng preservation engine.
+Ang mga bloke ng code, URLs, JSON at structured na data ay** laging protektado** sa pamamagitan ng preservation engine.
 
-> **Bakit gagamit ng maraming token kung kaya namang gawin ng kaunting token?** Ang bawat kahilingan ay dumadaan sa compression pipeline ng OmniRoute nang **transparent** — walang pagbabago sa client. Ito na ngayon ay isang **stack ng 12 composable engine** na tumatakbo nang sunud-sunod at nagmi-mix & match per routing combo — nakaugat sa mga ideya mula sa [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/JuliusBrussee/caveman) (⭐ 90K+), [LLMLingua-2](https://github.com/microsoft/LLMLingua), at [Troglodita](https://github.com/leninejunior/troglodita) (PT-BR).
+> **Bakit gagamit ng maraming token kung kakaunti ang token ang gumagawa ng trick?** Ang bawat kahilingan ay dumadaan sa compression pipeline ni OmniRoute** malinaw** — walang pagbabago sa kliyente. Ngayon ay a** stack ng 12 composable engine** na tumatakbo sa pagkakasunud-sunod at paghahalo at pagtutugma bawat pagruruta combo — pagbuo sa mga ideya mula sa [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/JuliusBrussee/caveman) (⭐ 90K +), [LLMLingua-2](https://github.com/microsoft/LLMLingua), at [Troglodita](https://github.com/leninejunior/troglodita) (PT-BR).
 
-### 🧱 Ang stack na may 12 engine
+### 🧱 Ang 12-engine stack
 
-Tumatakbo ang mga engine sa ayos ng pipeline; ang bawat isa ay malayang ma-toggle at ma-configure per combo:
+Ang mga makina ay tumatakbo sa pagkakasunud-sunod ng pipeline; ang bawat isa ay independiyenteng na-toggle at na-configure sa bawat combo:
 
 <table>
-  <tr><th align="center">#</th><th align="left">Engine</th><th align="left">Ano ang ginagawa nito</th></tr>
-  <tr><td align="center" nowrap>1</td><td align="left" nowrap><b>Session-Dedup</b></td><td align="left">Inaalis ang nilalamang paulit-ulit sa mga turn (content-addressed, cross-turn)</td></tr>
-  <tr><td align="center" nowrap>2</td><td align="left" nowrap><b>CCR</b></td><td align="left">Ina-archive ang malalaking block sa likod ng retrieve markers, kinukuha kapag kailangan</td></tr>
-  <tr><td align="center" nowrap>3</td><td align="left" nowrap><b>Lite</b></td><td align="left">Pag-trim ng whitespace + image-URL (latency-light na baseline)</td></tr>
-  <tr><td align="center" nowrap>4</td><td align="left" nowrap><b>RTK</b></td><td align="left">Matalinong pag-filter ng tool-result, dedup at truncation (command-aware)</td></tr>
-  <tr><td align="center" nowrap>5</td><td align="left" nowrap><b>Responses Tool Output</b></td><td align="left">Lossless-first na JSON + bounded diagnostic compression para sa shell/patch/search/build output (Responses API)</td></tr>
-  <tr><td align="center" nowrap>6</td><td align="left" nowrap><b>Headroom</b></td><td align="left">Lossless na tabular compaction ng JSON arrays (~30%) gamit ang vendored na <b>GCF</b> codec</td></tr>
-  <tr><td align="center" nowrap>7</td><td align="left" nowrap><b>Relevance</b></td><td align="left">Extractive na pag-score ng pangungusap laban sa huling query ng user</td></tr>
-  <tr><td align="center" nowrap>8</td><td align="left" nowrap><b>Caveman</b></td><td align="left">Rule-based na prose compression (~65–75% sa output)</td></tr>
-  <tr><td align="center" nowrap>9</td><td align="left" nowrap><b>Aggressive</b></td><td align="left">Summarization + progresibong pagtanda ng lumang turn</td></tr>
+  <tr><th align="center">#</th><th align="left">makina</th><th align="left">Ano ang ginagawa nito</th></tr>
+  <tr><td align="center" nowrap>1</td><td align="left" nowrap><b>Session-Dedup</b></td><td align="left">Paulit-ulit na bumababa ng content sa mga pagliko (content-addressed, cross-turn)</td></tr>
+  <tr><td align="center" nowrap>2</td><td align="left" nowrap><b>CCR</b></td><td align="left">Nag-archive ng malalaking bloke sa likod ng mga marker ng pagkuha, na kinukuha kapag hinihiling</td></tr>
+  <tr><td align="center" nowrap>3</td><td align="left" nowrap><b>Lite</b></td><td align="left">Whitespace + image-URL trimming (latency-light baseline)</td></tr>
+  <tr><td align="center" nowrap>4</td><td align="left" nowrap><b>RTK</b></td><td align="left">Pag-filter ng resulta ng matalinong tool, de-de-up at truncation (nakakaalam ng command)</td></tr>
+  <tr><td align="center" nowrap>5</td><td align="left" nowrap><b>Output ng Tool ng Mga Tugon</b></td><td align="left">Lossless-first JSON + bounded diagnostic compression para sa mga shell/patch/search/build output (Mga tugon API)</td></tr>
+  <tr><td align="center" nowrap>6</td><td align="left" nowrap><b>Headroom</b></td><td align="left">Lossless tabular compaction ng JSON arrays (~ 30%) sa pamamagitan ng isang vendor <b>GCF</b> codec</td></tr>
+  <tr><td align="center" nowrap>7</td><td align="left" nowrap><b>Kaugnayan</b></td><td align="left">Extractive na pag-iskor ng pangungusap laban sa huling query ng user</td></tr>
+  <tr><td align="center" nowrap>8</td><td align="left" nowrap><b>taong maninira sa lungga</b></td><td align="left">Nakabatay sa panuntunan ang prose compression (~ 65–75% sa output)</td></tr>
+  <tr><td align="center" nowrap>9</td><td align="left" nowrap><b>Agresibo</b></td><td align="left">Summarization + progresibong pag-iipon ng mga lumang liko</td></tr>
   <tr><td align="center" nowrap>10</td><td align="left" nowrap><b>LLMLingua-2</b></td><td align="left">ML semantic pruning sa pamamagitan ng MobileBERT ONNX — code-safe, async</td></tr>
   <tr><td align="center" nowrap>11</td><td align="left" nowrap><b>Ultra</b></td><td align="left">Heuristic token pruning na may opsyonal na small-model (SLM) tier</td></tr>
-  <tr><td align="center" nowrap>12</td><td align="left" nowrap><b>OmniGlyph</b></td><td align="left">Experimental na context-as-image encoding para sa sinukat na Claude Fable 5 sa direktang Anthropic wire; ang GPT 5.6 transformers ay nananatiling fail-closed habang hinihintay ang provider receipts. Apat na compression profile (aggressive default, balanced, coding-safe, passthrough) (pinaka-agresibo; opt-in)</td></tr>
+  <tr><td align="center" nowrap>12</td><td align="left" nowrap><b>OmniGlyph</b></td><td align="left">Pang-eksperimentong context-as-image encoding para sa sinusukat Claude Fable 5 sa direktang Anthropic wire; Ang mga GPT 5.6 transformer ay nananatiling nabigo-sarado na nakabinbing mga resibo ng provider. Apat na profile ng compression (agresibong default, balanse, coding-safe, passthrough) (pinaka agresibo; opt-in)</td></tr>
 </table>
 
-Ang mga code block, URL at structured data ay **laging pinapanatili** nang byte-perfect. Pinagsasama ng **one-click preset** ang mga engine:
+Ang mga bloke ng code, URLs at nakabalangkas na data ay** laging iniingatan** byte-perpekto.** Isang-click na mga preset** pagsamahin ang mga makina:
 
 <table>
-  <tr><th align="left">Mode</th><th align="left">Tipid</th><th align="left">Pinakamainam para sa</th></tr>
-  <tr><td align="left" nowrap>🪶 <b>Lite</b></td><td align="left" nowrap>~15%</td><td align="left">Ligtas na default na laging naka-on</td></tr>
-  <tr><td align="left" nowrap>🪨 <b>Standard (Caveman)</b></td><td align="left" nowrap>~30%</td><td align="left">Araw-araw na coding</td></tr>
-  <tr><td align="left" nowrap>⚡ <b>Aggressive</b></td><td align="left" nowrap>~50%</td><td align="left">Mahabang session na maraming tool</td></tr>
+  <tr><th align="left">Mode</th><th align="left">Savings</th><th align="left">Pinakamahusay para sa</th></tr>
+  <tr><td align="left" nowrap>🪶 <b>Lite</b></td><td align="left" nowrap>~15%</td><td align="left">Laging naka-on na ligtas na default</td></tr>
+  <tr><td align="left" nowrap>🪨 <b>Standard (Caveman)</b></td><td align="left" nowrap>~30%</td><td align="left">Pang-araw-araw na coding</td></tr>
+  <tr><td align="left" nowrap>⚡ <b>Agresibo</b></td><td align="left" nowrap>~50%</td><td align="left">Mahabang tool-heavy sessions</td></tr>
   <tr><td align="left" nowrap>🔥 <b>Ultra</b></td><td align="left" nowrap>~75%</td><td align="left">Pinakamataas na pagtitipid</td></tr>
-  <tr><td align="left" nowrap>🧰 <b>RTK</b></td><td align="left" nowrap>60–90%</td><td align="left">Output ng shell/test/build/git</td></tr>
-  <tr><td align="left" nowrap>🔗 <b>Stacked (RTK → Caveman)</b></td><td align="left" nowrap><b>78–95%</b></td><td align="left">Halong prompt + tool log</td></tr>
+  <tr><td align="left" nowrap>🧰 <b>RTK</b></td><td align="left" nowrap>60–90%</td><td align="left">Shell/test/build/git output</td></tr>
+  <tr><td align="left" nowrap>🔗 <b>Naka-stack (RTK → Caveman)</b></td><td align="left" nowrap><b>78–95%</b></td><td align="left">Mixed prompt + tool logs</td></tr>
 </table>
 
 **Tunay na halimbawa — Standard mode:**
 
-> **Bago (69 token):** _"Malamang na ang dahilan kung bakit nagre-render muli ang iyong React component ay dahil gumagawa ka ng bagong object reference sa bawat render cycle. Kapag nagpasa ka ng inline object bilang prop, nakikita ito ng shallow comparison ng React bilang ibang object sa bawat pagkakataon, na nagti-trigger ng re-render. Inirerekomenda kong gamitin ang useMemo para i-memoize ang object."_
+> **Bago (69 token):** _"Ang dahilan kung bakit muling nagre-render ang iyong React component ay malamang dahil gumagawa ka ng bagong object reference sa bawat render cycle. Kapag nagpasa ka ng inline na object bilang prop, nakikita ito ng mababaw na paghahambing ng React bilang ibang object sa bawat pagkakataon, na nagti-trigger ng muling pag-render. Irerekomenda ko ang paggamit useMemo para i-memoize ang object."_
 >
-> **Pagkatapos (19 token):** _"Bagong object ref bawat render. Inline object prop = bagong ref = re-render. I-wrap sa useMemo."_
+> **Pagkatapos (19 na token):** _"Bagong object ref bawat render. Inline object prop = new ref = re-render. I-wrap sa useMemo."_
 >
-> **Parehong sagot. 72% mas kaunting token. Walang pagkawala ng accuracy.** ✅
+> **Parehong sagot. 72% mas kaunting mga token. Pagkawala ng katumpakan ng zero.** ✅
 
-**Halimbawang PT-BR — mode na [Troglodita](https://github.com/leninejunior/troglodita):**
+**Halimbawa ng PT-BR — [Troglodita](https://github.com/leninejunior/troglodita) mode:**
 
-> **Bago (42 tokens):** _"Ang problema ay nagre-render muli ang component dahil isang bagong object reference ang ginagawa sa bawat render cycle. Irerekomenda ko ang paggamit ng `useMemo`."_
+> **Antes (42 token):** _"O problema é que o componente está re-renderizando porque uma nova referência de objeto está sendo criada em cada ciclo de renderização. Eu recomendaria usar useMemo."_
 >
-> **Pagkatapos (12 tokens):** _"Re-render: bagong ref bawat cycle (inline object na ginagawa muli). Gamitin ang `useMemo`."_
+> **Depois (12 token):** _"Re-render: ref nova cada ciclo (objeto inline recriado). Usar `useMemo`."_
 >
-> **Parehong sagot. ~70% mas kaunting tokens. Buo ang teknikal na katumpakan.** ✅
+> **Mesma resposta. ~ 70% menos token. Precisão técnica intacta.** ✅
 
 <br/>
 
-### 🎚️ Higit pa sa mga engine — mga output style, ang adaptive dial at per-request na kontrol
+### 🎚️ Higit pa sa mga engine — output styles, ang adaptive dial at per-request control
 
-Binabawasan ng 12 engine sa itaas ang pumapasok. Tatlong karagdagang layer ang humuhubog sa **paano**, **kailan**, at kung ano ang **lumalabas**:
+Ang 12 engine sa itaas ay lumiliit kung ano ang napupunta** sa** . Tatlong patong na hugis** paano** ,** kailan** , at kung ano ang dumating** palabas** :
 
-- **🪄 Output Styles** _(pag-steer sa output-axis)_ — nag-inject ng deterministic, cache-safe na mga instruksiyon sa paghubog ng sagot; mapagsasama, bawat isa sa `lite` / `full` / `ultra` na intensity. Ang pagdaragdag ng style ay isang linyang registry entry:
-  - **Terse prose** — alisin ang filler / articles / hedging; panatilihing eksakto ang teknikal na substansiya.
-  - **Less code** — "lazy senior dev" na YAGNI: pinakamaliit na gumaganang pagbabago, walang hindi hinihinging scaffolding.
-  - **Ponytail (lazy senior dev)** — akyatin ang YAGNI ladder, ayusin ang root cause, pinakamaliit na gumaganang diff.
-  - **I have ADHD (action-first)** — nauuna ang susunod na aksyon, may bilang ang mga hakbang, isang konkretong susunod na hakbang, walang preamble.
-  - **Terse CJK (文言)** — klasikal na Chinese na ultra-terse na estilo (naka-locale sa `zh`).
-- **🎯 Adaptive context-budget** _(ang dial)_ — sa halip na isang on/off na token threshold, i-escalate ang pinakamura at pinakawalang-loss na mga engine hanggang sa kinakailangan lang para **magkasya sa context window ng modelo**. Policy: `reserve-output` (default, model-aware) · `percentage` · `absolute`. Mode: `floor` (garantiyahan ang fit) · `replace-autotrigger` (mananalo ang iyong tahasang pinili) · `off` (legacy threshold).
-- **🎛️ Saan nagpapasya ang compression** _(precedence, mataas → mababa)_ — per-request `x-omniroute-compression` header › routing-combo override › aktibong named profile › adaptive / auto-trigger › panel default › off. Ang inilapat na plano ay ibinabalik sa `X-OmniRoute-Compression: <mode>; source=<source>` response header.
+- **🪄 Mga Estilo ng Output** _(output-axis steering)_ — inject deterministic, cache-safe response-shaping mga tagubilin; pinagsama, bawat isa sa `lite` / `full` / `ultra` intensity. Ang pagdaragdag ng istilo ay isang one-line na registry entry:
+  - **Terse prosa** — drop filler / mga artikulo / hedging; panatilihing eksakto ang teknikal na sangkap.
+  - **Mas kaunting code** — "tamad senior dev" YAGNI: pinakamaliit na pagbabago sa trabaho, walang hindi hiniling na scaffolding.
+  - **Nakapusod (tamad na senior dev)** — umakyat sa YAGNI hagdan, ayusin ang root cause, pinakamaliit na working diff.
+  - **Mayroon akong ADHD (action-first)** — next action leads, steps numbered, one concrete next step, walang preamble.
+  - **Terse CJK (文言)** — classical-Chinese ultra-terse style (locale-gated to `zh`).
+- **🎯 Adaptive context-budget** _(ang dial)_ — sa halip na isang on/off token threshold, pataasin ang pinakamurang, pinaka-lossless na makina hanggang sa kinakailangan** magkasya sa window ng konteksto ng modelo** . Patakaran: `reserve-output` (default, model-aware) · `percentage` · `absolute`. Mode: `floor` (garantisadong akma) · `replace-autotrigger` (panalo ang iyong tahasang pagpipilian) · `off` (legacy threshold).
+- **🎛️ Kung saan napagpasyahan ang compression** _(precedence, mataas → mababa)_ — per-request `x-omniroute-compression` header › routing-combo override › active named profile › adaptive / auto-trigger › panel default › naka-off. Ang inilapat na plano ay umaalingawngaw pabalik sa `X-OmniRoute-Compression: <mode>; source=<source>` response header.
 
-Mag-auto-trigger sa token threshold, i-on ang adaptive dial, i-pin ang isang named profile, magtakda ng one-off per request, o magtalaga ng pipeline per routing combo — kung alin ang bagay sa workload. Isang opt-in na offline **eval harness** (`npm run eval:compression`) ang nagsusuri ng fidelity vs. savings sa isang naka-pin na corpus bago mo i-promote ang isang pagbabago.
+Auto-trigger sa pamamagitan ng token threshold, i-flip ang adaptive dial, i-pin ang isang pinangalanang profile, magtakda ng one-off bawat kahilingan, o magtalaga ng pipeline sa bawat routing combo — alinman ang akma sa workload. Isang opt-in offline** eval harness** (`npm run eval:compression`) ay nakakuha ng katapatan kumpara sa pagtitipid sa isang naka-pin na corpus bago ka mag-promote ng pagbabago.
 
 📖 [`COMPRESSION_GUIDE.md`](docs/compression/COMPRESSION_GUIDE.md) · [`RTK_COMPRESSION.md`](docs/compression/RTK_COMPRESSION.md) · [`COMPRESSION_ENGINES.md`](docs/compression/COMPRESSION_ENGINES.md)
 
@@ -1003,7 +997,7 @@ Mag-auto-trigger sa token threshold, i-on ang adaptive dial, i-pin ang isang nam
 
 <div align="center">
 
-# ⚡ Mabilis na Simula
+# ⚡ Mabilis na Pagsisimula
 
 </div>
 
@@ -1014,28 +1008,21 @@ npm install -g omniroute
 omniroute
 ```
 
-> 💡 Nakikita mo ang `npm warn ERESOLVE` o peer-dep warnings? [Hindi sila mapanganib](docs/guides/TROUBLESHOOTING.md#npm-install-warnings-eresolve--peer--deprecated).
-> **Gumagamit ng npm 11 o mas bago?** Maaaring harangin ng npm ang mga package lifecycle script maliban kung pinapayagan ang mga ito. Kinakailangan ang `postinstall` ng OmniRoute (`node scripts/build/postinstall.mjs`) para ihanda ang mga native runtime file nito. Payagan ang mga package na pinangalanan sa warning ng npm kapag nag-i-install nang global. Para sa package set na iniulat ng OmniRoute 3.8.54:
+> 💡 Tingnan ang mga babala `npm warn ERESOLVE` o peer-dep? [Ang mga ito ay hindi nakakapinsala](docs/guides/TROUBLESHOOTING.md#npm-install-warnings-eresolve--peer--deprecated).** Gumagamit ng npm 11 o mas bago?** Maaaring i-block ng npm ang mga script ng lifecycle ng package maliban kung pinapayagan ang mga ito. OmniRoute's `postinstall` (`node scripts/build/postinstall.mjs`) ay kinakailangan upang ihanda ang mga native na runtime file nito. Payagan ang mga package na pinangalanan sa babala ng npm kapag nag-i-install sa buong mundo. Para sa package set na iniulat ng OmniRoute 3.8.54:
 >
-> ```bash
-> npm install -g --allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild omniroute
-> ```
+> `bash npm install -g --allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild omniroute `
 >
-> Para magamit muli ang allowlist na ito para sa mga susunod na global install, i-configure ito nang isang beses, pagkatapos ay mag-install nang normal:
+> Upang muling gamitin ang allowlist na ito para sa hinaharap na mga pandaigdigang pag-install, i-configure ito nang isang beses, pagkatapos ay i-install nang normal:
 >
-> ```bash
-> npm config set allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild --location=user
-> npm install -g omniroute
-> ```
+> `bash npm config set allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild --location=user npm install -g omniroute `
 >
-> Maaaring magbago ang dependency list sa pagitan ng mga release; kung iba ang iniulat ng npm na listahan, gamitin ang mga pangalan ng package mula sa warning na iyon. Ang pagpayag sa isang package ay nagpapahintulot sa mga install script nito na tumakbo.
-> **Gumagamit ng Gemini Web o ibang web-cookie provider?** Kasama sa npm package ang Playwright pero hindi ang Chromium binary nito. Tingnan ang [Playwright Chromium setup](docs/guides/TROUBLESHOOTING.md#gemini-web-and-playwright-chromium) na tala bago gawin ang unang web-provider request.
+> Maaaring magbago ang listahan ng dependency sa pagitan ng mga release; kung nag-uulat ang npm ng ibang listahan, gamitin ang mga pangalan ng package mula sa babalang iyon. Ang pagpayag sa isang package ay nagbibigay-daan sa pag-install ng mga script nito na tumakbo.** Gumagamit ng Gemini Web o ibang web-cookie provider?** Kasama sa npm package ang Playwright ngunit hindi ang Chromium binary nito. Tingnan ang [Playwright Chromium setup](docs/guides/TROUBLESHOOTING.md#gemini-web-and-playwright-chromium) note bago gawin ang unang kahilingan sa web-provider.
 
-Dashboard sa `http://localhost:20128` · API sa `http://localhost:20128/v1`.
+Dashboard at `http://localhost:20128` · API at `http://localhost:20128/v1`.
 
-**2) Ikonekta ang isang karapat-dapat na provider gamit ang sarili mong account**
+**2) Ikonekta ang isang karapat-dapat na provider gamit ang iyong sariling account**
 
-Dashboard → **Providers** → pumili ng provider na ang kasalukuyang terms at quota ay bagay sa iyong use case → idagdag ang API key nito o kumpletuhin ang account flow nito. Maaaring mangailangan ang mga free tier ng signup, approval, o payment method. Repasuhin ang [Free Tiers Guide](docs/getting-started/FREE-TIERS-GUIDE.md); hindi garantisado ang keyless availability, at ang mga provider na may markang `tos: avoid` ay hindi kasama sa `auto` bilang default.
+Dashboard →** Mga provider** → pumili ng provider na ang mga kasalukuyang tuntunin at quota ay akma sa iyong use case → idagdag ang API key nito o kumpletuhin ang daloy ng account nito. Maaaring mangailangan ng pag-signup, pag-apruba, o paraan ng pagbabayad ang mga libreng tier. Suriin ang [Free Tiers Guide](docs/getting-started/FREE-TIERS-GUIDE.md) ; hindi ginagarantiyahan ang keyless availability, at ang mga provider na may markang `tos: avoid` ay hindi kasama sa `auto` bilang default.
 
 **3) Ituro ang iyong coding tool**
 
@@ -1051,9 +1038,9 @@ Model:    auto            (routes among eligible connections — or choose provi
 curl http://localhost:20128/v1/models -H "Authorization: Bearer YOUR_KEY"
 ```
 
-Dapat mong makita ang mga nakakonektang modelo na nakalista. 🎉 Iyon na — magsimulang mag-code, at awtomatikong nag-a-auto-route at nag-fa-fallback ang OmniRoute para sa iyo.
+Dapat mong makitang nakalista ang iyong mga konektadong modelo. 🎉 Iyon lang — simulan ang coding, at OmniRoute auto-ruta at bumabalik para sa iyo.
 
-Kung hindi makapagpadala ang iyong client ng custom header, naglalabas din ang OmniRoute ng tokenized compatibility aliases:
+Kung hindi makapagpadala ang iyong kliyente ng mga custom na header, inilalantad din OmniRoute ang mga tokenized na alyas sa compatibility:
 
 ```txt
 OpenAI catalog:   http://localhost:20128/vscode/YOUR_KEY/
@@ -1064,7 +1051,7 @@ Ollama chat:      http://localhost:20128/vscode/YOUR_KEY/api/chat
 Ollama tags:      http://localhost:20128/vscode/YOUR_KEY/api/tags
 ```
 
-Gamitin lamang ang mga ito para sa mga client na hindi makakabit ng `Authorization: Bearer ...`. Ang header auth pa rin ang ginustong mode.
+Gamitin lamang ang mga ito para sa mga kliyenteng hindi makakabit `Authorization: Bearer ...`. Ang auth ng header ay nananatiling ginustong mode.
 
 <br/>
 
@@ -1283,29 +1270,29 @@ Mga canonical na sukatan noong 2026-10-18: **1.976 natatanging video** · **20.2
 <br/>
 <div align="center">
 
-## 🛠️ Stack ng Teknolohiya
+## 🛠️ Tech Stack
 
 </div>
 
 <table>
   <tr><th align="left">Layer</th><th align="left">Teknolohiya</th></tr>
   <tr><td nowrap><b>Runtime</b></td><td>Node.js 22.x / 24.x LTS — <code>&gt;=22.22.2 &lt;23 || &gt;=24.0.0 &lt;27</code></td></tr>
-  <tr><td nowrap><b>Wika</b></td><td>TypeScript 6.0 — <b>100% TypeScript</b> sa <code>src/</code> at <code>open-sse/</code> (walang <code>any</code> sa core mula v2.0)</td></tr>
-  <tr><td nowrap><b>Framework</b></td><td>Next.js 16 + React 19 + Tailwind CSS 4</td></tr>
-  <tr><td nowrap><b>Database</b></td><td>better-sqlite3 (SQLite, WAL journaling) + LowDB (legacy na JSON) — 147 module ng domain, 224 migration</td></tr>
-  <tr><td nowrap><b>Memory</b></td><td>SQLite FTS5 full-text + int8-quantized vector embeddings, typed decay</td></tr>
-  <tr><td nowrap><b>Mga Schema</b></td><td>Zod 4 — validation ng I/O ng MCP tool + mga kontrata ng API</td></tr>
-  <tr><td nowrap><b>Mga Protocol</b></td><td>MCP (stdio / HTTP / SSE) + A2A v0.3 (JSON-RPC 2.0 + SSE)</td></tr>
-  <tr><td nowrap><b>Streaming</b></td><td>Server-Sent Events (SSE) + WebSocket bridge (<code>/v1/ws</code>)</td></tr>
-  <tr><td nowrap><b>Compression</b></td><td>12-engine na pipeline — RTK, Caveman, LLMLingua-2 (MobileBERT ONNX), GCF, OmniGlyph</td></tr>
-  <tr><td nowrap><b>Pagpapatotoo at seguridad</b></td><td>OAuth 2.0 (PKCE) + JWT + API Keys + scoped auth ng MCP · AES-256-GCM habang nakaimbak · DOMPurify</td></tr>
-  <tr><td nowrap><b>Stealth</b></td><td>wreq-js — panggagaya ng JA3 / JA4 TLS fingerprint, 3-level na proxy</td></tr>
-  <tr><td nowrap><b>Resilience</b></td><td>Circuit breaker, exponential backoff, anti-thundering-herd, awtomatikong self-healing ng auto-combo</td></tr>
-  <tr><td nowrap><b>Pag-log</b></td><td>pino — mga structured JSON log na may konteksto ng request</td></tr>
-  <tr><td nowrap><b>Pagsubok</b></td><td>Node.js test runner + Vitest — <b>mahigit 60,000 static test declaration</b> sa mahigit 8,400 nasubaybayang test file (unit, integration, E2E, seguridad, ecosystem)</td></tr>
-  <tr><td nowrap><b>Mga Platform</b></td><td>Desktop (Electron) · Android (Termux) · PWA (anumang browser)</td></tr>
-  <tr><td nowrap><b>CI/CD</b></td><td>GitHub Actions — awtomatikong pag-publish sa npm + Docker Hub kapag may release</td></tr>
-  <tr><td nowrap><b>Mga Link</b></td><td><a href="https://omniroute.online">Website</a> · <a href="https://www.npmjs.com/package/omniroute">npm</a> · <a href="https://hub.docker.com/r/diegosouzapw/omniroute">Docker Hub</a></td></tr>
+  <tr><td nowrap><b>Wika</b></td><td>TypeScript 6.0 — <b>100% TypeScript</b> sa kabuuan ng <code>src/</code> at <code>open-sse/</code> (zero <code>any</code> sa core mula noong v2.0)</td></tr>
+  <tr><td nowrap><b>Balangkas</b></td><td>Next.js 16 + React 19 + Tailwind CSS 4</td></tr>
+  <tr><td nowrap><b>Database</b></td><td>better-sqlite3 (SQLite, WAL journaling) + LowDB (JSON legacy) — 147 domain modules, 224 migration</td></tr>
+  <tr><td nowrap><b>Alaala</b></td><td>SQLite FTS5 full-text + int8-quantized vector embeddings, na-type na pagkabulok</td></tr>
+  <tr><td nowrap><b>Mga scheme</b></td><td>Zod 4 — MCP tool I/O validation + API kontrata</td></tr>
+  <tr><td nowrap><b>Mga protocol</b></td><td>MCP (stdio / HTTP / SSE) + A2A v0.3 (JSON-RPC 2.0 + SSE)</td></tr>
+  <tr><td nowrap><b>Streaming</b></td><td>Mga Kaganapang Ipinadala ng Server (SSE) + WebSocket bridge (<code>/v1/ws</code>)</td></tr>
+  <tr><td nowrap><b>Compression</b></td><td>12-engine pipeline — RTK, Caveman, LLMLingua-2 (MobileBERT ONNX), GCF, OmniGlyph</td></tr>
+  <tr><td nowrap><b>&amp; seguridad</b></td><td>OAuth 2.0 (PKCE) + JWT + API Keys + MCP scoped auth · AES-256-GCM at rest · DOMPurify</td></tr>
+  <tr><td nowrap><b>Nakaw</b></td><td>wreq-js — JA3 / JA4 TLS fingerprint impersonation, 3-level na proxy</td></tr>
+  <tr><td nowrap><b>Katatagan</b></td><td>Circuit breaker, exponential backoff, anti-thundering-herd, auto-combo self-healing</td></tr>
+  <tr><td nowrap><b>Pag-log</b></td><td>pino — structured JSON log na may konteksto ng kahilingan</td></tr>
+  <tr><td nowrap><b>Pagsubok</b></td><td>Node.js test runner + Vitest — <b>60,000 + static na deklarasyon ng pagsubok</b> sa 8,400 + na sinusubaybayang mga test file (unit, integration, E2E, seguridad, ecosystem)</td></tr>
+  <tr><td nowrap><b>Mga plataporma</b></td><td>Desktop (Electron) · Android (Termux) · PWA (anumang browser)</td></tr>
+  <tr><td nowrap><b>CI/CD</b></td><td>GitHub Actions — auto npm publish + Docker Hub sa release</td></tr>
+  <tr><td nowrap><b>Mga link</b></td><td><a href="https://omniroute.online">Website</a> · <a href="https://www.npmjs.com/package/omniroute">npm</a> · <a href="https://hub.docker.com/r/diegosouzapw/omniroute">Docker Hub</a></td></tr>
 </table>
 
 <div align="center">
@@ -1320,69 +1307,69 @@ Mga canonical na sukatan noong 2026-10-18: **1.976 natatanging video** · **20.2
 
 <table>
   <tr><th align="left">Dokumento</th><th align="left">Paglalarawan</th></tr>
-  <tr><td nowrap><b><a href="docs/guides/USER_GUIDE.md">Gabay sa User</a></b></td><td>Mga provider, combo, integrasyon sa CLI, deployment</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/SETUP_GUIDE.md">Gabay sa Pagse-set up</a></b></td><td>Kumpletong mga paraan ng pag-install, mga configuration ng CLI tool, pagse-set up ng protocol, pag-aangkop ng timeout</td></tr>
-  <tr><td nowrap><b><a href="docs/reference/CLI-TOOLS.md">Gabay sa mga CLI Tool</a></b></td><td>Pagse-set up sa bawat tool para sa Claude Code, Codex, Cursor, Cline, OpenClaw, Kilo, Copilot</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/REMOTE-MODE.md">Remote na Mode</a></b></td><td>Patakbuhin ang remote na OmniRoute (VPS) mula sa CLI ng iyong laptop gamit ang mga scoped access token</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/CLAUDE-CODE-CONFIGURATION.md">Configuration ng Claude Code</a></b></td><td>Iugnay ang Claude Code sa OmniRoute (local/remote) gamit ang <code>launch</code> + mga profile para sa bawat modelo</td></tr>
-  <tr><td nowrap><b><a href="README.md#-quick-start">Mabilis na Pagsisimula</a></b></td><td>3 hakbang na pag-install → pagkonekta → pag-configure</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/USER_GUIDE.md">Gabay sa Gumagamit</a></b></td><td>Mga provider, combo, CLI integration, deployment</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/SETUP_GUIDE.md">Gabay sa Pag-setup</a></b></td><td>Mga kumpletong paraan ng pag-install, mga CLI tool config, pag-setup ng protocol, pag-tune ng timeout</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/CLI-TOOLS.md">CLI Tools Guide</a></b></td><td>Per-tool setup para sa Claude Code, Codex, Cursor, Cline, OpenClaw, Kilo, Copilot</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/REMOTE-MODE.md">Remote Mode</a></b></td><td>Magmaneho ng remote OmniRoute (VPS) mula sa iyong laptop CLI sa pamamagitan ng mga scoped access token</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/CLAUDE-CODE-CONFIGURATION.md">Claude Code Config</a></b></td><td>Ituro ang Claude Code sa OmniRoute (local/remote) na may <code>launch</code> + per-model na mga profile</td></tr>
+  <tr><td nowrap><b><a href="README.md#-quick-start">Mabilis na Pagsisimula</a></b></td><td>3-step na pag-install → connect → configure</td></tr>
 </table>
 
-### 🔧 Mga Operasyon at Deployment
+### 🔧 Operations & Deployment
 
 <table>
   <tr><th align="left">Dokumento</th><th align="left">Paglalarawan</th></tr>
-  <tr><td nowrap><b><a href="docs/guides/DOCKER_GUIDE.md">Gabay sa Docker</a></b></td><td>Pagpapatakbo ng Docker, mga profile ng Compose, Caddy HTTPS, mga tunnel, mga tag ng image</td></tr>
-  <tr><td nowrap><b><a href="contrib/podman/README.md">Gabay sa Podman</a></b></td><td>Integrasyon sa Quadlet systemd, podman-compose, SELinux</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/VM_DEPLOYMENT_GUIDE.md">Deployment sa VM</a></b></td><td>Kumpletong gabay: pagse-set up ng VM + nginx + Cloudflare</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/FLY_IO_DEPLOYMENT_GUIDE.md">Deployment sa Fly.io</a></b></td><td>Mag-deploy sa Fly.io gamit ang persistent storage</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/TERMUX_GUIDE.md">Gabay sa Termux</a></b></td><td>Patakbuhin ang OmniRoute sa Android gamit ang Termux</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/PWA_GUIDE.md">Gabay sa PWA</a></b></td><td>Pag-install ng Progressive Web App, pag-cache, arkitektura</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/UNINSTALL.md">Gabay sa Pag-uninstall</a></b></td><td>Malinis na pag-aalis para sa lahat ng paraan ng pag-install</td></tr>
-  <tr><td nowrap><b><a href="docs/reference/ENVIRONMENT.md">Configuration ng Environment</a></b></td><td>Kumpletong mga variable at reference ng <code>.env</code></td></tr>
+  <tr><td nowrap><b><a href="docs/guides/DOCKER_GUIDE.md">Docker Gabay</a></b></td><td>Docker run, Gumawa ng mga profile, Caddy HTTPS, mga lagusan, mga tag ng imahe</td></tr>
+  <tr><td nowrap><b><a href="contrib/podman/README.md">Gabay sa Podman</a></b></td><td>Quadlet systemd integration, podman-compose, SELinux</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/VM_DEPLOYMENT_GUIDE.md">VM Deployment</a></b></td><td>Kumpletong gabay: VM + nginx + Cloudflare setup</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/FLY_IO_DEPLOYMENT_GUIDE.md">Pag-deploy ng Fly.io</a></b></td><td>I-deploy sa Fly.io na may patuloy na storage</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/TERMUX_GUIDE.md">Gabay sa Termux</a></b></td><td>Patakbuhin ang OmniRoute sa Android sa pamamagitan ng Termux</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/PWA_GUIDE.md">PWA Gabay</a></b></td><td>Progresibong pag-install ng Web App, pag-cache, arkitektura</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/UNINSTALL.md">I-uninstall ang Gabay</a></b></td><td>Malinis na pag-alis para sa lahat ng paraan ng pag-install</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/ENVIRONMENT.md">Environment Config</a></b></td><td>Kumpletuhin ang mga variable at sanggunian <code>.env</code></td></tr>
 </table>
 
-### 🧠 Mga Feature at Arkitektura
+### 🧠 Mga Tampok at Arkitektura
 
 <table>
   <tr><th align="left">Dokumento</th><th align="left">Paglalarawan</th></tr>
-  <tr><td nowrap><b><a href="docs/architecture/ARCHITECTURE.md">Arkitektura</a></b></td><td>Arkitektura ng system, daloy ng data, at mga internal</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_GUIDE.md">Gabay sa Compression</a></b></td><td>Pipeline na may 7 opsyon: off / lite / standard / aggressive / ultra / RTK / stacked</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/RTK_COMPRESSION.md">RTK Compression</a></b></td><td>Compression ng output ng command, mga filter, tiwala, pag-verify, pagbawi ng raw output</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_ENGINES.md">Mga Compression Engine</a></b></td><td>Caveman, RTK, mga stacked pipeline, mga surface ng dashboard/API/MCP</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_RULES_FORMAT.md">Format ng mga Panuntunan sa Compression</a></b></td><td>Mga schema ng JSON rule-pack para sa mga filter ng Caveman at RTK</td></tr>
-  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_LANGUAGE_PACKS.md">Mga Language Pack sa Compression</a></b></td><td>Pag-detect ng wika at paggawa ng Caveman rule-pack</td></tr>
-  <tr><td nowrap><b><a href="docs/architecture/RESILIENCE_GUIDE.md">Gabay sa Resilience</a></b></td><td>Mga circuit breaker, cooldown, queue, pag-iwas sa thundering herd, TLS spoofing</td></tr>
-  <tr><td nowrap><b><a href="docs/routing/AUTO-COMBO.md">Auto-Combo Engine</a></b></td><td>Pagmamarka batay sa 16 na salik, mga mode pack, self-healing</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/PROXY_GUIDE.md">Gabay sa Proxy</a></b></td><td>Proxy system na may 3 antas, marketplace ng 1proxy, CRUD ng registry</td></tr>
-  <tr><td nowrap><b><a href="docs/reference/FREE_TIERS.md">Mga Libreng Tier</a></b></td><td>Pinagsama-samang direktoryo: 34 na dokumentadong umuulit na pool / 485 na naka-catalog na entry ng libreng tier</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/FEATURES.md">Gallery ng mga Feature</a></b></td><td>Biswal na tour sa dashboard na may mga screenshot</td></tr>
-  <tr><td nowrap><b><a href="docs/architecture/CODEBASE_DOCUMENTATION.md">Dokumentasyon ng Codebase</a></b></td><td>Madaling sundang walkthrough ng codebase para sa mga baguhan</td></tr>
+  <tr><td nowrap><b><a href="docs/architecture/ARCHITECTURE.md">Arkitektura</a></b></td><td>Arkitektura ng system, daloy ng data, at mga panloob</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_GUIDE.md">Gabay sa Compression</a></b></td><td>7-opsyon na pipeline: naka-off / lite / standard / agresibo / ultra / RTK / stacked</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/RTK_COMPRESSION.md">RTK Compression</a></b></td><td>Command-output compression, mga filter, trust, verify, raw-output recovery</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_ENGINES.md">Mga Compression Engine</a></b></td><td>Caveman, RTK, nakasalansan na mga pipeline, dashboard/API/MCP surface</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_RULES_FORMAT.md">Format ng Mga Panuntunan sa Compression</a></b></td><td>JSON rule-pack schemas para sa mga filter ng Caveman at RTK</td></tr>
+  <tr><td nowrap><b><a href="docs/compression/COMPRESSION_LANGUAGE_PACKS.md">Compression Language Pack</a></b></td><td>Pag-detect ng wika at paggawa ng rule-pack ng Caveman</td></tr>
+  <tr><td nowrap><b><a href="docs/architecture/RESILIENCE_GUIDE.md">Gabay sa Katatagan</a></b></td><td>Mga circuit breaker, cooldown, pila, anti-kulog na kawan, TLS spoofing</td></tr>
+  <tr><td nowrap><b><a href="docs/routing/AUTO-COMBO.md">Auto-Combo Engine</a></b></td><td>16-factor na pagmamarka, mga mode pack, pagpapagaling sa sarili</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/PROXY_GUIDE.md">Gabay sa Proxy</a></b></td><td>3-level na proxy system, 1proxy marketplace, registry CRUD</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/FREE_TIERS.md">Libreng Tier</a></b></td><td>Pinagsama-samang direktoryo: 34 na dokumentado na umuulit na pool / 465 na naka-catalog na libreng-tier na mga entry</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/FEATURES.md">Mga Tampok na Gallery</a></b></td><td>Visual dashboard tour na may mga screenshot</td></tr>
+  <tr><td nowrap><b><a href="docs/architecture/CODEBASE_DOCUMENTATION.md">Dokumentasyon ng Codebase</a></b></td><td>Walkthrough sa codebase na madaling gamitin sa nagsisimula</td></tr>
 </table>
 
-### 🤖 Mga Protocol at API
+### 🤖 Mga Protocol at APIs
 
 <table>
   <tr><th align="left">Dokumento</th><th align="left">Paglalarawan</th></tr>
-  <tr><td nowrap><b><a href="docs/reference/API_REFERENCE.md">Reference ng API</a></b></td><td>Lahat ng endpoint na may mga halimbawa</td></tr>
-  <tr><td nowrap><b><a href="docs/openapi.yaml">Espesipikasyon ng OpenAPI</a></b></td><td>Espesipikasyon ng OpenAPI 3.0</td></tr>
-  <tr><td nowrap><b><a href="open-sse/mcp-server/README.md">MCP Server</a></b></td><td>110 MCP tool, mga configuration ng IDE, mga client na Python/TS/Go</td></tr>
-  <tr><td nowrap><b><a href="docs/frameworks/MCP-SERVER.md">Gabay sa MCP Server</a></b></td><td>Pag-install ng MCP, mga transport, at reference ng tool</td></tr>
-  <tr><td nowrap><b><a href="src/lib/a2a/README.md">A2A Server</a></b></td><td>JSON-RPC 2.0 protocol, mga skill, streaming, pamamahala ng gawain</td></tr>
-  <tr><td nowrap><b><a href="docs/frameworks/A2A-SERVER.md">Gabay sa A2A Server</a></b></td><td>A2A agent card, mga gawain, mga skill, at streaming</td></tr>
+  <tr><td nowrap><b><a href="docs/reference/API_REFERENCE.md">API Sanggunian</a></b></td><td>Lahat ng mga endpoint na may mga halimbawa</td></tr>
+  <tr><td nowrap><b><a href="docs/openapi.yaml">OpenAPI Spec</a></b></td><td>detalye OpenAPI 3.0</td></tr>
+  <tr><td nowrap><b><a href="open-sse/mcp-server/README.md">MCP Server</a></b></td><td>110 MCP tool, IDE config, Python/TS/Go client</td></tr>
+  <tr><td nowrap><b><a href="docs/frameworks/MCP-SERVER.md">MCP Server Guide</a></b></td><td>MCP installation, transports, at tool reference</td></tr>
+  <tr><td nowrap><b><a href="src/lib/a2a/README.md">A2A Server</a></b></td><td>JSON-RPC 2.0 protocol, mga kasanayan, streaming, gawain mgmt</td></tr>
+  <tr><td nowrap><b><a href="docs/frameworks/A2A-SERVER.md">A2A Server Guide</a></b></td><td>A2A agent card, mga gawain, kasanayan, at streaming</td></tr>
 </table>
 
 ### 📋 Proyekto at Kalidad
 
 <table>
   <tr><th align="left">Dokumento</th><th align="left">Paglalarawan</th></tr>
-  <tr><td nowrap><b><a href="CONTRIBUTING.md">Pag-aambag</a></b></td><td>Setup at mga alituntunin sa development</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/BRANCHING_MODEL.md">Modelo ng Branching at Release</a></b></td><td>Kung saan tina-target ang mga PR (<code>release/*</code>), at kung ano ang ibig sabihin ng <code>main</code> at mga tag</td></tr>
-  <tr><td nowrap><b><a href="CHANGELOG.md">Talaan ng mga Pagbabago</a></b></td><td>Kumpletong kasaysayan ng release ayon sa bersyon</td></tr>
-  <tr><td nowrap><b><a href="SECURITY.md">Patakaran sa Seguridad</a></b></td><td>Pag-uulat ng mga kahinaan at mga kasanayan sa seguridad</td></tr>
-  <tr><td nowrap><b><a href="docs/guides/I18N.md">Gabay sa i18n</a></b></td><td>Suporta sa 67 wika, workflow ng pagsasalin, RTL</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/RELEASE_CHECKLIST.md">Checklist ng Release</a></b></td><td>Mga hakbang sa validation bago ang release</td></tr>
-  <tr><td nowrap><b><a href="docs/ops/COVERAGE_PLAN.md">Plano sa Coverage</a></b></td><td>Diskarte sa test coverage para sa mahigit 60,000 static test declaration sa mahigit 8,400 sinusubaybayang test file</td></tr>
+  <tr><td nowrap><b><a href="CONTRIBUTING.md">Nag-aambag</a></b></td><td>Pag-setup ng pag-unlad at mga alituntunin</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/BRANCHING_MODEL.md">Branching at Release Model</a></b></td><td>Kung saan PRs target (<code>release/*</code>), ano ang ibig sabihin ng <code>main</code> at mga tag</td></tr>
+  <tr><td nowrap><b><a href="CHANGELOG.md">Changelog</a></b></td><td>Buong kasaysayan ng paglabas sa bawat bersyon</td></tr>
+  <tr><td nowrap><b><a href="SECURITY.md">Patakaran sa Seguridad</a></b></td><td>Pag-uulat ng kahinaan at mga kasanayan sa seguridad</td></tr>
+  <tr><td nowrap><b><a href="docs/guides/I18N.md">Gabay sa i18n</a></b></td><td>67-language na suporta, daloy ng trabaho sa pagsasalin, RTL</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/RELEASE_CHECKLIST.md">Paglabas ng Checklist</a></b></td><td>Mga hakbang sa pagpapatunay bago ang paglabas</td></tr>
+  <tr><td nowrap><b><a href="docs/ops/COVERAGE_PLAN.md">Plano ng Saklaw</a></b></td><td>Subukan ang diskarte sa coverage para sa 60,000 + static na mga deklarasyon sa pagsubok sa 8,400 + na sinusubaybayang mga test file</td></tr>
 </table>
 
 <br/>
@@ -1391,15 +1378,15 @@ Mga canonical na sukatan noong 2026-10-18: **1.976 natatanging video** · **20.2
 
 # ⭐ Mga Nangungunang Contributor
 
-> Ang OmniRoute ay hinuhubog ng isang masigasig na open-source na komunidad. Ang mga indibidwal na ito ay nakagawa ng mga pambihirang ambag na direktang nakaaapekto sa kalidad, katatagan, at abot ng proyekto. **Salamat.**
+> OmniRoute ay hinubog ng isang madamdaming open-source na komunidad. Ang mga indibidwal na ito ay gumawa ng mga natatanging kontribusyon na direktang nakakaapekto sa kalidad, katatagan, at abot ng proyekto.** salamat po.**
 
-### Mga external contributor ayon sa mga na-merge na pull request
+### Mga panlabas na nag-aambag sa pamamagitan ng pinagsamang mga kahilingan sa paghila
 
 <table>
-  <tr><th align="center">Ranggo</th><th align="left">Contributor</th><th align="center">Mga Na-merge na PR</th><th align="right">~Mga nabagong linya</th></tr>
+  <tr><th align="center">Ranggo</th><th align="left">Contributor</th><th align="center">Pinagsamang PRs</th><th align="right">~ Binago ang mga linya</th></tr>
   <tr><td align="center">1</td><td align="left"><a href="https://github.com/maxmad64bis"><b>maxmad64bis</b></a></td><td align="center">418</td><td align="right">25,367,739</td></tr>
   <tr><td align="center">2</td><td align="left"><a href="https://github.com/HouMinXi"><b>HouMinXi</b></a></td><td align="center">295</td><td align="right">13,557,796</td></tr>
-  <tr><td align="center">3</td><td align="left"><a href="https://github.com/pacocartones"><b>pacocartones</b></a></td><td align="center">222</td><td align="right">81,551</td></tr>
+  <tr><td align="center">3</td><td align="left"><a href="https://github.com/pacocartones"><b>mga pacocartone</b></a></td><td align="center">222</td><td align="right">81,551</td></tr>
   <tr><td align="center">4</td><td align="left"><a href="https://github.com/backryun"><b>backryun</b></a></td><td align="center">210</td><td align="right">270,562</td></tr>
   <tr><td align="center">5</td><td align="left"><a href="https://github.com/JxnLexn"><b>JxnLexn</b></a></td><td align="center">198</td><td align="right">3,570,623</td></tr>
   <tr><td align="center">6</td><td align="left"><a href="https://github.com/oyi77"><b>oyi77</b></a></td><td align="center">190</td><td align="right">411,243</td></tr>
@@ -1419,9 +1406,9 @@ Mga canonical na sukatan noong 2026-10-18: **1.976 natatanging video** · **20.2
   <tr><td align="center">19</td><td align="left"><a href="https://github.com/QuangBlue"><b>QuangBlue</b></a></td><td align="center">43</td><td align="right">13,112</td></tr>
 </table>
 
-<sub>Isinagawa ang census noong 2026-11-03 03:01:19 UTC gamit ang live na tip ng <code>release/v3.8.53</code> na <code>05bc048d6c</code>. Naglalaman ang naka-pahinang GitHub GraphQL census ng 9,947 na na-merge na PR: 4,130 mula sa may-ari ng repository, 240 mula sa Dependabot, 6 mula sa iba pang bot/app, at <b>5,571 external PR mula sa 883 natatanging contributor</b>. Ang “Mga nabagong linya” ay ang mga addition + deletion ng GitHub at kabilang dito ang mga nabuong file, lockfile, catalog, pagsasalin, at dokumentasyon; ito ay churn, hindi LOC na isinulat ng may-akda. 53 PR ang nag-uulat ng mga GitHub diff na mahigit 500,000 linya (halimbawa, ang #13399, isang pagdaragdag ng iisang provider, ay naglilista ng 2,347 nabagong file), na nagpapalaki sa ilang kabuuan sa itaas. Magkakasamang niraranggo ang mga tabla.</sub>
+<sub>Kinuha ang census noong 2026-11-03 03:01:19 UTC na may live <code>release/v3.8.53</code> tip <code>05bc048d6c</code>. Ang paginated GitHub GraphQL census ay naglalaman ng 9,947 na pinagsamang PRs: 4,130 ng may-ari ng repositoryo, 240 ng Dependabot, 6 ng iba pang bots/apps, at <b>5,571 external PRs mula sa 883 natatanging contributor</b>. Ang "mga binagong linya" ay GitHub na nagdaragdag ng mga pagtanggal + at may kasamang mga nabuong file, lockfile, catalog, pagsasalin at dokumentasyon; ito ay churn, hindi authored LOC. 53 PRs report GitHub diffs sa itaas 500,000 linya (halimbawa #13399, isang solong karagdagan ng provider, ay naglilista ng 2,347 binagong file), na nagpapalaki ng ilang kabuuan sa itaas. Ang mga ugnayan ay pinagsama-sama.</sub>
 
-### Mga commit na iniugnay ng GitHub
+### Mga commit na nauugnay sa GitHub
 
 <table>
   <tr>
@@ -1430,42 +1417,42 @@ Mga canonical na sukatan noong 2026-10-18: **1.976 natatanging video** · **20.2
         <img src="https://github.com/maxmad64bis.png" width="40" style="border-radius:50%" alt="Dizzle"/><br/>
         <b>Dizzle</b>
       </a><br/>
-      <sub>🥇 418 commit na iniugnay ng GitHub</sub>
+      <sub>🥇 418 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/HouMinXi">
         <img src="https://github.com/HouMinXi.png" width="40" style="border-radius:50%" alt="Bob.Hou"/><br/>
         <b>Bob.Hou</b>
       </a><br/>
-      <sub>🥈 294 commit na iniugnay ng GitHub</sub>
+      <sub>🥈 294 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/oyi77">
         <img src="https://github.com/oyi77.png" width="40" style="border-radius:50%" alt="Paijo"/><br/>
         <b>Paijo</b>
       </a><br/>
-      <sub>🥉 229 commit na iniugnay ng GitHub</sub>
+      <sub>🥉 229 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/pacocartones">
         <img src="https://github.com/pacocartones.png" width="40" style="border-radius:50%" alt="Paco Cartones"/><br/>
         <b>Paco Cartones</b>
       </a><br/>
-      <sub>🏅 222 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 222 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/backryun">
         <img src="https://github.com/backryun.png" width="40" style="border-radius:50%" alt="backryun"/><br/>
         <b>backryun</b>
       </a><br/>
-      <sub>🏅 202 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 202 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/JxnLexn">
         <img src="https://github.com/JxnLexn.png" width="40" style="border-radius:50%" alt="Jan Leon"/><br/>
         <b>Jan Leon</b>
       </a><br/>
-      <sub>🏅 134 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 134 GitHub-attributed commits</sub>
     </td>
   </tr>
   <tr>
@@ -1474,49 +1461,49 @@ Mga canonical na sukatan noong 2026-10-18: **1.976 natatanging video** · **20.2
         <img src="https://github.com/RaviTharuma.png" width="40" style="border-radius:50%" alt="Ravi Tharuma"/><br/>
         <b>Ravi Tharuma</b>
       </a><br/>
-      <sub>🏅 126 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 126 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/hartmark">
         <img src="https://github.com/hartmark.png" width="40" style="border-radius:50%" alt="Markus Hartung"/><br/>
         <b>Markus Hartung</b>
       </a><br/>
-      <sub>🏅 115 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 115 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/rdself">
         <img src="https://github.com/rdself.png" width="40" style="border-radius:50%" alt="Randi"/><br/>
         <b>Randi</b>
       </a><br/>
-      <sub>🏅 108 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 108 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/christopher-s">
         <img src="https://github.com/christopher-s.png" width="40" style="border-radius:50%" alt="Chris"/><br/>
         <b>Chris</b>
       </a><br/>
-      <sub>🏅 70 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 70 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/jonlwheat2-gif">
         <img src="https://github.com/jonlwheat2-gif.png" width="40" style="border-radius:50%" alt="WebPerson"/><br/>
         <b>WebPerson</b>
       </a><br/>
-      <sub>🏅 68 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 68 GitHub-attributed commits</sub>
     </td>
     <td align="center" width="160">
       <a href="https://github.com/KooshaPari">
         <img src="https://github.com/KooshaPari.png" width="40" style="border-radius:50%" alt="Koosha Paridehpour"/><br/>
         <b>Koosha Paridehpour</b>
       </a><br/>
-      <sub>🏅 68 commit na iniugnay ng GitHub</sub>
+      <sub>🏅 68 GitHub-attributed commits</sub>
     </td>
   </tr>
 </table>
 
-<sub>Muling sinuri noong 2026-11-03 02:09:16 UTC: mga commit na iniugnay ng GitHub na iniulat ng Contributors API ng repository para sa default branch na <code>release/v3.8.53</code>. Nagbalik ang API ng 903 identity (429 user, 2 bot, 472 anonymous); hindi kasama sa talahanayang ito ang maintainer, mga bot, at mga anonymous na identity, at pinanatili rito ang mga tabla sa kompetisyon. Naiiba ito sa parehong ranking ng mga na-merge na PR sa itaas at census ng metadata ng Git sa ibaba.</sub>
+<sub>Muling sinuri sa 2026-11-03 02:09:16 UTC: GitHub-attributed commits na iniulat ng repositoryong Contributors API para sa <code>release/v3.8.53</code> default na branch. Ang API ay nagbalik ng 903 pagkakakilanlan (429 mga gumagamit, 2 bot, 472 hindi nagpapakilala); ibinubukod ng talahanayang ito ang tagapangasiwa, mga bot at hindi kilalang pagkakakilanlan at pinapanatili ang mga kaugnayan sa kumpetisyon. Naiiba ito sa parehong merged-PR ranking sa itaas at sa Git-metadata census sa ibaba.</sub>
 
-> 🙏 Ang mga feature, pag-aayos ng bug, at pagpapahusay sa imprastraktura ng mga contributor na ito ay isang **pangunahing bahagi** ng dahilan kung bakit maaasahan at mayaman sa feature ang OmniRoute. Mahalaga ang bawat pull request, bawat test case, at bawat i18n translation file. Binubuo ang open source ng mga taong tulad nila.
+> 🙏 Ang mga feature, pag-aayos ng bug, at pagpapahusay ng imprastraktura ng mga kontribyutor na ito ay a** pangunahing bahagi** kung bakit maaasahan at mayaman sa feature OmniRoute. Bawat kahilingan sa paghila, bawat kaso ng pagsubok, at bawat file ng pagsasalin ng i18n ay mahalaga. Ang open source ay binuo ng mga taong katulad nila.
 
 </div>
 
@@ -1797,15 +1784,15 @@ Ang OmniRoute ay nakatayo sa mga balikat ng mga higante. Nagsimula ito bilang fo
 
 ## 📄 Lisensya
 
-MIT License - tingnan ang [LICENSE](LICENSE) para sa mga detalye.
+MIT License - tingnan [LICENSE](LICENSE) para sa mga detalye.
 
 ---
 
 <div align="center">
 
-**[⬆ Bumalik sa itaas](#-omniroute)** · Ginawa nang may ❤️ para sa open-source AI community.
+**[⬆ Bumalik sa itaas](#-omniroute)** · Binuo gamit ang ❤️ para sa open-source na komunidad AI.
 
-<sub>Ginawa ni <a href="https://github.com/diegosouzapw">Diego Souza</a> · OmniRoute v3.8.54 · Node ≥22.22.2 · MIT License · <a href="https://omniroute.online">omniroute.online</a></sub>
+<sub>Nilikha ni <a href="https://github.com/diegosouzapw">Diego Souza</a> · OmniRoute v3.8.54 · Node ≥ 22.22.2 · MIT License · <a href="https://omniroute.online">omniroute.online</a></sub>
 
 </div>
-<!-- Pinagana ang GitHub Discussions para sa Q&A ng komunidad -->
+<!-- GitHub Discussions enabled for community Q&A -->

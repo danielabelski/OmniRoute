@@ -4,239 +4,158 @@
 
 ---
 
-Az OmniRoute tömörítése motorkontraktusokra épül. Egy mód futtathat közvetlenül egy motort
-(`caveman` vagy `rtk`), illetve egy determinisztikus, egymásra épülő feldolgozási folyamatot, amely több motort hajt végre sorrendben.
+OmniRoute kompresszió a motorszerződések köré épül. Egy mód futtathat egy motort közvetlenül (`caveman` vagy `rtk`), vagy egy determinisztikus halmozott folyamatot, amely több motort is végrehajt egymás után.
 
 ## Módok
 
-| Mód          | Motor útvonala                                                                          | Szándékolt bemenet                                  |
-| :----------- | :-------------------------------------------------------------------------------------- | :-------------------------------------------------- |
-| `off`        | none                                                                                    | Pontos prompt megőrzés                              |
-| `lite`       | Caveman lite segítők                                                                    | Alacsony kockázatú, mindig aktív tisztítás          |
-| `standard`   | Caveman                                                                                 | Természetes nyelvi prompt sűrítés                   |
-| `aggressive` | Caveman + előzmény/eszköz összefoglalók                                                 | Hosszú csevegési munkamenetek                       |
-| `ultra`      | Caveman + metsző segítők                                                                | Kontextuskorlát helyreállítása                      |
-| `rtk`        | RTK                                                                                     | Terminál, shell, build, teszt és git kimenet        |
-| `omniglyph`  | OmniGlyph                                                                               | Kontextus képként a natív szolgáltatói vezetéken    |
-| `stacked`    | Pipeline. Az alapértelmezett kérés `session-dedup -> lite`. Az `rtk -> caveman` opt-in. | Vegyes eszközlogok és próza, maximális megtakarítás |
+| Mód          | A motor útja                                                                                                  | Szánt bemenet                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `off`        | egyik sem                                                                                                     | Pontos azonnali megőrzés                               |
+| `lite`       | Caveman lite segítők                                                                                          | Alacsony kockázatú állandó tisztítás                   |
+| `standard`   | Barlanglakó ősember                                                                                           | Természetes nyelvű azonnali páralecsapódás             |
+| `aggressive` | Caveman + history/tool összefoglalók                                                                          | Hosszú csevegés                                        |
+| `ultra`      | Caveman + metsző segítők                                                                                      | Kontextus-korlát helyreállítás                         |
+| `rtk`        | RTK                                                                                                           | Terminál, shell, build, teszt és git kimenet           |
+| `omniglyph`  | OmniGlyph                                                                                                     | Context-as-image a natív szolgáltató vezetékén         |
+| `stacked`    | Csővezeték. A kérés alapértelmezett értéke `session-dedup -> lite`. `rtk -> caveman` feliratkozási lehetőség. | Vegyes szerszámnaplók és próza, maximális megtakarítás |
 
-### OmniGlyph tömörítési profilok
+### OmniGlyph kompressziós profilok
 
-Az `omniglyph` motor (csomag `omniglyph`, 1.4.0+) elfogad egy elnevezett szemantikai profilt, amelyet
-globálisan az `omniglyph.profile` beállításon keresztül lehet megadni a tömörítési beállításokban, vagy lépésenként a
-stacked pipeline lépéskonfigurációján keresztül:
+A `omniglyph` motor (csomag `omniglyph`, 1.4.0 +) egy elnevezett szemantikai profilt fogad el, globálisan beállítva `omniglyph.profile` keresztül a tömörítési beállításokban, vagy lépésenként a halmozott folyamat lépéskonfigjában:
 
-| Profil        | Határ                                                                                                           |
-| :------------ | :-------------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Alapértelmezett. A közzétett nyugták által mért irányelv — képrendszer, eszköz dokumentációk és sűrű előzmények |
-| `balanced`    | Megőrzi az élő állapotot natívan, védi az utolsó 8 fordulatot, összevonja a régebbi lezárt előzményeket         |
-| `coding-safe` | Megőrzi a jogosultságot, az eszközsémákat és az élő eszköz kimenetet natívan, védi az utolsó 12 fordulatot      |
-| `passthrough` | Átirányít átalakítás nélkül; a motor kihagyásra kerül                                                           |
+| Profil        | Határ                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `aggressive`  | Alapértelmezett. A politika a közzétett bevételek — képrendszert, eszközdokumentumokat és sűrű előzményeket mértek |
+| `balanced`    | Megtartja az élő állapotot natívan, megvédi az utolsó 8 fordulatot, összeomolja a régebbi zárt történelmet         |
+| `coding-safe` | Megőrzi a jogosultságot, a szerszámsémákat és az élő szerszám kimenetet natívan, védi az utolsó 12 fordulatot      |
+| `passthrough` | Útvonalak átalakítás nélkül; a motor kimarad                                                                       |
 
-A profil egy **plafon, nem padló**: a csomagban található `mergeCompressionProfileOptions`
-megtagadja, hogy egy hívó felülírja és újra megnyisson egy veszteséges sávot, amelyet a profil lezárt,
-így egy lépésenkénti `preserveSystemPrompt: false` nem tudja újra engedélyezni a rendszer tömörítését `coding-safe` alatt.
+A profil a** mennyezet, nem padló** : a csomagban található `mergeCompressionProfileOptions` nem engedi, hogy a hívó felülbírálja a veszteséges sáv újbóli megnyitását a profil zárva, így a lépésenkénti `preserveSystemPrompt: false` nem engedélyezheti újra a rendszertömörítést `coding-safe` alatt.
 
-Ezen a kódbázison mérve: a `coding-safe` és a `balanced` a `minCompressChars` értékét a
-maximumra emeli, és a rendszert, az eszközsémákat és az eszközeredményeket natívan tartja,
-így egy olyan munkamenet, amely még nem gyűjtött előzményeket, megáll a `below_min_chars`
-értéknél, és a motor semmit sem alakít át. Ezért az alapértelmezett az `aggressive` a
-legbiztonságosabb profil helyett.
+Ezen a kódbázison mérve: `coding-safe` és `balanced` a maximumra emeli `minCompressChars`, és natívan tartja a rendszert, az eszközsémákat és az eszközeredményeket, így a munkamenet, amely még nem halmozott fel történelmet, megáll `below_min_chars` nél, és a motor semmit sem alakít át. Ezért az alapértelmezett `aggressive` nem pedig a legbiztonságosabb profil.
 
-A csomag a saját modell hatókörét és profilját a környezeti konfigurációjából oldja fel.
-Az OmniRoute soha nem delegálja a döntést: az adapter a modellkaput a csomag legszigorúbb
-hatóköréhez rögzíti, így a gazdakörnyezet beállításai csak szűkíthetik az engedélyezési
-listát, soha nem szélesíthetik azt az OmniRoute által mért nyugtákon túl.
+A csomag feloldja saját modell hatókörét és profilját a környezet konfigurációjából. OmniRoute soha nem ruházza át a döntést: az adapter a modellkaput a csomag legkorlátozóbb hatóköréhez rögzíti, így a gazdagép környezet beállításai csak szűkíthetik az engedélyezési listát, soha nem tágíthatják ki OmniRoute mért bevételeinél túl.
 
-## Motorregiszter
+## Motornyilvántartás
 
-A regiszter az `open-sse/services/compression/engines/registry.ts` fájlban található. A motorok közös
-szerződést valósítanak meg:
+A rendszerleíró adatbázis `open-sse/services/compression/engines/registry.ts` ban található. A motorok közös szerződést kötnek:
 
 - `id`: stabil motorazonosító, például `caveman` vagy `rtk`
-- `apply(text, config)`: az egymásra épülő folyamatok által használt örökölt végrehajtási útvonal
-- `compress(input, config)`: az elsődleges végrehajtási útvonal, amely szöveget és statisztikákat ad vissza
-- `getConfigSchema()`: visszaadja az érvényes konfiguráció JSON-Schema-szerű szerkezetét
-- `validateConfig(config)`: visszaadja a következőt: `{ valid, errors[] }`
+- `apply(text, config)`: a halmozott folyamatok által használt örökölt végrehajtási útvonal
+- `compress(input, config)`: elsődleges végrehajtási útvonal, amely szöveget ad vissza + stats
+- `getConfigSchema()`: az érvényes konfiguráció JSON-sémaszerű alakját adja vissza
+- `validateConfig(config)`: `{ valid, errors[] }` adja vissza
 
-A regisztráció a `registerCompressionEngine(engine)` függvényt (speciális esetekben pedig a `registerEngine`
-függvényt) használja, amely az elfogadás előtt meghívja az `assertValidEngine()` és a
-`validateConfig(defaultConfig)` függvényt. Egy motor futásidejű eltávolításához használja az
-`unregisterCompressionEngine(id)` függvényt.
+A regisztráció `registerCompressionEngine(engine)` (vagy haladó esetekben `registerEngine` ) használja, amely meghívja `assertValidEngine()` és `validateConfig(defaultConfig)` az elfogadás előtt. `unregisterCompressionEngine(id)` segítségével távolítsa el a motort futás közben.
 
-A `strategySelector.ts` a tömörítés futtatása előtt regisztrálja a beépített motorokat. Így az előnézet,
-a futásidejű tömörítés, az egymásra épülő mód, a tesztek és a jövőbeli motorok ugyanazt a végrehajtási útvonalat használhatják.
+`strategySelector.ts` a sűrítés megkezdése előtt regisztrálja a beépített motorokat. Ez lehetővé teszi, hogy az előnézet, a futásidejű tömörítés, a halmozott mód, a tesztek és a jövőbeli motorok ugyanazt a végrehajtási útvonalat használják.
 
-### MCP-leírások tömörítése (kapcsolódó)
+### MCP leírás tömörítése (kapcsolódó)
 
-Egy különálló regiszter regiszterszinten tömöríti az MCP-eszközök leíró metaadatait — lásd:
-`open-sse/mcp-server/descriptionCompressor.ts` és [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Újra felhasználja
-a Caveman szabályait, de nem a kérések hasznos adatain, hanem az eszközök metaadatain működik.
+Egy külön beállításjegyzék tömöríti MCP eszközleíró metaadatokat — rendszerleíró adatbázis szintjén, lásd `open-sse/mcp-server/descriptionCompressor.ts` és [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Újra felhasználja a Caveman-szabályokat, de az eszközök metaadatai alapján működik, nem pedig a hasznos terheket kéri.
 
 ### További beépített motorok
 
-A Caveman, az RTK és az LLMLingua-2 mellett a regiszter több speciális veszteségmentes /
-strukturális motort is tartalmaz (ezeket az egymásra épülő folyamatok, a játszótér és a tesztek használják):
+A Caveman, RTK és LLMLingua-2 mellett a nyilvántartó több speciális veszteségmentes / szerkezeti motort szállít (halmozott csővezetékekhez, játszótérhez és tesztekhez):
 
-| Motor         | Azonosító       | Funkció                                                                                                                                                                                                             |
-| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): a nagy, összefüggő szövegblokkokat tartalomcímzett hivatkozásokkal helyettesíti, így az ismétlődő/nagy blokkok elküldése egyszer történik meg, később pedig hivatkozás mutat rájuk. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): homogén JSON-tömbök hasznos adatainak veszteségmentes, táblázatos tömörítése oszlopalapú `[N rows]` formába.                                                                                |
-| ionizer       | `ionizer`       | A nagy méretű homogén blokkok elejéről/közepéről/végéről vesz mintát, a kihagyott középső részt pedig CCR-alapú, tartalomcímzett hivatkozásként tárolja.                                                            |
-| session-dedup | `session-dedup` | Tartalomcímzett, fordulókon átívelő deduplikáció (a TokenMizer ihlette): kihagyja az ugyanazon munkamenet korábbi fordulóiban már látott szöveget.                                                                  |
+| Motor         | Id              | Mit csinál                                                                                                                                                                       |
+| ------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR           | `ccr`           | Content-Compress-Retrieve (H4): a nagy összefüggő szövegblokkokat tartalom-címzett hivatkozásokra cseréli, így repeated/large blokkokat egyszer küldi el, majd hivatkozik rájuk. |
+| fejtér        | `headroom`      | SmartCrusher (H3 + N5): homogén JSON-tömb hasznos terhek veszteségmentes táblázatos tömörítése oszlopos `[N rows]` formába.                                                      |
+| ionizáló      | `ionizer`       | Head/middle/tail sor mintavételezés nagyon nagy homogén blokkokhoz, az elided közepét CCR tartalom-címzett referenciaként tárolva.                                               |
+| session-dedup | `session-dedup` | Tartalomközpontú körök közötti deduplikáció (TokenMizer által inspirált): kiküszöböli a munkamenet korábbi fordulóiban már látott szöveget.                                      |
 
-**CCR-lekérési protokollra vonatkozó utasítás (#8033):** amikor a CCR először cserél le ≥1 blokkot egy
-kérésben, a motor egyetlen, idempotens `system` üzenetet szúr be az elejére (amely a
-`[CCR protocol]` őrjelzővel kezdődik), hogy megtanítsa a hívónak a jelölő → eszköz szerződést: mit jelent egy
-`[CCR retrieve hash=<24hex> chars=N]` jelölő, hogy a hash értékét szó szerint kell átmásolni
-(mind a 24 hexadecimális karaktert — a hibásan másolt hash értékek okozzák nagy valószínűséggel a „blokk nem található”
-hibákat), valamint hogy a `[dedup:ref sha=...]` jelölő jelentése „keresd meg az előzményekben”, nem pedig „hívd meg az
-eszközt”. A megjegyzés beszúrása **csak akkor történik meg, ha a hívó által meghirdetett `tools[]` bizonyítja, hogy
-ténylegesen el tudja érni az `omniroute_ccr_retrieve` eszközt** (`callerSupportsCcrRetrieve()` az
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts` fájlban) — egy egyszerű,
-OpenAI-kompatibilis hívó, amely nem rendelkezik ezzel az eszközzel, soha nem kap utasítást egy számára
-elérhetetlen elem meghívására. Az idempotenciát a rendszer úgy biztosítja, hogy a beszúrás előtt megkeresi az
-őrjelzőt az üzenetelőzményekben, így a többfordulós kéréseknél (amelyek újrajátsszák a korábbi üzeneteket) a
-megjegyzés nem halmozódik fel fordulónként.
+**CCR retrieve-protocol utasítás (#8033):** Amikor először CCR lecseréli ≥ 1 blokkot egy kérésben, a motor egyetlen, idempotens `system` üzenetet fűz (a `[CCR protocol]` őrzővel vezet), amely megtanítja a hívónak a jelölőt → tool kontraktus: mit jelent a `[CCR retrieve hash=<24hex> chars=N]` marker, hogy a hash-t szó szerint kell másolni (mind a 24 hexa zárolás oka valószínűleg nem található" hiányzik), és a — `[dedup:ref sha=...]` azt jelenti, hogy "nézz vissza a történelembe", nem pedig "hívd a szerszámot". A jegyzet be van fecskendezve** csak akkor, ha a hívó által hirdetett `tools[]` bizonyítja, hogy valóban elérheti `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — egy egyszerű OpenAI-kompatibilis hívó az eszköz nélkül soha nem kap utasítást arra, hogy olyat hívjon meg, amit nem tud elérni. Az idempotenciát úgy kényszerítik ki, hogy a beadás előtt átvizsgálják az üzenetelőzményeket az őrszem után, így a többfordulós kérések (amelyek a korábbi üzeneteket játsszák le) nem halmozzák fel körönként egyszer a jegyzetet.
 
-## Caveman
+## Barlanglakó ősember
 
-A Caveman mód a normál próza szemantikai tömörítésére összpontosít:
+A Caveman mód a normál próza szemantikai sűrítésére összpontosít:
 
-- megőrzi a kódblokkokat, URL-eket, JSON-adatokat, elérési utakat és strukturált adatokat
-- eltávolítja a töltelékszöveget, a bizonytalankodó megfogalmazásokat, az ismételt kontextust és a terjengős kötőelemeket
-- támogatja a nyelvspecifikus fájlszabálycsomagokat az `open-sse/services/compression/rules/` könyvtárban
-- továbbra is elérhető a korábbi `standard`, `aggressive` és `ultra` módokon keresztül
+- megőrzi a kódblokkokat, URLs, JSON, útvonalakat és strukturált adatokat
+- eltávolítja a kitöltést, a fedezetet, az ismétlődő kontextust és a bőbeszédű összekötő kifejezéseket
+- támogatja a nyelvtudatos fájlszabálycsomagokat a `open-sse/services/compression/rules/`
+- elérhető marad a régi `standard`, `aggressive` és `ultra` módokon keresztül
 
-A vezérlőpult felülete: `Dashboard -> Context & Cache -> Caveman`.
+A műszerfal felülete `Dashboard -> Context & Cache -> Caveman`.
 
-A Caveman upstream jelentése szerint a kimeneti tokenek száma `~75%`-kal alacsonyabb, a benchmarkokban az átlagos kimeneti megtakarítás `65%`,
-`22-87%` közötti tartománnyal, a bemenettömörítés pedig `~46%`. Az OmniRoute a Caveman bemeneti
-értékét használja a halmozott prompt-/kontextusmegtakarítások dokumentálásakor; a Caveman kimeneti mód továbbra is különálló,
-a válasz viselkedését befolyásoló funkció.
+A Caveman upstream `~75%` kevesebb kimeneti tokenről, `65%` átlagos kimeneti megtakarításról számol be a `22-87%` tartománnyal rendelkező benchmarkokban és egy `~46%` bemenet-tömörítő eszközről. OmniRoute a Caveman bemeneti oldali számát használja a halmozott prompt/context megtakarítások dokumentálásakor; A Caveman kimeneti mód külön válasz-viselkedési funkció marad.
 
 ## RTK
 
-Az RTK mód a parancsok és eszközök kimenetére összpontosít:
+RTK mód a parancs- és eszközkimenetre összpontosít:
 
-- felismeri többek között a `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  Cargo/Go tesztek, TypeScript/Vite/Webpack buildek, ESLint, npm audit/telepítések, Docker-naplók,
-  shell `find`/`grep`, veremkövetések és általános naplók kimeneti osztályait
-- 49 JSON-szűrőt alkalmaz az `open-sse/services/compression/engines/rtk/filters/` könyvtárból
-- támogatja az RTK-stílusú deklaratív feldolgozási láncot: ANSI-eltávolítás, csere, egyező kimenet esetén rövidzár,
-  sorok eltávolítása/megtartása, soronkénti csonkolás, eleje/vége/maximális sorszám szerinti csonkolás és üres eredmény esetén tartalékérték
-- támogatja a bizalmi ellenőrzéshez kötött projektszűrőket a `.rtk/filters.json`, a globális szűrőket pedig a
-  `DATA_DIR/rtk/filters.json` fájlban
-- eltávolítja az ANSI-szekvenciákat, a folyamatjelző zajt, az ismétlődő sorokat és a haszontalan sablonszöveget
-- megőrzi a beavatkozást igénylő hibákat, figyelmeztetéseket, összegzéseket, módosított fájlokat és a kimenet végének kontextusát
-- opcionálisan megőrizheti a kitakart nyers kimenetet helyreállításhoz/hibakereséshez, hitelesített felügyeleti
-  útvonalakon keresztül
+- olyan kimeneti osztályokat észlel, mint `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go tesztek, TypeScript/Vite/Webpack buildek, ESLint, npm audit/installs, Docker naplók, shell `find`/`grep`, veremnyomok és általános naplók
+- 49 JSON szűrőt alkalmaz `open-sse/services/compression/engines/rtk/filters/` től
+- támogatja az RTK-stílusú deklaratív folyamatot: ANSI lehúzás, csere, egyeztető kimenet rövidzárlat, strip/keep sorok, soronkénti csonkítás, head/tail/max-line csonkítás és on-empty tartalék
+- Támogatja a bizalmi projektszűrőket `.rtk/filters.json` ban és a globális szűrőket `DATA_DIR/rtk/filters.json` ben
+- ANSI szekvenciák, folyamatzaj, ismétlődő sorok és nem hasznos kazánok kivágása
+- megőrzi a végrehajtható hibákat, a figyelmeztetéseket, az összefoglalókat, a módosított fájlokat és a kontextust
+- opcionálisan megőrizheti a redaktált nyers kimenetet recovery/debugging számára hitelesített felügyeleti útvonalakon keresztül
 
-A vezérlőpult felülete: `Dashboard -> Context & Cache -> RTK`.
+A műszerfal felülete `Dashboard -> Context & Cache -> RTK`.
 
-Az egyéni szűrők, a megbízhatóság, az ellenőrzés és a nyers kimenet helyreállításának működési részletei az
-[`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md) dokumentumban találhatók.
+Az egyéni szűrők, a bizalom, az ellenőrzés és a nyers kimenet helyreállításának működési részletei [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md) ban.
 
-Az RTK upstream jelentése szerint a parancskimenetek tömörítésével `60-90%`-os megtakarítás érhető el. A README példája egy
-30 perces Claude Code-munkamenetet mutat be, amelyben a tokenszám `~118,000`-ről `~23,900`-ra csökkent, ami `79.7%`-os megtakarítás.
+RTK upstream `60-90%` megtakarításokat jelent a parancs-kimeneti tömörítéshez. A README példája egy 30 perces Claude kód munkamenetet mutat be, amely `~118,000` tokentől `~23,900`-ig vagy `79.7%` elmentettig megy.
 
-## LLMLingua-2 (Szemantikai ritkítás)
+## LLMLingua-2 (szemantikus metszés)
 
-Az LLMLingua-2 mód **szemantikai tokenritkítást** végez a prózán egy kis ONNX-tokenosztályozó
-használatával, kiegészítve a szabályalapú Caveman és RTK motorokat:
+LLMLingua-2 mód teljesít** szemantikus jelzőmetszés** prózában egy kis ONNX token osztályozóval, amely kiegészíti a szabályalapú Caveman és RTK motorokat:
 
-- csak a nem rendszerüzenetekben található prózát tömöríti; a kerítéssel határolt kódblokkokat és az egyéb megőrzött
-  szerkezeteket soha nem módosítja
-- az `@atjsh/llmlingua-2` háttérrendszert futtatja (ONNX az `@huggingface/transformers` használatával) egy
-  munkaszálon, így a modell következtetése soha nem blokkolja a kérések eseményciklusát
-- **halmozható** (`stackPriority` 35): egy halmozott feldolgozási láncban a
-  strukturális motorok (CCR, session-dedup, headroom, Caveman) után, de az `ultra` előtt fut, mivel
-  a szemantikai ritkítás a már strukturálisan tömörített szövegen a leghatékonyabb — például:
-  `rtk -> caveman -> llmlingua`
-- **bármilyen hiba esetén változatlan bemenettel folytatja a működést** (hiányzó opcionális függőségek, munkaszál-indítás, modellbetöltés, következtetés
-  vagy időtúllépés) → az eredeti szöveget változatlanul adja vissza, soha nem hibát
+- csak a nem rendszerüzenetekben tömöríti a prózát; a bekerített kódblokkok és más megőrzött konstrukciók soha nem változnak
+- a `@atjsh/llmlingua-2` háttérprogramot (ONNX via `@huggingface/transformers`) egy worker szálban futtatja, így a modellkövetkeztetés soha nem blokkolja a kérés eseményhurkot
+- van** egymásra rakható** (`stackPriority` 35): halmozott csővezetékben a szerkezeti motorok (CCR, session-dedup, headroom, Caveman) után fut, de `ultra` előtt, mivel a szemantikai metszés a már szerkezetileg tömörített szövegeknél a leghatékonyabb — pl `rtk -> caveman -> llmlingua`
+- **hiba esetén megnyílik** (hiányzik az opcionális deps, a worker spawn, a modell betöltése, a következtetés vagy az időtúllépés) → az eredeti szöveg változatlan formában kerül visszaadásra, soha nem hiba
 
-A motor helye: `open-sse/services/compression/engines/llmlingua/`. A vezérlőpult felülete:
-`Dashboard -> Context & Cache -> LLMLingua`.
+Motor helye: `open-sse/services/compression/engines/llmlingua/`. A műszerfal felülete `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modellek
 
-Az alapértelmezett modell a **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-gyors). Egy pontosabb **BERT-base** modell (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) is elérhető a motorkonfiguráció `model` mezőjén keresztül. Az `@huggingface/transformers`
-az első híváskor lusta betöltéssel tölti le a kiválasztott modellt a HuggingFace Hubról a
-`${DATA_DIR}/models/llmlingua` könyvtárba (`modelStore.ts`); a `modelPath` konfigurációs
-felülbírálás ehelyett egy helyi példányra irányítja (offline / elszigetelt telepítéseknél).
+Az alapértelmezett modell a**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, gyors). Nagyobb pontosságú** BERT-bázis** modell (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) a motorkonfiguráció `model` mezőn keresztül érhető el. `@huggingface/transformers` lustán letölti a kiválasztott modellt a HuggingFace Hubból `${DATA_DIR}/models/llmlingua` -ba az első híváskor (`modelStore.ts`); a `modelPath` konfiguráció felülírása inkább egy helyi másolatra irányítja (offline / légrés telepítések).
 
 ### Opcionális függőségek és igény szerinti telepítés
 
-A ritkítható LLMLingua futásidejű peer függőségi készlete **opcionális**. Két csomag szerepel
-`optionalDependencies` függőségként a `package.json` fájlban, és az éles build **külsőként** kezeli őket
-(a `scripts/build/prepublish.ts` nem csomagolja be ezeket):
+A kivágható LLMLingua futásidejű peer verem az** választható** . Két csomagot `optionalDependencies` nek nyilvánítanak `package.json` ben, és megőrzik** külső** a termelési build alapján (`scripts/build/prepublish.ts` nem köti össze őket):
 
-| Csomag               | Verzió (rögzített) | Megjegyzések                                       |
-| -------------------- | ------------------ | -------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`            | Belépési csomag; a többit peer függőségként jelöli |
-| `js-tiktoken`        | `^1.0.20`          | Tokenizáló                                         |
+| Csomag               | Verzió (pin) | Megjegyzések                                        |
+| -------------------- | ------------ | --------------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`      | Belépőcsomag; a többieket egyenrangúnak nyilvánítja |
+| `js-tiktoken`        | `^1.0.20`    | Tokenizátor                                         |
 
-Az `@huggingface/transformers` rögzített verziója `^4.2.0` (megosztva a helyi beágyazási útvonallal, és
-az önálló csomagban is követve); az `@atjsh/llmlingua-2@2.0.5` ehhez
-`"^3.5.2 || ^4.0.0"` peer követelményt ad meg, így a Transformers.js v3 és v4 egyaránt támogatott. A 2.0.4 óta
-az `@atjsh/llmlingua-2` már nem igényli az `@tensorflow/tfjs` csomagot, így az SLM-készlet legnagyobb önálló
-összetevője (TensorFlow.js) kikerült. Csak a fenti két csomag ritkítható SLM
-peer függőség. Egy szabványos `npm install` (fejlesztői környezetben) automatikusan telepíti az opcionális készletet, kivéve, ha az opcionális
-függőségeket kihagyják.
+`@huggingface/transformers` rögzítve van `^4.2.0` -ben (megosztva a helyi beágyazási útvonallal, és az önálló kötegbe is be van nyomva); `@atjsh/llmlingua-2@2.0.5` `"^3.5.2 || ^4.0.0"`-vel párosul, így Transformers.js v3 és v4 is támogatott. A 2.0.4 óta `@atjsh/llmlingua-2` már nincs szüksége `@tensorflow/tfjs`, ami eltávolította a legnagyobb egyetlen közreműködőt (TensorFlow.js) a SLM veremből. Csak a fenti két csomag metszhető SLM társ. A szabványos `npm install` (dev) automatikusan telepíti az opcionális veremet, hacsak nem hagyja ki az opcionális függőségeket.
 
-**Miért igény szerinti:** az npm-en közzétett csomag, az önálló bundle és a Docker-rendszerkép
-ezek **nélkül** a függőségek nélkül kerül kiadásra, hogy kis méretű maradjon. Ha ezek hiányoznak, a munkaszál függőségi
-kapuja (egy `@atjsh/llmlingua-2` feloldási próba a `worker.ts` fájlban) sikertelen lesz, a motor pedig
-**csendben, változatlan bemenettel folytatja a működést** — az LLMLingua kiválasztása hatástalan lesz (a szöveget változatlanul adja vissza,
-és nem naplóz hibát). Ritkított környezetben az aktiválásához telepítse az opcionális készletet:
+**Miért igény szerint:** az npm által kiadott csomag, az önálló csomag és a Docker képszállító** nélkül** ezek a depek, hogy karcsúak maradjanak. Ha nincsenek jelen, a dolgozó függőségi kapuja (a `@atjsh/llmlingua-2` feloldó szonda `worker.ts` ben) meghibásodik, és a motor** hangtalanul megnyílik** — LLMLingua kiválasztása no-op lesz (a szöveg változatlan formában jelenik meg, nincs hibanaplózás). A levágott környezetben történő aktiváláshoz telepítse az opcionális köteget:
 
 ```bash
-# rögzítés a package.json optionalDependencies részében megadott verziókhoz
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Az `@tensorflow/tfjs` eltávolítása (2.0.4+) megszünteti a korábban domináns, ~800 MB-os
-összetevőt — a fennmaradó tárigényt a transformers.js + onnxruntime-node futtatókörnyezetek,
-valamint az első használatkor letöltött TinyBERT modell (~57 MB) adják (nem npm-en keresztül).
+A `@tensorflow/tfjs` eltávolítás (2.0.4 +) kiküszöböli a korábban domináns ~ 800 MB közreműködőt — a fennmaradó lábnyom a transformers.js + onnxruntime-node runtimes, plusz a TinyBERT modell (~ 57 MB) az első használatkor letöltött (nem npm-n keresztül).
 
 Környezetenként:
 
-- **Fejlesztés / `npm install`** — automatikusan települ, kivéve, ha megadtad az `--omit=optional`
-  (vagy `--no-optional`) kapcsolót. Nincs szükség további teendőre.
-- **Globális npm (`npm i -g omniroute`) / önálló telepítés** — futtasd a fenti telepítési parancsot
-  a telepített csomag könyvtárában, vagy telepítsd újra az opcionális függőségek kihagyása nélkül.
-- **Docker** — add hozzá a telepítési parancsot egy származtatott képréteghez; a közzétett lemezkép
-  szándékosan minimális.
-- **VPS (PM2)** — telepítsd az alkalmazás `node_modules` könyvtárába, majd indítsd újra a folyamatot,
-  hogy a worker ismét ellenőrizze a kaput.
-- **Nyers Next standalone (`npm run build` → `.build/next/standalone/server.js`)** — az
-  önálló nyomkövetési csomag SEM a workert, SEM az opcionális függőségeket nem tartalmazza, ezért a motor
-  észrevétlenül nyitott állapotba vált hiba esetén. A `scripts/build/colocate-standalone.mjs` mindkettőt újra hozzáadja
-  (a worker esbuild-csomagját + az opcionális függőségek lezárt halmazát az önálló könyvtárfához); minden build után automatikusan
-  lefut a `postbuild` npm-hookon keresztül. Idempotens, és a függőségek hiányában kíméletesen kezeli a hibát.
+- **Fejlesztő / `npm install`** — automatikusan települ, hacsak nem teljesítette `--omit=optional` (vagy `--no-optional`). Nincs szükség intézkedésre.
+- **Globális npm (`npm i -g omniroute`) / önálló** — futtassa a fenti install parancsot a telepített csomagok könyvtárában, vagy telepítse újra az opcionális deps kihagyása nélkül.
+- **Docker** — hozzáadja az install parancsot egy származtatott képréteghez; a közzétett kép kialakítása vékony.
+- **VPS (PM2)** — telepítse az alkalmazás `node_modules` fájljába, majd indítsa újra a folyamatot, hogy a dolgozó újra megvizsgálja a kaput.
+- **Raw Next önálló (`npm run build` → `.build/next/standalone/server.js`)** — az önálló nyomkövető hajók NEITHER a dolgozót és az opcionális mélyedéseket, így a motor hangtalanul meghibásodik. `scripts/build/colocate-standalone.mjs` újra alkalmazza mindkettőt (a dolgozó + opcionális mélységi bezárását építi be az önálló fába); minden összeállítás után automatikusan fut a `postbuild` npm hook-on keresztül. Idempotens, hibamentes, ha a depek hiányoznak.
 
-**Ellenőrzés, hogy aktív-e:** az LLMLingua kiválasztásakor a valódi prózai szöveg ténylegesen rövidebbé válik
-(a motor többé nem vált észrevétlenül nyitott állapotba), és az első kérés elindítja a modell letöltését a
-`${DATA_DIR}/models/llmlingua` könyvtárba. A kapu szándékosan csak az `@atjsh/llmlingua-2` csomagot ellenőrzi —
-a többi társfüggőség kizárólag ESM-alapú, és a `require.resolve` akkor is hibát dob rájuk, ha jelen vannak —, ezért
-a worker továbbra is nyitott állapotba vált hiba esetén, ha bármely társfüggőség ténylegesen hiányzik az `import()` végrehajtásakor.
+**Ellenőrizze, hogy aktív-e:** LLMLingua kiválasztása esetén a valódi próza valójában összezsugorodik (a motor leállítja a hibanyitást), és az első kérés elindítja a modell letöltését `${DATA_DIR}/models/llmlingua` be. A kapu szándékosan csak `@atjsh/llmlingua-2` — vizsgálja, a többi peer csak ESM-et használ, és `require.resolve` akkor is dob rájuk, ha — jelen van, így a dolgozó továbbra is megszakad, ha valamelyik társ valóban hiányzik a `import()` időpontban.
 
-## Egymásra épülő feldolgozási láncok
+## Halmozott csővezetékek
 
-Az egymásra épülő mód sorrendben futtatja a feldolgozási lánc lépéseit. Az alapértelmezett sorrend:
+A halmozott mód a folyamat lépéseit sorrendben futtatja. Az alapértelmezett érték:
 
 ```txt
 rtk -> caveman
 ```
 
-Ezt olyan kódolóügynök-munkamenetekhez használja, amelyekben egy prompt a parancskimenetet emberi vagy asszisztensi prózával kombinálja. Az RTK először csökkenti a zajos eszköznaplók méretét, majd a Caveman tömöríti a fennmaradó természetes nyelvű szöveget.
+Használja ezt a kódoló ügynök munkamenetekhez, ahol a prompt kombinálja a parancskimenetet az emberi vagy asszisztens prózával. RTK először csökkenti a zajos eszköznaplókat, majd a Caveman tömöríti a megmaradt természetes nyelvet.
 
-A feldolgozási lánc lépései a tömörítési beállítások `stackedPipeline` mezőjével vagy tömörítési kombinációkon keresztül konfigurálhatók.
+A folyamat lépései `stackedPipeline` val konfigurálhatók a tömörítési beállításokban vagy a tömörítési kombinációkon keresztül.
 
-Amikor mindkét motor ugyanazt a megfelelő adattartalmat csökkenti, a megtakarítások összeadódnak:
+Ha mindkét motor ugyanazt a hasznos terhet csökkenti, a megtakarítás:
 
 ```txt
 combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
@@ -244,29 +163,29 @@ average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
 range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## MCP akadálymentességi fa szűrője
+## MCP akadálymentesítési faszűrő
 
-Az MCP akadálymentességi fájának intelligens szűrője egy végrehajtás utáni tömörítési réteg, amely az MCP **eszközeredményein** fut, nem pedig a promptokon vagy a kontextuson. Az olyan eszközök által visszaadott, részletes akadálymentességifa- és böngészőpillanatkép-adattartalmakat célozza, mint a Playwright, a computer-use és a böngészőautomatizálási MCP-kiszolgálók.
+A MCP akadálymentesítési fa intelligens szűrője egy végrehajtás utáni tömörítési réteg, amely MCP n fut.** eszköz eredményeit** , nem felszólításokra vagy kontextusra. Megcélozza a részletes akadálymentesítési fát és a böngésző pillanatképeit, amelyeket olyan eszközök adnak vissza, mint Playwright, a számítógép-használat és a böngésző-automatizálási MCP szerverek.
 
-### Mit csinál?
+### Mit csinál
 
-1. **Zaj eltávolítása** — eltávolítja az üres általános/szöveges bejegyzéseket (`- generic:`, `- text: ""`)
-2. **Testvérelemek összevonása** — ha ≥ `collapseThreshold` (alapértelmezés szerint 30) egymást követő sor szerkezetileg ismétlődik, összevonja őket az első `collapseKeepHead` (alapértelmezés szerint 10) sorra, egy darabszám-összesítésre és az utolsó `collapseKeepTail` (alapértelmezés szerint 5) sorra
-3. **Hivatkozások megőrzése** — a Playwright/computer-use működéséhez szükséges `[ref=eXX]` horgonyokat soha nem módosítja
-4. **Kényszerített csonkolás** — ha az összevonás utáni szöveg továbbra is meghaladja a `maxTextChars` értékét (alapértelmezés szerint 50 000), navigációs útmutatással csonkolja, hogy az ügynök folytathassa a munkát
+1. **Zajcsillapítás** — eltávolítja az üres generic/text bejegyzéseket (`- generic:`, `- text: ""`)
+2. **Testvér összeomlás** — ha ≥ `collapseThreshold` (alapértelmezett 30) egymást követő sorok szerkezeti ismétlődések, összecsukja őket az első `collapseKeepHead` (alapértelmezett 10) sorokba + a számlálás összegzése + az utolsó `collapseKeepTail` (alapértelmezett 5) sorok
+3. **Ref megőrzés** `[ref=eXX]` Playwright/computer-use által igényelt — horgonyokhoz soha nem szabad hozzáérni
+4. **Kemény csonkítás** — ha az összecsukás után a szöveg továbbra is meghaladja `maxTextChars` (alapértelmezett 50 000), akkor a navigációs utalással csonkolja, hogy az ügynök folytathassa a munkát
 
 ### A motor helye
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← a smartFilterText() belépési pontja
-  collapseRepeated.ts ← testvérelemek összevonási algoritmusa
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Konfiguráció
 
-A globális beállítások `compression.mcpAccessibility` mezője vezérli (056-os migráció). Alapértelmezett konfiguráció:
+`compression.mcpAccessibility` vezérli a globális beállításokban (migráció 056). Alapértelmezett konfiguráció:
 
 ```json
 {
@@ -279,105 +198,174 @@ A globális beállítások `compression.mcpAccessibility` mezője vezérli (056-
 }
 ```
 
-A szűrő csak azokra az eszközeredmény-adattartalmakra alkalmazandó, amelyek `type` értéke `"text"`, és amelyek hossza meghaladja a `minLengthToProcess` értékét. Nem érinti a promptok tömörítését vagy a kérések adattartalmait.
+A szűrő csak azokra a szerszámeredmény hasznos terhekre vonatkozik, amelyek `type` értéke `"text"`, és hossza meghaladja `minLengthToProcess`. Nincs hatással az azonnali tömörítésre vagy a hasznos terhelésekre.
 
 ### Várható megtakarítás
 
-60–80% a böngészőpillanatkép-eszközeredményeken, az oldal összetettségétől függően. Az összevonási algoritmus komplexitása a sorok számát tekintve O(n), és elhanyagolható késleltetést okoz.
+60–80%-a a böngésző pillanatfelvételi eszközének eredményeinek, az oldal bonyolultságától függően. Az összecsukási algoritmus O(n) a sorszámban, és elhanyagolható késleltetést ad hozzá.
 
-### A szűrő és a fenti tömörítési motorok összehasonlítása
+### Ez a szűrő a fenti kompressziós motorokhoz képest
 
-| Szempont              | Caveman / RTK / Stacked   | MCP akadálymentességi szűrő            |
-| --------------------- | ------------------------- | -------------------------------------- |
-| Cél                   | Kéréspromptok / kontextus | MCP-eszközeredmények                   |
-| Aktiválás             | Tömörítési mód beállítása | `compression.mcpAccessibility.enabled` |
-| Hatókör               | Minden SSE-üzenet         | Csak eszközeredmények                  |
-| Hivatkozási horgonyok | N/A                       | Feltétel nélkül megőrizve              |
+| Vonatkozás    | Caveman / RTK / Halmozott   | MCP akadálymentesítési szűrő           |
+| ------------- | --------------------------- | -------------------------------------- |
+| Cél           | Kérési promptok / kontextus | MCP eszköz eredményei                  |
+| Kioldó        | Tömörítési mód beállítása   | `compression.mcpAccessibility.enabled` |
+| Hatály        | Minden SSE üzenet           | Csak az eszköz eredményei              |
+| Ref horgonyok | N/A                         | Feltétel nélkül megőrizve              |
 
 ---
 
-## Tömörítési kombinációk
+## Tömörítési kombók
 
-A tömörítési kombinációk elnevezett tömörítési profilok, amelyek útválasztási kombinációkhoz rendelhetők:
+A tömörítési kombók neve tömörítési profilok, amelyek az útválasztási kombókhoz rendelhetők:
 
-- `compression_combos`: tárolja a módot, a folyamatot, az RTK-konfigurációt, a nyelvi konfigurációt és az alapértelmezett jelölőt
-- `compression_combo_assignments`: egy tömörítési kombinációt rendel hozzá egy útválasztási kombinációhoz
-- a futásidejű integráció az általános kombinációs felülbírálások előtt feloldja a hozzárendelt tömörítési kombinációt
-- az analitika tartalmazza a `compression_combo_id` és az `engine` mezőket
+- `compression_combos`: tárolási mód, csővezeték, RTK konfiguráció, nyelvi konfiguráció és alapértelmezett jelölő
+- `compression_combo_assignments`: a tömörítési kombót leképezi egy útválasztási kombóra
+- A futásidejű integráció feloldja a hozzárendelt tömörítési kombinációt, mielőtt az általános kombinációt felülbírálná
+- az elemzések közé tartozik `compression_combo_id` és `engine`
 
-Irányítópult-felület: `Dashboard -> Context & Cache -> Compression Combos`.
+Műszerfal felülete: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## API-felület
+## Előfeltételek / kezelői útmutató (CCR & session-dedup)
 
-| Útvonal                                | Cél                                                                               |
-| -------------------------------------- | --------------------------------------------------------------------------------- |
-| `/api/settings/compression`            | Globális tömörítési beállítások (a `mcpAccessibility` konfigurációt is beleértve) |
-| `/api/compression/preview`             | Bármely tömörítési mód előnézete                                                  |
-| `/api/compression/language-packs`      | Az elérhető Caveman nyelvi csomagok listázása                                     |
-| `/api/context/caveman/config`          | A Caveman-beállítások álneve                                                      |
-| `/api/context/rtk/config`              | RTK-alapértékek és -beállítások                                                   |
-| `/api/context/rtk/filters`             | RTK-szűrőkatalógus                                                                |
-| `/api/context/rtk/test`                | RTK-előnézeti/tesztelési végpont                                                  |
-| `/api/context/rtk/raw-output/[id]`     | Hitelesített, kitakart nyers kimenet helyreállítása                               |
-| `/api/context/combos`                  | Tömörítési kombinációk CRUD-műveletei                                             |
-| `/api/context/combos/[id]/assignments` | Útválasztásikombináció-hozzárendelések CRUD-műveletei                             |
-| `/api/context/analytics`               | A tömörítési analitika álneve                                                     |
+CCR (`ccr`) és `session-dedup` lecseréli vagy megszünteti a szöveget, és hagyja a a** jelző** mögött. Ez a szakasz a kezelői referencia a kliens bekötéséhez, a két jelölő leolvasásához és az elidézett tartalom lekéréséhez vagy diagnosztizálásához. Az egyes motorok mechanikáját fentebb tárgyaltuk; ez a "hogyan futtassam" réteg.
 
-A kezelési útvonalak kezelői hitelesítést vagy API-kulcsra vonatkozó házirend-ellenőrzéseket igényelnek.
+### Szállítások és végpontok
 
-## MCP-eszközök
+A CCR eszközöket megjelenítő MCP szervert háromféleképpen lehet elérni. Az alapértelmezett URL alapérték a `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
 
-A tömörítés öt MCP-eszközt tesz elérhetővé:
+| Szállítás                            | URL / parancs                           | Megjegyzések                                                                                                                                    |
+| ------------------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Streamálható HTTP (kliens, ajánlott) | `http://localhost:20128/api/mcp/stream` | A végpont, amellyel a jelenlegi MCP ügyfelek beszélnek.                                                                                         |
+| Legacy SSE singleton                 | `http://localhost:20128/api/mcp/sse`    | Régebbi egyszemélyes szállítás. Azt** bezár** streamelhető munkamenetek; `streamable-http` klienseket használj `/api/mcp/stream` ellen, ne ezt. |
+| stdio                                | `omniroute --mcp`                       | IDE MCP konfigurációhoz, amely elindítja a folyamatot. Nincs `--dev` zászló; `omniroute --mcp` az stdio belépési pontja.                        |
 
-| Eszköz                              | Hatókör             | Cél                                              |
+### Tárolási szintek (ami túléli az újraindítást)
+
+CCR egy** kétszintű** bolt, nem csak a memóriában:
+
+- **Forró memóriaszint** — blokkonkénti sapka 2 MiB, főként 16 MiB, globális 64 MiB. A bejegyzések alapértelmezett értéke 24 órás TTL (maximum 7 nap). A memóriából való teljes MCP lehívás korlátja 256 KiB; minden nagyobb még mindig elérhető a ranged / grep módokon keresztül.
+- **Tartós SQLite szint** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, alapértelmezés szerint be van kapcsolva) — támogatja a memórián belüli réteget, így a blokk túléli LRU kilakoltatást, újraindítást vagy egy másik példányon történő visszakeresést. A sor megtartja a blokk TTL, így a TTL előtti blokk mindkét szintről eltűnik.
+
+Három védőburkolat tartja a tartós réteget behatárolva — egy blokk csak a memóriában marad, ha:
+
+1. vége a blokknak** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. a futási környezet felhő futási környezet (nincs helyi lemez);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Tehát az „eltűnt blokk” nem egy általános újraindítási történet: a sub-512 KB blokk egy helyi, nem felhőalapú futási környezetben túléli az újraindítást a tartós rétegen keresztül, amíg TTL ki nem fogy. Lásd [a környezeti hivatkozást](../reference/ENVIRONMENT.md) a változóhoz.
+
+### A két jelző
+
+| Jelző                                 | Jelentése                                                                                                                                                                | Mit kell tennie a modellnek                                                                                                                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Egy nagy blokkot tartalom-címzetten tároltak.                                                                                                                            | Hívja `omniroute_ccr_retrieve` a** 24 hexadecimális hash szó szerint másolva** hogy visszakapja az eredeti szöveget.                                                                                          |
+| `[dedup:ref sha=…]`                   | `session-dedup` elided szöveg, amelyet már elküldtek ugyanannak a munkamenetnek egy korábbi fordulójában. Ez egy** szándékos visszatekintés** , nem veszteség vagy hiba. | Tedd** nem** hívjon bármilyen eszközt és tegye** nem** próbálja meg "rekonstruálni". A szöveg első előfordulása a kanonikus másolat; az aktuális kört soha nem írják át, hanem egy későbbi körben dedupálják. |
+
+A `[dedup:ref]` visszatekintés szándékos protokoll döntés — nincs küldés előtti rekonstrukció. Tekintse úgy, hogy "ez a pontos szöveg már korábban is megjelent ebben a munkamenetben".
+
+### Ügyfél előfeltételei
+
+- **Kulcs (stdio):** az stdio hívó nem hordoz kérésenkénti identitást, ezért `OMNIROUTE_API_KEY` hitelesít (a MCP szerver `env` van beállítva). Enélkül a hívó névtelen, és az igazgatót igénylő eszközök leromolhatnak.
+- **`tools[]` a befecskendezés előfeltétele.** A CCR retrieve-protocol utasítás (#8033) be van fecskendezve** csak** amikor a kérés hirdetett `tools[]` bizonyítja, hogy az ügyfél valóban elérheti `omniroute_ccr_retrieve`. Az egyezés egy zárószegmenses egyezés, amelyet elválasztó (`__`, `.`, `/`, `:`) határol. — soha nem csupasz — részkarakterlánc, így a névteres név, például `mcp__gateway__omniroute_ccr_retrieve` továbbra is számít. A hiányzó vagy nem egyező `tools[]` azt jelenti, hogy az utasítás _nincs_ befecskendezve.
+- **`codemode:false` (OpenCode ügyfelek).** OpenCode alapértelmezett kódmódja, amely csak a natív eszközeit hirdeti a modellnek és** nem** tegye MCP eszközöket a natív `tools[]` listára. Állítsa be `codemode: false` a MCP szerverbejegyzésben, hogy a `omniroute_ccr_*` eszközök megjelenjenek. Ez a** ügyfél** beállítás, nem egy OmniRoute. Még nem kapja meg a CCR utasítást: OpenCode egy eszközt `<server>_<tool>` néven nevez el, így a `omniroute` nevű szerver felfedi `omniroute_omniroute_ccr_retrieve`, és `_` nem tartozik az illesztett elválasztók közé.
+- **igazgatók.** A tárolás és a visszakeresés hitelesített főként ( API kulcsonként) elkülönítve történik. Egy kulcs csak a saját blokkjait látja.
+
+### Hatókör szerszámonként
+
+A hatókör érvényesítése mindig be van kapcsolva a szűk hatókörű HTTP/SSE hívóknál. A `omniroute_` CCR eszközök a következőket igénylik:
+
+| Eszköz                   | Hatály              |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+A hiányzó hatókör egy**MCP szerszámhiba eredménye** (`isError: true`, nem egy HTTP 403 — a `403 LOCAL_ONLY` a külön visszacsatolásos útvonalőrző hitelesítés): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Egy minimális távoli kulcsban tárolható `mcp:connect` (engedélyezi a `/api/mcp/` csak helyi kivágást), valamint a szükséges read/write hatókör.
+
+### Kliens mátrix
+
+| Ügyfél              | Szállítás                                      | Konfig a használathoz                                                                                                                                                                                                                                     | `tools[]` hirdetett? (→ CCR utasítás beadva)                                                                                                                                               |
+| ------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Claude kód          | streamelhető-http                              | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                                         | Igen — MCP-képes; befecskendezve.                                                                                                                                                          |
+| Cursor / Cline      | `stdio`** vagy** `streamable-http`             | stdio: `omniroute --mcp` `OMNIROUTE_API_KEY` a `env`; vagy egy távoli MCP -bejegyzés, amely `http://localhost:20128/api/mcp/stream` re mutat (lásd: [Telepítési útmutató → MCP Client Configuration](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Igen — reklámozza a `omniroute_ccr_*` eszközöket.                                                                                                                                          |
+| OpenCode            | streamelhető-http                              | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, plusz `codemode: false`                                                                                                                                                         | Csak `codemode: false` hirdetett eszközök; az utasítás még mindig nincs beadva, mert `omniroute_omniroute_ccr_retrieve` nem egyezik (lásd [Kliens előfeltételek](#client-prerequisites) ). |
+| OpenAI kompatibilis | OpenAI-kompatibilis HTTP (csevegés befejezése) | szabványos csevegés-kiegészítő kliens az OpenAI-kompatibilis végponttal szemben                                                                                                                                                                           | **Soha** — egy sima OpenAI-kompatibilis hívónak soha nem mondják, hogy hívja az eszközt, és az utasítást sem adják be.                                                                     |
+
+### Visszakeresési korlátok és oldalszámozás
+
+MCP eszköz szöveges eredményei `mcpAccessibility.maxTextChars` körül vannak vágva (alapértelmezett `50000`). Egy blokk `full` lekérésének felső határa 256 KiB —** nincs korlátlan teljes visszakeresés** . Ha egy blokk `chars=N` nagy, lapozd át ahelyett, hogy az egészet kihúznád:
+
+- Ökölszabály:**`chars > 40000` → használj `mode`** , soha egy csupasz tele.
+- `mode:"grep"` — regex `pattern` soronként egyeztetve, legfeljebb 1000 egyező sor (`unique: true` drops ismétlődik), a legolcsóbb a "találja meg azt a sort, amelyre szükségem van".
+- `mode:"lines"` — egy 1 indexű vonaltartomány; `start` és `end` is kell.
+- `mode:"head"` / `mode:"tail"` — first/last `n` sorok.
+- `mode:"stats"` — sorok, karakterek és bájtok a törzs nélkül számítanak.
+
+Használja `mode:"lines"` `start`/`end` -vel, hogy hosszú blokkot haladjon végig az oldalakon, ahelyett, hogy egyszerre kérné le az egészet.
+
+### Eszköz elnevezés
+
+A visszakereső eszköz neve jelenleg `omniroute_ccr_retrieve` (a `omniroute_` előtag a kiszolgálók közötti névütközések dátumozott megoldása). Egy tisztább korlátos utótagú eszköznév és egy javítás MCP JSON eredmények csonkolt középső karakterláncához a rendszer felfelé irányuló követésként követi nyomon; ez az oldal csak az aktuális, szállított viselkedést dokumentálja.
+
+### A munkamenet életciklusa
+
+A streamelhető HTTP-munkamenetek tétlenül működnek, és a szerver lekéri őket; az üresjárati ablak a `MCP_SESSION_IDLE_MS` konstans (névvel hivatkozva, nem kódolt értékkel, így ez az oldal nem sodródik, ha változik). A tétlenül learatott munkamenet tünete egy HTTP 404 `Unknown Mcp-Session-Id` — -vel, a megoldás a munkamenet újracsatlakozása vagy újraindítása,** nem** kulcs forgatásához, hatókör módosításához vagy eszköz átnevezéséhez.
+
+## API felület
+
+| Útvonal                                | Cél                                                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------- |
+| `/api/settings/compression`            | Globális tömörítési beállítások (beleértve `mcpAccessibility` konfigurációt is) |
+| `/api/compression/preview`             | Tekintse meg a tömörítési módokat                                               |
+| `/api/compression/language-packs`      | Sorolja fel az elérhető Caveman nyelvi csomagokat                               |
+| `/api/context/caveman/config`          | Caveman beállítások álnév                                                       |
+| `/api/context/rtk/config`              | RTK alapértékei és beállításai                                                  |
+| `/api/context/rtk/filters`             | RTK szűrőkatalógus                                                              |
+| `/api/context/rtk/test`                | RTK preview/test végpont                                                        |
+| `/api/context/rtk/raw-output/[id]`     | Hitelesített, szerkesztett nyers kimenet helyreállítása                         |
+| `/api/context/combos`                  | Kompressziós kombó CRUD                                                         |
+| `/api/context/combos/[id]/assignments` | Útválasztás-kombó hozzárendelés CRUD                                            |
+| `/api/context/analytics`               | Tömörítési elemzési álnév                                                       |
+
+A felügyeleti útvonalak kezelési hitelesítést vagy API-kulcs házirend-ellenőrzéseket igényelnek.
+
+## MCP Tools
+
+A tömörítés öt MCP eszközt tesz elérhetővé:
+
+| Eszköz                              | Hatály              | Cél                                              |
 | ----------------------------------- | ------------------- | ------------------------------------------------ |
-| `omniroute_compression_status`      | `read:compression`  | Beállítások, analitika, gyorsítótár-statisztikák |
-| `omniroute_compression_configure`   | `write:compression` | Globális beállítások frissítése                  |
-| `omniroute_set_compression_engine`  | `write:compression` | Mód és opcionális folyamat beállítása            |
+| `omniroute_compression_status`      | `read:compression`  | Beállítások, elemzések, gyorsítótár statisztikák |
+| `omniroute_compression_configure`   | `write:compression` | Frissítse a globális beállításokat               |
+| `omniroute_set_compression_engine`  | `write:compression` | Állítsa be a módot és az opcionális csővezetéket |
 | `omniroute_list_compression_combos` | `read:compression`  | Tömörítési kombinációk listázása                 |
-| `omniroute_compression_combo_stats` | `read:compression`  | Kombináció- és motoranalitika lekérése           |
+| `omniroute_compression_combo_stats` | `read:compression`  | Olvassa el combo/engine analytics-t              |
 
-## Hatókör és kizárások
+## Hatály és kizárások
 
-**A beágyazások soha nincsenek tömörítve.** Az `open-sse/handlers/embeddings.ts` soha nem hív meg
-tömörítési motort — a kérés és a válasz törzse módosítás nélkül, közvetlenül a végrehajtóhoz kerül.
-Ez jelenleg strukturális sajátosság (a beágyazások és a csevegési kiegészítések különálló kezelőket használnak), nem pedig
-futásidejű ellenőrzés, de ez azt jelenti, hogy a #8034-ben felvetett vektortorzítási aggály számára nincs kitettségi felület
-a beágyazási útvonalon.
+**A beágyazások soha nem tömöríthetők.** `open-sse/handlers/embeddings.ts` soha nem nevez semmilyen kompressziós motort — a request/response testek érintetlenül jutnak át közvetlenül a végrehajtóhoz. Ez ma strukturális (a beágyazások és a chat-befejezések diszjunkt kezelők), nem futásidejű ellenőrzés, de azt jelenti, hogy a #8034 vektortorzítási aggálya nem rendelkezik expozíciós felülettel a beágyazási útvonalon.
 
-**Modellenkénti/végpontonkénti kizárási szűrő (#8034).** Csevegési kiegészítések esetén az operátor megadhat
-olyan modellazonosítókat / `provider/model` célokat, amelyeket soha nem szabad tömöríteni — ez egy hasznos védőkorlát arra az esetre,
-ha a tömörítés később egy beágyazásokhoz közelebbi útvonalba lenne bekötve, és általánosságban is hasznos
-minden olyan modellnél, amelynél fontos a prompt bájtról bájtra pontos egyezése (determinisztikus kiértékelések, gyorsítótár-érzékeny
-előtagok stb.).
+**Per-model/endpoint kizáró szűrő (#8034).** A csevegés befejezéséhez az operátor megnevezheti a modellazonosítókat / `provider/model` célokat, amelyeket soha nem szabad tömöríteni, — egy védőkorlát, amely akkor hasznos, ha a tömörítést később a beágyazásokkal szomszédos útvonalhoz kötik közelebb, és általában hasznos minden olyan modellnél, amelynek pontos bájtról bájtra promptja számít (determinisztikus kiértékelések, gyorsítótár-érzékeny előtagok stb.).
 
-- Beállítási mező: `exclusions?: string[]` a globális tömörítési konfigurációban
-  (`GET`/`PUT /api/settings/compression`), amely a meglévő `key_value` tömörítési
-  névtéren (`src/lib/db/compression.ts`) keresztül maradandóan tárolódik — nincs új tábla.
-- Irányítópultlap: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Mintaszintaxis: a `*` az egyetlen helyettesítő karakter. A mintában szereplő összes többi reguláriskifejezés-meta-karakter
-  illesztés előtt escape-elésre kerül, így a `gpt-5.6` csak a literális karakterláncra illeszkedik, a `gpt-5x6` karakterláncra
-  soha (ReDoS-biztos, korlátozott, beágyazott kvantorok nélkül). A minták kis- és nagybetűktől függetlenül illeszkednek
-  mind a puszta modellazonosítóra, mind a `provider/model` összetett értékre — a `gpt-5-6`, az `openai/gpt-5-6`
-  és az `openai/*` egyaránt működik, a `*` önmagában pedig minden modellt kizár.
-- Illesztés: `isCompressionExcluded()` / `normalizeCompressionExclusions()` az
-  `open-sse/services/compression/exclusions.ts` fájlban. A `chatCore.ts` közvetlenül
-  a tömörítési beállítások feloldása után, **bármely motor futása előtt** ellenőrzi a kizárt célt, és az egyezést
-  pontosan úgy kezeli, mintha a tömörítés globálisan le lenne tiltva — a kérés törzse bizonyíthatóan
-  bájtról bájtra azonos marad. A kihagyást a `writeCompressionSkip(..., "excluded")` rögzíti,
-  hogy látható legyen az analitikában.
-- Alapértelmezés (üres/hiányzó lista): megegyezik a #8034 előtti viselkedéssel — semmi sincs kizárva.
+- Beállítások mező: `exclusions?: string[]` a globális tömörítési konfiguráción (`GET`/`PUT /api/settings/compression`), megmaradt a meglévő `key_value` tömörítési névtéren (`src/lib/db/compression.ts`) — nincs új tábla.
+- Irányítópult lap:** Irányítópult → Tömörítés → Kizárások** (`/dashboard/compression/exclusions`).
+- Minta szintaxis: `*` az egyetlen helyettesítő karakter. A mintában minden más reguláris kifejezés metakarakterét a rendszer kihagyja az egyeztetés előtt, így `gpt-5.6` csak a literális karakterláncra egyezik, `gpt-5x6` soha (ReDoS-biztos, korlátos, nincsenek beágyazott kvantorok). A minták kis- és nagybetűktől eltérően illeszkednek mind a csupasz modellazonosítóhoz, mind a `provider/model` összetett — `gpt-5-6`, `openai/gpt-5-6` és `openai/*` függvényhez, és `*` önmagában kizár minden modellt.
+- Illesztés: `isCompressionExcluded()` / `normalizeCompressionExclusions()` in `open-sse/services/compression/exclusions.ts`. `chatCore.ts` közvetlenül a tömörítési beállítások feloldása után ellenőrzi a kizárt célt,** mielőtt bármelyik motor beindulna** , és az egyezést pontosan úgy kezeli, mint a tömörítést, ha globálisan le van tiltva, — a kérés törzse bizonyíthatóan bájt-azonos. A kihagyást `writeCompressionSkip(..., "excluded")` keresztül rögzíti az analitikai láthatóság érdekében.
+- Alapértelmezett (empty/absent lista): megegyezik a #8034 előtti viselkedéssel — sincs kizárva.
 
 ## Ismert korlátozások
 
-- **Az LLMLingua-2 (SLM) egy helyre telepített opcionális függőségeket igényel.** A worker éles buildben csak akkor fut, ha az `@atjsh/llmlingua-2` és társfüggőségei egy helyre kerülnek a `dist/node_modules` könyvtárban (lásd: `scripts/build/colocateOptionals.mjs`, #4286). Ezek nélkül a motor nyitott hibakezelést alkalmaz (az eredeti szöveget adja vissza). A worker feloldása már nem függ az `import.meta.url` értékétől (ez az önálló bundle-ben leáll) — helyette a futásidejű cwd / `argv[1]` szolgál kiindulási pontként.
-- **A Caveman `de` / `fr` / `ja` nyelvi csomagjai részlegesek.** Tartalmaznak `context` + `filler` + `structural` szabályokat, de `dedup` / `ultra` csomagokat nem, ezért ezeknél a nyelveknél az `ultra` intenzitás nem erősebb a `full` intenzitásnál (kizárólag a saját szabályaikat használják — nincs észrevétlen visszaállás az angol `dedup`/`ultra` szabályokra, amelyek tönkretennék az idegen nyelvű szöveget). Az `en` / `es` / `id` / `pt-BR` csomagok teljesek. A részleges csomagokhoz szívesen fogadunk `dedup.json` + `ultra.json` hozzájárulásokat.
-- **A többlépcsős telemetria csak a tömörítést végző motorokat sorolja fel.** Ha egy többlépcsős feldolgozási folyamat egyik lépésében a motor lefutott, de 0 %-os megtakarítást ért el, akkor `stats:null` értéket ad vissza, így nem jelenik meg az `engineBreakdown` listában — ezért nem különböztethető meg egy kihagyott lépéstől. A „lefutott, 0 %” és a „kihagyva” esetek megkülönböztetése az összesítési modell módosítását igényelné, ezért ezt későbbre halasztottuk.
+- **LLMLingua-2 (SLM) megköveteli a közös helyen található opcionális dep-eket.** A dolgozó csak akkor fut termelési buildben, ha `@atjsh/llmlingua-2` + társak `dist/node_modules` -ben találhatók (lásd `scripts/build/colocateOptionals.mjs`, #4286). Ezek nélkül a motor hibamegnyílik (visszaadja az eredeti szöveget). A dolgozók felbontása már nem függ `import.meta.url` tól (az önálló kötegben meghal) — a futásidejű cwd / `argv[1]` hoz rögzíti.
+- **`de` / `fr` / `ja` Caveman nyelvi csomagok részlegesek.** Szállítanak `context` + `filler` + `structural` szabályokat, de nem `dedup` / `ultra` csomagokat, így `ultra` intenzitása nem erősebb, mint `full` ezeknél a nyelveknél (csak a saját szabályaikat használják —, nincs csendes visszaesés az angol `dedup`/`ultra` idegen szöveghez). `en` / `es` / `id` / `pt-BR` kész. Várjuk `dedup.json` + `ultra.json` hozzájárulását a részcsomagokhoz.
+- **A halmozott telemetria csak a tömörített motorokat jeleníti meg.** Egy halmozott csővezeték-lépés, amelynek motorja járt, de 0 %-os megtakarítást produkált, `stats:null` ad vissza, és így nem jelenik meg `engineBreakdown` — ben, megkülönböztethetetlenül egy kihagyott lépéstől. A „futott, 0 %” és a „kihagyott” megkülönböztetése a bontási modell megváltoztatását igényelné, és elhalasztható.
 
 ## Érvényesítés
 
-Az ehhez a területhez tartozó kiemelt ellenőrzések a következők:
+Ennek a területnek a fókuszált kapui a következők:
 
 ```bash
 node --import tsx/esm --test tests/unit/compression/rtk-*.test.ts tests/unit/compression/pipeline-integration.test.ts tests/unit/compression/context-compression-api.test.ts

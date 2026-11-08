@@ -4,263 +4,188 @@
 
 ---
 
-„OmniRoute“ glaudinimas grindžiamas variklių kontraktais. Režimas gali tiesiogiai vykdyti vieną variklį
-(`caveman` arba `rtk`) arba deterministinę sudėtinę grandinę, kuri paeiliui vykdo kelis variklius.
+OmniRoute kompresija yra pagrįsta variklio sutartimis. Režimas gali tiesiogiai paleisti vieną variklį (`caveman` arba `rtk`) arba deterministinį sudėtinį dujotiekį, kuris eilės tvarka vykdo kelis variklius.
 
 ## Režimai
 
-| Režimas      | Variklio kelias                                                                                            | Numatytasis įvestis                                   |
-| ------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `off`        | none                                                                                                       | Tikslus raginimo išsaugojimas                         |
-| `lite`       | Caveman lite helpers                                                                                       | Mažos rizikos nuolatinis valymas                      |
-| `standard`   | Caveman                                                                                                    | Natūralios kalbos raginimo sutraukimas                |
-| `aggressive` | Caveman + history/tool summarizers                                                                         | Ilgos pokalbių sesijos                                |
-| `ultra`      | Caveman + pruning helpers                                                                                  | Konteksto limito atkūrimas                            |
-| `rtk`        | RTK                                                                                                        | Terminalo, shell, kūrimo, testavimo ir git išvestis   |
-| `omniglyph`  | OmniGlyph                                                                                                  | Kontekstas kaip vaizdas vietinio teikėjo tinkle       |
-| `stacked`    | Pipeline. Numatytasis užklausos nustatymas yra `session-dedup -> lite`. `rtk -> caveman` yra pasirenkamas. | Mišrūs įrankių žurnalai ir proza, maksimalus taupymas |
+| Režimas      | Variklio kelias                                                                                          | Numatytas įvestis                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `off`        | jokios                                                                                                   | Tikslus greitas konservavimas                             |
+| `lite`       | Caveman Lite pagalbininkai                                                                               | Mažos rizikos nuolatinis valymas                          |
+| `standard`   | Urvinis žmogus                                                                                           | Greitas kondensatas natūralia kalba                       |
+| `aggressive` | Urvinio žmogaus + history/tool suvestinės                                                                | Ilgos pokalbių sesijos                                    |
+| `ultra`      | Urvinio žmogaus + genėjimo pagalbininkai                                                                 | Konteksto apribojimo atkūrimas                            |
+| `rtk`        | RTK                                                                                                      | Terminalas, apvalkalas, kūrimas, bandymas ir git išvestis |
+| `omniglyph`  | OmniGlyph                                                                                                | Kontekstas kaip vaizdas vietiniame teikėjo laide          |
+| `stacked`    | Dujotiekis. Numatytasis užklausos parametras yra `session-dedup -> lite`. `rtk -> caveman` pasirenkamas. | Mišrūs įrankių žurnalai ir proza, maksimaliai sutaupoma   |
 
 ### OmniGlyph suspaudimo profiliai
 
-`omniglyph` variklis (paketas `omniglyph`, 1.4.0+) priima pavadintą semantinį profilį, nustatytą
-globaliai per `omniglyph.profile` suspaudimo nustatymuose arba kiekvienam žingsniui per
-sukrauto konvejerio žingsnio konfigūraciją:
+`omniglyph` variklis (paketas `omniglyph`, 1.4.0 +) priima įvardytą semantinį profilį, visame pasaulyje nustatytą per `omniglyph.profile` glaudinimo nustatymuose arba kiekvienam žingsniui per sudėtinio dujotiekio žingsnių konfigūraciją:
 
-| Profilis      | Riba                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `aggressive`  | Numatytasis. Politika, pagal kurią buvo matuojami paskelbti kvitai – vaizdų sistema, įrankių dokumentai ir tanki istorija |
-| `balanced`    | Išlaiko gyvą būseną natyvią, apsaugo paskutinius 8 posūkius, sutraukia senesnę uždarytą istoriją                          |
-| `coding-safe` | Išlaiko autoritetą, įrankių schemas ir gyvą įrankio išvestį natyvią, apsaugo paskutinius 12 posūkių                       |
-| `passthrough` | Nukreipia be transformavimo; variklis praleidžiamas                                                                       |
+| Profilis      | Riba                                                                                                 |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `aggressive`  | Numatytoji. Paskelbtų kvitų politika matavo — vaizdų sistemą, įrankių dokumentus ir tankią istoriją  |
+| `balanced`    | Išsaugo gyvą valstiją, saugo paskutinius 8 posūkius, sugriauna senesnę uždarą istoriją               |
+| `coding-safe` | Išlaiko autoritetą, įrankių schemas ir tiesioginę įrankių išvestį, apsaugo paskutinius 12 apsisukimų |
+| `passthrough` | Maršrutai be transformacijos; variklis praleidžiamas                                                 |
 
-Profilis yra **lubos, o ne grindys**: `mergeCompressionProfileOptions` pakete neleidžia
-iškvietėjui perrašyti ir iš naujo atidaryti prarandamo kanalo, kurį profilis uždarė, todėl
-žingsnis po žingsnio `preserveSystemPrompt: false` negali iš naujo įjungti sistemos
-suspaudimo naudojant `coding-safe`.
+Profilis yra a** lubos, o ne grindys** : pakuotėje esantis `mergeCompressionProfileOptions` atsisako leisti skambinančiajam nepaisyti, kad būtų iš naujo atidaryta nuostolinga juosta, profilis uždarytas, todėl kiekvienam žingsniui `preserveSystemPrompt: false` negali iš naujo įjungti sistemos glaudinimo pagal `coding-safe`.
 
-Išmatuota šioje kodų bazėje: `coding-safe` ir `balanced` padidina `minCompressChars` iki
-maksimumo ir išlaiko sistemą, įrankių schemas bei įrankių rezultatus natyvius, todėl
-sesija, kuri dar nesukaupė istorijos, sustoja ties `below_min_chars` ir variklis nieko
-netransformuoja. Štai kodėl numatytasis yra `aggressive`, o ne saugiausias profilis.
+Matuojant pagal šią kodų bazę: `coding-safe` ir `balanced` padidina `minCompressChars` iki maksimumo ir išlaiko sistemos, įrankių schemų ir įrankių rezultatus natūralius, todėl seansas, kuris dar nesukaupė istorijos, sustoja ties `below_min_chars` ir variklis nieko nekeičia. Štai kodėl numatytasis yra `aggressive`, o ne saugiausias profilis.
 
-Paketas išsprendžia savo modelio apimtį ir profilį iš savo aplinkos konfigūracijos.
-OmniRoute niekada nedeleguoja sprendimo: adapteris priskiria modelio vartus prie paketo
-griežčiausios apimties, todėl pagrindinės aplinkos nustatymai gali tik susiaurinti
-leidžiamųjų sąrašą, bet niekada jo neišplėsti už OmniRoute išmatuotų kvitų ribų.
+Paketas išsprendžia savo modelio apimtį ir profilį pagal aplinkos konfigūraciją. OmniRoute niekada neperduoda sprendimo: adapteris prisega modelio vartus prie labiausiai ribojančios paketo apimties, todėl pagrindinio kompiuterio aplinkos parametrai gali tik susiaurinti leistinų sąrašą, niekada jo neišplėsti iki OmniRoute išmatuotų kvitų.
 
-## Variklių registras
+## Variklio registras
 
-Registras yra faile `open-sse/services/compression/engines/registry.ts`. Varikliai įgyvendina bendrą
-sutartį:
+Registras gyvena `open-sse/services/compression/engines/registry.ts`. Varikliai sudaro bendrą sutartį:
 
-- `id`: nekintantis variklio ID, pvz., `caveman` arba `rtk`
-- `apply(text, config)`: senasis vykdymo kelias, naudojamas sudėtinėse konvejerinėse sekose
-- `compress(input, config)`: pagrindinis vykdymo kelias, grąžinantis tekstą ir statistiką
-- `getConfigSchema()`: grąžina JSON schemą primenančią galiojančios konfigūracijos struktūrą
+- `id`: stabilus variklio ID, pvz. `caveman` arba `rtk`
+- `apply(text, config)`: senas vykdymo kelias, naudojamas sukrautuose vamzdynuose
+- `compress(input, config)`: pirminis vykdymo kelias, grąžinantis tekstą + statistika
+- `getConfigSchema()`: grąžina į JSON schemą panašią galiojančios konfigūracijos formą
 - `validateConfig(config)`: grąžina `{ valid, errors[] }`
 
-Registracijai naudojama `registerCompressionEngine(engine)` (arba `registerEngine` sudėtingesniais atvejais),
-kuri prieš priimdama iškviečia `assertValidEngine()` ir `validateConfig(defaultConfig)`.
-Norėdami pašalinti variklį vykdymo metu, naudokite `unregisterCompressionEngine(id)`.
+Registruojantis naudojamas `registerCompressionEngine(engine)` (arba `registerEngine` išplėstiniams atvejams), kuris iškviečia `assertValidEngine()` ir `validateConfig(defaultConfig)` prieš priimant. Naudokite `unregisterCompressionEngine(id)`, kad pašalintumėte variklį veikimo metu.
 
-`strategySelector.ts` užregistruoja integruotuosius variklius prieš vykdant glaudinimą. Tai leidžia peržiūrai,
-vykdymo meto glaudinimui, sudėtiniam režimui, testams ir būsimiems varikliams naudoti tą patį vykdymo kelią.
+`strategySelector.ts` registruoja įmontuotus variklius prieš pradedant suspaudimą. Tai leidžia peržiūrai, vykdymo laiko glaudinimui, sudėtiniam režimui, bandymams ir būsimiems varikliams naudoti tą patį vykdymo kelią.
 
-### MCP aprašų glaudinimas (susiję)
+### MCP aprašymo suspaudimas (susijęs)
 
-Atskiras registras glaudina MCP įrankių aprašų metaduomenis registro lygmeniu — žr.
-`open-sse/mcp-server/descriptionCompressor.ts` ir [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Jis pakartotinai naudoja
-Caveman taisykles, tačiau apdoroja įrankių metaduomenis, o ne užklausų naudingąją apkrovą.
+Atskiras registras suglaudina MCP įrankio aprašo metaduomenis registro lygiu — žr. `open-sse/mcp-server/descriptionCompressor.ts` ir [MCP-SERVER.md](../frameworks/MCP-SERVER.md). Jis pakartotinai naudoja „Caveman“ taisykles, bet naudoja įrankio metaduomenis, o ne prašo naudingų krovinių.
 
-### Papildomi integruotieji varikliai
+### Papildomi įmontuoti varikliai
 
-Be Caveman, RTK ir LLMLingua-2, registre pateikiami keli specializuoti nenuostolingi /
-struktūriniai varikliai (naudojami sudėtinėse konvejerinėse sekose, bandomojoje aplinkoje ir testuose):
+Be „Caveman“, RTK ir LLMLingua-2, registre pateikiami keli specializuoti be nuostolių / struktūriniai varikliai (naudojami vamzdynuose, žaidimų aikštelėje ir bandymuose):
 
-| Variklis      | ID              | Ką jis daro                                                                                                                                                                                                           |
-| ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CCR           | `ccr`           | Content-Compress-Retrieve (H4): didelius vientisus teksto blokus pakeičia turinio adresais pagrįstomis nuorodomis, todėl pasikartojantys / dideli blokai siunčiami vieną kartą, o vėliau į juos pateikiamos nuorodos. |
-| headroom      | `headroom`      | SmartCrusher (H3 + N5): nenuostolingai lenteliniu būdu suglaudina vienalytes JSON masyvų naudingąsias apkrovas į stulpelinę `[N rows]` formą.                                                                         |
-| ionizer       | `ionizer`       | Labai dideliems vienalyčiams blokams atrenka pradžios / vidurio / pabaigos eilučių imtį, o praleistą vidurį išsaugo kaip CCR turinio adresu pagrįstą nuorodą.                                                         |
-| session-dedup | `session-dedup` | Turinio adresais pagrįstas pasikartojimų šalinimas tarp dialogo žingsnių (įkvėptas TokenMizer): pašalina tekstą, kuris jau buvo pateiktas ankstesniuose tos pačios sesijos žingsniuose.                               |
+| Variklis      | Id              | Ką tai daro                                                                                                                                                                           |
+| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CCR           | `ccr`           | Turinio suspaudimas ir gavimas (H4): pakeičia didelius gretimus teksto blokus į turinį adresuotomis nuorodomis, todėl repeated/large blokai siunčiami vieną kartą, o vėliau nurodomi. |
+| aukštis       | `headroom`      | SmartCrusher (H3 + N5): vienarūšių JSON masyvo naudingųjų apkrovų lentelinis sutankinimas be nuostolių į stulpelinę `[N rows]` formą.                                                 |
+| jonizatorius  | `ionizer`       | Head/middle/tail eilučių mėginių ėmimas labai dideliems vienarūšiams blokams, išsaugant elidinį vidurį kaip CCR turinį adresuotą nuorodą.                                             |
+| session-dedup | `session-dedup` | Su turiniu susijęs kryžminio posūkio dubliavimo panaikinimas (įkvėptas „TokenMizer“): panaikina tekstą, jau matytą ankstesniuose tos pačios sesijos posūkiuose.                       |
 
-**CCR gavimo protokolo instrukcija (#8033):** kai CCR pirmą kartą užklausoje pakeičia ≥1 bloką,
-variklis pradžioje prideda vieną idempotentišką `system` pranešimą (prasidedantį
-`[CCR protocol]` kontroliniu žymeniu), kuris skambinančiajai šaliai paaiškina žymeklio → įrankio sutartį: ką reiškia
-`[CCR retrieve hash=<24hex> chars=N]` žymeklis, kad maiša turi būti nukopijuota pažodžiui
-(visi 24 šešioliktainiai simboliai — neteisingai nukopijuotos maišos yra tikėtina „blokas nerastas“
-klaidų priežastis) ir kad `[dedup:ref sha=...]` žymeklis reiškia „ieškoti ankstesnėje istorijoje“, o ne „kviesti
-įrankį“. Pastaba įterpiama **tik tada, kai skambinančiosios šalies paskelbtas `tools[]` įrodo, kad ji
-iš tikrųjų gali pasiekti `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` faile
-`open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — įprasta
-su OpenAI suderinama skambinančioji šalis, neturinti šio įrankio, niekada negauna instrukcijos iškviesti to,
-ko negali pasiekti. Idempotentiškumas užtikrinamas prieš įterpiant patikrinant, ar pranešimų istorijoje yra kontrolinis žymuo,
-todėl kelių dialogo žingsnių užklausose (kurios pakartotinai perduoda ankstesnius pranešimus) ši
-pastaba nepridedama iš naujo kiekviename žingsnyje.
+**CCR atkūrimo protokolo instrukcija (#8033):** Kai pirmą kartą CCR užklausoje pakeičia ≥ 1 bloką, variklis pateikia vieną idempotentinį `system` pranešimą (pirmaujantis `[CCR protocol]` sentinel), mokydamas skambinantįjį žymeklį → įrankį susitarti: ką reiškia `[CCR retrieve hash=<24hex> chars=N]` žymeklis, kad maiša turi būti nukopijuota pažodžiui (visi 24 hex lock yra klaidingi simboliai) — nerasta“ praleidžia), o `[dedup:ref sha=...]` žymeklis reiškia „pažvelgti atgal į istoriją“, o ne „iškviesti įrankį“. Užrašas suleidžiamas** tik tada, kai skambinančiojo reklamuojamas `tools[]` įrodo, kad jis iš tikrųjų gali pasiekti `omniroute_ccr_retrieve`** (`callerSupportsCcrRetrieve()` in `open-sse/services/compression/engines/ccr/protocolInstruction.ts`) — paprastas su OpenAI suderinamas skambintuvas be šio įrankio niekada negauna nurodymo paskambinti tam, ko jis negali pasiekti. Idempotencija užtikrinama nuskaitant sargybinio pranešimų istoriją prieš įvedant, todėl kelių posūkių užklausos (kurios atkuria ankstesnius pranešimus) nededa raštelio vieną kartą per ėjimą.
 
-## Caveman
+## Urvinis žmogus
 
-Caveman režimas skirtas semantiniam įprasto teksto glaudinimui:
+Urvinio žmogaus režimas orientuotas į normalios prozos semantinį kondensavimą:
 
-- išsaugo kodo blokus, URL, JSON, kelius ir struktūrinius duomenis
-- pašalina perteklinį tekstą, abejojimą išreiškiančias frazes, pasikartojantį kontekstą ir išplėstines jungiamąsias formuluotes
-- palaiko kalbai pritaikytus failų taisyklių rinkinius kataloge `open-sse/services/compression/rules/`
-- išlieka pasiekiamas per ankstesnius `standard`, `aggressive` ir `ultra` režimus
+- išsaugo kodų blokus, URLs, JSON, kelius ir struktūrinius duomenis
+- pašalina užpildą, apsidraudimą, pasikartojantį kontekstą ir daugžodžias jungiamąsias frazes
+- palaiko kalbos žinią failų taisyklių paketus `open-sse/services/compression/rules/`
+- išlieka pasiekiamas naudojant senus `standard`, `aggressive` ir `ultra` režimus
 
-Valdymo skydelyje ši funkcija pasiekiama per `Dashboard -> Context & Cache -> Caveman`.
+Prietaisų skydelio paviršius yra `Dashboard -> Context & Cache -> Caveman`.
 
-Caveman pirminio projekto duomenimis, išvesties žetonų skaičius sumažėja `~75%`, etalonuose vidutiniškai sutaupoma `65%` išvesties, o diapazonas siekia `22-87%`; įvesties glaudinimo priemonė sutaupo `~46%`. Dokumentuodama sudėtines užklausų ir konteksto santaupas, OmniRoute naudoja Caveman įvesties glaudinimo rodiklį; Caveman išvesties režimas išlieka atskira atsakymo elgsenos funkcija.
+Caveman prieš srovę praneša apie `~75%` mažiau išvesties žetonų, `65%` vidutinį išvesties sutaupymą `22-87%` diapazone ir `~46%` įvesties glaudinimo įrankį. OmniRoute naudoja „Caveman“ įvesties numerį, kai dokumentuoja sukauptas prompt/context santaupas; Urvinio žmogaus išvesties režimas išlieka atskira atsako elgesio funkcija.
 
 ## RTK
 
-RTK režimas skirtas komandų ir įrankių išvesčiai:
+RTK režimas sutelktas į komandų ir įrankių išvestį:
 
-- aptinka tokias išvesties klases kaip `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest,
-  Cargo/Go testai, TypeScript/Vite/Webpack komponavimas, ESLint, npm auditas / diegimai, Docker žurnalai,
-  apvalkalo `find`/`grep`, dėklo pėdsakai ir bendrieji žurnalai
-- taiko 49 JSON filtrus iš `open-sse/services/compression/engines/rtk/filters/`
-- palaiko RTK stiliaus deklaratyvų konvejerį: ANSI šalinimą, keitimą, trumpojo jungimo veikseną sutapus išvesčiai,
-  eilučių šalinimą / išsaugojimą, kiekvienos eilutės trumpinimą, pradžios / pabaigos / maksimalaus eilučių skaičiaus ribojimą ir atsarginę veikseną tuščios išvesties atveju
-- palaiko pasitikėjimu apribotus projekto filtrus faile `.rtk/filters.json` ir visuotinius filtrus faile
-  `DATA_DIR/rtk/filters.json`
-- pašalina ANSI sekas, eigos triukšmą, pasikartojančias eilutes ir nenaudingą standartinį tekstą
-- išsaugo taisytinas triktis, įspėjimus, suvestines, pakeistus failus ir kontekstą iš išvesties pabaigos
-- pasirinktinai gali išsaugoti nuasmenintą neapdorotą išvestį, kad ją būtų galima atkurti ar derinti naudojant autentifikuotus valdymo maršrutus
+- aptinka išvesties klases, tokias kaip `git status`, `git branch`, `git diff`, Vitest/Jest/Pytest, Cargo/Go testai, TypeScript/Vite/Webpack versijos, ESLint, npm audit/installs, Docker žurnalai, apvalkalas `find`/`grep`, dėklo pėdsakai ir bendrieji žurnalai
+- Taiko 49 JSON filtrus iš `open-sse/services/compression/engines/rtk/filters/`
+- palaiko RTK stiliaus deklaratyvųjį konvejerį: ANSI pašalinimas, keitimas, suderinimo išvesties trumpasis jungimas, strip/keep eilutės, eilutės sutrumpinimas, head/tail/max-line sutrumpinimas ir tuščias atsarginis
+- palaiko patikimus projektų filtrus `.rtk/filters.json` ir pasaulinius filtrus `DATA_DIR/rtk/filters.json`
+- pašalinamos ANSI sekos, progreso triukšmas, pasikartojančios eilutės ir nenaudinga generacija
+- išsaugo veiksmingus gedimus, įspėjimus, santraukas, pakeistus failus ir uodegos kontekstą
+- pasirinktinai gali išsaugoti redaguotą neapdorotą recovery/debugging išvestį per autentifikuotus valdymo maršrutus
 
-Valdymo skydelyje ši funkcija pasiekiama per `Dashboard -> Context & Cache -> RTK`.
+Prietaisų skydelio paviršius yra `Dashboard -> Context & Cache -> RTK`.
 
-Pasirinktinių filtrų, pasitikėjimo, tikrinimo ir neapdorotos išvesties atkūrimo naudojimo informacija pateikta
-faile [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
+Eksploatacinė informacija apie tinkintus filtrus, pasitikėjimą, patikrinimą ir neapdorotos išvesties atkūrimą veikia [`RTK_COMPRESSION.md`](./RTK_COMPRESSION.md).
 
-RTK pirminio projekto duomenimis, komandų išvesties glaudinimas sutaupo `60-90%`. README pavyzdyje parodyta, kaip per 30 minučių Claude Code seansą žetonų skaičius sumažėjo nuo `~118,000` iki `~23,900`, taigi sutaupyta `79.7%`.
+RTK prieš srovę praneša apie `60-90%` sutaupymus komandų išvesties glaudinimui. Jo README pavyzdyje parodyta 30 minučių Claude kodo sesija, pereinanti nuo `~118,000` žetonų iki `~23,900` arba `79.7%` išsaugoto.
 
-## LLMLingua-2 (semantinis retinimas)
+## LLMLingua-2 (semantinis genėjimas)
 
-LLMLingua-2 režimas atlieka prozos **semantinį žetonų retinimą**, naudodamas nedidelį ONNX žetonų
-klasifikatorių, ir papildo taisyklėmis pagrįstus Caveman bei RTK variklius:
+LLMLingua-2 režimas veikia** semantinis žetonų genėjimas** apie prozą, naudojant mažą ONNX žetonų klasifikatorių, papildantį taisyklėmis pagrįstus Caveman ir RTK variklius:
 
-- glaudina tik nesisteminių pranešimų tekstą; kodo blokai su aptvarais ir kitos išsaugomos
-  konstrukcijos niekada nekeičiamos
-- vykdo `@atjsh/llmlingua-2` posistemę (ONNX per `@huggingface/transformers`) darbinėje
-  gijoje, todėl modelio išvedimas niekada neblokuoja užklausų įvykių ciklo
-- yra **sudedamas** (`stackPriority` 35): sudėtiniame konvejeryje jis vykdomas po
-  struktūrinių variklių (CCR, session-dedup, headroom, Caveman), bet prieš `ultra`, nes
-  semantinis retinimas veiksmingiausias jau struktūriškai suglaudintam tekstui, pvz.,
-  `rtk -> caveman -> llmlingua`
-- įvykus **bet kokiai klaidai, netrikdo veikimo** (trūksta pasirinktinių priklausomybių, nepavyksta paleisti darbinio proceso, įkelti modelio, atlikti išvedimo
-  arba viršijamas skirtasis laikas) → pradinis tekstas grąžinamas nepakeistas, klaida niekada negrąžinama
+- suspaudžia prozą tik nesisteminiuose pranešimuose; aptverti kodų blokai ir kitos išsaugotos konstrukcijos niekada nekeičiamos
+- paleidžia `@atjsh/llmlingua-2` backend (ONNX per `@huggingface/transformers`) darbuotojo gijoje, todėl modelio išvada niekada neužblokuoja užklausos įvykio ciklo
+- yra** galima sukrauti** (`stackPriority` 35): sukrautame konvejeryje jis veikia po struktūrinių variklių (CCR, session-dedup, headroom, Caveman), bet prieš `ultra`, nes semantinis genėjimas yra efektyviausias jau struktūriškai suglaudintam tekstui — pvz `rtk -> caveman -> llmlingua`
+- **nesėkmingai atsidaro esant bet kokiai klaidai** (trūksta pasirenkamų deps, darbuotojo keitimo, modelio įkėlimo, išvados arba skirtojo laiko) → originalus tekstas grąžinamas nepakeistas, niekada nėra klaida
 
-Variklio vieta: `open-sse/services/compression/engines/llmlingua/`. Valdymo skydelyje ši funkcija
-pasiekiama per `Dashboard -> Context & Cache -> LLMLingua`.
+Variklio vieta: `open-sse/services/compression/engines/llmlingua/`. Prietaisų skydelio paviršius yra `Dashboard -> Context & Cache -> LLMLingua`.
 
 ### Modeliai
 
-Numatytasis modelis yra **TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~57 MB,
-spartus). Didesnio tikslumo **BERT-base** modelį (`Arcoldd/llmlingua4j-bert-base-onnx`,
-~710 MB) galima pasirinkti variklio konfigūracijos lauke `model`. `@huggingface/transformers`
-pirmojo iškvietimo metu atidėtai atsisiunčia pasirinktą modelį iš HuggingFace Hub į
-`${DATA_DIR}/models/llmlingua` (`modelStore.ts`); konfigūracijos perrašymo lauku `modelPath`
-galima nurodyti vietinę kopiją (dieginiams be interneto ryšio / izoliuotuose tinkluose).
+Numatytasis modelis yra**TinyBERT** (`atjsh/llmlingua-2-js-tinybert-meetingbank`, ~ 57 MB, greitas ). Didesnis tikslumas** BERT bazė** modelis (`Arcoldd/llmlingua4j-bert-base-onnx`, ~ 710 MB) pasiekiamas variklio konfigūracijos `model` lauke. `@huggingface/transformers` tingiai atsisiunčia pasirinktą modelį iš HuggingFace Hub į `${DATA_DIR}/models/llmlingua` pirmojo skambučio metu (`modelStore.ts`); `modelPath` konfigūracijos nepaisymas nukreipia jį į vietinę kopiją (diegimai neprisijungus / su oro tarpais).
 
-### Pasirinktinės priklausomybės ir diegimas pagal poreikį
+### Pasirenkamos priklausomybės ir diegimas pagal pareikalavimą
 
-Pašalinamas LLMLingua vykdymo aplinkos lygiaverčių priklausomybių rinkinys yra **pasirinktinis**. Du paketai faile
-`package.json` deklaruoti kaip `optionalDependencies`, o produkciniame komponavime paliekami **išoriniai**
-(`scripts/build/prepublish.ts` jų neįtraukia):
+Apkarpomas LLMLingua vykdymo laiko lygiavertis dėklas yra** neprivaloma** . Dvi pakuotės `optionalDependencies` deklaruojamos kaip `package.json` ir saugomos** išorės** pagal gamybos versiją (`scripts/build/prepublish.ts` jų nesujungia):
 
-| Paketas              | Versija (fiksuota) | Pastabos                                                         |
-| -------------------- | ------------------ | ---------------------------------------------------------------- |
-| `@atjsh/llmlingua-2` | `2.0.5`            | Įėjimo paketas; kitus deklaruoja kaip lygiavertes priklausomybes |
-| `js-tiktoken`        | `^1.0.20`          | Žetonų skaidytuvas                                               |
+| Paketas              | Versija (smeigtukas) | Pastabos                                    |
+| -------------------- | -------------------- | ------------------------------------------- |
+| `@atjsh/llmlingua-2` | `2.0.5`              | Įėjimo paketas; kitus skelbia bendraamžiais |
+| `js-tiktoken`        | `^1.0.20`            | Tokenizatorius                              |
 
-`@huggingface/transformers` versija fiksuota kaip `^4.2.0` (ji bendrinama su vietinių vektorinių reprezentacijų keliu ir
-taip pat įtraukiama į autonominio paketo priklausomybių sekimą); `@atjsh/llmlingua-2@2.0.5` kaip lygiavertės priklausomybės reikalauja
-`"^3.5.2 || ^4.0.0"`, todėl palaikomos ir Transformers.js v3, ir v4. Nuo 2.0.4 versijos
-`@atjsh/llmlingua-2` nebereikalauja `@tensorflow/tfjs`, todėl iš SLM rinkinio pašalintas didžiausias pavienis
-komponentas (TensorFlow.js). Pašalinamos SLM lygiavertės priklausomybės yra tik du pirmiau nurodyti paketai.
-Įprasta komanda `npm install` (kūrimo aplinkoje) pasirinktinį rinkinį įdiegia automatiškai, nebent pasirinktinių
-priklausomybių diegimas praleidžiamas.
+`@huggingface/transformers` prisegtas prie `^4.2.0` (bendrinamas su vietiniu įterpimo keliu ir taip pat atsekamas į atskirą rinkinį); `@atjsh/llmlingua-2@2.0.5` bendradarbiauja su `"^3.5.2 || ^4.0.0"`, todėl palaikomi ir Transformers.js v3, ir v4. Nuo 2.0.4 versijos `@atjsh/llmlingua-2` nebereikalauja `@tensorflow/tfjs`, todėl iš SLM krūvos buvo pašalintas didžiausias bendraautoris (TensorFlow.js). Tik du aukščiau pateikti paketai yra genėti SLM. Standartinis `npm install` (dev) pasirenkamą krūvą įdiegia automatiškai, nebent būtų praleistos pasirenkamos priklausomybės.
 
-**Kodėl diegiama pagal poreikį:** npm paskelbtas paketas, autonominis paketas ir Docker atvaizdis
-pateikiami **be** šių priklausomybių, kad išliktų nedideli. Kai jų nėra, darbinio proceso priklausomybių
-patikra (`@atjsh/llmlingua-2` aptikimo bandymas faile `worker.ts`) nepavyksta, o variklis
-**tyliai netrikdo veikimo** — pasirinkus LLMLingua neatliekamas joks veiksmas (tekstas grąžinamas nepakeistas,
-klaida neregistruojama). Norėdami jį aktyvinti apkarpytoje aplinkoje, įdiekite pasirinktinį rinkinį:
+**Kodėl pagal pareikalavimą:** npm paskelbtas paketas, atskiras paketas ir Docker vaizdo siuntimas** be** šie deps išlikti liekni. Kai jų nėra, sugenda darbuotojo priklausomybės vartai ( `@atjsh/llmlingua-2` sprendimo zondas `worker.ts`) ir variklis** nesėkmingai atsidaro tyliai** — pasirinkus LLMLingua tampa ne-oper (tekstas grąžinamas nepakeistas, klaida neužregistruota). Norėdami suaktyvinti jį apkarpytoje aplinkoje, įdiekite pasirenkamą krūvą:
 
 ```bash
-# fiksuokite package.json optionalDependencies deklaruotas versijas
+# pin to the versions declared in package.json optionalDependencies
 npm install @atjsh/llmlingua-2@2.0.5 js-tiktoken
 ```
 
-Pašalinus `@tensorflow/tfjs` (2.0.4+) nebeliko anksčiau dominavusio ~800 MB
-komponento — likusią apimtį sudaro transformers.js ir onnxruntime-node vykdymo aplinkos
-bei pirmą kartą naudojant atsisiunčiamas TinyBERT modelis (~57 MB) (ne per npm).
+Pašalinus `@tensorflow/tfjs` (2.0.4 +), pašalinamas anksčiau dominavęs ~ 800 MB bendradarbis — likęs pėdsakas yra transformers.js + onnxruntime-node vykdymo laikas ir TinyBERT modelis (~ 57 MB), atsisiųstas pirmą kartą naudojant (ne per npm).
 
 Pagal aplinką:
 
-- **Kūrimo aplinka / `npm install`** — įdiegiama automatiškai, nebent nurodėte `--omit=optional`
-  (arba `--no-optional`). Jokių veiksmų nereikia.
-- **Globalus npm (`npm i -g omniroute`) / autonominis diegimas** — paleiskite pirmiau pateiktą diegimo komandą
-  įdiegto paketo kataloge arba įdiekite iš naujo, nepraleisdami pasirenkamųjų priklausomybių.
-- **Docker** — įtraukite diegimo komandą į išvestinio atvaizdo sluoksnį; publikuojamas atvaizdas
-  specialiai pateikiamas sumažintas.
-- **VPS (PM2)** — įdiekite į programos `node_modules`, tada paleiskite procesą iš naujo, kad
-  darbinis procesas pakartotinai patikrintų užkardą.
-- **Neapdorotas Next autonominis paketas (`npm run build` → `.build/next/standalone/server.js`)** — į
-  autonominio paketo sekimo rezultatą NEĮTRAUKIAMAS nei darbinis procesas, nei pasirenkamosios priklausomybės, todėl variklis tyliai
-  persijungia į atvirą režimą. `scripts/build/colocate-standalone.mjs` iš naujo pritaiko abu elementus (darbinio proceso esbuild +
-  pasirenkamųjų priklausomybių uždarinį autonominio paketo medyje); po kiekvieno komponavimo jis automatiškai paleidžiamas naudojant
-  npm `postbuild` kablį. Idempotentiškas; jei priklausomybių nėra, klaidos apdorojamos netrikdant veikimo.
+- **Kūrėjas / `npm install`** — įdiegiamas automatiškai, nebent išlaikėte `--omit=optional` (arba `--no-optional`). Nereikia jokių veiksmų.
+- **Visuotinis npm (`npm i -g omniroute`) / atskiras** — paleiskite aukščiau esančią diegimo komandą įdiegtų paketų kataloge arba įdiekite iš naujo, nepraleisdami pasirenkamų deps.
+- **Docker** — pridėkite diegimo komandą išvestiniame vaizdo sluoksnyje; paskelbtas vaizdas yra plonas pagal dizainą.
+- **VPS (PM2)** — įdiekite į programos `node_modules`, tada paleiskite procesą iš naujo, kad darbuotojas iš naujo patikrintų vartus.
+- **Atskiras „Raw Next“ (`npm run build` → `.build/next/standalone/server.js`)** — atskiri sekimo laivai NEITHER darbuotojo nei pasirenkami deps, todėl variklis tyliai atsidaro. `scripts/build/colocate-standalone.mjs` iš naujo pritaiko abu (darbuotojas įrengia + pasirenkamąjį-dep uždarymą į atskirą medį); jis veikia automatiškai per `postbuild` npm kabliuką po kiekvieno kūrimo. Idempotentas, atsparus nesėkmėms, kai nėra dep.
 
-**Patikrinkite, ar tai aktyvuota:** pasirinkus LLMLingua, tikras prozos tekstas iš tiesų sutrumpėja (variklis
-nustoja persijungti į atvirą režimą), o pirmoji užklausa inicijuoja modelio atsisiuntimą į
-`${DATA_DIR}/models/llmlingua`. Užkarda sąmoningai tikrina tik `@atjsh/llmlingua-2` —
-kiti lygiaverčiai paketai palaiko tik ESM, todėl `require.resolve` jiems pateikia klaidą net tada, kai jie įdiegti, — taigi
-darbinis procesas vis tiek persijungia į atvirą režimą, jei vykdant `import()` iš tiesų trūksta kurio nors lygiaverčio paketo.
+**Patikrinkite, ar jis aktyvus:** Pasirinkus LLMLingua, tikroji proza iš tikrųjų susitraukia (variklis nustoja atsidaryti), o pirmoji užklausa suaktyvina modelio atsisiuntimą į `${DATA_DIR}/models/llmlingua`. Vartai tyčia tikrina tik `@atjsh/llmlingua-2` — kiti bendraamžiai yra tik ESM ir `require.resolve` meta juos net tada, kai yra — todėl darbuotojas vis tiek atsidaro nesėkmingai, jei `import()` metu kurio nors bendraamžio tikrai trūksta.
 
-## Sudėtinės grandinės
+## Sukrauti vamzdynai
 
-Sudėtiniu režimu grandinės veiksmai vykdomi iš eilės. Numatytoji seka:
+Stacked režimu dujotiekio žingsniai vykdomi eilės tvarka. Numatytasis yra:
 
 ```txt
 rtk -> caveman
 ```
 
-Naudokite ją programavimo agento seansams, kuriuose užklausa sujungia komandų išvestį su žmogaus ar asistento tekstu. RTK pirmiausia sumažina perteklinius įrankių žurnalus, tada Caveman suglaudina likusią natūralią kalbą.
+Naudokite tai kodavimo agento seansams, kai eilutė sujungia komandų išvestį su žmogaus ar asistento proza. RTK pirmiausia sumažina triukšmingus įrankių žurnalus, tada Caveman suspaudžia likusią natūralią kalbą.
 
-Grandinės veiksmai konfigūruojami naudojant `stackedPipeline` glaudinimo nuostatose arba per glaudinimo derinius.
+Dujotiekio žingsniai sukonfigūruojami naudojant `stackedPipeline` glaudinimo nustatymuose arba naudojant glaudinimo derinius.
 
-Kai abu moduliai sumažina tą patį tinkamą turinį, sutaupymas sumuojasi:
+Kai abu varikliai sumažina tą pačią tinkamą naudingąją apkrovą, sutaupoma:
 
 ```txt
-combined = 1 - (1 - RTK sutaupymas) * (1 - Caveman įvesties sutaupymas)
+combined = 1 - (1 - RTK savings) * (1 - Caveman input savings)
 average  = 1 - (1 - 0.80) * (1 - 0.46) = 89.2%
 range    = 1 - (1 - 0.60..0.90) * (1 - 0.46) = 78.4-94.6%
 ```
 
-## MCP prieinamumo medžio filtras
+## MCP pritaikymo neįgaliesiems medžio filtras
 
-MCP prieinamumo medžio išmanusis filtras yra po vykdymo veikiantis glaudinimo sluoksnis, taikomas MCP **įrankių rezultatams**, o ne užklausoms ar kontekstui. Jis skirtas išsamiam prieinamumo medžių ir naršyklės momentinių kopijų turiniui, kurį grąžina tokie įrankiai kaip Playwright, kompiuterio valdymo ir naršyklės automatizavimo MCP serveriai.
+MCP pritaikymo neįgaliesiems medžio išmanusis filtras yra glaudinimo sluoksnis po vykdymo, kuris veikia MCP** įrankio rezultatai** , ne pagal raginimus ar kontekstą. Tai taikoma išsamiam pritaikymo neįgaliesiems medžio ir naršyklės momentinių kopijų naudingosioms apkrovoms, kurias grąžina tokie įrankiai kaip Playwright, kompiuterio naudojimas ir naršyklės automatizavimo MCP serveriai.
 
-### Ką jis atlieka
+### Ką tai daro
 
-1. **Triukšmo šalinimas** — pašalina tuščius bendruosius ar tekstinius įrašus (`- generic:`, `- text: ""`)
-2. **Gretimų elementų sutraukimas** — kai ≥ `collapseThreshold` (numatytoji reikšmė 30) iš eilės einančių eilučių yra struktūriniai pasikartojimai, jos sutraukiamos paliekant pirmąsias `collapseKeepHead` (numatytoji reikšmė 10) eilučių + kiekio suvestinę + paskutines `collapseKeepTail` (numatytoji reikšmė 5) eilutes
-3. **Nuorodų išsaugojimas** — Playwright ir kompiuterio valdymui būtini `[ref=eXX]` inkarai niekada nekeičiami
-4. **Griežtas sutrumpinimas** — jei po sutraukimo tekstas vis dar viršija `maxTextChars` (numatytoji reikšmė 50 000), jis sutrumpinamas pridedant naršymo užuominą, kad agentas galėtų tęsti darbą
+1. **Triukšmo šalinimas** — pašalina tuščius generic/text įrašus (`- generic:`, `- text: ""`)
+2. **Brolių žlugimas** — kai ≥ `collapseThreshold` (numatytasis 30) iš eilės eilučių kartojasi, sutraukia jas į pirmąsias `collapseKeepHead` (numatytasis 10) eilutes + skaičiavimo suvestinė + paskutines `collapseKeepTail` (numatytosios 5) eilutes
+3. **Ref išsaugojimas** — `[ref=eXX]` inkarai, kurių reikalauja Playwright/computer-use, niekada neliečiami
+4. **Sunkus sutrumpinimas** — jei tekstas po sutraukimo vis tiek viršija `maxTextChars` (numatytasis 50 000), sutrumpinamas su naršymo užuomina, kad agentas galėtų tęsti darbą
 
-### Modulio vieta
+### Variklio vieta
 
 ```txt
 open-sse/services/compression/engines/mcpAccessibility/
-  index.ts            ← smartFilterText() pradžios taškas
-  collapseRepeated.ts ← gretimų elementų sutraukimo algoritmas
+  index.ts            ← smartFilterText() entry point
+  collapseRepeated.ts ← sibling-collapse algorithm
   constants.ts        ← DEFAULT_MCP_ACCESSIBILITY_CONFIG
 ```
 
 ### Konfigūracija
 
-Valdoma naudojant `compression.mcpAccessibility` visuotinėse nuostatose (migracija 056). Numatytoji konfigūracija:
+Valdo `compression.mcpAccessibility` visuotiniuose nustatymuose (migracija 056). Numatytoji konfigūracija:
 
 ```json
 {
@@ -273,109 +198,174 @@ Valdoma naudojant `compression.mcpAccessibility` visuotinėse nuostatose (migrac
 }
 ```
 
-Filtras taikomas tik tiems įrankių rezultatų duomenims, kurių `type` yra `"text"` ir kurių ilgis viršija `minLengthToProcess`. Jis neturi įtakos užklausų glaudinimui ar užklausų duomenims.
+Filtras taikomas tik įrankio rezultatų naudingosioms apkrovoms, kurių `type` yra `"text"` ir kurių ilgis viršija `minLengthToProcess`. Tai neturi įtakos greitam suspaudimui ar užklausoms naudingoms apkrovoms.
 
-### Tikėtinas sutaupymas
+### Tikimasi sutaupyti
 
-Naršyklės momentinių kopijų įrankių rezultatų apimtis sumažėja 60–80 %, priklausomai nuo puslapio sudėtingumo. Sutraukimo algoritmo sudėtingumas pagal eilučių skaičių yra O(n), todėl jis beveik nepadidina delsos.
+60–80 % naršyklės momentinių nuotraukų įrankio rezultatų, atsižvelgiant į puslapio sudėtingumą. Sutraukimo algoritmas yra O(n) eilučių skaičiuje ir prideda nereikšmingą delsą.
 
-### Šio filtro ir pirmiau aprašytų glaudinimo modulių palyginimas
+### Šis filtras palyginti su aukščiau esančiais suspaudimo varikliais
 
-| Aspektas        | Caveman / RTK / Stacked    | MCP prieinamumo filtras                |
-| --------------- | -------------------------- | -------------------------------------- |
-| Tikslas         | Užklausos / kontekstas     | MCP įrankių rezultatai                 |
-| Suaktyvinimas   | Glaudinimo režimo nuostata | `compression.mcpAccessibility.enabled` |
-| Taikymo sritis  | Visi SSE pranešimai        | Tik įrankių rezultatai                 |
-| Nuorodų inkarai | Netaikoma                  | Visada išsaugomi                       |
+| Aspektas       | Urvinis žmogus / RTK / Sukrautas | MCP prieinamumo filtras                |
+| -------------- | -------------------------------- | -------------------------------------- |
+| Tikslas        | Užklausos raginimai / kontekstas | MCP įrankio rezultatai                 |
+| Trigeris       | Suspaudimo režimo nustatymas     | `compression.mcpAccessibility.enabled` |
+| Taikymo sritis | Visi SSE pranešimai              | Tik įrankių rezultatai                 |
+| Ref inkarai    | N/A                              | Saugomas besąlygiškai                  |
 
 ---
 
-## Glaudinimo deriniai
+## Suspaudimo deriniai
 
-Glaudinimo deriniai – tai pavadinti glaudinimo profiliai, kuriuos galima priskirti maršruto parinkimo deriniams:
+Suspaudimo deriniai yra pavadinti glaudinimo profiliais, kuriuos galima priskirti maršruto deriniams:
 
-- `compression_combos`: saugo režimą, konvejerį, RTK konfigūraciją, kalbos konfigūraciją ir numatytojo pasirinkimo žymą
+- `compression_combos`: saugojimo režimas, vamzdynas, RTK konfigūracija, kalbos konfigūracija ir numatytasis žymeklis
 - `compression_combo_assignments`: susieja glaudinimo derinį su maršruto parinkimo deriniu
-- vykdymo aplinkos integracija pirmiausia nustato priskirtą glaudinimo derinį, o tik tada taiko bendrąsias derinių perrašas
-- analizėje pateikiami `compression_combo_id` ir `engine`
+- vykdymo laiko integracija išsprendžia priskirtą glaudinimo kombinaciją prieš nepaisant bendrojo derinio
+- analitika apima `compression_combo_id` ir `engine`
 
-Valdymo skydelio vieta: `Dashboard -> Context & Cache -> Compression Combos`.
+Prietaisų skydelio paviršius: `Dashboard -> Context & Cache -> Compression Combos`.
 
-## API sąsaja
+## Būtinos sąlygos / operatoriaus vadovas (CCR & session-dedup)
 
-| Maršrutas                              | Paskirtis                                                                      |
+CCR (`ccr`) ir `session-dedup` pakeiskite arba panaikinkite tekstą ir palikite a** žymeklis** už nugaros. Šis skyrius yra operatoriaus nuoroda, kaip prijungti klientą, nuskaityti du žymeklius ir nuskaityti arba diagnozuoti pašalintą turinį. Kiekvieno variklio mechanika aprašyta aukščiau; tai sluoksnis „kaip man tai paleisti“.
+
+### Transportas ir galutiniai taškai
+
+MCP serverį, kuris atskleidžia „ CCR įrankius, galima pasiekti trimis būdais. Numatytoji bazė URL yra `http://localhost:20128` (`OMNIROUTE_BASE_URL`):
+
+| Transportas                              | URL / komanda                           | Pastabos                                                                                                                                         |
+| ---------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Srautinė HTTP (klientas, rekomenduojama) | `http://localhost:20128/api/mcp/stream` | Galutinis taškas, su kuriuo kalba dabartiniai MCP klientai.                                                                                      |
+| Senas SSE vienvietis                     | `http://localhost:20128/api/mcp/sse`    | Senesnis vienvietis transportas. Tai** užsidaro** transliuojamos sesijos; naudokite `streamable-http` klientus prieš `/api/mcp/stream`, o ne šį. |
+| stdio                                    | `omniroute --mcp`                       | IDE MCP konfigūracijai, kuri sukelia procesą. Nėra `--dev` vėliavos; `omniroute --mcp` yra stdio įėjimo taškas.                                  |
+
+### Saugyklos pakopos (kas išgyvena paleidus iš naujo)
+
+CCR yra a** dviejų pakopų** parduotuvėje, ne tik atmintyje:
+
+- **Karšta atminties pakopa** — bloko dangtelis 2 MiB, vienas pagrindinis 16 MiB, pasaulinis 64 MiB. Įrašai pagal numatytuosius nustatymus yra 24 h TTL (daugiausia 7 dienos). Visas MCP gavimas iš atminties yra apribotas iki 256 KiB; bet kas didesnis vis tiek pasiekiamas naudojant diapazono / grep režimus.
+- **Patvari SQLite pakopa** (`ccr_blocks`, `COMPRESSION_CCR_DURABLE_STORE`, įjungta pagal numatytuosius nustatymus) — palaiko atmintyje esančią pakopą, todėl blokas išgyvena LRU iškeldinimą, paleidimą iš naujo arba gavimo nukreipimą į kitą egzempliorių. Eilėje išlaikomas bloko TTL, todėl blokas, esantis už jo TTL dingsta iš abiejų pakopų.
+
+Trys apsaugos apsaugo patvarią pakopą apribotą — blokas lieka tik atmintyje, kai:
+
+1. blokas baigėsi** 512 KB** (`MAX_DURABLE_BLOCK_BYTES`);
+2. vykdymo laikas yra debesies vykdymo laikas (nėra vietinio disko);
+3. `COMPRESSION_CCR_DURABLE_STORE=false`.
+
+Taigi „blokas dingo“ nėra visapusiška iš naujo paleidimo istorija: sub-512 KB blokas vietinėje, ne debesų vykdymo aplinkoje, išlaiko paleidimą iš naujo per patvarią pakopą, kol baigiasi jo TTL. Žr. [Aplinkos nuorodą](../reference/ENVIRONMENT.md) apie kintamąjį.
+
+### Du žymekliai
+
+| Žymeklis                              | Reikšmė                                                                                                                                                  | Ką turėtų daryti modelis                                                                                                                                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[CCR retrieve hash=<24hex> chars=N]` | Didelis blokas buvo saugomas pagal turinį.                                                                                                               | Paskambinkite `omniroute_ccr_retrieve` su** 24 šešioliktainė maiša nukopijuota pažodžiui** kad atgautumėte originalų tekstą.                                                                                          |
+| `[dedup:ref sha=…]`                   | `session-dedup` elided tekstas jau išsiųstas ankstesniame tos pačios sesijos eigoje. Tai yra an** tyčinis žvilgsnis atgal** , o ne praradimas ar klaida. | Daryk** ne** paskambink bet kokiam įrankiui ir padaryk** ne** pabandyk tai „rekonstruoti“. Pirmasis teksto atvejis yra kanoninė kopija; dabartinis posūkis niekada neperrašomas, jis pašalinamas vėlesniame posūkyje. |
+
+`[dedup:ref]` peržiūra yra apgalvotas protokolinis sprendimas, — nėra rekonstrukcijos prieš siuntimą. Laikykite tai kaip „šis tikslus tekstas jau buvo paskelbtas anksčiau šios sesijos metu“.
+
+### Būtinos sąlygos klientui
+
+- **Raktas (stdio):** stdio skambinantysis neturi užklausos tapatybės, todėl jis autentifikuojamas naudojant `OMNIROUTE_API_KEY` (nustatytas MCP serverio `env`). Be jo skambinantysis yra anoniminis, o įrankiai, kuriems reikia vadovo, gali susilpnėti.
+- **`tools[]` yra išankstinė injekcijos sąlyga.** Įvedama CCR retrieve-protocol instrukcija (#8033).** tik** kai užklausos reklamuojamas `tools[]` įrodo, kad klientas iš tikrųjų gali pasiekti `omniroute_ccr_retrieve`. Atitiktis yra paskutinio segmento atitikmuo, apribotas skyrikliu (`__`, `.`, `/`, `:`) — niekada nėra tuščios poeilutės — todėl pavadinimas su vardų erdve, pvz. `mcp__gateway__omniroute_ccr_retrieve` vis tiek skaičiuojamas. Jei `tools[]` nėra arba jis neatitinka, tai reiškia, kad instrukcija _neįšvirkščiama pagal dizainą.
+- **`codemode:false` (OpenCode klientai).** OpenCode numatytasis kodo režimas, kuris reklamuoja tik savo įrankius modeliui ir** ne** įtraukite MCP įrankius į vietinį `tools[]` sąrašą. Nustatykite `codemode: false` MCP serverio įraše, kad būtų reklamuojami `omniroute_ccr_*` įrankiai. Tai yra a** klientas** nustatymas, o ne OmniRoute. Jame dar nėra įvesta CCR instrukcijos: OpenCode įrankį pavadina `<server>_<tool>`, todėl serveris, vadinamas `omniroute` atskleidžia `omniroute_omniroute_ccr_retrieve`, o `_` nėra vienas iš suderintų separatorių.
+- **Direktoriai.** Saugojimas ir gavimas yra atskirti pagal autentifikuotą pagrindinį (už API raktą). Raktas mato tik savo blokus.
+
+### Taikymo sritis pagal įrankį
+
+Apimties užtikrinimas visada įjungtas siauros apimties HTTP/SSE skambintojams. `omniroute_` CCR įrankiams reikia:
+
+| Įrankis                  | Taikymo sritis      |
+| ------------------------ | ------------------- |
+| `omniroute_ccr_store`    | `write:compression` |
+| `omniroute_ccr_delete`   | `write:compression` |
+| `omniroute_ccr_retrieve` | `read:compression`  |
+| `omniroute_ccr_inspect`  | `read:compression`  |
+| `omniroute_ccr_list`     | `read:compression`  |
+| `omniroute_ccr_stats`    | `read:compression`  |
+
+Trūksta apimtis grąžina an**MCP įrankio klaidos rezultatas** (`isError: true`, o ne HTTP 403 — `403 LOCAL_ONLY` yra atskiras atgalinio maršruto apsaugos autentifikavimas): `Error: Insufficient MCP scopes for <tool>. Missing: <scope>.` Minimaliame nuotolinio valdymo mygtuke gali būti `mcp:connect` (įgalioja `/api/mcp/` tik vietinį iškirpimą) ir specifinę read/write sritį, kurios jam reikia.
+
+### Kliento matrica
+
+| Klientas              | Transportas                                      | Konfigūracija naudoti                                                                                                                                                                                                                           | `tools[]` reklamavosi? (suleidžiama → CCR instrukcija)                                                                                                                              |
+| --------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude kodas          | transliuojamas - http                            | `claude mcp add --transport http omniroute http://localhost:20128/api/mcp/stream`                                                                                                                                                               | Taip — MCP; suleisti.                                                                                                                                                               |
+| Cursor / Cline        | `stdio`** arba** `streamable-http`               | stdio: `omniroute --mcp` su `OMNIROUTE_API_KEY` `env`; arba nuotolinis MCP įrašas, nukreiptas į `http://localhost:20128/api/mcp/stream` (žr. [sąrankos vadovą → MCP kliento konfigūracija](../guides/SETUP_GUIDE.md#mcp-client-configuration) ) | Taip, — reklamuoja `omniroute_ccr_*` įrankius.                                                                                                                                      |
+| OpenCode              | transliuojamas - http                            | `opencode mcp add omniroute --url http://localhost:20128/api/mcp/stream`, plius `codemode: false`                                                                                                                                               | Įrankiai reklamuojami tik su `codemode: false`; instrukcija vis tiek neįvesta, nes `omniroute_omniroute_ccr_retrieve` nesutampa (žr. [Kliento prielaidos](#client-prerequisites) ). |
+| Suderinamas su OpenAI | Su OpenAI suderinamas HTTP (pokalbių užbaigimai) | standartinis pokalbių užbaigimo klientas su OpenAI suderinamu galutiniu tašku                                                                                                                                                                   | **Niekada** — paprastam su OpenAI suderinamam skambinančiajam niekada nesakoma skambinti į įrankį, o instrukcija neįvedama.                                                         |
+
+### Paieškos ribos ir puslapių skaičius
+
+MCP įrankio teksto rezultatai iškirpti aplink `mcpAccessibility.maxTextChars` (numatytasis `50000`). Bloko `full` gavimas yra 256 KiB —** nėra neapriboto pilno atkūrimo** . Kai bloko `chars=N` yra didelis, perbraukite jį, o ne traukite visą:
+
+- Nykščio taisyklė:**`chars > 40000` → naudokite `mode`** , niekada plikas pilnas.
+- `mode:"grep"` — regex `pattern` atitinka eilutę po eilutės, iki 1 000 atitinkančių eilučių (`unique: true` drops pasikartoja), pigiausia už „rasti vieną man reikalingą eilutę“.
+- `mode:"lines"` — 1 indeksuotų linijų diapazonas; reikia ir `start`, ir `end`.
+- `mode:"head"` / `mode:"tail"` — first/last `n` linijos.
+- `mode:"stats"` — eilutės, simboliai ir baitai skaičiuojami be kūno.
+
+Naudokite `mode:"lines"` su `start`/`end`, jei norite nueiti ilgą puslapių bloką, o ne prašyti viso iš karto.
+
+### Įrankio įvardijimas
+
+Šiuo metu gavimo įrankis pavadintas `omniroute_ccr_retrieve` (priešdėlis `omniroute_` yra pasenęs kelių serverių pavadinimų susidūrimų sprendimas). Švaresnis apribotos priesagos įrankio pavadinimas ir MCP JSON rezultatų sutrumpintos eilutės vidurio pataisa stebimi kaip tolesni veiksmai; šiame puslapyje dokumentuojama tik dabartinė siuntimo elgsena.
+
+### Sesijos gyvavimo ciklas
+
+Streamable-HTTP sesijos neveikia ir serveris jas naudoja; tuščiosios eigos langas yra `MCP_SESSION_IDLE_MS` konstanta (nurodyta pavadinimu, o ne užkoduota reikšmė, todėl šis puslapis nejuda, kai jis keičiasi). Nenaudojamo seanso požymis yra HTTP 404 su `Unknown Mcp-Session-Id` — Ištaisyti galima iš naujo prisijungti arba paleisti seansą iš naujo,** ne** norėdami pasukti raktą, pakeisti taikymo sritį arba pervardyti įrankį.
+
+## API paviršius
+
+| Maršrutas                              | Tikslas                                                                        |
 | -------------------------------------- | ------------------------------------------------------------------------------ |
 | `/api/settings/compression`            | Visuotiniai glaudinimo nustatymai (įskaitant `mcpAccessibility` konfigūraciją) |
-| `/api/compression/preview`             | Bet kurio glaudinimo režimo peržiūra                                           |
-| `/api/compression/language-packs`      | Galimų Caveman kalbos paketų sąrašas                                           |
-| `/api/context/caveman/config`          | Caveman nustatymų alternatyvusis vardas                                        |
-| `/api/context/rtk/config`              | RTK numatytosios reikšmės ir nustatymai                                        |
+| `/api/compression/preview`             | Peržiūrėkite bet kurį suspaudimo režimą                                        |
+| `/api/compression/language-packs`      | Išvardykite galimus „Caveman“ kalbos paketus                                   |
+| `/api/context/caveman/config`          | Urvinio žmogaus nustatymų slapyvardis                                          |
+| `/api/context/rtk/config`              | RTK numatytieji nustatymai ir nustatymai                                       |
 | `/api/context/rtk/filters`             | RTK filtrų katalogas                                                           |
-| `/api/context/rtk/test`                | RTK peržiūros / testavimo galinis taškas                                       |
-| `/api/context/rtk/raw-output/[id]`     | Autentifikuotas užmaskuotos neapdorotos išvesties atkūrimas                    |
-| `/api/context/combos`                  | Glaudinimo derinių CRUD                                                        |
-| `/api/context/combos/[id]/assignments` | Priskyrimų maršruto parinkimo deriniams CRUD                                   |
-| `/api/context/analytics`               | Alternatyvusis glaudinimo analizės vardas                                      |
+| `/api/context/rtk/test`                | RTK preview/test galutinis taškas                                              |
+| `/api/context/rtk/raw-output/[id]`     | Autentifikuotas redaguotas neapdorotos išvesties atkūrimas                     |
+| `/api/context/combos`                  | Kompresijos kombinacija CRUD                                                   |
+| `/api/context/combos/[id]/assignments` | Maršruto parinkimo derinio priskyrimas CRUD                                    |
+| `/api/context/analytics`               | Suspaudimo analizės slapyvardis                                                |
 
 Valdymo maršrutams reikalingas valdymo autentifikavimas arba API rakto politikos patikros.
 
 ## MCP įrankiai
 
-Glaudinimo funkcija pateikia penkis MCP įrankius:
+Suspaudimas atskleidžia penkis MCP įrankius:
 
-| Įrankis                             | Aprėptis            | Paskirtis                                   |
+| Įrankis                             | Taikymo sritis      | Tikslas                                     |
 | ----------------------------------- | ------------------- | ------------------------------------------- |
-| `omniroute_compression_status`      | `read:compression`  | Nustatymai, analizė ir podėlio statistika   |
-| `omniroute_compression_configure`   | `write:compression` | Visuotinių nustatymų atnaujinimas           |
-| `omniroute_set_compression_engine`  | `write:compression` | Režimo ir pasirenkamo konvejerio nustatymas |
-| `omniroute_list_compression_combos` | `read:compression`  | Glaudinimo derinių sąrašas                  |
-| `omniroute_compression_combo_stats` | `read:compression`  | Derinių / variklių analizės nuskaitymas     |
+| `omniroute_compression_status`      | `read:compression`  | Nustatymai, analizė, talpyklos statistika   |
+| `omniroute_compression_configure`   | `write:compression` | Atnaujinkite visuotinius nustatymus         |
+| `omniroute_set_compression_engine`  | `write:compression` | Nustatykite režimą ir pasirenkamą dujotiekį |
+| `omniroute_list_compression_combos` | `read:compression`  | Išvardykite glaudinimo derinius             |
+| `omniroute_compression_combo_stats` | `read:compression`  | Skaitykite combo/engine analytics           |
 
-## Aprėptis ir išimtys
+## Taikymo sritis ir išimtys
 
-**Įterpiniai niekada neglaudinami.** `open-sse/handlers/embeddings.ts` niekada nekviečia jokio
-glaudinimo variklio – užklausos / atsakymo turiniai perduodami vykdytojui nepakeisti.
-Šiuo metu tai užtikrinama struktūriškai (įterpinius ir pokalbių užbaigimus apdoroja atskiros
-tvarkyklės), o ne vykdymo aplinkos patikra, tačiau tai reiškia, kad #8034 nurodyta vektorių
-iškraipymo problema neturi jokio poveikio paviršiaus įterpinių kelyje.
+**Įterpimai niekada nėra suspausti.** `open-sse/handlers/embeddings.ts` niekada nevadina jokio suspaudimo variklio — request/response kūnai perduodami tiesiai į vykdytoją nepaliesti. Šiandien tai yra struktūrinė (įterpimai ir pokalbių užbaigimai yra atskirtos tvarkyklės), o ne vykdymo laiko patikra, bet tai reiškia, kad #8034 vektorinio iškraipymo problema įterpimo kelyje neturi poveikio.
 
-**Atskiram modeliui / galiniam taškui taikomas išimčių filtras (#8034).** Pokalbių užbaigimų
-atveju operatorius gali nurodyti modelių ID / `provider/model` paskirties vietas, kurios
-niekada neturi būti glaudinamos – ši apsaugos priemonė naudinga, jei ateityje glaudinimas
-būtų prijungtas arčiau su įterpiniais susijusio kelio, ir apskritai naudinga bet kuriam
-modeliui, kuriam svarbi tiksli, baitas po baito nekintanti užklausa (deterministiniai
-vertinimai, podėliui jautrūs prefiksai ir t. t.).
+**Per-model/endpoint išskyrimo filtras (#8034).** Užbaigdamas pokalbį, operatorius gali pavadinti modelio ID / `provider/model` tikslus, kurių niekada negalima suspausti — apsauginis turėklas, naudingas, jei vėliau glaudinimas yra arčiau įterpimo kelio, ir paprastai naudingas bet kokiam modeliui, kurio tikslus baitas po baito eilutės yra svarbios (deterministiniai įvertinimai, talpyklos jautrūs priešdėliai ir kt.).
 
-- Nustatymų laukas: `exclusions?: string[]` visuotinėje glaudinimo konfigūracijoje
-  (`GET`/`PUT /api/settings/compression`), išsaugomas naudojant esamą `key_value` glaudinimo
-  vardų sritį (`src/lib/db/compression.ts`) – naujos lentelės nereikia.
-- Valdymo skydelio kortelė: **Dashboard → Compression → Exclusions**
-  (`/dashboard/compression/exclusions`).
-- Šablonų sintaksė: `*` yra vienintelis pakaitos simbolis. Visi kiti reguliariųjų išraiškų
-  metasimboliai šablone prieš atitikties tikrinimą yra apsaugomi, todėl `gpt-5.6` atitinka
-  tik pažodinę eilutę, o ne `gpt-5x6` (atsparu ReDoS, apribota, nėra įdėtųjų kvantifikatorių).
-  Šablonų atitiktis, neatsižvelgiant į raidžių registrą, tikrinama ir pagal vien modelio ID,
-  ir pagal sudėtinę `provider/model` reikšmę – `gpt-5-6`, `openai/gpt-5-6` ir `openai/*`
-  veikia, o vien `*` pašalina iš glaudinimo visus modelius.
-- Atitikties nustatymas: `isCompressionExcluded()` / `normalizeCompressionExclusions()`
-  faile `open-sse/services/compression/exclusions.ts`. `chatCore.ts` patikrina, ar paskirties
-  vieta neįtraukta į išimtis, iškart po glaudinimo nustatymų nustatymo, **dar prieš paleidžiant
-  bet kurį variklį**, ir atitiktį traktuoja lygiai taip pat, kaip visuotinai išjungtą
-  glaudinimą – įrodyta, kad užklausos turinys išlieka identiškas baitų lygmeniu. Praleidimas
-  užregistruojamas naudojant `writeCompressionSkip(..., "excluded")`, kad būtų matomas
-  analizėje.
-- Numatytoji reikšmė (tuščias sąrašas arba jo nėra): veikimas identiškas buvusiam iki #8034 –
-  niekas neįtraukiama į išimtis.
+- Nustatymų laukas: `exclusions?: string[]` visuotinėje glaudinimo konfigūracijoje (`GET`/`PUT /api/settings/compression`), išliko per esamą `key_value` glaudinimo vardų sritį (`src/lib/db/compression.ts`) — naujos lentelės.
+- Prietaisų skydelio skirtukas:** Prietaisų skydelis → Suspaudimas → Išimtys** (`/dashboard/compression/exclusions`).
+- Šablono sintaksė: `*` yra vienintelis pakaitos simbolis. Kiekvienas kitas reguliariojo reiškinio metasimbolis šablone prieš derinimą pašalinamas, todėl `gpt-5.6` atitinka tik pažodinę eilutę, niekada netinka `gpt-5x6` (saugus ReDoS, ribotas, nėra įdėtųjų kvantiklių). Šablonai nejautrus didžiosioms ir mažosioms raidėms atitinka tiek pliko modelio ID, tiek `provider/model` sudėtinį — `gpt-5-6`, `openai/gpt-5-6` ir `openai/*`, o vien `*` neįtraukia visų modelių.
+- Atitikimas: `isCompressionExcluded()` / `normalizeCompressionExclusions()` in `open-sse/services/compression/exclusions.ts`. `chatCore.ts` patikrina neįtrauktą taikinį iškart po to, kai išsprendžia glaudinimo nustatymus,** prieš paleidžiant bet kokį variklį** , ir atitiktį traktuoja lygiai taip, kaip glaudinimas yra visuotinai išjungtas — užklausos turinys yra įrodyta, kad baitas yra identiškas. Praleidimas įrašomas per `writeCompressionSkip(..., "excluded")`, kad būtų galima matyti analizę.
+- Numatytasis (empty/absent sąrašas ): identiškas prieš #8034 elgsenai — nieko neišskiriama.
 
 ## Žinomi apribojimai
 
-- **LLMLingua-2 (SLM) reikia kartu įdiegtų pasirenkamųjų priklausomybių.** Vykdymo procesas produkcinėje versijoje veikia tik tada, kai `@atjsh/llmlingua-2` ir susijusios priklausomybės yra kartu įdiegtos į `dist/node_modules` (žr. `scripts/build/colocateOptionals.mjs`, #4286). Be jų variklis saugiai grąžina pradinį tekstą. Vykdymo proceso nustatymas nebepriklauso nuo `import.meta.url` (atskirame pakete jis neveikia) — kaip atskaitos tašką jis naudoja vykdymo aplinkos cwd / `argv[1]`.
-- **Caveman kalbų paketai `de` / `fr` / `ja` yra daliniai.** Juose pateikiamos `context` + `filler` + `structural` taisyklės, tačiau nėra `dedup` / `ultra` paketų, todėl toms kalboms `ultra` intensyvumas nėra stipresnis už `full` (naudojamos tik jų pačių taisyklės — nėra nebylaus atsarginio perėjimo prie angliškų `dedup`/`ultra` taisyklių, kurios sugadintų tekstą užsienio kalba). `en` / `es` / `id` / `pt-BR` paketai yra išsamūs. Laukiami `dedup.json` + `ultra.json` papildymai daliniams paketams.
-- **Sudėtinės telemetrijos duomenyse pateikiami tik glaudinimą atlikę varikliai.** Sudėtinio konvejerio veiksmas, kurio variklis buvo paleistas, bet nesutaupė vietos (0 %), grąžina `stats:null`, todėl nėra rodomas `engineBreakdown` — jo neįmanoma atskirti nuo praleisto veiksmo. Norint atskirti „paleista, 0 %“ nuo „praleista“, reikėtų pakeisti išskaidymo modelį, todėl tai atidedama.
+- **LLMLingua-2 (SLM) reikalauja kartu esančių pasirenkamų deps.** Darbuotojas veikia tik gamybinėje versijoje, kai `@atjsh/llmlingua-2` + bendraamžiai yra `dist/node_modules` (žr. `scripts/build/colocateOptionals.mjs`, #4286). Be jų variklis atsidaro (grąžina originalų tekstą). Darbuotojo skiriamoji geba nebepriklauso nuo `import.meta.url` (ji miršta atskirame pakete) — ji pritvirtinama prie vykdymo laiko cwd / `argv[1]`.
+- **Caveman kalbos paketai `de` / `fr` / `ja` yra daliniai.** Jie siunčia `context` + `filler` + `structural` taisykles, bet ne `dedup` / `ultra` paketus, todėl toms kalboms `ultra` intensyvumas nėra stipresnis nei `full` (jie naudoja tik savo taisykles — nėra tylaus grįžimo prie anglų kalbos `dedup`/`ultra` užsienio teksto). `en` / `es` / `id` / `pt-BR` yra baigti. Laukiame `dedup.json` + `ultra.json` indėlių į dalines pakuotes.
+- **Sukrautoje telemetrijoje pateikiami tik suspausti varikliai.** Sudėtinio vamzdyno žingsnis, kurio variklis veikė, bet sutaupė 0 %, grąžina `stats:null`, todėl `engineBreakdown` — neatsiranda taip, kad būtų galima atskirti nuo žingsnio, kuris buvo praleistas. Norint atskirti „paleista, 0 %“ nuo „praleista“, reikėtų pakeisti suskirstymo modelį ir tai atidedama.
 
-## Validavimas
+## Patvirtinimas
 
-Šiai sričiai skirti patikrinimai yra:
+Šios srities vartai yra šie:
 
 ```bash
 node --import tsx/esm --test tests/unit/compression/rtk-*.test.ts tests/unit/compression/pipeline-integration.test.ts tests/unit/compression/context-compression-api.test.ts

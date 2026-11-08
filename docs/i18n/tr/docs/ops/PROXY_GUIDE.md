@@ -4,46 +4,46 @@
 
 ---
 
-> **Coğrafi engelleri aşın, kimliğinizi koruyun ve AI trafiğini herhangi bir proxy üzerinden yönlendirin — üstelik hiçbir yapılandırma karmaşası olmadan.**
+> **Sıfır yapılandırma karmaşıklığıyla coğrafi blokları aşın, kimliğinizi koruyun ve AI trafiğini herhangi bir proxy — üzerinden yönlendirin.**
 
-OmniRoute; üst sağlayıcı AI trafiğini HTTP, HTTPS veya SOCKS5 proxy'leri üzerinden yönlendirmenize olanak tanıyan, tüm özelliklere sahip bir proxy yönetim sistemi içerir. İster engellenmiş bir bölgede olun, ister IP rotasyonuna ihtiyaç duyun ya da gizli parmak izi oluşturmak isteyin — bu kılavuz ihtiyacınız olan her şeyi kapsar.
+OmniRoute yukarı akışlı AI sağlayıcı trafiğini HTTP, HTTPS veya SOCKS5 proxy'leri aracılığıyla yönlendirmenize olanak tanıyan tam özellikli bir proxy yönetim sistemi içerir. İster engellenmiş bir bölgede olun, ister IP rotasyonuna ihtiyacınız olsun, ister gizli — parmak izi almak isteyin, bu kılavuz her şeyi kapsar.
 
 ---
 
 ## İçindekiler
 
-- [Neden Proxy Kullanılmalı?](#neden-proxy-kullanılmalı)
-- [Mimariye Genel Bakış](#mimariye-genel-bakış)
-- [4 Seviyeli Proxy Sistemi](#4-seviyeli-proxy-sistemi)
-- [Proxy Kayıt Defteri (CRUD)](#proxy-kayıt-defteri-crud)
-- [1proxy Ücretsiz Pazarı](#1proxy-ücretsiz-proxy-pazarı)
-- [Proxy Rotasyonu](#proxy-rotasyonu)
-- [Algılama Önleme ve Gizlilik](#algılama-önleme--gizlilik)
-- [Üst Proxy Modları](#üst-proxy-modları)
-- [Kontrol Paneli Arayüzü](#kontrol-paneli-arayüzü)
-- [API Referansı](#api-referansı)
-- [Ortam Değişkenleri](#ortam-değişkenleri)
-- [Sorun Giderme](#sorun-giderme)
+- [Neden Proxy Kullanmalı?](#why-use-proxies)
+- [Mimariye Genel Bakış](#architecture-overview)
+- [4 Seviyeli Proxy Sistemi](#4-level-proxy-system)
+- [Vekil Kayıt Defteri (CRUD)](#proxy-registry-crud)
+- [1proxy Ücretsiz Pazar Yeri](#1proxy-free-proxy-marketplace)
+- [Vekalet Rotasyonu](#proxy-rotation)
+- [Algılanma Önleme ve Gizlilik](#anti-detection--stealth)
+- [Yukarı Akış Proxy Modları](#upstream-proxy-modes)
+- [Kontrol paneli UI](#dashboard-ui)
+- [API Referansı](#api-reference)
+- [Ortam Değişkenleri](#environment-variables)
+- [Sorun giderme](#troubleshooting)
 
 ---
 
-## Neden Proxy Kullanılmalı?
+## Neden Proxy Kullanmalı?
 
-Birçok AI sağlayıcısı erişimi coğrafi bölgeye göre kısıtlar. **Rusya, Çin, İran, Küba, Türkiye** ve diğer ülkelerdeki geliştiriciler aşağıdakine benzer hatalarla karşılaşır:
+Birçok AI sağlayıcısı erişimi coğrafi bölgeye göre kısıtlıyor. Geliştiriciler** Rusya, Çin, İran, Küba, Türkiye** ve diğer ülkeler aşağıdaki gibi hatalarla karşılaşıyor:
 
 ```
 unsupported_country_region_territory
 ```
 
-Proxy'ler, engellenmiş bölgelerin dışında da şu amaçlarla kullanılabilir:
+Engellenen bölgelerin dışında bile proxy'ler aşağıdakiler için faydalıdır:
 
-| Kullanım Alanı         | Açıklama                                                               |
-| ---------------------- | ---------------------------------------------------------------------- |
-| **Coğrafi engel aşma** | Engellenmiş ülkelerden OpenAI, Anthropic, Codex ve Copilot'a erişme    |
-| **IP rotasyonu**       | Hız sınırlamasından kaçınmak için istekleri birden fazla IP'ye dağıtma |
-| **Gizlilik**           | Gerçek IP adresinizi üst sağlayıcılardan gizleme                       |
-| **Uyumluluk**          | Trafiği belirli yargı bölgeleri üzerinden yönlendirme                  |
-| **Test**               | Farklı bölgelerden gelen istekleri simüle etme                         |
+| Kullanım Örneği    | Tanım                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| **Coğrafi bypass** | Engellenen ülkelerden OpenAI, Anthropic, Codex, Copilot erişin    |
+| **IP rotasyonu**   | Hız sınırlamasını önlemek için istekleri birden fazla IPs dağıtın |
+| **Mahremiyet**     | Gerçek IP yukarı akış sağlayıcılarından gizleyin                  |
+| **Uyumluluk**      | Trafiği belirli yetki alanları üzerinden yönlendirin              |
+| **Test**           | Farklı bölgelerden gelen istekleri simüle edin                    |
 
 ---
 
@@ -51,104 +51,114 @@ Proxy'ler, engellenmiş bölgelerin dışında da şu amaçlarla kullanılabilir
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       OmniRoute Sunucusu                      │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
 │  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
-│  │ Kayıt       │───▶│ Dağıtıcı     │───▶│ Fetch (undici)   │  │
-│  │ Defteri     │    │ (önbellekli) │    │                  │  │
-│  │ (SQLite)    │    │              │    │                  │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ 1proxy      │                        │ Üst Sağlayıcı    │  │
-│  │ Senkroniz.  │                        │ API'si           │  │
-│  │ (ücr. havuz)│                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Temel Bileşenler
+### Anahtar Bileşenler
 
-| Bileşen                 | Dosya                                        | Rol                                                                         |
-| ----------------------- | -------------------------------------------- | --------------------------------------------------------------------------- |
-| **Proxy Kayıt Defteri** | `src/lib/db/proxies.ts`                      | Proxy girdileri ve kapsam atamaları için CRUD işlemleri                     |
-| **Proxy Dağıtıcısı**    | `open-sse/utils/proxyDispatcher.ts`          | Önbelleğe alma özelliğiyle `undici` ProxyAgent/SOCKS dağıtıcıları oluşturur |
-| **Proxy Fetch**         | `open-sse/utils/proxyFetch.ts`               | Proxy dağıtıcısı ekleyerek `fetch()` işlevini sarmalar                      |
-| **Ayarlar Rotası**      | `src/app/api/settings/proxy/route.ts`        | Eski proxy yapılandırma API'si (GET/PUT/DELETE)                             |
-| **Yönetim Rotası**      | `src/app/api/v1/management/proxies/route.ts` | Kayıt defteri CRUD API'si (GET/POST/PATCH/DELETE)                           |
-| **1proxy Veritabanı**   | `src/lib/db/oneproxy.ts`                     | Ücretsiz proxy pazarı kalıcılığı                                            |
+| Bileşen             | Dosya                                        | Rol                                                                 |
+| ------------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| **Vekil Kaydı**     | `src/lib/db/proxies.ts`                      | proxy girişleri için CRUD + kapsam atamaları                        |
+| **Vekil Gönderici** | `open-sse/utils/proxyDispatcher.ts`          | Önbelleğe alma ile `undici` ProxyAgent/SOCKS dağıtıcıları oluşturur |
+| **Proxy Getirme**   | `open-sse/utils/proxyFetch.ts`               | `fetch()` proxy dağıtıcı eklemeyle sarar                            |
+| **Ayarlar Rota**    | `src/app/api/settings/proxy/route.ts`        | Eski proxy yapılandırması API (GET/PUT/DELETE)                      |
+| **Yönetim Rotası**  | `src/app/api/v1/management/proxies/route.ts` | Kayıt defteri CRUD API (GET/POST/PATCH/DELETE)                      |
+| **1 vekil DB**      | `src/lib/db/oneproxy.ts`                     | Ücretsiz proxy pazar kalıcılığı                                     |
 
 ---
 
-## 4 Seviyeli Proxy Sistēmi
+## Yeni hesaplar için varsayılan proxy durumu
 
-OmniRoute, öncelik sırasına göre çözümlenen **dört bağımsız kapsamda** proxy yapılandırmasını destekler:
+İçinde** Ayarlar → Proxy → Genel yapılandırma** , kullanmak** Yeni bağlantılar için proxy'yi varsayılan olarak etkinleştirin** yeni eklenen sağlayıcı hesaplarının ilk proxy durumunu seçmek için.
+
+Yeni ayar, yeni eklenen sağlayıcı hesaplarının başlangıçtaki proxy durumunu kontrol eder. Mevcut hesapları değiştirmez veya genel proxy anahtarının yerini almaz. Başlangıç değeri önceki davranışı korur. Gelecekte proxy'nin varsayılan olarak devre dışı olduğu hesaplar oluşturmak için bunu bir kez kapatın.
+
+Tercih, mevcut Ayarlar API aracılığıyla `defaultNewConnectionProxyEnabled` olarak saklanır. Hiçbir zaman kaydedilmediğinde varsayılan olarak `true` olur. `false` kaydedilmesi, sonraki yeni hesaplar için yeniden başlatma gerekmeden geçerli olur. `POST /api/providers` isteğe bağlı katı bir boolean `proxyEnabled` kabul eder; açık bir `true` veya `false` oluşturma varsayılanına göre önceliklidir. Yinelenen bir hesabın ihmal edilmesi veya OAuth yeniden bağlanması, o hesabın kayıtlı durumunu korur. Bireysel hesaplar daha sonra yine etkinleştirilebilir veya devre dışı bırakılabilir.
+
+Seçici sağlayıcı aktarımları, yeni hesaplar için hedef kurulumun varsayılanını kullanır ve mevcut hesapları değiştirirken hedef ilkesini korur. Proxy geçişleri taşınabilir aktarım alanları değildir. Tam yedekleme geri yüklemesi ve geçmiş JSON/SQL geçişi, kayıtlı hesap değerleri ve eski şema varsayılanları dahil olmak üzere mevcut geri yükleme anlamlarını korur; tam ayarların geri yüklenmesi de bu tercihi geri yükleyebilir.
+
+Bu tercih bir vekil atamaz veya kişinin sağlıklı veya kullanımda olduğunu belirlemez. Gerçek yönlendirme hâlâ genel proxy anahtarına ve geçerli proxy yapılandırmasına bağlıdır. Kalıcı bir hesaba sahip olmayan sentetik sağlayıcılar, hesap oluşturmadan önceki OAuth trafiği, environment/system proxy'leri ve harici arka uçların ağ iletişimi kapsamı dışındadır.
+
+## 4 Seviyeli Proxy Sistemi
+
+OmniRoute şu adreste proxy yapılandırmasını destekler:** dört bağımsız kapsam** , öncelik sırasına göre çözüldü:
 
 ```
-Öncelik Çözümleme Sırası (en yüksek → en düşük):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Hesap/Bağlantı Proxy'si  →  API anahtarı / OAuth bağlantısı başına
-  2. 🟡 Sağlayıcı Proxy'si       →  sağlayıcı başına (ör. tüm OpenAI trafiği)
-  3. 🟠 Kombinasyon Proxy'si     →  kombinasyon/yönlendirme yapılandırması başına
-  4. 🟢 Global Proxy             →  tüm trafik, tüm sağlayıcılar
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Çözümleme Nasıl Çalışır?
+### Çözünürlük Nasıl Çalışır?
 
-OmniRoute, üst sağlayıcıya bir istek gönderdiğinde her seviyeyi sırayla kontrol eden `resolveProxyForConnectionFromRegistry()` fonksiyonunu çağırır:
+OmniRoute bir yukarı akış sağlayıcısına bir istek gönderdiğinde, her seviyeyi sırayla kontrol eden `resolveProxyForConnectionFromRegistry()` çağırır:
 
-1. **Hesap seviyesi** — Bu belirli bağlantı kimliğine atanmış bir proxy var mı?
-2. **Sağlayıcı seviyesi** — Bu sağlayıcıya (ör. `openai`) atanmış bir proxy var mı?
-3. **Global seviye** — Yapılandırılmış bir global proxy var mı?
+1. **Hesap düzeyinde** — Bu özel ID bağlantısına atanmış bir proxy var mı?
+2. **Sağlayıcı düzeyinde** — Bu sağlayıcıya atanmış bir proxy var mı (ör. `openai`)?
+3. **Küresel düzeyde** — Yapılandırılmış genel bir proxy var mı?
 4. **Proxy yok** — Sağlayıcıya doğrudan bağlantı.
 
-İlk eşleşme kullanılır. Bu, global bir proxy'yi yedek seçenek olarak ayarlayabileceğiniz ancak belirli sağlayıcılar veya bağlantılar için bunu geçersiz kılabileceğiniz anlamına gelir.
+İlk maç kazanır. Bu, genel bir proxy'yi geri dönüş olarak ayarlayabileceğiniz ancak bunu belirli sağlayıcılar veya bağlantılar için geçersiz kılabileceğiniz anlamına gelir.
 
-### Proxy Üzerinden Yönlendirilenler
+### Neler Proxy Edilir?
 
-| Trafik Türü              | Proxy Kullanılıyor mu? | Notlar                                                |
-| ------------------------ | ---------------------- | ----------------------------------------------------- |
-| Sohbet tamamlamaları     | ✅                     | Tüm `/v1/chat/completions` istekleri                  |
-| Embedding'ler            | ✅                     | `/v1/embeddings`                                      |
-| Görsel oluşturma         | ✅                     | `/v1/images/generations`                              |
-| Ses (TTS/STT)            | ✅                     | `/v1/audio/*`                                         |
-| OAuth belirteci değişimi | ✅                     | `unsupported_country_region_territory` sorununu çözer |
-| Bağlantı testleri        | ✅                     | "Bağlantıyı Test Et" düğmesi proxy kullanır           |
-| Belirteç yenileme        | ✅                     | Arka planda OAuth yenilemesi                          |
-| Model senkronizasyonu    | ✅                     | Model listeleme ve keşfetme                           |
+| Trafik Türü           | Vekaleten mi? | Notlar                                        |
+| --------------------- | ------------- | --------------------------------------------- |
+| Sohbet tamamlamaları  | ✅            | Tüm `/v1/chat/completions` istekleri          |
+| Gömmeler              | ✅            | `/v1/embeddings`                              |
+| Görüntü oluşturma     | ✅            | `/v1/images/generations`                      |
+| Ses (TTS/STT)         | ✅            | `/v1/audio/*`                                 |
+| OAuth token değişimi  | ✅            | `unsupported_country_region_territory` çözer  |
+| Bağlantı testleri     | ✅            | "Bağlantıyı Test Et" düğmesi proxy kullanıyor |
+| Jeton yenileme        | ✅            | Arka plan OAuth yenilemesi                    |
+| Model senkronizasyonu | ✅            | Model listeleme ve keşif                      |
 
 ---
 
-## Proxy Kayıt Defteri (CRUD)
+## Vekil Kayıt Defteri (CRUD)
 
-Proxy kayıt defteri, tüm proxy'lerinizi depolayan bir SQLite tablosudur (`proxy_registry`). Her proxy aşağıdaki alanlara sahiptir:
+Proxy kaydı, tüm proxy'lerinizi saklayan bir SQLite tablosudur (`proxy_registry`). Her proxy şunları içerir:
 
-| Alan       | Tür     | Açıklama                                               |
-| ---------- | ------- | ------------------------------------------------------ |
-| `id`       | UUID    | Benzersiz tanımlayıcı                                  |
-| `name`     | String  | İnsan tarafından okunabilir etiket                     |
-| `type`     | String  | Protokol: `http`, `https`, `socks5`                    |
-| `host`     | String  | Proxy ana bilgisayar adı veya IP adresi                |
-| `port`     | Integer | Bağlantı noktası numarası                              |
-| `username` | String  | Kimlik doğrulama kullanıcı adı (beklemede şifrelenmiş) |
-| `password` | String  | Kimlik doğrulama parolası (beklemede şifrelenmiş)      |
-| `region`   | String  | Coğrafi bölge etiketi                                  |
-| `notes`    | String  | Serbest metin notları                                  |
-| `status`   | String  | `active` veya `inactive`                               |
-| `source`   | String  | `manual` veya `oneproxy`                               |
+| Alan       | Tip     | Tanım                                                         |
+| ---------- | ------- | ------------------------------------------------------------- |
+| `id`       | UUID    | Benzersiz tanımlayıcı                                         |
+| `name`     | Sicim   | İnsan tarafından okunabilen etiket                            |
+| `type`     | Sicim   | Protokol: `http`, `https`, `socks5`                           |
+| `host`     | Sicim   | Proxy ana bilgisayar adı veya IP                              |
+| `port`     | Tamsayı | Bağlantı noktası numarası                                     |
+| `username` | Sicim   | Kimlik doğrulama kullanıcı adı (beklemedeyken şifrelenmiştir) |
+| `password` | Sicim   | Kimlik doğrulama şifresi (beklemedeyken şifrelenir)           |
+| `region`   | Sicim   | Coğrafi bölge etiketi                                         |
+| `notes`    | Sicim   | Serbest metinli notlar                                        |
+| `status`   | Sicim   | `active` veya `inactive`                                      |
+| `source`   | Sicim   | `manual` veya `oneproxy`                                      |
 
 ### Proxy Oluşturma
 
-**Kontrol Paneli Üzerinden:**
+**Kontrol Paneli aracılığıyla:**
 
-1. **Ayarlar → Proxy** bölümüne gidin
-2. **Proxy Ekle** seçeneğine tıklayın
-3. Tür, ana bilgisayar, bağlantı noktası ve isteğe bağlı kimlik doğrulama bilgilerini doldurun
-4. Kaydedin
+1. Git** Ayarlar → Proxy'si**
+2. Tıklamak** Proxy Ekle**
+3. Tür, ana bilgisayar, bağlantı noktası ve isteğe bağlı kimlik doğrulama bilgilerini girin
+4. Kaydetmek
 
-**API Üzerinden:**
+**API aracılığıyla:**
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies \
@@ -176,15 +186,15 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Not:** Açıkça boş olmayan yeni değerler göndermediğiniz sürece kimlik bilgileri korunur. `username`/`password` için boş dizeler gönderildiğinde depolanan değerler korunur.
+> **Not:** Boş olmayan değiştirmeleri açıkça göndermediğiniz sürece kimlik bilgileriniz korunur. `username`/`password` için boş dizelerin gönderilmesi, saklanan değerleri koruyacaktır.
 
-### Proxy Silme
+### Proxy'yi Silme
 
 ```bash
-# Proxy herhangi bir kapsama atanmışsa başarısız olur
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Zorla silme (atamaları da kaldırır)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
@@ -194,26 +204,26 @@ curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&f
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Proxy'leri Kapsamlara Atama
+### Kapsamlara Proxy Atama
 
 ```bash
-# Global kapsama ata
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Belirli bir sağlayıcıya ata
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Belirli bir bağlantıya/anahtara ata
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Etkin Proxy'yi Çözümleme
+### Etkili Proxy Çözümü
 
 Belirli bir bağlantı için hangi proxy'nin kullanılacağını kontrol edin:
 
@@ -221,11 +231,11 @@ Belirli bir bağlantı için hangi proxy'nin kullanılacağını kontrol edin:
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Çözümlenen proxy'yi seviyesi (`account`, `provider` veya `global`) ve kaynağıyla birlikte döndürür.
+Çözümlenen proxy'yi düzeyi (`account`, `provider` veya `global`) ve kaynağıyla birlikte döndürür.
 
 ### Toplu Atama
 
-Tek bir proxy'yi aynı anda birden fazla sağlayıcıya veya bağlantıya atayın:
+Bir proxy'yi aynı anda birden fazla sağlayıcıya veya bağlantıya atayın:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -237,82 +247,82 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### İçe/Dışa Aktarma
+### Import/Export
 
-Proxy'ler **Yedekleme/Geri Yükleme** sistemine dahildir. OmniRoute yapılandırmanızı dışa aktardığınızda:
+Proxy'ler dahildir**Backup/Restore** sistem. OmniRoute yapılandırmanızı dışa aktardığınızda:
 
-1. **Kontrol Paneli → Ayarlar → Yedekleme** bölümüne gidin
-2. **Dışa Aktar** seçeneğine tıklayın — proxy kayıt defteri ve atamalar dahil edilir
-3. Geri yüklemek için **İçe Aktar** seçeneğine tıklayın ve yedekleme dosyasını yükleyin
+1. Git** Kontrol Paneli → Ayarları → Yedekleme**
+2. Tıklamak** İhracat** — proxy kaydı ve atamaları dahildir
+3. Geri yüklemek için tıklayın** İçe aktarmak** ve yedekleme dosyasını yükleyin
 
-Proxy kayıt defteri ayrıca **host+port değerlerine göre upsert** işlemini destekler — zaten mevcut olan bir proxy'yi (aynı ana bilgisayar ve bağlantı noktasıyla) içe aktarırsanız kopya oluşturmak yerine mevcut proxy'yi günceller.
+Proxy kayıt defteri de destekler** ana bilgisayar + bağlantı noktası tarafından yükseltildi** —, zaten var olan bir proxy'yi (aynı ana bilgisayar ve bağlantı noktası) içe aktarırsanız, bir kopya oluşturmak yerine güncellenir.
 
-### Eski Sistemden Geçiş
+### Eski Taşıma
 
-Proxy'leri daha eski bir sürümde (registry öncesi) yapılandırdıysanız OmniRoute bunları otomatik olarak taşır:
+Proxy'leri daha eski bir sürümde (ön kayıt) yapılandırdıysanız OmniRoute bunları otomatik olarak taşır:
 
 ```
-Eski key_value deposu → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Bu işlem, yükseltmeden sonraki ilk başlatmada bir kez gerçekleşir. Yeniden çalıştırmak için `migrateLegacyProxyConfigToRegistry({ force: true })` kullanın.
+Bu, yükseltme sonrasında ilk başlatmada bir kez gerçekleşir. Yeniden çalıştırmak için `migrateLegacyProxyConfigToRegistry({ force: true })` kullanın.
 
 ---
 
 ## 1proxy Ücretsiz Proxy Pazarı
 
-> 🆕 **[@oyi77](https://github.com/oyi77) tarafından katkıda bulunulmuştur** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Sorun [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Katkıda bulunan: [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Sayı [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute, dünyanın dört bir yanından **yüzlerce ücretsiz, doğrulanmış proxy'ye** erişim sağlamak için **[1proxy](https://1proxy-api.aitradepulse.com)** topluluk platformuyla entegre olur. Bu, kendi proxy altyapısına sahip olmayan kullanıcılar için idealdir.
+OmniRoute ile entegre olur** [1 vekil](https://1proxy-api.aitradepulse.com)** erişim sağlamak için topluluk platformu** yüzlerce ücretsiz, doğrulanmış proxy** dünyanın dört bir yanından. Bu, kendi proxy altyapısına sahip olmayan kullanıcılar için mükemmeldir.
 
 ### Nasıl Çalışır?
 
 ```
-┌─────────────┐   Senkronize Et   ┌─────────────────┐    Döndür     ┌───────────┐
-│  1proxy API │ ─────────────────▶ │  proxy_registry  │ ────────────▶ │ Sağlayıcı │
-│   (harici)  │  500 proxy'ye kadar│  source=oneproxy │ kaliteye göre │    API     │
-└─────────────┘                    └─────────────────┘                └───────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Senkronize et** — OmniRoute, doğrulanmış proxy'leri 1proxy API'sinden alır
-2. **Sakla** — Proxy'ler aynı `proxy_registry` tablosuna `source = 'oneproxy'` ile kaydedilir
-3. **Filtrele** — Protokole, ülkeye ve kalite puanına göre filtreleyin
-4. **Döndür** — Kalite, rastgele veya sıralı stratejileri kullanarak en iyi proxy'yi seçin
-5. **Otomatik düşürme** — Başarısız proxy'lerin kalite puanı düşürülür; eşik değerin altına düşenler → etkin değil olarak işaretlenir
+1. **Senkronizasyon** — OmniRoute, 1proxy API doğrulanmış proxy'leri getirir
+2. **Mağaza** — Proxy'ler `source = 'oneproxy'` ile aynı `proxy_registry` tablosuna kaydedilir
+3. **Filtre** — Protokole, ülkeye, kalite puanına göre filtrele
+4. **Döndür** — Kaliteli, rastgele veya sıralı stratejiler kullanarak en iyi proxy'yi seçin
+5. **Otomatik bozulma** — Başarısız proxy'lerin kalite puanları düşer; eşiğin altında → etkin değil olarak işaretlendi
 
 ### Proxy'leri Senkronize Etme
 
-**Kontrol Paneli Üzerinden:**
+**Kontrol Paneli aracılığıyla:**
 
-1. **Ayarlar → 1proxy** sekmesine gidin
-2. **"Şimdi Senkronize Et"** düğmesine tıklayın
-3. İstatistikleri görüntüleyin: toplam proxy sayısı, etkin proxy sayısı, ortalama kalite ve ülkelere göre dağılım
+1. Git** Ayarlar → 1proxy** sekme
+2. Tıklamak** "Şimdi Eşitle"**
+3. İstatistikleri görüntüleyin: toplam proxy sayısı, aktif sayı, ortalama kalite, ülkeye göre dağılım
 
-**API Üzerinden:**
+**API aracılığıyla:**
 
 ```bash
-# Senkronizasyonu tetikle
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Yanıt:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Proxy'leri Filtreleme
 
 ```bash
-# Protokole göre filtrele
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Ülkeye göre filtrele
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Minimum kalite puanına göre filtrele
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Filtreleri birleştir
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
@@ -320,34 +330,34 @@ curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&
 
 Her 1proxy proxy'si meta verilerle birlikte gelir:
 
-| Alan            | Açıklama                                         |
-| --------------- | ------------------------------------------------ |
-| `qualityScore`  | 1proxy doğrulamasından alınan 0-100 arası puan   |
-| `latencyMs`     | Ölçülen ağ gecikmesi                             |
-| `anonymity`     | `transparent`, `anonymous` veya `elite`          |
-| `googleAccess`  | Proxy'nin Google hizmetlerine erişip erişemediği |
-| `countryCode`   | İki harfli ISO ülke kodu                         |
-| `lastValidated` | Son doğrulamanın zaman damgası                   |
+| Alan            | Tanım                                              |
+| --------------- | -------------------------------------------------- |
+| `qualityScore`  | 1proxy doğrulamasından 0-100 derecelendirme        |
+| `latencyMs`     | Ölçülen ağ gecikmesi                               |
+| `anonymity`     | `transparent`, `anonymous` veya `elite`            |
+| `googleAccess`  | Proxy'nin Google hizmetlerine erişip erişemeyeceği |
+| `countryCode`   | İki harfli ISO ülke kodu                           |
+| `lastValidated` | Son doğrulamanın zaman damgası                     |
 
 Kalite puanları dinamik olarak ayarlanır:
 
-- **Başarısız istekler** puanı 10 azaltır
-- **Puan ≤10'a düşerse** → proxy `inactive` olarak işaretlenir
-- Etkin olmayan proxy'ler döndürme işlemine dahil edilmez
+- **Başarısız istekler** puanı 10 puan düşürün
+- **Puan ≤ 10'a düşüyor** → proxy'si `inactive` işaretlenmiştir
+- Etkin olmayan proxy'ler rotasyonun dışında bırakılır
 
-### Döndürme Stratejileri
+### Rotasyon Stratejileri
 
 ```bash
-# Kaliteye göre döndür (önce en iyi proxy) — varsayılan
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Rastgele döndürme
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Sıralı (önce en uzun süredir doğrulanmamış olan)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
@@ -356,67 +366,67 @@ curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
 
 1proxy senkronizasyonunda yerleşik bir devre kesici bulunur:
 
-- **Art arda 5 senkronizasyon hatasından** sonra diğer senkronizasyon girişimleri engellenir
+- Sonrasında** 5 ardışık senkronizasyon hatası** , daha fazla senkronizasyon girişimi engellenir
 - Şununla sıfırlayın: `resetOneproxyCircuitBreaker()` veya sunucuyu yeniden başlatın
-- Senkronizasyon durumu `GET /api/settings/oneproxy?action=status` adresinden alınabilir
+- Senkronizasyon durumu `GET /api/settings/oneproxy?action=status` mevcuttur
 
 ### 1proxy Proxy'lerini Temizleme
 
 ```bash
-# Tek bir 1proxy proxy'sini sil
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# TÜM 1proxy proxy'lerini temizle (manuel proxy'lere dokunulmaz)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Algılama Önleme ve Gizlilik
+## Algılanma Önleme ve Gizlilik
 
-OmniRoute, trafiği yalnızca bir proxy üzerinden yönlendirmekle kalmaz — trafiğin meşru görünmesini de sağlar:
+OmniRoute trafiği yalnızca bir proxy — üzerinden yönlendirmekle kalmaz, trafiğin meşru görünmesini de sağlar:
 
-### TLS Parmak İzi Sahteciliği
+### TLS Parmak İzi Sahtekarlığı
 
-Tarayıcı benzeri TLS parmak izleri oluşturmak için `wreq-js` kullanarak tarayıcı dışı TLS el sıkışmalarını işaretleyen bot algılama sistemlerini atlatır.
+Tarayıcı dışı TLS el sıkışmalarını işaretleyen bot algılama sistemlerini atlayarak tarayıcı benzeri TLS parmak izleri oluşturmak için `wreq-js` kullanır.
 
 ### CLI Parmak İzi Eşleştirme
 
-**CLI Parmak İzi Anahtarı** (`Ayarlar → Güvenlik`), HTTP başlıklarını ve JSON gövde alanlarını yerel CLI ikili dosyalarının (Claude Code, Codex vb.) imzasıyla tam olarak eşleşecek şekilde yeniden sıralar. Bu özellik, proxy'nin **üzerine ek olarak** çalışır:
+**CLI Parmak İzi Geçişi** (`Settings → Security`) HTTP başlıklarını ve JSON gövde alanlarını, yerel CLI ikili dosyalarının (Claude Code, Codex vb.) tam imzasıyla eşleşecek şekilde yeniden sıralar. Bu işe yarıyor** üstüne** vekil:
 
 ```
-IP adresiniz (engellenmiş) → Proxy IP'si (ABD) → Sağlayıcı API'si
-                              + TLS sahteciliği
-                              + CLI parmak izi
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Aynı anda hem **IP maskeleme** hem de **istek özgünlüğü** elde edersiniz.
+İkisini de alırsın**IP maskeleme** Ve** özgünlük iste** aynı anda.
 
-### Proxy IP'sini Koruma
+### Proxy IP Koruması
 
-Kontrol panelindeki renk kodlu rozetler, hangi proxy düzeyinin etkin olduğunu gösterir:
+Kontrol panelindeki renk kodlu rozetler hangi proxy düzeyinin etkin olduğunu gösterir:
 
-| Rozet | Düzey     | Anlamı                                           |
-| ----- | --------- | ------------------------------------------------ |
-| 🟢    | Genel     | Tüm trafik bu proxy üzerinden geçer              |
-| 🟡    | Sağlayıcı | Yalnızca bu sağlayıcının trafiği proxy'den geçer |
-| 🔵    | Bağlantı  | Bu belirli anahtar/hesap bu proxy'yi kullanır    |
+| Rozet | Seviye    | Anlam                                                |
+| ----- | --------- | ---------------------------------------------------- |
+| 🟢    | Küresel   | Tüm trafik bu proxy üzerinden geçiyor                |
+| 🟡    | sağlayıcı | Yalnızca bu sağlayıcının trafiğine proxy uygulanıyor |
+| 🔵    | Bağlantı  | Bu belirli key/account bu proxy'yi kullanıyor        |
 
-Rozet ayrıca doğrulama için çözümlenen proxy IP'sini de gösterir.
+Rozet ayrıca doğrulama için çözümlenen proxy IP da gösterir.
 
 ---
 
 ## Yukarı Akış Proxy Modları
 
-CLIProxyAPI kalıbını kullanan sağlayıcılar için OmniRoute üç yukarı akış proxy modunu destekler:
+CLIProxyAPI modelini kullanan sağlayıcılar için OmniRoute, üç yukarı akış proxy modunu destekler:
 
-| Mod           | Açıklama                                                       |
-| ------------- | -------------------------------------------------------------- |
-| `native`      | OmniRoute, proxy yönlendirmesini doğrudan yönetir (varsayılan) |
-| `cliproxyapi` | Harici bir CLIProxyAPI örneğine devreder                       |
-| `fallback`    | Önce yerel modu dener, başarısız olursa CLIProxyAPI'ye geçer   |
+| Mod           | Tanım                                                       |
+| ------------- | ----------------------------------------------------------- |
+| `native`      | OmniRoute proxy yönlendirmeyi doğrudan yönetir (varsayılan) |
+| `cliproxyapi` | Harici bir CLIProxyAPI örneğine delegeler                   |
+| `fallback`    | Önce yerel dener, CLIProxyAPI geri döner                    |
 
-Her sağlayıcı için ayrı ayrı yapılandırın:
+Sağlayıcıya göre yapılandırın:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -426,118 +436,118 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Kontrol Paneli Kullanıcı Arayüzü
+## Kontrol paneli UI
 
 ### Ayarlar → Proxy Sekmesi
 
-- **Genel proxy** yapılandırması (tüm trafik için bir kez ayarlanır)
-- **Sağlayıcı başına proxy** geçersiz kılmaları
-- **Bağlantı başına proxy** atamaları
-- Yapılandırılmış proxy üzerinden **bağlantı testi**
-- Etkin proxy düzeyini gösteren **renk kodlu rozetler**
+- **Küresel vekil** yapılandırma (tüm trafik için bir kez ayarlanır)
+- **Sağlayıcı başına proxy** geçersiz kılmalar
+- **Bağlantı başına proxy** atamalar
+- **Bağlantı testi** yapılandırılmış proxy aracılığıyla
+- **Renk kodlu rozetler** aktif proxy seviyesini gösteriyor
 
 ### Ayarlar → 1proxy Sekmesi
 
-- Ücretsiz proxy'leri almak için **Şimdi Senkronize Et** düğmesi
-- **İstatistik kartları**: Toplam, Etkin, Ort. Kalite, Son Senkronizasyon
-- **Filtreler**: Protokol, Ülke Kodu, Min. Kalite
-- Ana makine, protokol, ülke, kalite puanı, gecikme, anonimlik ve Google erişimini içeren **proxy tablosu**
-- Başarı/başarısızlık takibi ve ardışık başarısızlık sayısını içeren **senkronizasyon durumu** paneli
-- Tüm 1proxy girdilerini kaldırmak için **Tümünü Temizle**
+- **Şimdi Senkronize Et** ücretsiz proxy'leri almak için düğme
+- **İstatistik kartları** : Toplam, Etkin, Ort. Kalite, Son Senkronizasyon
+- **Filtreler** : Protokol, Ülke Kodu, Min Kalite
+- **Vekil tablo** ana bilgisayar, protokol, ülke, kalite puanı, gecikme, anonimlik, Google erişimi ile
+- **Senkronizasyon durumu** success/failure takibi ve ardışık arıza sayımı içeren panel
+- **Tümünü Temizle** tüm 1proxy girişlerini kaldırmak için
 
 ---
 
 ## API Referansı
 
-### Proxy Ayarları API'si
+### Proxy Ayarları API
 
-| Yöntem   | Uç Nokta                                       | Açıklama                           |
-| -------- | ---------------------------------------------- | ---------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Tam proxy yapılandırmasını getirir |
-| `GET`    | `/api/settings/proxy?level=global`             | Genel proxy'yi getirir             |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Sağlayıcı proxy'sini getirir       |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Etkin proxy'yi çözümler            |
-| `PUT`    | `/api/settings/proxy`                          | Proxy yapılandırmasını günceller   |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | İlgili düzeydeki proxy'yi kaldırır |
+| Yöntem   | Uç nokta                                       | Tanım                             |
+| -------- | ---------------------------------------------- | --------------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Tam proxy yapılandırmasını edinin |
+| `GET`    | `/api/settings/proxy?level=global`             | Küresel proxy'yi edinin           |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Sağlayıcı proxy'sini edinin       |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Etkili proxy'yi çözümleyin        |
+| `PUT`    | `/api/settings/proxy`                          | Proxy yapılandırmasını güncelle   |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Proxy'yi düzeyde kaldır           |
 
-### Proxy Kayıt API'si
+### Vekil Kayıt Defteri API
 
-| Yöntem   | Uç Nokta                                          | Açıklama                        |
-| -------- | ------------------------------------------------- | ------------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Tüm proxy'leri listeler         |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Proxy'yi kimliğine göre getirir |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Proxy atamalarını getirir       |
-| `POST`   | `/api/v1/management/proxies`                      | Proxy oluşturur                 |
-| `PATCH`  | `/api/v1/management/proxies`                      | Proxy'yi günceller              |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Proxy'yi siler                  |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Zorla siler                     |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Toplu atama yapar               |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Atamaları listeler              |
-| `GET`    | `/api/v1/management/proxies/health`               | Proxy sağlık istatistikleri     |
+| Yöntem   | Uç nokta                                          | Tanım                       |
+| -------- | ------------------------------------------------- | --------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | Tüm proxy'leri listele      |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | ID tarafından proxy alın    |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Proxy atamalarını alın      |
+| `POST`   | `/api/v1/management/proxies`                      | Proxy oluştur               |
+| `PATCH`  | `/api/v1/management/proxies`                      | Proxy'yi güncelle           |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Proxy'yi sil                |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Silmeye zorla               |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Toplu atama                 |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Ödevleri listeleme          |
+| `GET`    | `/api/v1/management/proxies/health`               | Proxy sağlık istatistikleri |
 
-### Tüneller API'si
+### Tüneller API
 
-OmniRoute örneğinizi, giden trafiği bir proxy üzerinden yönlendirmek yerine herkese açık internete açmak (Cloudflare/ngrok/Tailscale) için [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md) belgesine bakın. Tünel REST API'si `/api/tunnels/{cloudflared,ngrok,tailscale}/*` altında bulunur ve yukarıda belgelenen giden proxy zincirinden bağımsızdır.
+OmniRoute örneğinizi bir proxy aracılığıyla giden yolu yönlendirmek yerine genel internete (Cloudflare/ngrok/Tailscale) açmak için bkz. [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). REST API tüneli `/api/tunnels/{cloudflared,ngrok,tailscale}/*` altında bulunur ve yukarıda belgelenen giden proxy zincirine diktir.
 
-### 1proxy API'si
+### 1 vekil API
 
-| Yöntem   | Uç Nokta                               | Açıklama                                          |
-| -------- | -------------------------------------- | ------------------------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | 1proxy proxy'lerini listeler                      |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | İstatistikleri ve senkronizasyon durumunu getirir |
-| `GET`    | `/api/settings/oneproxy?action=status` | Yalnızca senkronizasyon durumunu getirir          |
-| `POST`   | `/api/settings/oneproxy`               | Senkronizasyonu tetikler                          |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Sonraki proxy'ye geçer                            |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Birini siler                                      |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Tümünü temizler                                   |
+| Yöntem   | Uç nokta                               | Tanım                                         |
+| -------- | -------------------------------------- | --------------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | 1proxy proxy'sini listele                     |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | İstatistikleri + senkronizasyon durumunu alın |
+| `GET`    | `/api/settings/oneproxy?action=status` | Yalnızca senkronizasyon durumunu al           |
+| `POST`   | `/api/settings/oneproxy`               | Senkronizasyonu tetikle                       |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Sonraki proxy'ye döndür                       |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Birini sil                                    |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Tümünü temizle                                |
 
-### Yukarı Akış Proxy API'si
+### Yukarı Akış Proxy'si API
 
-| Yöntem   | Uç Nokta                          | Açıklama                                    |
-| -------- | --------------------------------- | ------------------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Yukarı akış proxy yapılandırmasını getirir  |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Yukarı akış proxy modunu ayarlar            |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Yukarı akış proxy yapılandırmasını kaldırır |
+| Yöntem   | Uç nokta                          | Tanım                                     |
+| -------- | --------------------------------- | ----------------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Yukarı akış proxy yapılandırmasını edinin |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Yukarı akış proxy modunu ayarlayın        |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Yukarı akış proxy yapılandırmasını kaldır |
 
 ---
 
 ## Ortam Değişkenleri
 
-| Değişken              | Varsayılan | Açıklama                                                                             |
-| --------------------- | ---------- | ------------------------------------------------------------------------------------ |
-| `ENABLE_SOCKS5_PROXY` | `true`     | SOCKS5 proxy desteğini etkinleştirir (`.env.example` içinde varsayılan değer `true`) |
+| Değişken              | Varsayılan | Tanım                                                                     |
+| --------------------- | ---------- | ------------------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`     | SOCKS5 proxy desteğini etkinleştirin ( `.env.example` varsayılan `true` ) |
 
 ---
 
-## Sorun Giderme
+## Sorun giderme
 
-### "SOCKS5 proxy devre dışı"
+### "SOCKS5 proxy'si devre dışı"
 
-`.env` dosyanızda `ENABLE_SOCKS5_PROXY=true` olarak ayarlayın ve yeniden başlatın.
+`.env` dosyanızda `ENABLE_SOCKS5_PROXY=true` ayarlayın ve yeniden başlatın.
 
-### Proxy üzerinden "socket hang up" hataları
+### Proxy aracılığıyla "soket kapatma" hataları
 
-Bu, boşta kalan bağlantıları sonlandıran ucuz proxy'lerde normaldir. OmniRoute bunu zaten şu yöntemlerle ele alır:
+Boşta kalan bağlantıları kesen ucuz proxy'lerde bu normaldir. OmniRoute bunu zaten şu şekilde hallediyor:
 
-- Proxy bağlantılarında keep-alive özelliğini devre dışı bırakarak (`keepAliveTimeout: 1`)
-- Pipelining özelliğini devre dışı bırakarak (`pipelining: 0`)
-- Tekrarlanan el sıkışmalarını önlemek için dispatcher'ları önbelleğe alarak
+- Proxy bağlantılarında (`keepAliveTimeout: 1`) canlı tutmayı devre dışı bırakma
+- Ardışık düzenin devre dışı bırakılması (`pipelining: 0`)
+- Tekrarlanan el sıkışmalarını önlemek için sevk görevlilerini önbelleğe almak
 
-Sorun devam ederse farklı bir proxy deneyin veya 1proxy rotasyon özelliğini kullanın.
+Devam ederse farklı bir proxy deneyin veya 1proxy döndürme özelliğini kullanın.
 
-### OAuth sırasında "unsupported_country_region_territory"
+### OAuth sırasında "desteklenmeyen_ülke_region_territory"
 
-OAuth akışını başlatmadan **önce** proxy'nin yapılandırıldığından emin olun. OmniRoute, OAuth token alışverişini yapılandırılmış proxy üzerinden yönlendirir. Önce global veya sağlayıcı düzeyinde bir proxy ayarlayın, ardından bağlanın.
+Proxy'nin yapılandırıldığından emin olun** önce** OAuth akışını başlatıyorum. OmniRoute OAuth token değişimini yapılandırılmış proxy aracılığıyla yönlendirir. Önce genel veya sağlayıcı düzeyinde bir proxy ayarlayın, ardından bağlanın.
 
 ### Proxy kullanılmıyor
 
-Çözümleme sırasını kontrol edin:
+Çözünürlük sırasını kontrol edin:
 
-1. `GET /api/settings/proxy?resolve=your-connection-id` ile doğrulayın
-2. Proxy `status` değerinin `active` (`inactive` değil) olup olmadığını kontrol edin
+1. `GET /api/settings/proxy?resolve=your-connection-id` ile doğrula
+2. Proxy `status` `active` olup olmadığını kontrol edin ( `inactive` değil)
 3. Proxy atama kapsamının bağlantınızla eşleştiğinden emin olun
 
-### 1proxy senkronizasyonu başarısız oluyor
+### 1proxy senkronizasyonu başarısız
 
 Senkronizasyon durumunu kontrol edin:
 
@@ -545,7 +555,7 @@ Senkronizasyon durumunu kontrol edin:
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-`consecutiveFailures >= 5` ise devre kesici tetiklenmiştir. Sıfırlamak için sunucuyu yeniden başlatın veya manuel olarak sıfırlanmasını bekleyin.
+`consecutiveFailures >= 5` ise devre kesici açmıştır. Sıfırlamak için sunucuyu yeniden başlatın veya manuel sıfırlamayı bekleyin.
 
 ---
 
@@ -565,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' veya 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (yalnızca 1proxy)
-  latency_ms INTEGER,                        -- milisaniye (yalnızca 1proxy)
-  anonymity TEXT,                            -- şeffaf/anonim/elit
-  google_access INTEGER DEFAULT 0,           -- Google'a erişebilir mi? (1proxy)
-  last_validated TEXT,                       -- ISO zaman damgası (1proxy)
-  country_code TEXT,                         -- ISO 2 harfli kod (1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
+  anonymity TEXT,                            -- transparent/anonymous/elite
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -583,8 +593,8 @@ CREATE TABLE proxy_registry (
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
-  scope TEXT NOT NULL,        -- 'global', 'provider', 'account' veya 'combo'
-  scope_id TEXT,              -- sağlayıcı kimliği, bağlantı kimliği veya combo kimliği
+  scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -593,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Proxy Sağlık Kontrolü (v3.8.16+)
+## Proxy Durum Kontrolü (v3.8.16 +)
 
-OmniRoute'un **proxy hızlı hata verme** mekanizması (`src/lib/proxyHealth.ts`), hızlı bir TCP bağlantı kontrolüyle çalışmayan proxy'leri <2 saniye içinde algılar ve ardından istek başına ek yükü önlemek için **sonucu önbelleğe alır**.
+OmniRoute** proxy hızlı başarısız** mekanizma (`src/lib/proxyHealth.ts`), hızlı bir TCP bağlantı kontrolü yoluyla < 2'lerdeki ölü proxy'leri algılar ve ardından** sonucu önbelleğe alır** istek başına ek yükten kaçınmak için.
 
 ### Nasıl Çalışır?
 
 ```
-İstek ──▶ ProxyHealthCache.get(url)
-          │
-          ├─ Önbellek isabeti + güncel?  ──▶ önbelleğe alınmış durumu döndür
-          │
-          └─ Önbellekte yok / eski?       ──▶ host:port adresine TCP bağlantısı kur
-                                              (zaman aşımı: FAST_FAIL_TIMEOUT_MS)
-                                              ──▶ HEALTH_CACHE_TTL_MS süresince önbelleğe al
-                                              ──▶ sonucu döndür
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Bu olmadan çalışmayan bir proxy, başarısız olmadan önce her isteği `PROXY_TIMEOUT_MS` süresinin tamamı boyunca (varsayılan 30 saniye) engellerdi.
+Bu olmadan ölü bir proxy, başarısız olmadan önce tam `PROXY_TIMEOUT_MS` (varsayılan 30'lar) yönelik her isteği engeller.
 
 ### Ayarlanabilir Ortam Değişkenleri
 
-| Değişken                     | Varsayılan | Amaç                                            |
-| ---------------------------- | ---------- | ----------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`     | Sağlık kontrolü başına TCP bağlantı zaman aşımı |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`    | Sağlık sonucunun önbellekte tutulma süresi      |
+| Değişken                     | Varsayılan | Amaç                                                 |
+| ---------------------------- | ---------- | ---------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`     | Durum denetimi başına TCP bağlantı zaman aşımı       |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`    | Bir sağlık sonucu ne kadar süreyle önbelleğe alınır? |
 
 **Önerilen değerler:**
 
-| Senaryo                            | Hızlı hata verme zaman aşımı | Önbellek TTL'si | Gerekçe                                                                                   |
-| ---------------------------------- | ---------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
-| Yüksek işlem hacimli API ağ geçidi | 1500ms                       | 60000ms         | Agresif hızlı hata verme, kontrolleri azaltmak için daha uzun önbellek                    |
-| Coğrafi olarak dağıtılmış düğümler | 3000ms                       | 15000ms         | Daha yavaş ağlar daha fazla zamana ihtiyaç duyar; hızlı yük devri için daha kısa önbellek |
-| Geliştirme / test                  | 1000ms                       | 10000ms         | Yerel proxy'lerde hızlı yineleme                                                          |
-| Gizlilik / algılama önleme         | 2500ms                       | 45000ms         | Hız sınırlarını tetikleyebilecek hızlı yoklamalardan kaçınma                              |
+| Senaryo                                 | Hızlı arıza zaman aşımı | Önbellek TTL | muhakeme                                                                                         |
+| --------------------------------------- | ----------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
+| Yüksek verimli API ağ geçidi            | 1500ms                  | 60000ms      | Kontrolleri azaltmak için agresif arıza hızlı, daha uzun önbellek                                |
+| Coğrafi olarak dağıtılmış düğümler      | 3000ms                  | 15000ms      | Daha yavaş ağların daha fazla zamana ihtiyacı vardır; hızlı yük devretme için daha kısa önbellek |
+| Geliştirme / test etme                  | 1000ms                  | 10000ms      | Yerel proxy'lerde hızlı yineleme                                                                 |
+| Gizlilik / tespit edilmeye karşı koruma | 2500ms                  | 45000ms      | Hız limitlerini tetikleyebilecek hızlı problamadan kaçının                                       |
 
-### Proxy Sağlığını İnceleme
+### Proxy Sağlığını Denetleme
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -638,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Belirli bir proxy'yi yeniden kontrol etmeye zorla
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Önbellek girdisi `HEALTH_CACHE_TTL_MS` süresini aştığında `stale` bayrağı `true` olur ve sonraki istek yeni bir kontrolü tetikler.
+Önbellek girişi `HEALTH_CACHE_TTL_MS` aştığında `stale` bayrağı `true` olur ve bir sonraki istek yeni bir kontrolü tetikler.
 
-### Proxy Türüne Göre Varsayılanlar
+### Proxy Başına Tür Varsayılanları
 
-Sağlık kontrolü, URL şemasına göre uygun varsayılan değerleri kullanır:
+Durum kontrolü, URL şemasını temel alan makul varsayılanları kullanır:
 
-| Şema                       | Varsayılan port |
-| -------------------------- | --------------- |
-| `http://`                  | 8080            |
-| `https://`                 | 443             |
-| `socks5://` / `socks5h://` | 1080            |
+| Şema                       | Varsayılan bağlantı noktası |
+| -------------------------- | --------------------------- |
+| `http://`                  | 8080                        |
+| `https://`                 | 443                         |
+| `socks5://` / `socks5h://` | 1080                        |
 
-URL'deki özel portlar (`http://host:9999`) her zaman şema varsayılanına göre önceliklidir.
+URL (`http://host:9999`) özel bağlantı noktaları her zaman şema varsayılanına göre önceliklidir.
 
 ---
 
-## Proxy Analitiği ve Gözlemlenebilirlik
+## Proxy Analizi ve Gözlemlenebilirlik
 
-OmniRoute, operatörlerin yönlendirme kalıplarını, gecikme artışlarını ve yinelenen hataları teşhis etmesine yardımcı olmak için proxy başına kullanımı izler.
+OmniRoute operatörlerin yönlendirme modellerini, gecikme artışlarını ve yinelenen hataları teşhis etmesine yardımcı olmak için proxy başına kullanımı izler.
 
-### İzlenen Veriler
+### Neler Takip Ediliyor
 
-OmniRoute, yapılandırılmış bir proxy üzerinden geçen her istek için şunları kaydeder:
+Yapılandırılmış bir proxy aracılığıyla yapılan her istek için OmniRoute şunları kaydeder:
 
-| Metrik       | Açıklama                                              |
-| ------------ | ----------------------------------------------------- |
-| `proxy_url`  | Tam proxy URL'si (kimlik doğrulama bilgileri maskeli) |
-| `provider`   | Üst sağlayıcı kimliği (openai, anthropic vb.)         |
-| `latency_ms` | Proxy el sıkışması dahil toplam gidiş-dönüş süresi    |
-| `connect_ms` | Yalnızca TCP bağlantı süresi                          |
-| `status`     | Üst sistemden gelen HTTP durum kodu                   |
-| `error`      | İstek başarısız olduysa hata sınıfı                   |
-| `timestamp`  | ISO 8601 UTC                                          |
+| Metrik       | Tanım                                                     |
+| ------------ | --------------------------------------------------------- |
+| `proxy_url`  | Tam proxy URL (kimlik kimlik bilgileri maskelenmiş halde) |
+| `provider`   | Yukarı akış sağlayıcısı ID (openai, antropik vb.)         |
+| `latency_ms` | Vekil el sıkışma dahil toplam gidiş-dönüş süresi          |
+| `connect_ms` | yalnızca TCP bağlantı süresi                              |
+| `status`     | yukarı akıştan HTTP durum kodu                            |
+| `error`      | İstek başarısız olursa hata sınıfı                        |
+| `timestamp`  | ISO 8601 UTC                                              |
 
-### Verilere Erişme
+### Verilere Erişim
 
 ```bash
-# Son proxy olayları
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Asıl uç nokta `/api/usage/proxy-logs`'dur (bkz. `src/app/api/usage/proxy-logs/route.ts`). Bu uç nokta şunları destekler:
+Gerçek son nokta `/api/usage/proxy-logs` (bkz. `src/app/api/usage/proxy-logs/route.ts`). Bu uç nokta şunları destekler:
 
-- `GET /api/usage/proxy-logs` — proxy günlüklerini getirir
-- `DELETE /api/usage/proxy-logs` — tüm proxy günlüklerini temizler
+- `GET /api/usage/proxy-logs` — proxy günlüklerini al
+- `DELETE /api/usage/proxy-logs` — tüm proxy günlüklerini temizle
 
-Gerekirse toplu istatistikler, SQL aracılığıyla doğrudan `proxy_logs` tablosundan sorgulanabilir. Kontrol paneli arayüzü toplu görünümler sunabilir.
+Toplu istatistikler gerekirse SQL aracılığıyla doğrudan `proxy_logs` tablosundan sorgulanabilir. Kontrol paneli UI toplu görünümler sunabilir.
 
-### Yaygın Kalıplar
+### Ortak Desenler
 
-**Kararsız bir proxy'yi tespit etme** (başarı ve başarısızlık arasında gidip gelir):
+**Çırpınan bir proxy'yi algılama** ( success/failure arasında geçiş yapar):
 
 ```sql
 SELECT proxy_url,
@@ -707,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Yavaş proxy'leri bulma** (p95 gecikmesi > 2 sn.):
+**Yavaş proxy'ler bulun** (p95 gecikme > 2s):
 
 ```sql
 WITH ranked AS (
@@ -724,96 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Döndürme Stratejisi Karar Ağacı
+## Rotasyon Stratejisi Karar Ağacı
 
-Bir kapsama birden fazla proxy atandığında OmniRoute, her istek için hangisinin kullanılacağını seçmek üzere bir **döndürme stratejisi** kullanır. Strateji kapsam düzeyinde yapılandırılır (genel, sağlayıcı başına, hesap başına, kombinasyon başına).
+Bir kapsama birden fazla proxy atandığında OmniRoute,** rotasyon stratejisi** Her istek için hangisinin kullanılacağını seçmek için. Strateji kapsam düzeyinde (genel, sağlayıcı başına, hesap başına, kombinasyon başına) yapılandırılır.
 
-### Kullanılabilir Stratejiler
+### Mevcut Stratejiler
 
-| Strateji               | Kullanım durumu                           | Ödünleşim                                                           |
-| ---------------------- | ----------------------------------------- | ------------------------------------------------------------------- |
-| `quality` (varsayılan) | Farklı kalitede proxy'lerle üretim ortamı | Yüksek puanlı proxy'leri tercih eder; düşük puanlıları dışlayabilir |
-| `random`               | Yük dağıtımı, gizlilik                    | Eşit dağıtım sağlar; kalite sinyallerini yok sayar                  |
-| `sequential`           | Hata ayıklama, deterministik test         | Proxy'ler arasında sırayla döner; anlaşılması kolaydır              |
+| Strateji               | Ne zaman kullanılmalı               | Değiş tokuş                                                                  |
+| ---------------------- | ----------------------------------- | ---------------------------------------------------------------------------- |
+| `quality` (varsayılan) | Karışık kalitede proxy'lerle üretim | Yüksek dereceli proxy'leri tercih eder; düşük puanlı olanları aç bırakabilir |
+| `random`               | Yük dağıtımı, gizlilik              | Eşit dağıtım; kalite sinyallerini göz ardı eder                              |
+| `sequential`           | Hata ayıklama, deterministik test   | Proxy'ler arasında sırayla geçiş yapar; hakkında mantık yürütmek kolay       |
 
 ### Karar Ağacı
 
 ```
-                    Proxy'leriniz için kalite puanlarınız var mı?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-      EVET                    HAYIR
+       YES                     NO
         │                       │
-   Tüm proxy'lerin             │
-   kalitesi yaklaşık           │
-   olarak eşit mi?             │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
- EVET      HAYIR              `random`
-   │         │                kullanın
-   │         │              (eşit dağılım,
-   │         │               zaman içinde
-   │         │               kalite verisi
-   │         │               oluşturur)
+  YES       NO                Use
+   │         │              `random`
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    `quality` kullanın
-   │    (farklı kalite
-   │    düzeyleri için
-   │    en iyisi)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-`random` kullanın
-(yükü eşit
-dağıtın)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Kendi Proxy’leriniz İçin Otomatik Hata Sonrası Devre Dışı Bırakma
+## Kendi Proxy'leriniz için Otomatik Arıza Hariç Tutma
 
-1proxy pazar yeri havuzu, başarısız proxy’lerin derecesini zaten otomatik olarak düşürür (bkz.
-[Proxy Kalite Puanları](#proxy-quality-scores)). Kayıt defterine **sizin**
-eklediğiniz proxy’ler için arka plan sağlık zamanlayıcısı
-(`src/lib/proxyHealth/scheduler.ts`), hiçbir şeyi silmeden aynı “çalışmayan bir üyeyi
-zincirden otomatik olarak çıkarma” davranışını sağlar:
+1proxy pazar havuzu, başarısız olan proxy'leri zaten kendi başına otomatik olarak düşürür (bkz. [Proxy Kalite Puanları](#proxy-quality-scores) ). Vekiller için** Sen** Kayıt defterine eklenen arka plan sağlık planlayıcısı (`src/lib/proxyHealth/scheduler.ts`), hiçbir şeyi silmeden aynı "ölü bir üyeyi zincirden otomatik olarak hariç tut" davranışını sağlar:
 
 ```bash
-# .env — art arda 3 başarısız yoklamadan sonra bir proxy'yi geçici olarak devre dışı bırakın;
-# yoklamalara yeniden yanıt vermeye başladığında otomatik olarak tekrar etkinleştirin.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Çoklu proxy zincirine nasıl uyduğu:
+Çoklu proxy zincirine nasıl uyar:
 
-1. Zamanlayıcı, kayıtlı her proxy’yi her `PROXY_HEALTH_INTERVAL_MS`
-   aralığında yoklar (varsayılan 10 dk.; minimum 1 dk.).
-2. Art arda `PROXY_AUTO_REMOVE_AFTER` adet **kesin** başarısızlıktan sonra (gerçek
-   bir bağlantı hatasıdır; zaman aşımı veya yoklama hedefinin kendi 5xx yanıtı hiçbir zaman
-   sayılmaz, bkz. [Proxy Sağlık Denetimi](#proxy-health-checking-v3816)), proxy’nin `status`
-   değeri `dead` olarak ayarlanır.
-3. `dead`, havuz/döndürme çözümlemesinin kullandığı etkin durum filtresinin
-   hariç tuttuğu durumlardan biridir; bu nedenle kapsamın döndürme mekanizması (sıralı / rastgele / yapışkan /
-   gecikme — bkz. [Döndürme Stratejisi Karar Ağacı](#rotation-strategy-decision-tree))
-   söz konusu proxy’yi yeni isteklere vermeyi hemen durdurur. Havuzdaki diğer proxy’ler
-   bundan etkilenmez ve havuzun tamamı hiçbir zaman sessizce doğrudan bağlantıya
-   geri dönmez — hatada kapalı koruma mekanizması için bkz.
-   [4 Seviyeli Proxy Sistemi](#4-level-proxy-system).
-4. Zamanlayıcı, `dead` proxy’leri aynı aralıkta yoklamaya devam eder. Bir sonraki
-   başarılı yoklama, `status` değerini tekrar `active` olarak değiştirir ve proxy yeniden döndürmeye dahil olur —
-   manuel olarak yeniden eklemek gerekmez.
+1. Zamanlayıcı her kayıtlı proxy'yi her `PROXY_HEALTH_INTERVAL_MS` araştırır (varsayılan 10 dakika; minimum 1 dakika).
+2. `PROXY_AUTO_REMOVE_AFTER` sonra ardışık** kesin** başarısızlıklar (gerçek bir bağlantı hatası — zaman aşımı veya araştırma hedefinin kendi 5xx'i hiçbir zaman sayılmaz, bkz. [Proxy Sağlık Kontrolü](#proxy-health-checking-v3816) ), proxy'nin `status` `dead` olarak ayarlanır.
+3. `dead` pool/rotation çözümlemesi tarafından kullanılan canlı durum filtresinin hariç tuttuğu durumlardan biridir, dolayısıyla bir kapsamın rotasyonu (yuvarlak-robin / rastgele / yapışkan / gecikme — bkz. [Rotasyon Stratejisi Karar Ağacı](#rotation-strategy-decision-tree) ) bu proxy'yi yeni isteklere vermeyi anında durdurur. Havuzdaki başka hiçbir proxy etkilenmez ve havuzun tamamı hiçbir zaman sessizce doğrudan bağlantıya geri dönmez. [4 Seviyeli Proxy Sisteminin](#4-level-proxy-system) arıza kapatma korumasına —.
+4. Zamanlayıcı `dead` proxy'lerini aynı aralıkta incelemeye devam eder. Bir sonraki başarılı prob, `status` `active` geri çevirir ve manuel olarak yeniden eklemeye gerek kalmadan — dönüşüne yeniden girer.
 
-Bu davranış bilinçli olarak **isteğe bağlı ve tahribatsızdır**: zamanlayıcı varsayılan olarak yalnızca
-başarısızlıkları sayar ve günlüğe kaydeder (`decision.ts` içindeki C politikasına bakın);
-`PROXY_AUTO_DISABLE` hiçbir zaman bir satırı silmez — ayrı ve daha agresif olan
-`PROXY_AUTO_REMOVE` bayrağı bunun içindir. Her ikisi de `true` olarak ayarlanırsa
-`PROXY_AUTO_REMOVE` öncelikli olur (silinmek üzere olan bir proxy’yi arada geçici olarak
-devre dışı bırakmanın bir faydası yoktur). Değişkenlerin tam listesi için
-[Ortam Yapılandırması](../reference/ENVIRONMENT.md) başvuru belgesine bakın.
+Bu kasıtlı olarak** isteğe bağlı ve tahribatsız** : varsayılan olarak zamanlayıcı yalnızca hataları sayar ve günlüğe kaydeder ( `decision.ts` C politikasına bakın) ve `PROXY_AUTO_DISABLE`, ayrı, daha agresif `PROXY_AUTO_REMOVE` bayrağının amacı olan — satırını asla silmez. Her ikisi de `true` olarak ayarlanırsa `PROXY_AUTO_REMOVE` kazanır (silinmek üzere olan bir proxy'nin aradaki geçici devre dışı bırakma işleminin hiçbir faydası yoktur). Değişken listesinin tamamı için [Ortam Yapılandırması](../reference/ENVIRONMENT.md) referansına bakın.
 
 ---
 
-> 📖 **İlgili belgeler:**
+> 📖** İlgili belgeler:**
 >
-> - [Kullanıcı Kılavuzu](../guides/USER_GUIDE.md) — Genel kurulum ve yapılandırma
-> - [API Başvurusu](../reference/API_REFERENCE.md) — Eksiksiz API belgeleri
-> - [Ortam Yapılandırması](../reference/ENVIRONMENT.md) — Tüm ortam değişkenleri
+> - [Kullanıcı Kılavuzu](../guides/USER_GUIDE.md) — Genel kurulum ve yapılandırma - [API Referans](../reference/API_REFERENCE.md) — Tam API belgeleri - [Ortam Yapılandırması](../reference/ENVIRONMENT.md) — Tüm ortam değişkenleri

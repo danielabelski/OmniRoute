@@ -4,32 +4,32 @@
 
 ---
 
-> **Ocoliți blocările geografice, protejați-vă identitatea și direcționați traficul AI prin orice proxy — fără nicio complexitate de configurare.**
+> **Ocoliți blocurile geografice, protejați-vă identitatea și direcționați traficul AI prin orice proxy — cu complexitate de configurare zero.**
 
-OmniRoute include un sistem complet de gestionare a proxy-urilor, care vă permite să direcționați traficul către furnizorii AI din amonte prin proxy-uri HTTP, HTTPS sau SOCKS5. Indiferent dacă vă aflați într-o regiune blocată, aveți nevoie de rotația adreselor IP sau doriți o amprentare discretă — acest ghid acoperă totul.
+OmniRoute include un sistem de gestionare a proxy complet care vă permite să direcționați traficul furnizorului AI în amonte prin proxy HTTP, HTTPS sau SOCKS5. Indiferent dacă vă aflați într-o regiune blocată, aveți nevoie de rotație IP sau doriți amprenta ascunsă — acest ghid acoperă totul.
 
 ---
 
 ## Cuprins
 
-- [De ce să utilizați proxy-uri?](#why-use-proxies)
-- [Prezentare generală a arhitecturii](#architecture-overview)
+- [De ce să folosiți proxy?](#why-use-proxies)
+- [Privire de ansamblu asupra arhitecturii](#architecture-overview)
 - [Sistem proxy pe 4 niveluri](#4-level-proxy-system)
-- [Registru de proxy-uri (CRUD)](#proxy-registry-crud)
-- [Piața gratuită 1proxy](#1proxy-free-proxy-marketplace)
-- [Rotația proxy-urilor](#proxy-rotation)
-- [Evitarea detectării și operarea discretă](#anti-detection--stealth)
-- [Moduri pentru proxy-ul din amonte](#upstream-proxy-modes)
-- [Interfața tabloului de bord](#dashboard-ui)
-- [Referință API](#api-reference)
+- [Registrul proxy (CRUD)](#proxy-registry-crud)
+- [1 piață gratuită de proxy](#1proxy-free-proxy-marketplace)
+- [Rotație proxy](#proxy-rotation)
+- [Anti-Detecție și Stealth](#anti-detection--stealth)
+- [Moduri proxy în amonte](#upstream-proxy-modes)
+- [Tabloul de bord UI](#dashboard-ui)
+- [API Referință](#api-reference)
 - [Variabile de mediu](#environment-variables)
 - [Depanare](#troubleshooting)
 
 ---
 
-## De ce să utilizați proxy-uri?
+## De ce să folosiți proxy?
 
-Mulți furnizori AI restricționează accesul în funcție de regiunea geografică. Dezvoltatorii din **Rusia, China, Iran, Cuba, Turcia** și din alte țări întâmpină erori precum:
+Mulți furnizori AI restricționează accesul în funcție de regiune geografică. Dezvoltatorii în** Rusia, China, Iran, Cuba, Turcia** și alte țări întâmpină erori precum:
 
 ```
 unsupported_country_region_territory
@@ -37,115 +37,126 @@ unsupported_country_region_territory
 
 Chiar și în afara regiunilor blocate, proxy-urile sunt utile pentru:
 
-| Caz de utilizare         | Descriere                                                                   |
-| ------------------------ | --------------------------------------------------------------------------- |
-| **Ocolire geografică**   | Accesați OpenAI, Anthropic, Codex și Copilot din țările blocate             |
-| **Rotația adreselor IP** | Distribuiți solicitările între mai multe adrese IP pentru a evita limitarea |
-| **Confidențialitate**    | Ascundeți adresa IP reală față de furnizorii din amonte                     |
-| **Conformitate**         | Direcționați traficul prin jurisdicții specifice                            |
-| **Testare**              | Simulați solicitări din regiuni diferite                                    |
+| Caz de utilizare       | Descriere                                                            |
+| ---------------------- | -------------------------------------------------------------------- |
+| **Ocolire geografică** | Accesați OpenAI, Anthropic, Codex, Copilot din țările blocate        |
+| **IP rotație**         | Distribuiți cererile în mai multe IPs pentru a evita limitarea ratei |
+| **Confidențialitate**  | Ascundeți IP dvs. real de la furnizorii din amonte                   |
+| **Conformitate**       | Dirijați traficul prin jurisdicții specifice                         |
+| **Testare**            | Simulați cereri din diferite regiuni                                 |
 
 ---
 
-## Prezentare generală a arhitecturii
+## Privire de ansamblu asupra arhitecturii
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       Server OmniRoute                        │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Registru de │    │ Dispecer de  │    │ Fetch (undici)   │  │
-│  │ proxy-uri   │───▶│ proxy-uri    │───▶│                  │  │
-│  │ (SQLite)    │    │ (în cache)   │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ Sincronizare│                        │ API-ul furnizoru-│  │
-│  │ 1proxy      │                        │ lui din amonte   │  │
-│  │ (fond grat.)│                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Componente principale
+### Componente cheie
 
-| Componentă                | Fișier                                       | Rol                                                                        |
-| ------------------------- | -------------------------------------------- | -------------------------------------------------------------------------- |
-| **Registru de proxy-uri** | `src/lib/db/proxies.ts`                      | Operații CRUD pentru intrările proxy și atribuirile domeniului de aplicare |
-| **Dispecer de proxy-uri** | `open-sse/utils/proxyDispatcher.ts`          | Creează dispeceri ProxyAgent/SOCKS pentru `undici`, cu memorare în cache   |
-| **Fetch prin proxy**      | `open-sse/utils/proxyFetch.ts`               | Încapsulează `fetch()` și injectează dispecerul proxy                      |
-| **Rută de setări**        | `src/app/api/settings/proxy/route.ts`        | API moștenit pentru configurarea proxy-ului (GET/PUT/DELETE)               |
-| **Rută de administrare**  | `src/app/api/v1/management/proxies/route.ts` | API CRUD pentru registru (GET/POST/PATCH/DELETE)                           |
-| **Bază de date 1proxy**   | `src/lib/db/oneproxy.ts`                     | Persistență pentru piața de proxy-uri gratuite                             |
+| Componentă             | Fişier                                       | Rol                                                  |
+| ---------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| **Registrul proxy**    | `src/lib/db/proxies.ts`                      | CRUD pentru intrările proxy atribuirea domeniului +  |
+| **Dispecer proxy**     | `open-sse/utils/proxyDispatcher.ts`          | Creează dispeceri `undici` ProxyAgent/SOCKS cu cache |
+| **Preluare proxy**     | `open-sse/utils/proxyFetch.ts`               | Înfășoară `fetch()` cu injecție de dispecer proxy    |
+| **Setări Rută**        | `src/app/api/settings/proxy/route.ts`        | Configurație proxy moștenită API (GET/PUT/DELETE)    |
+| **Ruta de management** | `src/app/api/v1/management/proxies/route.ts` | Registry CRUD API (GET/POST/PATCH/DELETE)            |
+| **1 proxy DB**         | `src/lib/db/oneproxy.ts`                     | Persistență gratuită pe piața de proxy               |
 
 ---
+
+## Starea proxy implicită pentru conturile noi
+
+În** Setări → Proxy → Configurare globală** , folosiți** Activați proxy în mod implicit pentru conexiuni noi** pentru a alege starea proxy inițială a conturilor de furnizor nou adăugate.
+
+Noua setare controlează starea proxy inițială a conturilor de furnizor nou adăugate. Nu modifică conturile existente și nu înlocuiește comutatorul proxy global. Valoarea sa inițială păstrează comportamentul anterior. Dezactivați-l o dată pentru a crea conturi viitoare cu proxy dezactivat în mod prestabilit.
+
+Preferința este stocată ca `defaultNewConnectionProxyEnabled` prin setările existente API. Este implicit la `true` când nu este salvat niciodată. Salvarea `false` intră în vigoare pentru conturile noi ulterioare fără repornire. `POST /api/providers` acceptă un `proxyEnabled` boolean strict opțional; un `true` sau `false` explicit are prioritate față de valoarea implicită de creare. Omiterea unui cont duplicat sau reconectarea OAuth păstrează starea stocată a contului respectiv. Conturile individuale pot fi activate sau dezactivate ulterior.
+
+Transferurile selective de furnizori folosesc configurația implicită a instalării de destinație pentru conturile noi și păstrează politica de destinație atunci când înlocuiesc conturile existente. Comutarile proxy nu sunt câmpuri de transfer portabile. Restaurarea completă de rezervă și migrarea istorică JSON/SQL își păstrează semantica de restaurare existentă, inclusiv valorile contului salvat și valorile implicite ale schemei moștenite; o restaurare completă a setărilor poate restabili și această preferință.
+
+Această preferință nu atribuie un proxy și nu stabilește că unul este sănătos sau în uz. Rutarea reală depinde în continuare de comutatorul proxy global și de configurația proxy aplicabilă. Furnizorii sintetici fără un cont persistent, traficul OAuth înainte de crearea contului, proxy-urile environment/system și rețelele backend-urilor externe sunt în afara domeniului său de aplicare.
 
 ## Sistem proxy pe 4 niveluri
 
-OmniRoute acceptă configurarea proxy-urilor în **patru domenii independente**, evaluate în ordinea priorității:
+OmniRoute acceptă configurarea proxy la** patru domenii independente** , rezolvate in ordinea prioritatilor:
 
 ```
-Ordinea de evaluare a priorității (de la cea mai mare → la cea mai mică):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Proxy de cont/conexiune  →  per cheie API / conexiune OAuth
-  2. 🟡 Proxy de furnizor        →  per furnizor (de ex., tot traficul OpenAI)
-  3. 🟠 Proxy de combinație      →  per combinație/configurație de rutare
-  4. 🟢 Proxy global             →  tot traficul, toți furnizorii
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Cum funcționează evaluarea
+### Cum funcționează rezoluția
 
-Când OmniRoute trimite o solicitare către un furnizor din amonte, apelează `resolveProxyForConnectionFromRegistry()`, care verifică fiecare nivel în ordine:
+Când OmniRoute trimite o solicitare către un furnizor din amonte, apelează `resolveProxyForConnectionFromRegistry()` care verifică fiecare nivel în ordine:
 
-1. **La nivel de cont** — Există un proxy atribuit acestui ID de conexiune?
-2. **La nivel de furnizor** — Există un proxy atribuit acestui furnizor (de ex., `openai`)?
+1. **La nivel de cont** — Există un proxy alocat acestei conexiuni specifice ID?
+2. **La nivel de furnizor** — Există un proxy alocat acestui furnizor (de exemplu, `openai`)?
 3. **La nivel global** — Există un proxy global configurat?
-4. **Fără proxy** — Conexiune directă la furnizor.
+4. **Fără proxy** — Conexiune directă cu furnizorul.
 
-Prima potrivire are prioritate. Aceasta înseamnă că puteți configura un proxy global ca soluție de rezervă, dar îl puteți suprascrie pentru anumiți furnizori sau anumite conexiuni.
+Primul meci câștigă. Aceasta înseamnă că puteți seta un proxy global ca alternativă, dar îl puteți înlocui pentru anumiți furnizori sau conexiuni.
 
-### Ce trafic este direcționat prin proxy
+### Ce devine proxy
 
-| Tip de trafic             | Prin proxy? | Observații                                      |
-| ------------------------- | ----------- | ----------------------------------------------- |
-| Completări de chat        | ✅          | Toate solicitările `/v1/chat/completions`       |
-| Înglobări                 | ✅          | `/v1/embeddings`                                |
-| Generare de imagini       | ✅          | `/v1/images/generations`                        |
-| Audio (TTS/STT)           | ✅          | `/v1/audio/*`                                   |
-| Schimb de token OAuth     | ✅          | Rezolvă `unsupported_country_region_territory`  |
-| Teste de conexiune        | ✅          | Butonul „Testare conexiune” utilizează proxy-ul |
-| Reîmprospătarea tokenului | ✅          | Reînnoire OAuth în fundal                       |
-| Sincronizarea modelelor   | ✅          | Listarea și descoperirea modelelor              |
+| Tip de trafic           | Proxy? | Note                                           |
+| ----------------------- | ------ | ---------------------------------------------- |
+| Finalizări de chat      | ✅     | Toate cererile `/v1/chat/completions`          |
+| Înglobări               | ✅     | `/v1/embeddings`                               |
+| Generarea imaginii      | ✅     | `/v1/images/generations`                       |
+| Audio (TTS/STT)         | ✅     | `/v1/audio/*`                                  |
+| schimb de jetoane OAuth | ✅     | Rezolvă `unsupported_country_region_territory` |
+| Teste de conectare      | ✅     | Butonul „Testează conexiunea” folosește proxy  |
+| Reîmprospătare simbol   | ✅     | Reînnoire OAuth de fundal                      |
+| Sincronizarea modelului | ✅     | Listarea modelelor și descoperirea             |
 
 ---
 
-## Registrul de proxy-uri (CRUD)
+## Registrul proxy (CRUD)
 
-Registrul de proxy-uri este un tabel SQLite (`proxy_registry`) care stochează toate proxy-urile dvs. Fiecare proxy are:
+Registrul proxy este un tabel SQLite (`proxy_registry`) care stochează toate proxy-urile dvs. Fiecare proxy are:
 
-| Câmp       | Tip          | Descriere                                                     |
-| ---------- | ------------ | ------------------------------------------------------------- |
-| `id`       | UUID         | Identificator unic                                            |
-| `name`     | Șir          | Etichetă ușor de citit                                        |
-| `type`     | Șir          | Protocol: `http`, `https`, `socks5`                           |
-| `host`     | Șir          | Numele de gazdă sau IP-ul proxy-ului                          |
-| `port`     | Număr întreg | Numărul portului                                              |
-| `username` | Șir          | Numele de utilizator pentru autentificare (criptat în repaus) |
-| `password` | Șir          | Parola pentru autentificare (criptată în repaus)              |
-| `region`   | Șir          | Eticheta regiunii geografice                                  |
-| `notes`    | Șir          | Note în format liber                                          |
-| `status`   | Șir          | `active` sau `inactive`                                       |
-| `source`   | Șir          | `manual` sau `oneproxy`                                       |
+| Domeniu    | Tip    | Descriere                                               |
+| ---------- | ------ | ------------------------------------------------------- |
+| `id`       | UUID   | Identificator unic                                      |
+| `name`     | Şir    | Etichetă care poate fi citită de om                     |
+| `type`     | Şir    | Protocol: `http`, `https`, `socks5`                     |
+| `host`     | Şir    | Nume de gazdă proxy sau IP                              |
+| `port`     | Întreg | Numărul portului                                        |
+| `username` | Şir    | Nume de utilizator de autentificare (criptat în repaus) |
+| `password` | Şir    | Parola de autentificare (criptată în repaus)            |
+| `region`   | Şir    | Etichetă de regiune geografică                          |
+| `notes`    | Şir    | Note cu text liber                                      |
+| `status`   | Şir    | `active` sau `inactive`                                 |
+| `source`   | Şir    | `manual` sau `oneproxy`                                 |
 
 ### Crearea unui proxy
 
-**Prin panoul de control:**
+**Prin tabloul de bord:**
 
-1. Accesați **Setări → Proxy**
-2. Faceți clic pe **Adăugare proxy**
-3. Completați tipul, gazda, portul și, opțional, acreditările de autentificare
-4. Salvați
+1. Du-te la** Setări → Proxy**
+2. Clic** Adăugați proxy**
+3. Completați tipul, gazda, portul și acreditările de autentificare opționale
+4. Salva
 
 **Prin API:**
 
@@ -175,15 +186,15 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Notă:** Acreditările sunt păstrate dacă nu trimiteți în mod explicit valori de înlocuire care nu sunt goale. Trimiterea unor șiruri goale pentru `username`/`password` va păstra valorile stocate.
+> **Nota:** Acreditările sunt păstrate, cu excepția cazului în care trimiteți în mod explicit înlocuitori care nu sunt goale. Trimiterea șirurilor goale pentru `username`/`password` va păstra valorile stocate.
 
 ### Ștergerea unui proxy
 
 ```bash
-# Eșuează dacă proxy-ul este atribuit oricărui domeniu
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Ștergere forțată (elimină și atribuirile)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
@@ -193,26 +204,26 @@ curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&f
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Atribuirea proxy-urilor domeniilor
+### Atribuirea proxy-urilor pentru domenii
 
 ```bash
-# Atribuire domeniului global
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Atribuire unui anumit furnizor
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Atribuire unei anumite conexiuni/chei
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Determinarea proxy-ului efectiv
+### Rezolvarea proxy-ului eficient
 
 Verificați ce proxy ar fi utilizat pentru o anumită conexiune:
 
@@ -220,11 +231,11 @@ Verificați ce proxy ar fi utilizat pentru o anumită conexiune:
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Returnează proxy-ul determinat împreună cu nivelul său (`account`, `provider` sau `global`) și sursa.
+Returnează proxy-ul rezolvat cu nivelul său (`account`, `provider` sau `global`) și sursa.
 
 ### Atribuire în bloc
 
-Atribuiți simultan un proxy mai multor furnizori sau conexiuni:
+Atribuiți un proxy mai multor furnizori sau conexiuni simultan:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -238,170 +249,170 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
 
 ### Import/Export
 
-Proxy-urile sunt incluse în sistemul de **Copiere de rezervă/Restaurare**. Când exportați configurația OmniRoute:
+Proxy-urile sunt incluse în**Backup/Restore** sistem. Când exportați configurația OmniRoute :
 
-1. Accesați **Panou de control → Setări → Copie de rezervă**
-2. Faceți clic pe **Export** — registrul de proxy-uri și atribuirile sunt incluse
-3. Pentru restaurare, faceți clic pe **Import** și încărcați fișierul copiei de rezervă
+1. Du-te la** Tabloul de bord → Setări → Backup**
+2. Clic** Export** Registrul proxy — și atribuțiile sunt incluse
+3. Pentru a restabili, faceți clic** Import** și încărcați fișierul de rezervă
 
-Registrul de proxy-uri acceptă și operațiunea **upsert după gazdă+port** — dacă importați un proxy care există deja (aceeași gazdă și același port), acesta este actualizat în loc să fie creat un duplicat.
+Registrul proxy acceptă, de asemenea** upsert de portul gazdă +** — dacă importați un proxy care există deja (aceeași gazdă și același port), acesta se actualizează în loc să creeze un duplicat.
 
-### Migrare din versiunea anterioară
+### Migrație moștenită
 
-Dacă ați configurat proxy-uri într-o versiune mai veche (anterioară registrului), OmniRoute le migrează automat:
+Dacă ați configurat proxy-uri într-o versiune mai veche (pre-registry), OmniRoute le migrează automat:
 
 ```
-Stocare key_value moștenită → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Acest lucru se întâmplă o singură dată, la prima pornire după actualizare. Utilizați `migrateLegacyProxyConfigToRegistry({ force: true })` pentru a rula din nou migrarea.
+Acest lucru se întâmplă o dată la prima pornire după upgrade. Folosiți `migrateLegacyProxyConfigToRegistry({ force: true })` pentru a rula din nou.
 
 ---
 
-## Piața de proxy-uri gratuite 1proxy
+## 1 piață proxy gratuită
 
-> 🆕 **Contribuție de la [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Problemă [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Contribuție de [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Problema [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute se integrează cu platforma comunitară **[1proxy](https://1proxy-api.aitradepulse.com)** pentru a oferi acces la **sute de proxy-uri gratuite și validate** din întreaga lume. Această opțiune este ideală pentru utilizatorii care nu dispun de propria infrastructură de proxy-uri.
+OmniRoute se integrează cu** [1 proxy](https://1proxy-api.aitradepulse.com)** platformă comunitară pentru a oferi acces la** sute de proxy-uri gratuite, validate** din întreaga lume. Acest lucru este perfect pentru utilizatorii care nu au propria infrastructură proxy.
 
 ### Cum funcționează
 
 ```
-┌─────────────┐  Sincronizare  ┌─────────────────┐    Rotație    ┌──────────┐
-│ API 1proxy  │ ─────────────▶ │  proxy_registry  │ ────────────▶ │ Furnizor │
-│  (extern)   │ până la 500 de │  source=oneproxy │ după calitate │   API    │
-└─────────────┘   proxy-uri    └─────────────────┘               └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Sincronizare** — OmniRoute preia proxy-uri validate din API-ul 1proxy
-2. **Stocare** — Proxy-urile sunt salvate în același tabel `proxy_registry`, cu `source = 'oneproxy'`
-3. **Filtrare** — Filtrați după protocol, țară și scor de calitate
-4. **Rotație** — Selectați cel mai bun proxy folosind strategii bazate pe calitate, selecție aleatorie sau secvențială
-5. **Degradare automată** — Proxy-urilor care eșuează li se reduce scorul de calitate; sub prag → sunt marcate ca inactive
+1. **Sincronizare** — OmniRoute preia proxy-urile validate din 1proxy API
+2. **Magazin** — Proxy-urile sunt salvate în același tabel `proxy_registry` cu `source = 'oneproxy'`
+3. **Filtra** — Filtrați după protocol, țară, scor de calitate
+4. **Roti** — Alegeți cel mai bun proxy folosind strategii de calitate, aleatorii sau secvenţiale
+5. **Auto-degradare** — Proxy-urile eșuate își reduc scorul de calitate; sub pragul → marcat ca inactiv
 
 ### Sincronizarea proxy-urilor
 
-**Prin panoul de control:**
+**Prin tabloul de bord:**
 
-1. Accesați fila **Setări → 1proxy**
-2. Faceți clic pe **„Sincronizați acum”**
-3. Vizualizați statisticile: numărul total de proxy-uri, numărul celor active, calitatea medie și distribuția pe țări
+1. Du-te la** Setări → 1proxy** fila
+2. Clic** „Sincronizează acum”**
+3. Vedeți statistici: total proxy, număr activ, calitate medie, defalcare în funcție de țară
 
 **Prin API:**
 
 ```bash
-# Declanșează sincronizarea
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Răspuns:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Filtrarea proxy-urilor
 
 ```bash
-# Filtrează după protocol
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Filtrează după țară
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Filtrează după scorul minim de calitate
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Combină filtrele
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Scorurile de calitate ale proxy-urilor
+### Scoruri de calitate proxy
 
-Fiecare proxy 1proxy include metadate:
+Fiecare proxy 1 proxy vine cu metadate:
 
-| Câmp            | Descriere                                              |
-| --------------- | ------------------------------------------------------ |
-| `qualityScore`  | Evaluare între 0 și 100 rezultată din validarea 1proxy |
-| `latencyMs`     | Latența de rețea măsurată                              |
-| `anonymity`     | `transparent`, `anonymous` sau `elite`                 |
-| `googleAccess`  | Indică dacă proxy-ul poate accesa serviciile Google    |
-| `countryCode`   | Codul ISO al țării, format din două litere             |
-| `lastValidated` | Marcajul temporal al ultimei validări                  |
+| Domeniu         | Descriere                                    |
+| --------------- | -------------------------------------------- |
+| `qualityScore`  | Evaluare 0-100 de la validarea 1proxy        |
+| `latencyMs`     | Latența rețelei măsurată                     |
+| `anonymity`     | `transparent`, `anonymous` sau `elite`       |
+| `googleAccess`  | Dacă proxy-ul poate accesa serviciile Google |
+| `countryCode`   | Cod de țară ISO din două litere              |
+| `lastValidated` | Marca temporală a ultimei validări           |
 
 Scorurile de calitate sunt ajustate dinamic:
 
-- **Solicitările eșuate** reduc scorul cu 10 puncte
-- **Scorul scade la ≤10** → proxy-ul este marcat ca `inactive`
+- **Solicitări nereușite** reduce scorul cu 10 puncte
+- **Scorul scade la ≤ 10** proxy → este marcat `inactive`
 - Proxy-urile inactive sunt excluse din rotație
 
 ### Strategii de rotație
 
 ```bash
-# Rotație după calitate (mai întâi cel mai bun proxy) — implicit
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Rotație aleatorie
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Secvențială (mai întâi cel validat cel mai demult)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Întrerupător de circuit
+### Întrerupător
 
-Sincronizarea 1proxy dispune de un întrerupător de circuit încorporat:
+Sincronizarea 1proxy are un întrerupător de circuit încorporat:
 
-- După **5 eșecuri consecutive de sincronizare**, încercările ulterioare de sincronizare sunt blocate
-- Resetați-l cu: `resetOneproxyCircuitBreaker()` sau reporniți serverul
-- Starea sincronizării este disponibilă la `GET /api/settings/oneproxy?action=status`
+- După** 5 erori consecutive de sincronizare** , încercările ulterioare de sincronizare sunt blocate
+- Resetați cu: `resetOneproxyCircuitBreaker()` sau reporniți serverul
+- Starea de sincronizare este disponibilă la `GET /api/settings/oneproxy?action=status`
 
-### Ștergerea proxy-urilor 1proxy
+### Ștergerea 1 proxy-uri
 
 ```bash
-# Șterge un singur proxy 1proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Șterge TOATE proxy-urile 1proxy (proxy-urile manuale nu sunt afectate)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Anti-Detectare și Discreție
+## Anti-Detecție și Stealth
 
-OmniRoute nu doar direcționează traficul printr-un proxy — face traficul să pară legitim:
+OmniRoute nu direcționează doar traficul printr-un proxy — ci face ca traficul să pară legitim:
 
-### Falsificarea amprentei TLS
+### TLS Fingerprint Spoofing
 
-Folosește `wreq-js` pentru a genera amprente TLS similare celor ale browserelor, evitând sistemele de detectare a boților care semnalează negocierile TLS ce nu provin de la browsere.
+Utilizează `wreq-js` pentru a genera amprente TLS asemănătoare browserului, ocolind sistemele de detectare a botului care semnalează strângeri de mână TLS non-browser.
 
-### Potrivirea amprentei CLI
+### CLI Potrivirea amprentei
 
-**Comutatorul pentru amprenta CLI** (`Settings → Security`) reordonează anteturile HTTP și câmpurile din corpul JSON pentru a se potrivi exact cu semnătura binarelor CLI native (Claude Code, Codex etc.). Acesta funcționează **suplimentar față de** proxy:
+The**CLI Comutare amprentă digitală** (`Settings → Security`) reordonează anteturile HTTP și câmpurile de corp JSON pentru a se potrivi cu semnătura exactă a binarelor CLI native ( Cod Claude, Codex etc.). Acest lucru funcționează** deasupra** proxy:
 
 ```
-IP-ul dvs. (blocat) → IP proxy (SUA) → API-ul furnizorului
-                       + falsificare TLS
-                       + amprentă CLI
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Obțineți simultan atât **mascarea adresei IP**, cât și **autenticitatea solicitării**.
+Le primești pe amândouă**IP mascare** şi** cere autenticitate** simultan.
 
-### Păstrarea IP-ului proxy
+### Proxy IP Conservare
 
-Insignele codificate prin culori din panoul de control arată ce nivel de proxy este activ:
+Insignele cu coduri de culoare din tabloul de bord arată ce nivel de proxy este activ:
 
-| Insignă | Nivel     | Semnificație                                         |
-| ------- | --------- | ---------------------------------------------------- |
-| 🟢      | Global    | Întregul trafic trece prin acest proxy               |
-| 🟡      | Furnizor  | Doar traficul acestui furnizor trece prin proxy      |
-| 🔵      | Conexiune | Această cheie/acest cont specific folosește proxy-ul |
+| Insigna | Nivel     | Sens                                             |
+| ------- | --------- | ------------------------------------------------ |
+| 🟢      | Global    | Tot traficul trece prin acest proxy              |
+| 🟡      | Furnizor  | Numai traficul acestui furnizor este proxy       |
+| 🔵      | Conexiune | Acest key/account specific folosește acest proxy |
 
-Insigna afișează și adresa IP rezolvată a proxy-ului, pentru verificare.
+Insigna arată, de asemenea, proxy-ul IP rezolvat pentru verificare.
 
 ---
 
@@ -409,13 +420,13 @@ Insigna afișează și adresa IP rezolvată a proxy-ului, pentru verificare.
 
 Pentru furnizorii care folosesc modelul CLIProxyAPI, OmniRoute acceptă trei moduri proxy în amonte:
 
-| Mod           | Descriere                                                   |
-| ------------- | ----------------------------------------------------------- |
-| `native`      | OmniRoute gestionează direct rutarea prin proxy (implicit)  |
-| `cliproxyapi` | Delegă către o instanță CLIProxyAPI externă                 |
-| `fallback`    | Încearcă mai întâi modul nativ, apoi recurge la CLIProxyAPI |
+| Modul         | Descriere                                             |
+| ------------- | ----------------------------------------------------- |
+| `native`      | OmniRoute gestionează direct rutarea proxy (implicit) |
+| `cliproxyapi` | Delegați la o instanță CLIProxyAPI externă            |
+| `fallback`    | Încearcă mai întâi nativ, se întoarce la CLIProxyAPI  |
 
-Configurați separat pentru fiecare furnizor:
+Configurați pentru fiecare furnizor:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,86 +436,86 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Interfața panoului de control
+## Tabloul de bord UI
 
-### Setări → Fila Proxy
+### Setări → Proxy
 
-- Configurarea **proxy-ului global** (se configurează o singură dată pentru întregul trafic)
-- Suprascrieri ale proxy-ului **pentru fiecare furnizor**
-- Atribuiri de proxy **pentru fiecare conexiune**
-- **Testarea conexiunii** prin proxy-ul configurat
-- **Insigne codificate prin culori** care indică nivelul activ al proxy-ului
+- **Proxy global** configurație (setată o dată pentru tot traficul)
+- **Proxy pentru fiecare furnizor** suprascrie
+- **Proxy per conexiune** sarcinile
+- **Test de conectare** prin proxy configurat
+- **Ecusoane cu coduri de culori** care arată nivelul proxy activ
 
-### Setări → Fila 1proxy
+### Setări → 1Proxy Tab
 
-- Butonul **Sincronizează acum** pentru preluarea proxy-urilor gratuite
-- **Carduri cu statistici**: Total, Active, Calitate medie, Ultima sincronizare
-- **Filtre**: Protocol, Codul țării, Calitate minimă
-- **Tabel de proxy-uri** cu gazda, protocolul, țara, scorul de calitate, latența, anonimatul și accesul la Google
-- Panou pentru **starea sincronizării**, cu monitorizarea reușitelor/eșecurilor și numărul de eșecuri consecutive
-- **Șterge tot** pentru eliminarea tuturor intrărilor 1proxy
+- **Sincronizează acum** butonul pentru a prelua proxy-uri gratuite
+- **Cărți cu statistici** : Total, Activ, Calitate medie, Ultima sincronizare
+- **Filtre** : Protocol, Cod de țară, Calitate min
+- **Tabel proxy** cu gazdă, protocol, țară, scor de calitate, latență, anonimat, acces Google
+- **Starea de sincronizare** panou cu urmărire success/failure și număr de erori consecutive
+- **Ștergeți tot** pentru a elimina toate intrările 1proxy
 
 ---
 
-## Referință API
+## API Referință
 
-### API-ul setărilor proxy
+### Setări proxy API
 
-| Metodă   | Punct final                                    | Descriere                                 |
-| -------- | ---------------------------------------------- | ----------------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Obține configurația proxy completă        |
-| `GET`    | `/api/settings/proxy?level=global`             | Obține proxy-ul global                    |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Obține proxy-ul furnizorului              |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Determină proxy-ul efectiv                |
-| `PUT`    | `/api/settings/proxy`                          | Actualizează configurația proxy           |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Elimină proxy-ul de la nivelul specificat |
+| Metodă   | Punct final                                    | Descriere                            |
+| -------- | ---------------------------------------------- | ------------------------------------ |
+| `GET`    | `/api/settings/proxy`                          | Obțineți configurația proxy completă |
+| `GET`    | `/api/settings/proxy?level=global`             | Obțineți proxy global                |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Obțineți proxy de furnizor           |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Rezolvați proxy eficient             |
+| `PUT`    | `/api/settings/proxy`                          | Actualizați configurația proxy       |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Eliminați proxy la nivel             |
 
-### API-ul registrului de proxy-uri
+### Registrul proxy API
 
-| Metodă   | Punct final                                       | Descriere                              |
-| -------- | ------------------------------------------------- | -------------------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Listează toate proxy-urile             |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Obține proxy-ul după ID                |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Obține atribuirile proxy-ului          |
-| `POST`   | `/api/v1/management/proxies`                      | Creează un proxy                       |
-| `PATCH`  | `/api/v1/management/proxies`                      | Actualizează un proxy                  |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Șterge un proxy                        |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Forțează ștergerea                     |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Atribuie în bloc                       |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Listează atribuirile                   |
-| `GET`    | `/api/v1/management/proxies/health`               | Statistici privind starea proxy-urilor |
+| Metodă   | Punct final                                       | Descriere                    |
+| -------- | ------------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | Listați toți proxy-urile     |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Obțineți proxy prin ID       |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Obțineți sarcini proxy       |
+| `POST`   | `/api/v1/management/proxies`                      | Creați proxy                 |
+| `PATCH`  | `/api/v1/management/proxies`                      | Actualizați proxy            |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Ștergeți proxy               |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Ștergerea forțată            |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Atribuire în bloc            |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Listează sarcinile           |
+| `GET`    | `/api/v1/management/proxies/health`               | Statistici de sănătate proxy |
 
-### API-ul tunelurilor
+### Tuneluri API
 
-Pentru a expune instanța OmniRoute la internetul public (Cloudflare/ngrok/Tailscale), în loc să direcționați traficul de ieșire printr-un proxy, consultați [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). API-ul REST pentru tuneluri se află sub `/api/tunnels/{cloudflared,ngrok,tailscale}/*` și este independent de lanțul proxy de ieșire documentat mai sus.
+Pentru a vă expune instanța OmniRoute la internetul public (Cloudflare/ngrok/Tailscale) în loc de rutare de ieșire printr-un proxy, consultați [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunelul REST API trăiește sub `/api/tunnels/{cloudflared,ngrok,tailscale}/*` și este ortogonal cu lanțul proxy de ieșire documentat mai sus.
 
-### API-ul 1proxy
+### 1 proxy API
 
-| Metodă   | Punct final                            | Descriere                                  |
-| -------- | -------------------------------------- | ------------------------------------------ |
-| `GET`    | `/api/settings/oneproxy`               | Listează proxy-urile 1proxy                |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Obține statisticile + starea sincronizării |
-| `GET`    | `/api/settings/oneproxy?action=status` | Obține doar starea sincronizării           |
-| `POST`   | `/api/settings/oneproxy`               | Declanșează sincronizarea                  |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Comută la următorul proxy                  |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Șterge un proxy                            |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Șterge toate proxy-urile                   |
+| Metodă   | Punct final                            | Descriere                                    |
+| -------- | -------------------------------------- | -------------------------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | Listați 1 proxy proxy                        |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Obțineți starea de sincronizare + statistici |
+| `GET`    | `/api/settings/oneproxy?action=status` | Obțineți doar starea de sincronizare         |
+| `POST`   | `/api/settings/oneproxy`               | Declanșează sincronizarea                    |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Rotiți la următorul proxy                    |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Șterge unul                                  |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Ștergeți totul                               |
 
-### API-ul proxy-ului în amonte
+### Upstream Proxy API
 
-| Metodă   | Punct final                       | Descriere                                 |
-| -------- | --------------------------------- | ----------------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Obține configurația proxy-ului în amonte  |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Setează modul proxy-ului în amonte        |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Elimină configurația proxy-ului în amonte |
+| Metodă   | Punct final                       | Descriere                               |
+| -------- | --------------------------------- | --------------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Obțineți configurația proxy în amonte   |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Setați modul proxy în amonte            |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Eliminați configurația proxy din amonte |
 
 ---
 
 ## Variabile de mediu
 
-| Variabilă             | Valoare implicită | Descriere                                                                  |
-| --------------------- | ----------------- | -------------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`            | Activează suportul pentru proxy SOCKS5 (implicit `true` în `.env.example`) |
+| Variabilă             | Implicit | Descriere                                                          |
+| --------------------- | -------- | ------------------------------------------------------------------ |
+| `ENABLE_SOCKS5_PROXY` | `true`   | Activați suportul proxy SOCKS5 (implicit `true` în `.env.example`) |
 
 ---
 
@@ -512,45 +523,45 @@ Pentru a expune instanța OmniRoute la internetul public (Cloudflare/ngrok/Tails
 
 ### „Proxy-ul SOCKS5 este dezactivat”
 
-Setați `ENABLE_SOCKS5_PROXY=true` în fișierul `.env` și reporniți.
+Setați `ENABLE_SOCKS5_PROXY=true` în fișierul dvs. `.env` și reporniți.
 
-### Erori „socket hang up” prin proxy
+### erori "socket hang up" prin proxy
 
-Acest lucru este normal în cazul proxy-urilor ieftine care închid conexiunile inactive. OmniRoute gestionează deja această situație prin:
+Acest lucru este normal în cazul proxy-urilor ieftine care renunță la conexiunile inactive. OmniRoute se ocupă deja de acest lucru prin:
 
-- Dezactivarea keep-alive pentru conexiunile proxy (`keepAliveTimeout: 1`)
-- Dezactivarea pipelining-ului (`pipelining: 0`)
-- Memorarea în cache a dispecerilor pentru a evita repetarea handshake-urilor
+- Dezactivarea menținerii în viață pe conexiunile proxy (`keepAliveTimeout: 1`)
+- Dezactivarea conductei (`pipelining: 0`)
+- Memorarea în cache a dispecerilor pentru a evita strângerile repetate de mână
 
-Dacă problema persistă, încercați un alt proxy sau utilizați funcția de rotație 1proxy.
+Dacă persistă, încercați un alt proxy sau utilizați funcția de rotație 1proxy.
 
 ### „unsupported_country_region_territory” în timpul OAuth
 
-Asigurați-vă că proxy-ul este configurat **înainte** de a începe fluxul OAuth. OmniRoute direcționează schimbul de tokenuri OAuth prin proxy-ul configurat. Setați mai întâi un proxy global sau la nivel de furnizor, apoi conectați-vă.
+Asigurați-vă că proxy-ul este configurat** înainte** pornind fluxul OAuth. OmniRoute direcționează schimbul de token OAuth prin proxy-ul configurat. Setați mai întâi un proxy global sau la nivel de furnizor, apoi conectați-vă.
 
-### Proxy-ul nu este utilizat
+### Proxy nu este folosit
 
 Verificați ordinea de rezoluție:
 
 1. Verificați cu `GET /api/settings/proxy?resolve=your-connection-id`
-2. Verificați dacă `status` al proxy-ului este `active` (nu `inactive`)
-3. Asigurați-vă că domeniul de atribuire al proxy-ului corespunde conexiunii dvs.
+2. Verificați dacă proxy-ul `status` este `active` (nu `inactive`)
+3. Asigurați-vă că domeniul de atribuire a proxy-ului se potrivește conexiunii dvs
 
-### Sincronizarea 1proxy eșuează
+### 1 sincronizare proxy eșuată
 
-Verificați starea sincronizării:
+Verificați starea de sincronizare:
 
 ```bash
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Dacă `consecutiveFailures >= 5`, disjunctorul a fost declanșat. Reporniți serverul pentru resetare sau așteptați resetarea manuală.
+Dacă `consecutiveFailures >= 5`, întrerupătorul s-a declanșat. Reporniți serverul pentru resetare sau așteptați resetarea manuală.
 
 ---
 
 ## Schema bazei de date
 
-### Tabelul `proxy_registry`
+### `proxy_registry` Masa
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -564,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' sau 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (doar pentru 1proxy)
-  latency_ms INTEGER,                        -- milisecunde (doar pentru 1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- poate accesa Google? (1proxy)
-  last_validated TEXT,                       -- marcaj temporal ISO (1proxy)
-  country_code TEXT,                         -- cod ISO din 2 litere (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### Tabelul `proxy_assignments`
+### `proxy_assignments` Masa
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- ID-ul furnizorului, ID-ul conexiunii sau ID-ul combinației
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Verificarea stării proxy-ului (v3.8.16+)
+## Verificarea sănătății proxy (v3.8.16 +)
 
-Mecanismul **proxy fast-fail** al OmniRoute (`src/lib/proxyHealth.ts`) detectează proxy-urile nefuncționale în <2s printr-o verificare rapidă a conexiunii TCP, apoi **memorează rezultatul în cache** pentru a evita costul suplimentar pentru fiecare solicitare.
+OmniRoute lui** proxy fast-fail** mecanismul (`src/lib/proxyHealth.ts`) detectează proxy-urile nefuncționale în < 2s printr-o verificare rapidă a conexiunii TCP, apoi** memorează în cache rezultatul** pentru a evita cheltuielile generale pentru fiecare cerere.
 
 ### Cum funcționează
 
 ```
-Solicitare ──▶ ProxyHealthCache.get(url)
-                │
-                ├─ Cache găsit + recent?  ──▶ returnează starea din cache
-                │
-                └─ Cache negăsit / expirat?  ──▶ conexiune TCP la host:port
-                                                  (expirare: FAST_FAIL_TIMEOUT_MS)
-                                                  ──▶ memorare în cache pentru HEALTH_CACHE_TTL_MS
-                                                  ──▶ returnează rezultatul
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Fără acest mecanism, un proxy nefuncțional ar bloca fiecare solicitare pe întreaga durată `PROXY_TIMEOUT_MS` (implicit 30s) înainte de a eșua.
+Fără aceasta, un proxy mort ar bloca fiecare cerere pentru `PROXY_TIMEOUT_MS` complet (30 de secunde implicit) înainte de a eșua.
 
-### Variabile de mediu ajustabile
+### Variabile de mediu reglabile
 
-| Variabilă                    | Valoare implicită | Scop                                                                    |
-| ---------------------------- | ----------------- | ----------------------------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`            | Timpul de expirare al conexiunii TCP pentru fiecare verificare de stare |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`           | Durata memorării în cache a rezultatului verificării de stare           |
+| Variabilă                    | Implicit | Scop                                                            |
+| ---------------------------- | -------- | --------------------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`   | TCP timeout pentru conexiune per verificarea stării de sănătate |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`  | Cât timp este stocat în cache un rezultat de sănătate           |
 
 **Valori recomandate:**
 
-| Scenariu                     | Timp de expirare fast-fail | TTL cache | Motivație                                                                                              |
-| ---------------------------- | -------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
-| Gateway API cu trafic intens | 1500ms                     | 60000ms   | Eșec rapid agresiv, cache mai lung pentru reducerea verificărilor                                      |
-| Noduri distribuite geografic | 3000ms                     | 15000ms   | Rețelele mai lente necesită mai mult timp; cache mai scurt pentru comutare rapidă în caz de defecțiune |
-| Dezvoltare / testare         | 1000ms                     | 10000ms   | Iterare rapidă pe proxy-urile locale                                                                   |
-| Mod discret / anti-detectare | 2500ms                     | 45000ms   | Evită sondarea rapidă care ar putea declanșa limitele de rată                                          |
+| Scenariu                  | Timeout pentru eșec rapid | Cache TTL | Raţionament                                                                           |
+| ------------------------- | ------------------------- | --------- | ------------------------------------------------------------------------------------- |
+| Gateway API de mare debit | 1500 ms                   | 60000 ms  | Cache agresivă, rapidă, mai lungă pentru a reduce verificările                        |
+| Noduri geo-distribuite    | 3000 ms                   | 15000 ms  | Rețelele mai lente au nevoie de mai mult timp; cache mai scurtă pentru failover rapid |
+| Dezvoltare / testare      | 1000 ms                   | 10000 ms  | Iterație rapidă pe proxy-uri locale                                                   |
+| Stealth / anti-detecție   | 2500 ms                   | 45000 ms  | Evitați sondarea rapidă care ar putea declanșa limite de viteză                       |
 
-### Inspectarea stării proxy-urilor
+### Inspectarea sănătății proxy
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Forțează reverificarea unui anumit proxy
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Indicatorul `stale` este `true` atunci când intrarea din cache a depășit `HEALTH_CACHE_TTL_MS`, iar următoarea solicitare va declanșa o nouă verificare.
+Indicatorul `stale` este `true` atunci când intrarea în cache a depășit `HEALTH_CACHE_TTL_MS` și următoarea solicitare va declanșa o nouă verificare.
 
-### Valori implicite pentru fiecare tip de proxy
+### Valori implicite pentru tipul de proxy
 
-Verificarea stării utilizează valori implicite adecvate în funcție de schema URL:
+Verificarea sănătății folosește valori implicite sensibile bazate pe schema URL :
 
-| Schemă                     | Port implicit |
+| Sistem                     | Port implicit |
 | -------------------------- | ------------- |
 | `http://`                  | 8080          |
 | `https://`                 | 443           |
 | `socks5://` / `socks5h://` | 1080          |
 
-Porturile personalizate din URL (`http://host:9999`) au întotdeauna prioritate față de valoarea implicită a schemei.
+Porturile personalizate din URL (`http://host:9999`) au întotdeauna prioritate față de schema implicită.
 
 ---
 
-## Analiza și observabilitatea proxy-urilor
+## Analiză proxy și observabilitate
 
-OmniRoute urmărește utilizarea fiecărui proxy pentru a ajuta operatorii să diagnosticheze tiparele de rutare, creșterile bruște ale latenței și erorile recurente.
+OmniRoute urmărește utilizarea per-proxy pentru a ajuta operatorii să diagnosticheze modelele de rutare, vârfurile de latență și eșecurile recurente.
 
-### Ce se urmărește
+### Ce este urmărit
 
-Pentru fiecare solicitare efectuată printr-un proxy configurat, OmniRoute înregistrează:
+Pentru fiecare solicitare printr-un proxy configurat, OmniRoute înregistrează:
 
-| Metrică      | Descriere                                                           |
-| ------------ | ------------------------------------------------------------------- |
-| `proxy_url`  | URL-ul complet al proxy-ului (datele de autentificare sunt mascate) |
-| `provider`   | ID-ul furnizorului upstream (openai, anthropic etc.)                |
-| `latency_ms` | Durata totală dus-întors, inclusiv negocierea cu proxy-ul           |
-| `connect_ms` | Doar durata conexiunii TCP                                          |
-| `status`     | Codul de stare HTTP primit de la upstream                           |
-| `error`      | Clasa erorii, dacă solicitarea a eșuat                              |
-| `timestamp`  | ISO 8601 UTC                                                        |
+| Metric       | Descriere                                                            |
+| ------------ | -------------------------------------------------------------------- |
+| `proxy_url`  | Proxy complet URL (cu acreditările de autentificare mascate)         |
+| `provider`   | Furnizorul din amonte ID (openai, antropic etc.)                     |
+| `latency_ms` | Timp total de călătorie dus-întors, inclusiv strângere de mână proxy |
+| `connect_ms` | TCP numai timp de conectare                                          |
+| `status`     | codul de stare HTTP din amonte                                       |
+| `error`      | Clasa de eroare dacă cererea a eșuat                                 |
+| `timestamp`  | ISO 8601 UTC                                                         |
 
-### Accesarea datelor
+### Accesarea Datelor
 
 ```bash
-# Evenimente proxy recente
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Endpointul real este `/api/usage/proxy-logs` (consultați `src/app/api/usage/proxy-logs/route.ts`). Acest endpoint acceptă:
+Punctul final real este `/api/usage/proxy-logs` (vezi `src/app/api/usage/proxy-logs/route.ts`). Acest punct final acceptă:
 
 - `GET /api/usage/proxy-logs` — preia jurnalele proxy
 - `DELETE /api/usage/proxy-logs` — șterge toate jurnalele proxy
 
-Dacă este necesar, statisticile agregate pot fi interogate direct din tabelul `proxy_logs` prin SQL. Interfața tabloului de bord poate oferi vizualizări agregate.
+Statisticile agregate pot fi interogate direct din tabelul `proxy_logs` prin SQL dacă este necesar. Tabloul de bord UI poate oferi vizualizări agregate.
 
-### Tipare uzuale
+### Modele comune
 
-**Detectarea unui proxy instabil** (alternează între succes și eșec):
+**Detectați un proxy care se zbate** (alternează între success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Identificarea proxy-urilor lente** (latență p95 > 2s):
+**Găsiți proxy lente** (p95 latență > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,94 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Arbore decizional pentru strategia de rotație
+## Arborele de decizie al strategiei de rotație
 
-Atunci când mai multe proxy-uri sunt atribuite unui domeniu de aplicare, OmniRoute utilizează o **strategie de rotație** pentru a alege proxy-ul folosit pentru fiecare solicitare. Strategia este configurată la nivelul domeniului de aplicare (global, per furnizor, per cont, per combinație).
+Când mai multe proxy sunt alocate unui domeniu, OmniRoute utilizează a** strategia de rotație** pentru a alege pe care să o utilizați pentru fiecare cerere. Strategia este configurată la nivel de domeniu (global, per-furnizor, per-cont, per-combo).
 
 ### Strategii disponibile
 
-| Strategie             | Când se utilizează                           | Compromis                                                                                |
-| --------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `quality` (implicită) | Producție cu proxy-uri de calitate variabilă | Favorizează proxy-urile bine evaluate; le poate defavoriza excesiv pe cele slab evaluate |
-| `random`              | Distribuirea sarcinii, confidențialitate     | Distribuție uniformă; ignoră indicatorii de calitate                                     |
-| `sequential`          | Depanare, testare deterministă               | Parcurge proxy-urile în ordine; comportament ușor de înțeles                             |
+| Strategie            | Când să utilizați                           | Schimbul                                                                           |
+| -------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `quality` (implicit) | Producție cu proxy de calitate mixtă        | Favorizează proxy-urile cu rating ridicat; îi pot înfometei pe cei cu cote scăzute |
+| `random`             | Distribuția încărcăturii, confidențialitate | Distribuție uniformă; ignoră semnalele de calitate                                 |
+| `sequential`         | Depanare, testare deterministă              | Ciclează prin proxy în ordine; ușor de raționat                                    |
 
-### Arbore decizional
+### Arborele de decizie
 
 ```
-                    Aveți scoruri de calitate pentru proxy-uri?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       DA                      NU
+       YES                     NO
         │                       │
-   Sunt toate proxy-urile       │
-   aproximativ egale            │
-   calitativ?                   │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  DA        NU              Utilizați
+  YES       NO                Use
    │         │              `random`
-   │         │              (distribuirea
-   │         │              uniformă generează
-   │         │              în timp date
-   │         │              despre calitate)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Utilizați `quality`
-   │    (cea mai bună pentru
-   │    calitate variabilă)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-Utilizați `random`
-(distribuiți sarcina
-uniform)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Excluderea automată a propriilor proxy-uri în caz de eroare
+## Excluderea automată a erorilor pentru propriile proxy
 
-Pool-ul marketplace 1proxy retrogradează deja automat proxy-urile care eșuează (consultați
-[Scorurile de calitate ale proxy-urilor](#proxy-quality-scores)). Pentru
-proxy-urile adăugate de **dumneavoastră** în registru, planificatorul de verificări ale stării din fundal
-(`src/lib/proxyHealth/scheduler.ts`) oferă același comportament de „excludere automată
-din lanț a unui membru nefuncțional”, fără a șterge nimic:
+Grupul de piață de proxy 1 degradează deja automat proxy-urile eșuate pe cont propriu (consultați [Scorurile de calitate proxy](#proxy-quality-scores) ). Pentru proxy** tu** adăugat la registru, programatorul de sănătate de fundal (`src/lib/proxyHealth/scheduler.ts`) oferă același comportament „excluderea automată a unui membru mort din lanț”, fără a șterge nimic:
 
 ```bash
-# .env — dezactivează temporar un proxy după 3 verificări eșuate consecutiv și îl reactivează
-# automat atunci când începe să răspundă din nou la verificări.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Cum se integrează într-un lanț cu mai multe proxy-uri:
+Cum se potrivește într-un lanț multi-proxy:
 
-1. Planificatorul verifică fiecare proxy înregistrat la fiecare `PROXY_HEALTH_INTERVAL_MS`
-   (implicit 10 min; minimum 1 min).
-2. După `PROXY_AUTO_REMOVE_AFTER` eșecuri **concludente** consecutive (un eșec real
-   de conexiune — un timeout sau o eroare 5xx a țintei de verificare nu este luată niciodată în calcul; consultați
-   [Verificarea stării proxy-urilor](#proxy-health-checking-v3816)), valoarea `status` a proxy-ului este
-   setată la `dead`.
-3. `dead` este una dintre stările excluse de filtrul pentru stări active utilizat la rezolvarea
-   pool-ului/rotației, astfel încât rotația unui domeniu de aplicare (round-robin / aleatorie / persistentă /
-   după latență — consultați [Arborele decizional al strategiei de rotație](#rotation-strategy-decision-tree))
-   încetează imediat să aloce acel proxy solicitărilor noi. Niciun alt proxy din
-   pool nu este afectat, iar întregul pool nu revine niciodată în mod silențios la o conexiune
-   directă — consultați mecanismul de protecție fail-closed din [Sistemul de proxy pe 4 niveluri](#4-level-proxy-system).
-4. Planificatorul continuă să verifice proxy-urile `dead` la același interval. Următoarea
-   verificare reușită schimbă `status` înapoi la `active`, iar proxy-ul reintră în rotație —
-   fără a fi necesară readăugarea manuală.
+1. Planificatorul verifică fiecare proxy înregistrat la fiecare `PROXY_HEALTH_INTERVAL_MS` (implicit 10 min; minim 1 min).
+2. Dupa `PROXY_AUTO_REMOVE_AFTER` consecutiv** concludentă** eșecuri (o defecțiune reală a conexiunii — un timeout sau propriul 5xx al țintei probei nu contează niciodată, consultați [Verificarea sănătății proxy](#proxy-health-checking-v3816) ), `status` al proxy-ului este setat la `dead`.
+3. `dead` este una dintre stările pe care filtrul de stare activă utilizat de rezoluția pool/rotation le exclude, astfel încât rotația unui domeniu (round-robin / aleatoriu / sticky / latency — vezi [Arborele de decizie al strategiei de rotație](#rotation-strategy-decision-tree) ) încetează imediat să predea acel proxy noilor cereri. Niciun alt proxy din pool nu este afectat, iar întregul pool nu revine niciodată în tăcere la o conexiune directă — vezi [sistemul de proxy cu 4 niveluri](#4-level-proxy-system) de protecție închisă.
+4. Programatorul continuă să verifice proxy-urile `dead` în același interval. Următoarea sondă de succes întoarce `status` înapoi la `active` și reintră în rotația — nu este necesară adăugarea manuală.
 
-Această funcționalitate este în mod deliberat **opțională și nedistructivă**: în mod implicit, planificatorul doar
-contorizează și înregistrează eșecurile (consultați politica C din `decision.ts`), iar `PROXY_AUTO_DISABLE`
-nu șterge niciodată un rând — pentru aceasta există opțiunea separată și mai agresivă
-`PROXY_AUTO_REMOVE`. Dacă ambele sunt setate la `true`, `PROXY_AUTO_REMOVE`
-are prioritate (un proxy care urmează să fie șters nu are nevoie de o dezactivare temporară între timp). Consultați
-referința [Configurarea mediului](../reference/ENVIRONMENT.md) pentru lista completă
-de variabile.
+Acest lucru este în mod deliberat** opt-in și non-distructiv** : în mod implicit, planificatorul numără și înregistrează numai eșecurile (vezi politica C în `decision.ts`), iar `PROXY_AUTO_DISABLE` nu șterge niciodată un rând — pentru care este indicatorul separat, mai agresiv `PROXY_AUTO_REMOVE`. Dacă ambele sunt setate la `true`, `PROXY_AUTO_REMOVE` câștigă (un proxy pe cale de a fi șters nu are nici un folos pentru o dezactivare soft între ele). Consultați referința [Environment Config](../reference/ENVIRONMENT.md) pentru lista completă de variabile.
 
 ---
 
-> 📖 **Documentație asociată:**
+> 📖** Documentatie aferenta:**
 >
-> - [Ghidul utilizatorului](../guides/USER_GUIDE.md) — Configurare generală
-> - [Referința API](../reference/API_REFERENCE.md) — Documentația API completă
-> - [Configurarea mediului](../reference/ENVIRONMENT.md) — Toate variabilele de mediu
+> - [Ghidul utilizatorului](../guides/USER_GUIDE.md) — Configurare generală și configurare - [API Referință](../reference/API_REFERENCE.md) — Documentație completă API - [Environment Config](../reference/ENVIRONMENT.md) — Toate variabilele de mediu

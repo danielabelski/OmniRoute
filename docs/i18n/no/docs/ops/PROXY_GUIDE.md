@@ -4,24 +4,24 @@
 
 ---
 
-> **Omgå geografiske blokkeringer, beskytt identiteten din og rut AI-trafikk gjennom hvilken som helst proxy — helt uten komplisert konfigurasjon.**
+> **Omgå geografiske blokkeringer, beskytt identiteten din og rute AI -trafikk gjennom en hvilken som helst proxy- — med null konfigurasjonskompleksitet.**
 
-OmniRoute inkluderer et komplett system for proxyadministrasjon som lar deg rute trafikk til eksterne AI-leverandører gjennom HTTP-, HTTPS- eller SOCKS5-proxyer. Enten du befinner deg i en blokkert region, trenger IP-rotasjon eller ønsker skjult fingeravtrykksbeskyttelse — denne veiledningen dekker alt.
+OmniRoute inkluderer et fullverdig proxy-administrasjonssystem som lar deg rute oppstrøms AI leverandørtrafikk gjennom HTTP, HTTPS eller SOCKS5 proxyer. Enten du er i et blokkert område, trenger IP rotasjon eller vil ha stealth fingeravtrykk — dekker denne veiledningen alt.
 
 ---
 
 ## Innholdsfortegnelse
 
 - [Hvorfor bruke proxyer?](#why-use-proxies)
-- [Arkitekturoversikt](#architecture-overview)
-- [Proxysystem med 4 nivåer](#4-level-proxy-system)
-- [Proxyregister (CRUD)](#proxy-registry-crud)
-- [1proxy – gratis markedsplass](#1proxy-free-proxy-marketplace)
-- [Proxyrotasjon](#proxy-rotation)
-- [Antideteksjon og skjult modus](#anti-detection--stealth)
-- [Moduser for oppstrømsproxy](#upstream-proxy-modes)
-- [Brukergrensesnitt for kontrollpanelet](#dashboard-ui)
-- [API-referanse](#api-reference)
+- [Oversikt over arkitektur](#architecture-overview)
+- [4-nivå proxy-system](#4-level-proxy-system)
+- [Fullmaktsregister (CRUD)](#proxy-registry-crud)
+- [1proxy gratis markedsplass](#1proxy-free-proxy-marketplace)
+- [Proxy-rotasjon](#proxy-rotation)
+- [Anti-deteksjon og stealth](#anti-detection--stealth)
+- [Oppstrøms proxy-moduser](#upstream-proxy-modes)
+- [Dashboard UI](#dashboard-ui)
+- [API Referanse](#api-reference)
 - [Miljøvariabler](#environment-variables)
 - [Feilsøking](#troubleshooting)
 
@@ -29,123 +29,134 @@ OmniRoute inkluderer et komplett system for proxyadministrasjon som lar deg rute
 
 ## Hvorfor bruke proxyer?
 
-Mange AI-leverandører begrenser tilgangen basert på geografisk region. Utviklere i **Russland, Kina, Iran, Cuba, Tyrkia** og andre land støter på feil som:
+Mange AI leverandører begrenser tilgangen etter geografisk region. Utviklere i** Russland, Kina, Iran, Cuba, Tyrkia** , og andre land støter på feil som:
 
 ```
 unsupported_country_region_territory
 ```
 
-Selv utenfor blokkerte regioner er proxyer nyttige for:
+Selv utenfor blokkerte områder er proxyer nyttige for:
 
-| Bruksområde             | Beskrivelse                                                                |
-| ----------------------- | -------------------------------------------------------------------------- |
-| **Geografisk omgåelse** | Få tilgang til OpenAI, Anthropic, Codex og Copilot fra blokkerte land      |
-| **IP-rotasjon**         | Fordel forespørsler mellom flere IP-adresser for å unngå hastighetsgrenser |
-| **Personvern**          | Skjul den virkelige IP-adressen din for eksterne leverandører              |
-| **Samsvar**             | Rut trafikk gjennom bestemte jurisdiksjoner                                |
-| **Testing**             | Simuler forespørsler fra ulike regioner                                    |
+| Bruk Case             | Beskrivelse                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| **Geografisk bypass** | Få tilgang til OpenAI, Anthropic, Codex, Copilot fra blokkerte land |
+| **IP rotasjon**       | Fordel forespørsler på flere IPs for å unngå hastighetsbegrensning  |
+| **Privatliv**         | Skjul din ekte IP fra oppstrømsleverandører                         |
+| **Overholdelse**      | Ruter trafikk gjennom spesifikke jurisdiksjoner                     |
+| **Testing**           | Simuler forespørsler fra forskjellige regioner                      |
 
 ---
 
-## Arkitekturoversikt
+## Oversikt over arkitektur
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       OmniRoute-server                        │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Proxy-      │    │ Proxy-       │    │ Proxy-           │  │
-│  │ register    │───▶│ fordeler     │───▶│ henting (undici) │  │
-│  │ (SQLite)    │    │ (bufret)     │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ 1proxy-     │                        │ Ekstern          │  │
-│  │ synkronisering│                      │ leverandør-API   │  │
-│  │ (gratis utvalg)│                     │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 ### Nøkkelkomponenter
 
-| Komponent               | Fil                                          | Rolle                                                              |
-| ----------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
-| **Proxyregister**       | `src/lib/db/proxies.ts`                      | CRUD for proxyoppføringer og omfangstildelinger                    |
-| **Proxyfordeler**       | `open-sse/utils/proxyDispatcher.ts`          | Oppretter `undici` ProxyAgent-/SOCKS-dispatchere med hurtigbufring |
-| **Proxyhenting**        | `open-sse/utils/proxyFetch.ts`               | Pakker inn `fetch()` med injisering av proxyfordeler               |
-| **Innstillingsrute**    | `src/app/api/settings/proxy/route.ts`        | Eldre API for proxykonfigurasjon (GET/PUT/DELETE)                  |
-| **Administrasjonsrute** | `src/app/api/v1/management/proxies/route.ts` | CRUD-API for registeret (GET/POST/PATCH/DELETE)                    |
-| **1proxy-database**     | `src/lib/db/oneproxy.ts`                     | Vedvarende lagring for markedsplassen med gratis proxyer           |
+| Komponent              | Fil                                          | Rolle                                                         |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| **Fullmaktsregister**  | `src/lib/db/proxies.ts`                      | CRUD for proxy-oppføringer + scope-tilordninger               |
+| **Fullmaktsavsender**  | `open-sse/utils/proxyDispatcher.ts`          | Oppretter `undici` ProxyAgent/SOCKS -ekspeditører med caching |
+| **Fullmaktshenting**   | `open-sse/utils/proxyFetch.ts`               | Omslutter `fetch()` med proxy-dispatcher-injeksjon            |
+| **Innstillinger Rute** | `src/app/api/settings/proxy/route.ts`        | Eldre proxy-konfigurasjon API (GET/PUT/DELETE)                |
+| **Forvaltningsrute**   | `src/app/api/v1/management/proxies/route.ts` | Register CRUD API (GET/POST/PATCH/DELETE)                     |
+| **1 proxy DB**         | `src/lib/db/oneproxy.ts`                     | Gratis proxy markedsplass utholdenhet                         |
 
 ---
 
-## 4-nivåers proxysystem
+## Standard proxy-status for nye kontoer
 
-OmniRoute støtter proxykonfigurasjon på **fire uavhengige nivåer**, som løses i prioritert rekkefølge:
+I** Innstillinger → Proxy → Global konfigurasjon** , bruk** Aktiver proxy som standard for nye tilkoblinger** for å velge den opprinnelige proxy-statusen for nylig lagt til leverandørkontoer.
+
+Den nye innstillingen kontrollerer den opprinnelige proxy-statusen til nylig lagt til leverandørkontoer. Den endrer ikke eksisterende kontoer eller erstatter den globale proxy-svitsjen. Startverdien bevarer den forrige oppførselen. Slå den av én gang for å opprette fremtidige kontoer med proxy deaktivert som standard.
+
+Preferansen lagres som `defaultNewConnectionProxyEnabled` gjennom de eksisterende innstillingene API. Den er standard til `true` når den aldri lagres. Lagring av `false` trer i kraft for påfølgende nye kontoer uten omstart. `POST /api/providers` aksepterer en valgfri streng boolsk `proxyEnabled`; en eksplisitt `true` eller `false` har forrang over opprettelsesstandarden. Utelatelse av en duplikatkonto eller OAuth reconnect bevarer kontoens lagrede tilstand. Individuelle kontoer kan fortsatt aktiveres eller deaktiveres etterpå.
+
+Selektive leverandøroverføringer bruker destinasjonsinstallasjonens standard for nye kontoer og bevarer destinasjonspolicyen når de erstatter eksisterende kontoer. Proxy-vekslere er ikke bærbare overføringsfelt. Full sikkerhetskopigjenoppretting og historisk JSON/SQL -migrering beholder sin eksisterende gjenopprettingssemantikk, inkludert lagrede kontoverdier og eldre skjemastandarder; en fullstendig gjenoppretting av innstillinger kan også gjenopprette denne preferansen.
+
+Denne preferansen tildeler ikke en proxy eller fastslår at en er sunn eller i bruk. Faktisk ruting avhenger fortsatt av den globale proxy-svitsjen og gjeldende proxy-konfigurasjon. Syntetiske leverandører uten en vedvarende konto, OAuth -trafikk før kontooppretting, environment/system proxyer og eksterne backends nettverk er utenfor omfanget.
+
+## 4-nivå proxy-system
+
+OmniRoute støtter proxy-konfigurasjon på** fire uavhengige omfang** , løst i prioritert rekkefølge:
 
 ```
-Prioritert løsningsrekkefølge (høyest → lavest):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Konto-/tilkoblingsproxy  →  per API-nøkkel / OAuth-tilkobling
-  2. 🟡 Leverandørproxy          →  per leverandør (f.eks. all OpenAI-trafikk)
-  3. 🟠 Kombinasjonsproxy        →  per kombinasjons-/rutingskonfigurasjon
-  4. 🟢 Global proxy             →  all trafikk, alle leverandører
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Slik fungerer løsningen
+### Hvordan oppløsning fungerer
 
-Når OmniRoute sender en forespørsel til en oppstrømsleverandør, kalles `resolveProxyForConnectionFromRegistry()`, som kontrollerer hvert nivå i rekkefølge:
+Når OmniRoute sender en forespørsel til en oppstrømsleverandør, kaller den `resolveProxyForConnectionFromRegistry()` som sjekker hvert nivå i rekkefølge:
 
-1. **Kontonivå** — Er en proxy tilordnet denne spesifikke tilkoblings-ID-en?
-2. **Leverandørnivå** — Er en proxy tilordnet denne leverandøren (f.eks. `openai`)?
-3. **Globalt nivå** — Er en global proxy konfigurert?
+1. **Kontonivå** — Er det en proxy tilordnet denne spesifikke tilkoblingen ID?
+2. **Leverandørnivå** — Er det en proxy tilordnet denne leverandøren (f.eks. `openai`)?
+3. **Globalt nivå** — Er det konfigurert en global proxy?
 4. **Ingen proxy** — Direkte tilkobling til leverandøren.
 
-Det første treffet vinner. Dette betyr at du kan angi en global proxy som reserve, men overstyre den for bestemte leverandører eller tilkoblinger.
+Den første kampen vinner. Dette betyr at du kan angi en global proxy som en reserve, men overstyre den for spesifikke leverandører eller tilkoblinger.
 
-### Hva som rutes gjennom proxy
+### Hva får fullmakt
 
-| Trafikktype           | Via proxy? | Merknader                                    |
-| --------------------- | ---------- | -------------------------------------------- |
-| Chat-fullføringer     | ✅         | Alle `/v1/chat/completions`-forespørsler     |
-| Embeddings            | ✅         | `/v1/embeddings`                             |
-| Bildegenerering       | ✅         | `/v1/images/generations`                     |
-| Lyd (TTS/STT)         | ✅         | `/v1/audio/*`                                |
-| OAuth-tokenutveksling | ✅         | Løser `unsupported_country_region_territory` |
-| Tilkoblingstester     | ✅         | Knappen «Test tilkobling» bruker proxy       |
-| Tokenfornyelse        | ✅         | OAuth-fornyelse i bakgrunnen                 |
-| Modellsynkronisering  | ✅         | Modelliste og -oppdagelse                    |
+| Trafikktype            | Fullmakt? | Notater                                      |
+| ---------------------- | --------- | -------------------------------------------- |
+| Chatfullføringer       | ✅        | Alle `/v1/chat/completions` forespørsler     |
+| Innstøpninger          | ✅        | `/v1/embeddings`                             |
+| Bildegenerering        | ✅        | `/v1/images/generations`                     |
+| Lyd (TTS/STT)          | ✅        | `/v1/audio/*`                                |
+| OAuth token utveksling | ✅        | Løser `unsupported_country_region_territory` |
+| Tilkoblingstester      | ✅        | "Test tilkobling"-knappen bruker proxy       |
+| Token-oppdatering      | ✅        | Bakgrunn OAuth fornyelse                     |
+| Modellsynkronisering   | ✅        | Modellliste og funn                          |
 
 ---
 
-## Proxyregister (CRUD)
+## Fullmaktsregister (CRUD)
 
-Proxyregisteret er en SQLite-tabell (`proxy_registry`) som lagrer alle proxyene dine. Hver proxy har:
+Proxy-registeret er en SQLite tabell (`proxy_registry`) som lagrer alle proxyene dine. Hver proxy har:
 
-| Felt       | Type    | Beskrivelse                                         |
-| ---------- | ------- | --------------------------------------------------- |
-| `id`       | UUID    | Unik identifikator                                  |
-| `name`     | String  | Menneskelesbar etikett                              |
-| `type`     | String  | Protokoll: `http`, `https`, `socks5`                |
-| `host`     | String  | Proxyens vertsnavn eller IP-adresse                 |
-| `port`     | Integer | Portnummer                                          |
-| `username` | String  | Brukernavn for autentisering (kryptert ved lagring) |
-| `password` | String  | Passord for autentisering (kryptert ved lagring)    |
-| `region`   | String  | Etikett for geografisk region                       |
-| `notes`    | String  | Fritekstnotater                                     |
-| `status`   | String  | `active` eller `inactive`                           |
-| `source`   | String  | `manual` eller `oneproxy`                           |
+| Felt       | Type    | Beskrivelse                          |
+| ---------- | ------- | ------------------------------------ |
+| `id`       | UUID    | Unik identifikator                   |
+| `name`     | String  | Etikett som kan leses av mennesker   |
+| `type`     | String  | Protokoll: `http`, `https`, `socks5` |
+| `host`     | String  | Proxy-vertsnavn eller IP             |
+| `port`     | Heltall | Portnummer                           |
+| `username` | String  | Auth-brukernavn (kryptert i hvile)   |
+| `password` | String  | Auth-passord (kryptert i hvile)      |
+| `region`   | String  | Etikett for geografisk område        |
+| `notes`    | String  | Fritekstnotater                      |
+| `status`   | String  | `active` eller `inactive`            |
+| `source`   | String  | `manual` eller `oneproxy`            |
 
 ### Opprette en proxy
 
-**Via kontrollpanelet:**
+**Via Dashboard:**
 
-1. Gå til **Innstillinger → Proxy**
-2. Klikk på **Legg til proxy**
-3. Fyll ut type, vert, port og eventuelle autentiseringsopplysninger
-4. Lagre
+1. Gå til** Innstillinger → Proxy**
+2. Klikk** Legg til proxy**
+3. Fyll inn påloggingsinformasjonen for type, vert, port og valgfri autentisering
+4. Spare
 
 **Via API:**
 
@@ -163,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Oppdatere en proxy
+### Oppdatering av en proxy
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -175,54 +186,54 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Merk:** Påloggingsopplysninger beholdes med mindre du uttrykkelig sender ikke-tomme erstatninger. Hvis du sender tomme strenger for `username`/`password`, beholdes de lagrede verdiene.
+> **Note:** Legitimasjonen er bevart med mindre du eksplisitt sender ikke-tomme erstatninger. Sending av tomme strenger for `username`/`password` vil beholde de lagrede verdiene.
 
-### Slette en proxy
+### Sletting av en proxy
 
 ```bash
-# Mislykkes hvis proxyen er tilordnet et nivå
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Tving sletting (fjerner også tilordninger)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Vise proxyer
+### Oppføringsfullmakter
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Tilordne proxyer til nivåer
+### Tilordne fullmakter til Scopes
 
 ```bash
-# Tilordne til globalt nivå
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Tilordne til en bestemt leverandør
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Tilordne til en bestemt tilkobling/nøkkel
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Fastslå gjeldende proxy
+### Løser effektiv proxy
 
-Kontroller hvilken proxy som vil bli brukt for en gitt tilkobling:
+Sjekk hvilken proxy som skal brukes for en gitt tilkobling:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Returnerer den valgte proxyen med nivået (`account`, `provider` eller `global`) og kilden.
+Returnerer den løste proxyen med nivået (`account`, `provider` eller `global`) og kilden.
 
-### Massetilordning
+### Masseoppdrag
 
 Tilordne én proxy til flere leverandører eller tilkoblinger samtidig:
 
@@ -236,184 +247,184 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### Import/eksport
+### Import/Export
 
-Proxyer er inkludert i systemet for **sikkerhetskopiering/gjenoppretting**. Når du eksporterer OmniRoute-konfigurasjonen:
+Fullmakter er inkludert i**Backup/Restore** system. Når du eksporterer OmniRoute konfigurasjonen:
 
-1. Gå til **Kontrollpanel → Innstillinger → Sikkerhetskopiering**
-2. Klikk på **Eksporter** — proxyregisteret og tilordningene er inkludert
-3. For å gjenopprette klikker du på **Importer** og laster opp sikkerhetskopifilen
+1. Gå til** Dashboard → Innstillinger → Backup**
+2. Klikk** Eksport** — proxy-register og oppdrag er inkludert
+3. Klikk på for å gjenopprette** Import** og last opp sikkerhetskopifilen
 
-Proxyregisteret støtter også **upsert etter vert+port** — hvis du importerer en proxy som allerede finnes (samme vert og port), oppdateres den i stedet for at det opprettes et duplikat.
+Proxy-registeret støtter også** upsert av vert + port** — hvis du importerer en proxy som allerede eksisterer (samme vert og port), oppdateres den i stedet for å lage en duplikat.
 
-### Migrering fra eldre versjoner
+### Eldre migrasjon
 
-Hvis du konfigurerte proxyer i en eldre versjon (før registeret), migrerer OmniRoute dem automatisk:
+Hvis du konfigurerte proxyer i en eldre versjon (pre-register), migrerer OmniRoute dem automatisk:
 
 ```
-Eldre key_value-lager → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Dette skjer én gang ved første oppstart etter oppgraderingen. Bruk `migrateLegacyProxyConfigToRegistry({ force: true })` for å kjøre migreringen på nytt.
+Dette skjer én gang ved første oppstart etter oppgradering. Bruk `migrateLegacyProxyConfigToRegistry({ force: true })` for å kjøre på nytt.
 
 ---
 
-## 1proxy-markedsplass for gratis proxyer
+## 1proxy gratis proxy-markedsplass
 
-> 🆕 **Bidratt av [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (sak [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** Bidraget av [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (utgave [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute integreres med fellesskapsplattformen **[1proxy](https://1proxy-api.aitradepulse.com)** for å gi tilgang til **hundrevis av gratis, validerte proxyer** fra hele verden. Dette er perfekt for brukere som ikke har sin egen proxy-infrastruktur.
+OmniRoute integreres med** [1 proxy](https://1proxy-api.aitradepulse.com)** fellesskapsplattform å gi tilgang til** hundrevis av gratis, validerte proxyer** fra hele verden. Dette er perfekt for brukere som ikke har sin egen proxy-infrastruktur.
 
-### Slik fungerer det
+### Hvordan det fungerer
 
 ```
-┌─────────────┐  Synkroniser  ┌─────────────────┐    Roter      ┌──────────┐
-│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Leverandør│
-│  (ekstern)  │  opptil 500   │  source=oneproxy │ etter kvalitet│   API    │
-└─────────────┘    proxyer    └─────────────────┘               └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Synkroniser** — OmniRoute henter validerte proxyer fra 1proxy API-et
-2. **Lagre** — Proxyene lagres i den samme `proxy_registry`-tabellen med `source = 'oneproxy'`
-3. **Filtrer** — Filtrer etter protokoll, land og kvalitetspoeng
-4. **Roter** — Velg den beste proxyen ved hjelp av kvalitetsbaserte, tilfeldige eller sekvensielle strategier
-5. **Automatisk nedgradering** — Mislykkede proxyer får redusert kvalitetspoengsummen sin; under terskelen → merkes som inaktive
+1. **Synkroniser** — OmniRoute henter validerte proxyer fra 1proxy API
+2. **Lager** — Proxyer lagres i samme `proxy_registry` tabell som `source = 'oneproxy'`
+3. **Filter** — Filtrer etter protokoll, land, kvalitetspoeng
+4. **Rotere** — Velg den beste proxyen ved å bruke kvalitets-, tilfeldige eller sekvensielle strategier
+5. **Automatisk nedbrytning** — Mislykkede fullmakter får redusert kvalitetspoengsum; under terskel → markert som inaktiv
 
-### Synkronisering av proxyer
+### Synkroniserer proxyer
 
-**Via kontrollpanelet:**
+**Via Dashboard:**
 
-1. Gå til fanen **Innstillinger → 1proxy**
-2. Klikk på **«Synkroniser nå»**
-3. Vis statistikk: totalt antall proxyer, antall aktive, gjennomsnittlig kvalitet og fordeling etter land
+1. Gå til** Innstillinger → 1proxy** fanen
+2. Klikk** "Synkroniser nå"**
+3. Se statistikk: totalt antall fullmakter, antall aktive, gjennomsnittlig kvalitet, fordeling etter land
 
 **Via API:**
 
 ```bash
-# Start synkronisering
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Svar:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
 ### Filtrering av proxyer
 
 ```bash
-# Filtrer etter protokoll
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Filtrer etter land
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Filtrer etter minste kvalitetspoengsum
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Kombiner filtre
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Kvalitetspoeng for proxyer
+### Proxy kvalitetspoeng
 
-Hver proxy fra 1proxy leveres med metadata:
+Hver 1proxy proxy kommer med metadata:
 
-| Felt            | Beskrivelse                                     |
-| --------------- | ----------------------------------------------- |
-| `qualityScore`  | Vurdering fra 0–100 basert på 1proxy-validering |
-| `latencyMs`     | Målt nettverksforsinkelse                       |
-| `anonymity`     | `transparent`, `anonymous` eller `elite`        |
-| `googleAccess`  | Om proxyen har tilgang til Google-tjenester     |
-| `countryCode`   | ISO-landskode på to bokstaver                   |
-| `lastValidated` | Tidsstempel for siste validering                |
+| Felt            | Beskrivelse                                    |
+| --------------- | ---------------------------------------------- |
+| `qualityScore`  | 0-100 rangering fra 1 proxy-validering         |
+| `latencyMs`     | Målt nettverksforsinkelse                      |
+| `anonymity`     | `transparent`, `anonymous` eller `elite`       |
+| `googleAccess`  | Om proxyen kan få tilgang til Google tjenester |
+| `countryCode`   | To-bokstavs ISO -landskode                     |
+| `lastValidated` | Tidsstempel for siste validering               |
 
-Kvalitetspoengene justeres dynamisk:
+Kvalitetspoeng justeres dynamisk:
 
-- **Mislykkede forespørsler** reduserer poengsummen med 10 poeng
-- **Poengsummen faller til ≤10** → proxyen merkes som `inactive`
-- Inaktive proxyer utelates fra rotasjonen
+- **Mislykkede forespørsler** redusere poengsummen med 10 poeng
+- **Poengsummen synker til ≤ 10** → proxy er merket med `inactive`
+- Inaktive fullmakter er ekskludert fra rotasjon
 
 ### Rotasjonsstrategier
 
 ```bash
-# Roter etter kvalitet (beste proxy først) — standard
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Tilfeldig rotasjon
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Sekvensiell (minst nylig validert først)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Kretsbryter
+### Strømbryter
 
-1proxy-synkroniseringen har en innebygd kretsbryter:
+1proxy sync har en innebygd kretsbryter:
 
-- Etter **5 sammenhengende synkroniseringsfeil** blokkeres flere synkroniseringsforsøk
+- Etter** 5 påfølgende synkroniseringsfeil** , blokkeres ytterligere synkroniseringsforsøk
 - Tilbakestill med: `resetOneproxyCircuitBreaker()` eller start serveren på nytt
 - Synkroniseringsstatus er tilgjengelig på `GET /api/settings/oneproxy?action=status`
 
-### Sletting av 1proxy-proxyer
+### Sletting av 1proxy proxyer
 
 ```bash
-# Slett én enkelt 1proxy-proxy
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# Slett ALLE 1proxy-proxyer (manuelle proxyer berøres ikke)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Antideteksjon og skjuling
+## Anti-deteksjon og stealth
 
-OmniRoute ruter ikke bare trafikk gjennom en proxy — det får også trafikken til å se legitim ut:
+OmniRoute ruter ikke bare trafikk gjennom en proxy — det får trafikken til å se legitim ut:
 
-### Forfalskning av TLS-fingeravtrykk
+### TLS Fingeravtrykkspoofing
 
-Bruker `wreq-js` til å generere nettleserlignende TLS-fingeravtrykk og omgår dermed botdeteksjonssystemer som flagger TLS-håndtrykk som ikke kommer fra nettlesere.
+Bruker `wreq-js` til å generere nettleserlignende TLS -fingeravtrykk, og omgår botdeteksjonssystemer som flagger TLS -håndtrykk som ikke er nettlesere.
 
-### Samsvar med CLI-fingeravtrykk
+### CLI Fingerprint Matching
 
-**Bryteren for CLI-fingeravtrykk** (`Innstillinger → Sikkerhet`) endrer rekkefølgen på HTTP-hoder og felt i JSON-innholdet slik at de samsvarer med den nøyaktige signaturen til opprinnelige CLI-binærfiler (Claude Code, Codex osv.). Dette fungerer **i tillegg til** proxyen:
+De**CLI Fingerprint Toggle** (`Settings → Security`) omorganiserer HTTP overskrifter og JSON kroppsfelt for å matche den nøyaktige signaturen til opprinnelige CLI binærfiler (Claude -kode, Codex, etc.). Dette fungerer** på toppen av** proxy:
 
 ```
-Din IP (blokkert) → Proxy-IP (USA) → Leverandør-API
-                     + TLS-forfalskning
-                     + CLI-fingeravtrykk
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Du får både **IP-maskering** og **forespørselsautentisitet** samtidig.
+Du får begge deler**IP maskering** og** be om autentisitet** samtidig.
 
-### Bevaring av proxy-IP
+### Proxy IP Bevaring
 
-Fargekodede merker i kontrollpanelet viser hvilket proxynivå som er aktivt:
+Fargekodede merker i dashbordet viser hvilket proxy-nivå som er aktivt:
 
-| Merke | Nivå       | Betydning                                      |
-| ----- | ---------- | ---------------------------------------------- |
-| 🟢    | Globalt    | All trafikk går gjennom denne proxyen          |
-| 🟡    | Leverandør | Bare trafikk fra denne leverandøren proxes     |
-| 🔵    | Tilkobling | Denne bestemte nøkkelen/kontoen bruker proxyen |
+| Skilt | Nivå        | Betydning                                       |
+| ----- | ----------- | ----------------------------------------------- |
+| 🟢    | Global      | All trafikk går gjennom denne proxyen           |
+| 🟡    | Leverandør  | Bare denne leverandørens trafikk er proxy       |
+| 🔵    | Forbindelse | Denne spesifikke key/account bruker denne proxy |
 
-Merket viser også den fastslåtte proxy-IP-en for verifisering.
+Merket viser også den løste proxy IP for verifisering.
 
 ---
 
-## Oppstrøms proxymoduser
+## Oppstrøms proxy-moduser
 
-For leverandører som bruker CLIProxyAPI-mønsteret, støtter OmniRoute tre oppstrøms proxymoduser:
+For leverandører som bruker CLIProxyAPI -mønsteret, støtter OmniRoute tre oppstrøms proxy-moduser:
 
-| Modus         | Beskrivelse                                                   |
-| ------------- | ------------------------------------------------------------- |
-| `native`      | OmniRoute håndterer proxyruting direkte (standard)            |
-| `cliproxyapi` | Delegerer til en ekstern CLIProxyAPI-instans                  |
-| `fallback`    | Prøver opprinnelig modus først og går tilbake til CLIProxyAPI |
+| Modus         | Beskrivelse                                         |
+| ------------- | --------------------------------------------------- |
+| `native`      | OmniRoute håndterer proxy-ruting direkte (standard) |
+| `cliproxyapi` | Delegerer til en ekstern CLIProxyAPI instans        |
+| `fallback`    | Prøver native først, faller tilbake til CLIProxyAPI |
 
 Konfigurer per leverandør:
 
@@ -425,132 +436,132 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## Brukergrensesnitt for kontrollpanelet
+## Dashboard UI
 
-### Innstillinger → Proxy-fanen
+### Innstillinger → Proxy Tab
 
-- Konfigurasjon av **global proxy** (angi én gang for all trafikk)
-- **Proxyoverstyringer per leverandør**
-- **Proxytildelinger per tilkobling**
+- **Global proxy** konfigurasjon (sett én gang for all trafikk)
+- **Per-leverandør proxy** overstyrer
+- **Proxy per tilkobling** oppdrag
 - **Tilkoblingstest** gjennom konfigurert proxy
-- **Fargekodede merker** som viser aktivt proxynivå
+- **Fargekodede merker** viser aktivt proxy-nivå
 
-### Innstillinger → 1proxy-fanen
+### Innstillinger → 1proxy Tab
 
-- **Synkroniser nå**-knapp for å hente gratis proxyer
-- **Statistikkort**: Totalt, Aktive, Gjennomsnittlig kvalitet, Siste synkronisering
-- **Filtre**: Protokoll, Landskode, Minimumskvalitet
-- **Proxytabell** med vert, protokoll, land, kvalitetspoeng, ventetid, anonymitet og Google-tilgang
-- **Synkroniseringsstatuspanel** med sporing av vellykkede/mislykkede forsøk og antall påfølgende feil
+- **Synkroniser nå** knappen for å hente gratis proxyer
+- **Statistikk kort** : Total, Aktiv, Gj.sn. kvalitet, Siste synkronisering
+- **Filtre** : Protokoll, Landskode, Min kvalitet
+- **Fullmaktstabell** med vert, protokoll, land, kvalitetspoeng, ventetid, anonymitet, Google -tilgang
+- **Synkroniseringsstatus** panel med success/failure -sporing og påfølgende feiltelling
 - **Fjern alle** for å fjerne alle 1proxy-oppføringer
 
 ---
 
-## API-referanse
+## API Referanse
 
-### API for proxyinnstillinger
+### Proxy-innstillinger API
 
-| Metode   | Endepunkt                                      | Beskrivelse                         |
-| -------- | ---------------------------------------------- | ----------------------------------- |
-| `GET`    | `/api/settings/proxy`                          | Hent fullstendig proxykonfigurasjon |
-| `GET`    | `/api/settings/proxy?level=global`             | Hent global proxy                   |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Hent leverandørproxy                |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Fastslå gjeldende proxy             |
-| `PUT`    | `/api/settings/proxy`                          | Oppdater proxykonfigurasjon         |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Fjern proxy på angitt nivå          |
+| Metode   | Endepunkt                                      | Beskrivelse                  |
+| -------- | ---------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Få full proxy-konfigurasjon  |
+| `GET`    | `/api/settings/proxy?level=global`             | Få global proxy              |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Få leverandørproxy           |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Løs effektiv proxy           |
+| `PUT`    | `/api/settings/proxy`                          | Oppdater proxy-konfigurasjon |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Fjern proxy på nivå          |
 
-### API for proxyregister
+### Fullmaktsregister API
 
-| Metode   | Endepunkt                                         | Beskrivelse                 |
-| -------- | ------------------------------------------------- | --------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Vis alle proxyer            |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Hent proxy etter ID         |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Hent proxytildelinger       |
-| `POST`   | `/api/v1/management/proxies`                      | Opprett proxy               |
-| `PATCH`  | `/api/v1/management/proxies`                      | Oppdater proxy              |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Slett proxy                 |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Tving sletting              |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Massetildel                 |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Vis tildelinger             |
-| `GET`    | `/api/v1/management/proxies/health`               | Helsestatistikk for proxyer |
+| Metode   | Endepunkt                                         | Beskrivelse               |
+| -------- | ------------------------------------------------- | ------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | List opp alle fullmakter  |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | Få proxy av ID            |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Få proxy-oppdrag          |
+| `POST`   | `/api/v1/management/proxies`                      | Opprett proxy             |
+| `PATCH`  | `/api/v1/management/proxies`                      | Oppdater proxy            |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Slett proxy               |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Tving sletting            |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Massetilordning           |
+| `GET`    | `/api/v1/management/proxies/assignments`          | List opp oppgaver         |
+| `GET`    | `/api/v1/management/proxies/health`               | Helsestatistikk for proxy |
 
-### API for tunneler
+### Tunneler API
 
-Hvis du vil eksponere OmniRoute-instansen din på det offentlige internettet (Cloudflare/ngrok/Tailscale) i stedet for å rute utgående trafikk gjennom en proxy, kan du se [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). REST-API-et for tunneler ligger under `/api/tunnels/{cloudflared,ngrok,tailscale}/*` og er uavhengig av den utgående proxykjeden som er dokumentert ovenfor.
+For å eksponere OmniRoute forekomsten din for det offentlige Internett (Cloudflare/ngrok/Tailscale) i stedet for å rute utgående gjennom en proxy, se [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md). Tunnelen REST API lever under `/api/tunnels/{cloudflared,ngrok,tailscale}/*` og er ortogonal til den utgående proxy-kjeden som er dokumentert ovenfor.
 
-### API for 1proxy
+### 1 proxy API
 
-| Metode   | Endepunkt                              | Beskrivelse                             |
-| -------- | -------------------------------------- | --------------------------------------- |
-| `GET`    | `/api/settings/oneproxy`               | Vis 1proxy-proxyer                      |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Hent statistikk + synkroniseringsstatus |
-| `GET`    | `/api/settings/oneproxy?action=status` | Hent bare synkroniseringsstatus         |
-| `POST`   | `/api/settings/oneproxy`               | Utløs synkronisering                    |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Bytt til neste proxy                    |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Slett én                                |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Fjern alle                              |
+| Metode   | Endepunkt                              | Beskrivelse                  |
+| -------- | -------------------------------------- | ---------------------------- |
+| `GET`    | `/api/settings/oneproxy`               | List opp 1 proxy-fullmakter  |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Få statistikk + sync status  |
+| `GET`    | `/api/settings/oneproxy?action=status` | Få kun synkroniseringsstatus |
+| `POST`   | `/api/settings/oneproxy`               | Utløs synkronisering         |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Roter til neste proxy        |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Slett en                     |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Fjern alle                   |
 
-### API for oppstrøms proxy
+### Oppstrøms proxy API
 
-| Metode   | Endepunkt                         | Beskrivelse                        |
-| -------- | --------------------------------- | ---------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Hent oppstrøms proxykonfigurasjon  |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Angi oppstrøms proxymodus          |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Fjern oppstrøms proxykonfigurasjon |
+| Metode   | Endepunkt                         | Beskrivelse                         |
+| -------- | --------------------------------- | ----------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Få oppstrøms proxy-konfigurasjon    |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Sett oppstrøms proxy-modus          |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Fjern oppstrøms proxy-konfigurasjon |
 
 ---
 
 ## Miljøvariabler
 
-| Variabel              | Standardverdi | Beskrivelse                                                             |
-| --------------------- | ------------- | ----------------------------------------------------------------------- |
-| `ENABLE_SOCKS5_PROXY` | `true`        | Aktiver støtte for SOCKS5-proxy (standardverdi `true` i `.env.example`) |
+| Variabel              | Misligholde | Beskrivelse                                                    |
+| --------------------- | ----------- | -------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true`      | Aktiver SOCKS5 proxy-støtte (standard `true` i `.env.example`) |
 
 ---
 
 ## Feilsøking
 
-### «SOCKS5-proxyen er deaktivert»
+### "SOCKS5 proxy er deaktivert"
 
-Angi `ENABLE_SOCKS5_PROXY=true` i `.env`-filen, og start på nytt.
+Sett `ENABLE_SOCKS5_PROXY=true` i `.env` filen og start på nytt.
 
-### «socket hang up»-feil via proxy
+### "socket henge opp" feil via proxy
 
-Dette er normalt med billige proxyer som lukker inaktive tilkoblinger. OmniRoute håndterer allerede dette ved å:
+Dette er normalt med billige proxyer som slipper ledige tilkoblinger. OmniRoute håndterer allerede dette ved:
 
-- Deaktivere keep-alive på proxytilkoblinger (`keepAliveTimeout: 1`)
-- Deaktivere pipelining (`pipelining: 0`)
-- Mellomlagre dispatchere for å unngå gjentatte håndtrykk
+- Deaktivering av keep-alive på proxy-tilkoblinger (`keepAliveTimeout: 1`)
+- Deaktivering av pipelining (`pipelining: 0`)
+- Bufre sender for å unngå gjentatte håndtrykk
 
-Hvis problemet vedvarer, kan du prøve en annen proxy eller bruke rotasjonsfunksjonen i 1proxy.
+Hvis det vedvarer, prøv en annen proxy eller bruk 1proxy-rotasjonsfunksjonen.
 
-### «unsupported_country_region_territory» under OAuth
+### "unsupported_country_region_territory" under OAuth
 
-Kontroller at proxyen er konfigurert **før** du starter OAuth-flyten. OmniRoute ruter utvekslingen av OAuth-tokener gjennom den konfigurerte proxyen. Angi først en global proxy eller en proxy på leverandørnivå, og koble deretter til.
+Kontroller at proxyen er konfigurert** før** starter OAuth strømmen. OmniRoute ruter OAuth -tokenutveksling gjennom den konfigurerte proxyen. Angi først en global proxy eller proxy på leverandørnivå, og koble deretter til.
 
-### Proxyen brukes ikke
+### Proxy blir ikke brukt
 
-Kontroller oppløsningsrekkefølgen:
+Sjekk oppløsningsrekkefølgen:
 
 1. Bekreft med `GET /api/settings/proxy?resolve=your-connection-id`
-2. Kontroller om proxyens `status` er `active` (ikke `inactive`)
-3. Kontroller at omfanget for proxytilordningen samsvarer med tilkoblingen din
+2. Sjekk om proxyen `status` er `active` (ikke `inactive`)
+3. Sørg for at proxy-tildelingsomfanget samsvarer med tilkoblingen din
 
-### Synkronisering med 1proxy mislykkes
+### 1 proxy-synkronisering mislykkes
 
-Kontroller synkroniseringsstatusen:
+Sjekk synkroniseringsstatusen:
 
 ```bash
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Hvis `consecutiveFailures >= 5`, er kretsbryteren utløst. Start serveren på nytt for å tilbakestille den, eller vent på manuell tilbakestilling.
+Hvis `consecutiveFailures >= 5`, har effektbryteren løst ut. Start serveren på nytt for å tilbakestille, eller vent på manuell tilbakestilling.
 
 ---
 
 ## Databaseskjema
 
-### Tabellen `proxy_registry`
+### `proxy_registry` bord
 
 ```sql
 CREATE TABLE proxy_registry (
@@ -564,26 +575,26 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' eller 'oneproxy'
-  quality_score INTEGER,                     -- 0–100 (kun 1proxy)
-  latency_ms INTEGER,                        -- millisekunder (kun 1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- tilgang til Google? (1proxy)
-  last_validated TEXT,                       -- ISO-tidsstempel (1proxy)
-  country_code TEXT,                         -- ISO-kode på 2 bokstaver (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ```
 
-### Tabellen `proxy_assignments`
+### `proxy_assignments` bord
 
 ```sql
 CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- leverandør-ID, tilkoblings-ID eller kombinasjons-ID
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Helsesjekk av proxyer (v3.8.16+)
+## Proxy Health Checking (v3.8.16 +)
 
-OmniRoutes mekanisme for **rask proxyfeil** (`src/lib/proxyHealth.ts`) oppdager døde proxyer på <2s via en rask kontroll av TCP-tilkoblingen og **mellomlagrer deretter resultatet** for å unngå ekstraarbeid per forespørsel.
+OmniRoute sine** proxy rask-mislykkes** mekanisme (`src/lib/proxyHealth.ts`) oppdager døde proxyer i < 2s via en rask TCP -tilkoblingssjekk, deretter** cacher resultatet** for å unngå overhead per forespørsel.
 
-### Slik fungerer det
+### Hvordan det fungerer
 
 ```
-Forespørsel ──▶ ProxyHealthCache.get(url)
-                 │
-                 ├─ Treff i mellomlager + ferskt?  ──▶ returner mellomlagret status
-                 │
-                 └─ Bom i mellomlager / foreldet?  ──▶ TCP-tilkobling til vert:port
-                                                        (tidsavbrudd: FAST_FAIL_TIMEOUT_MS)
-                                                        ──▶ mellomlagre i HEALTH_CACHE_TTL_MS
-                                                        ──▶ returner resultat
+Request ──▶ ProxyHealthCache.get(url)
+             │
+             ├─ Cache hit + fresh?  ──▶ return cached status
+             │
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Uten dette ville en død proxy blokkert hver forespørsel i hele `PROXY_TIMEOUT_MS` (standardverdi 30s) før den mislyktes.
+Uten dette ville en død proxy blokkert hver forespørsel om full `PROXY_TIMEOUT_MS` (standard 30s) før den mislyktes.
 
 ### Justerbare miljøvariabler
 
-| Variabel                     | Standardverdi | Formål                                        |
-| ---------------------------- | ------------- | --------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`        | Tidsavbrudd for TCP-tilkobling per helsesjekk |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`       | Hvor lenge et helseresultat mellomlagres      |
+| Variabel                     | Misligholde | Hensikt                                       |
+| ---------------------------- | ----------- | --------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`      | TCP tidsavbrudd for tilkobling per helsesjekk |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`     | Hvor lenge et helseresultat er bufret         |
 
 **Anbefalte verdier:**
 
-| Scenario                      | Tidsavbrudd for rask feil | TTL for mellomlager | Begrunnelse                                                                |
-| ----------------------------- | ------------------------- | ------------------- | -------------------------------------------------------------------------- |
-| API-gateway med høy trafikk   | 1500ms                    | 60000ms             | Aggressiv rask feil, lengre mellomlagring for å redusere antall kontroller |
-| Geografisk distribuerte noder | 3000ms                    | 15000ms             | Tregere nettverk trenger mer tid; kortere mellomlagring for rask failover  |
-| Utvikling/testing             | 1000ms                    | 10000ms             | Rask iterasjon på lokale proxyer                                           |
-| Skjult modus / anti-deteksjon | 2500ms                    | 45000ms             | Unngå hyppig sondering som kan utløse hastighetsbegrensninger              |
+| Scenario                             | Fast-fail timeout | Cache TTL | Argumentasjon                                                     |
+| ------------------------------------ | ----------------- | --------- | ----------------------------------------------------------------- |
+| API gateway med høy gjennomstrømning | 1500 ms           | 60 000 ms | Aggressiv feil-rask, lengre hurtigbuffer for å redusere sjekker   |
+| Geo-distribuerte noder               | 3000 ms           | 15 000 ms | Tregere nettverk trenger mer tid; kortere cache for rask failover |
+| Utvikler / testing                   | 1000 ms           | 10 000 ms | Rask iterasjon på lokale fullmakter                               |
+| Stealth / anti-deteksjon             | 2500 ms           | 45 000 ms | Unngå rask sondering som kan utløse hastighetsgrenser             |
 
-### Kontrollere proxyhelse
+### Inspiserer fullmaktshelse
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Tving en ny kontroll av en bestemt proxy
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Flagget `stale` er `true` når mellomlageroppføringen har overskredet `HEALTH_CACHE_TTL_MS`, og den neste forespørselen vil utløse en ny kontroll.
+`stale` flagget er `true` når cache-oppføringen har overskredet `HEALTH_CACHE_TTL_MS` og neste forespørsel vil utløse en ny sjekk.
 
-### Standardverdier per proxytype
+### Standarder per proxy-type
 
-Helsesjekken bruker fornuftige standardverdier basert på URL-skjemaet:
+Helsesjekken bruker fornuftige standardinnstillinger basert på URL skjemaet:
 
-| Skjema                     | Standardport |
-| -------------------------- | ------------ |
-| `http://`                  | 8080         |
-| `https://`                 | 443          |
-| `socks5://` / `socks5h://` | 1080         |
+| Opplegg                    | Standard port |
+| -------------------------- | ------------- |
+| `http://`                  | 8080          |
+| `https://`                 | 443           |
+| `socks5://` / `socks5h://` | 1080          |
 
-Egendefinerte porter i URL-en (`http://host:9999`) har alltid prioritet over standardverdien for skjemaet.
+Egendefinerte porter i URL (`http://host:9999`) har alltid forrang over skjemastandarden.
 
 ---
 
-## Proxyanalyse og observerbarhet
+## Proxy-analyse og observerbarhet
 
-OmniRoute sporer bruk per proxy for å hjelpe operatører med å diagnostisere rutingsmønstre, forsinkelsestopper og gjentakende feil.
+OmniRoute sporer per-proxy-bruk for å hjelpe operatører med å diagnostisere rutingmønstre, latency-spiker og tilbakevendende feil.
 
-### Hva som spores
+### Hva spores
 
-For hver forespørsel gjennom en konfigurert proxy registrerer OmniRoute:
+For hver forespørsel gjennom en konfigurert proxy, registrerer OmniRoute :
 
-| Måleverdi    | Beskrivelse                                         |
-| ------------ | --------------------------------------------------- |
-| `proxy_url`  | Fullstendig proxy-URL (med maskerte påloggingsdata) |
-| `provider`   | ID for oppstrømsleverandør (openai, anthropic osv.) |
-| `latency_ms` | Total tur-retur-tid, inkludert proxy-håndtrykk      |
-| `connect_ms` | Kun TCP-tilkoblingstid                              |
-| `status`     | HTTP-statuskode fra oppstrømstjenesten              |
-| `error`      | Feilklasse hvis forespørselen mislyktes             |
-| `timestamp`  | ISO 8601 UTC                                        |
+| Metrisk      | Beskrivelse                                             |
+| ------------ | ------------------------------------------------------- |
+| `proxy_url`  | Full proxy URL (med autentiseringslegitimasjon maskert) |
+| `provider`   | Oppstrømsleverandør ID (openai, antropisk, etc.)        |
+| `latency_ms` | Total tur-retur-tid inkludert proxy-håndtrykk           |
+| `connect_ms` | TCP kun tilkoblingstid                                  |
+| `status`     | HTTP statuskode fra oppstrøms                           |
+| `error`      | Feilklasse hvis forespørselen mislyktes                 |
+| `timestamp`  | ISO 8601 UTC                                            |
 
-### Tilgang til dataene
+### Få tilgang til dataene
 
 ```bash
-# Nylige proxyhendelser
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Det faktiske endepunktet er `/api/usage/proxy-logs` (se `src/app/api/usage/proxy-logs/route.ts`). Dette endepunktet støtter:
+Det virkelige endepunktet er `/api/usage/proxy-logs` (se `src/app/api/usage/proxy-logs/route.ts`). Dette endepunktet støtter:
 
-- `GET /api/usage/proxy-logs` — hent proxylogger
-- `DELETE /api/usage/proxy-logs` — slett alle proxylogger
+- `GET /api/usage/proxy-logs` — hente proxy-logger
+- `DELETE /api/usage/proxy-logs` — slett alle proxy-logger
 
-Aggregert statistikk kan ved behov hentes direkte fra tabellen `proxy_logs` via SQL. Brukergrensesnittet i kontrollpanelet kan tilby aggregerte visninger.
+Samlet statistikk kan søkes direkte fra `proxy_logs` tabellen via SQL om nødvendig. Dashbordet UI kan tilby samlede visninger.
 
 ### Vanlige mønstre
 
-**Oppdag en ustabil proxy** (veksler mellom vellykkede og mislykkede forespørsler):
+**Oppdag en flagrende proxy** (veksler mellom success/failure):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Finn trege proxyer** (p95-forsinkelse > 2 s):
+**Finn trege proxyer** (p95 latens > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,93 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Beslutningstre for rotasjonsstrategi
+## Rotasjonsstrategi beslutningstre
 
-Når flere proxyer er tilordnet et virkeområde, bruker OmniRoute en **rotasjonsstrategi** for å velge hvilken som skal brukes for hver forespørsel. Strategien konfigureres på virkeområdenivå (globalt, per leverandør, per konto, per kombinasjon).
+Når flere proxyer er tilordnet et omfang, bruker OmniRoute en** rotasjonsstrategi** å velge hvilken som skal brukes for hver forespørsel. Strategien konfigureres på omfangsnivå (globalt, per leverandør, per konto, per kombinasjon).
 
 ### Tilgjengelige strategier
 
-| Strategi             | Når den bør brukes                            | Avveining                                                     |
-| -------------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| `quality` (standard) | Produksjon med proxyer av varierende kvalitet | Foretrekker høyt vurderte proxyer; kan forsømme lavt vurderte |
-| `random`             | Lastfordeling, personvern                     | Jevn fordeling; ignorerer kvalitetssignaler                   |
-| `sequential`         | Feilsøking, deterministisk testing            | Går gjennom proxyene i rekkefølge; lett å forstå              |
+| Strategi             | Når du skal bruke                             | Avveining                                                   |
+| -------------------- | --------------------------------------------- | ----------------------------------------------------------- |
+| `quality` (standard) | Produksjon med fullmakter av blandet kvalitet | favoriserer høyt rangerte proxyer; kan sulte lavt rangerte  |
+| `random`             | Lastfordeling, personvern                     | Jevn fordeling; ignorerer kvalitetssignaler                 |
+| `sequential`         | Debugging, deterministisk testing             | Sykler gjennom proxyer i rekkefølge; lett å resonnere rundt |
 
 ### Beslutningstre
 
 ```
-                    Har du kvalitetspoeng for proxyene dine?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       JA                      NEI
+       YES                     NO
         │                       │
-   Er alle proxyene            │
-   omtrent like                │
-   i kvalitet?                 │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
-  JA        NEI              Bruk
+  YES       NO                Use
    │         │              `random`
-   │         │              (jevn spredning
-   │         │              bygger kvalitetsdata
-   │         │              over tid)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    Bruk `quality`
+   │    Use `quality`
    │    (best for
-   │    varierende kvalitet)
+   │    mixed quality)
    │
-Bruk `random`
-(fordel belastningen
-jevnt)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Automatisk utelukkelse av feilende egne proxyer
+## Automatisk utestenging av feil for dine egne proxyer
 
-Markedsplasspoolen til 1proxy nedgraderer allerede automatisk proxyer som feiler (se
-[Poengsummer for proxykvalitet](#proxy-quality-scores)). For
-proxyer **du** har lagt til i registeret, gir den bakgrunnskjørende helsesjekkplanleggeren
-(`src/lib/proxyHealth/scheduler.ts`) den samme funksjonaliteten for å «utelukke et dødt medlem fra
-kjeden automatisk», uten å slette noe:
+1proxy markedsplass-poolen degraderer allerede mislykkede proxyer automatisk på egen hånd (se [Proxy-kvalitetspoeng](#proxy-quality-scores) ). For fullmakter** du** lagt til i registeret, gir bakgrunnshelseplanleggeren (`src/lib/proxyHealth/scheduler.ts`) den samme "ekskluder et dødt medlem fra kjeden automatisk", uten å slette noe:
 
 ```bash
-# .env — deaktiver en proxy midlertidig etter 3 mislykkede sonderinger på rad, og aktiver den
-# automatisk igjen så snart den begynner å svare på sonderinger.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Slik fungerer dette i en kjede med flere proxyer:
+Slik passer den inn i en multi-proxy-kjede:
 
-1. Planleggeren sonderer hver registrerte proxy hvert `PROXY_HEALTH_INTERVAL_MS`
-   (standardverdi 10 min; minimum 1 min).
-2. Etter `PROXY_AUTO_REMOVE_AFTER` påfølgende **entydige** feil (en reell
-   tilkoblingsfeil — tidsavbrudd eller sonderingsmålets egne 5xx-feil teller aldri, se
-   [Helsesjekk av proxyer](#proxy-health-checking-v3816)), settes proxyens `status`
-   til `dead`.
-3. `dead` er en av statusene som utelukkes av filteret for aktive statuser som brukes ved
-   løsning av pool/rotasjon, slik at et omfangs rotasjon (round-robin / tilfeldig / fast /
-   latenstid — se [Beslutningstre for rotasjonsstrategi](#rotation-strategy-decision-tree))
-   umiddelbart slutter å tildele denne proxyen til nye forespørsler. Ingen andre proxyer i
-   poolen påvirkes, og hele poolen faller aldri stille tilbake til en direkte
-   tilkobling — se fail-closed-vernet i [Proxysystemet med fire nivåer](#4-level-proxy-system).
-4. Planleggeren fortsetter å sondere `dead`-proxyer med samme intervall. Den neste
-   vellykkede sonderingen endrer `status` tilbake til `active`, og proxyen tas inn i rotasjonen igjen —
-   uten at den må legges til manuelt på nytt.
+1. Planleggeren sonderer hver registrerte proxy hver `PROXY_HEALTH_INTERVAL_MS` (standard 10 min; minimum 1 min).
+2. Etter `PROXY_AUTO_REMOVE_AFTER` på rad** avgjørende** feil (en reell tilkoblingsfeil — en timeout eller sondemålets egen 5xx teller aldri, se [Proxy Health Checking](#proxy-health-checking-v3816) ), proxyens `status` er satt til `dead`.
+3. `dead` er en av statusene som live-status-filteret som brukes av pool/rotation oppløsning utelukker, så et skops rotasjon (round-robin / random / sticky / latency — se [Rotation Strategy Decision Tree](#rotation-strategy-decision-tree) ) slutter umiddelbart å gi den proxyen til nye forespørsler. Ingen andre proxyer i bassenget er berørt, og hele bassenget faller aldri stille tilbake til en direkte forbindelse — se [4-Level Proxy System](#4-level-proxy-system) feillukket vakt.
+4. Planleggeren fortsetter å undersøke `dead` proxyer på samme intervall. Den neste vellykkede sonden snur `status` tilbake til `active` og den går inn igjen i rotasjon — uten manuell re-add.
 
-Dette er bevisst **valgfritt og ikke-destruktivt**: Som standard teller og
-logger planleggeren bare feil (se policy C i `decision.ts`), og `PROXY_AUTO_DISABLE`
-sletter aldri en rad — det er formålet med det separate og mer aggressive
-`PROXY_AUTO_REMOVE`-flagget. Hvis begge er satt til `true`, har `PROXY_AUTO_REMOVE`
-forrang (en proxy som snart skal slettes, har ingen nytte av å bli midlertidig deaktivert først). Se
-referansen [Miljøkonfigurasjon](../reference/ENVIRONMENT.md) for en fullstendig
-liste over variabler.
+Dette er bevisst** opt-in og ikke-destruktiv** : som standard teller og logger planleggeren bare feil (se policy C i `decision.ts`), og `PROXY_AUTO_DISABLE` sletter aldri en rad — som er det det separate, mer aggressive `PROXY_AUTO_REMOVE` flagget er til for. Hvis begge er satt til `true`, vinner `PROXY_AUTO_REMOVE` (en proxy som skal slettes har ingen bruk for en myk deaktivering i mellom). Se [Environment Config-](../reference/ENVIRONMENT.md) referansen for hele variabellisten.
 
 ---
 
-> 📖 **Relatert dokumentasjon:**
+> 📖** Relatert dokumentasjon:**
 >
-> - [Brukerveiledning](../guides/USER_GUIDE.md) — Generelt oppsett og konfigurasjon
-> - [API-referanse](../reference/API_REFERENCE.md) — Fullstendig API-dokumentasjon
-> - [Miljøkonfigurasjon](../reference/ENVIRONMENT.md) — Alle miljøvariabler
+> - [Brukerveiledning](../guides/USER_GUIDE.md) — Generell oppsett og konfigurasjon - [API Referanse](../reference/API_REFERENCE.md) — Full API dokumentasjon - [Environment Config](../reference/ENVIRONMENT.md) — Alle miljøvariabler

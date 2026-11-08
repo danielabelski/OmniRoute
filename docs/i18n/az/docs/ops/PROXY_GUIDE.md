@@ -4,148 +4,159 @@
 
 ---
 
-> **Coğrafi bloklamaları keçin, kimliyinizi qoruyun və süni intellekt trafikini istənilən proksi üzərindən yönləndirin — heç bir mürəkkəb konfiqurasiya olmadan.**
+> **Coğrafi blokları keçin, şəxsiyyətinizi qoruyun və AI trafikini sıfır konfiqurasiya mürəkkəbliyi ilə istənilən proxy — vasitəsilə yönləndirin.**
 
-OmniRoute yuxarı səviyyəli süni intellekt provayderi trafikini HTTP, HTTPS və ya SOCKS5 proksiləri üzərindən yönləndirməyə imkan verən tam funksiyalı proksi idarəetmə sistemini ehtiva edir. Bloklanmış regionda olmağınızdan, IP rotasiyasına ehtiyac duymanızdan və ya gizli barmaq izi maskalanması istəməyinizdən asılı olmayaraq — bu təlimat hər şeyi əhatə edir.
+OmniRoute sizə HTTP, HTTPS və ya SOCKS5 proksiləri vasitəsilə yuxarı AI provayder trafikini yönləndirməyə imkan verən tam funksiyalı proksi idarəetmə sistemini ehtiva edir. Bloklanmış bölgədə olmağınızdan, IP fırlanmasına ehtiyacınızdan və ya gizli barmaq izini istəməyinizdən asılı olmayaraq — bu təlimat hər şeyi əhatə edir.
 
 ---
 
 ## Mündəricat
 
-- [Niyə proksilərdən istifadə etməli?](#why-use-proxies)
-- [Arxitekturaya ümumi baxış](#architecture-overview)
-- [4 səviyyəli proksi sistemi](#4-level-proxy-system)
-- [Proksi reyestri (CRUD)](#proxy-registry-crud)
-- [1proxy pulsuz bazarı](#1proxy-free-proxy-marketplace)
-- [Proksi rotasiyası](#proxy-rotation)
-- [Aşkarlanmadan qorunma və gizlilik](#anti-detection--stealth)
-- [Yuxarı səviyyəli proksi rejimləri](#upstream-proxy-modes)
-- [İdarəetmə panelinin interfeysi](#dashboard-ui)
-- [API arayışı](#api-reference)
-- [Mühit dəyişənləri](#environment-variables)
+- [Niyə Proksilərdən istifadə edin?](#why-use-proxies)
+- [Memarlığa Baxış](#architecture-overview)
+- [4 Səviyyəli Proksi Sistemi](#4-level-proxy-system)
+- [Proksi Qeydiyyatı (CRUD)](#proxy-registry-crud)
+- [1proxy Pulsuz Marketplace](#1proxy-free-proxy-marketplace)
+- [Proksi fırlanması](#proxy-rotation)
+- [Aşkarlanma və Gizlilik](#anti-detection--stealth)
+- [Upstream Proxy Rejimləri](#upstream-proxy-modes)
+- [İdarə paneli UI](#dashboard-ui)
+- [API İstinad](#api-reference)
+- [Ətraf Mühit Dəyişənləri](#environment-variables)
 - [Problemlərin aradan qaldırılması](#troubleshooting)
 
 ---
 
-## Niyə proksilərdən istifadə etməli?
+## Niyə Proksilərdən istifadə edin?
 
-Bir çox süni intellekt provayderi coğrafi regiona əsasən girişi məhdudlaşdırır. **Rusiya, Çin, İran, Kuba, Türkiyə** və digər ölkələrdəki tərtibatçılar aşağıdakı kimi xətalarla qarşılaşırlar:
+Bir çox AI provayderi coğrafi bölgəyə görə girişi məhdudlaşdırır. Tərtibatçılar** Rusiya, Çin, İran, Kuba, Türkiyə** , və digər ölkələr belə xətalarla qarşılaşır:
 
 ```
 unsupported_country_region_territory
 ```
 
-Proksilər hətta bloklanmış regionlardan kənarda da faydalıdır:
+Hətta bloklanmış bölgələrdən kənarda belə proksilər aşağıdakılar üçün faydalıdır:
 
-| İstifadə ssenarisi        | Təsvir                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------ |
-| **Coğrafi blokdan keçid** | Bloklanmış ölkələrdən OpenAI, Anthropic, Codex və Copilot-a giriş əldə edin          |
-| **IP rotasiyası**         | Sürət məhdudiyyətinin qarşısını almaq üçün sorğuları bir neçə IP arasında bölüşdürün |
-| **Məxfilik**              | Həqiqi IP ünvanınızı yuxarı səviyyəli provayderlərdən gizlədin                       |
-| **Uyğunluq**              | Trafiki müəyyən yurisdiksiyalar üzərindən yönləndirin                                |
-| **Sınaq**                 | Müxtəlif regionlardan gələn sorğuları simulyasiya edin                               |
+| İstifadə Case     | Təsvir                                                                            |
+| ----------------- | --------------------------------------------------------------------------------- |
+| **Coğrafi keçid** | Bloklanmış ölkələrdən OpenAI, Anthropic, Codex, Copilot daxil olun                |
+| **IP fırlanma**   | Məhdudiyyət dərəcəsinin qarşısını almaq üçün sorğuları bir neçə IPs üzrə paylayın |
+| **Məxfilik**      | Həqiqi IP nı yuxarı provayderlərdən gizlədin                                      |
+| **Uyğunluq**      | Müəyyən yurisdiksiyalar üzrə nəqliyyat marşrutu                                   |
+| **Test**          | Müxtəlif bölgələrdən gələn sorğuları simulyasiya edin                             |
 
 ---
 
-## Arxitekturaya ümumi baxış
+## Memarlığa Baxış
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                       OmniRoute serveri                       │
+│                       OmniRoute Server                        │
 │                                                               │
 │  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐  │
-│  │ Proksi      │    │ Proksi       │    │ Proksi           │  │
-│  │ reyestri    │───▶│ dispetçeri   │───▶│ Fetch (undici)   │  │
-│  │ (SQLite)    │    │ (keşlənmiş)  │    │                  │  │
+│  │ Proxy       │    │ Proxy        │    │ Proxy            │  │
+│  │ Registry    │───▶│ Dispatcher   │───▶│ Fetch (undici)   │  │
+│  │ (SQLite)    │    │ (cached)     │    │                  │  │
 │  └─────────────┘    └──────────────┘    └────────┬─────────┘  │
 │         ▲                                        │            │
 │         │                                        ▼            │
 │  ┌──────┴──────┐                        ┌──────────────────┐  │
-│  │ 1proxy      │                        │ Yuxarı səviyyəli │  │
-│  │ sinxroniz.  │                        │ provayder API-si │  │
-│  │ (pulsuz pul)│                        │                  │  │
+│  │ 1proxy Sync │                        │ Upstream         │  │
+│  │ (free pool) │                        │ Provider API     │  │
 │  └─────────────┘                        └──────────────────┘  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### Əsas komponentlər
+### Əsas Komponentlər
 
-| Komponent                    | Fayl                                         | Rol                                                                       |
-| ---------------------------- | -------------------------------------------- | ------------------------------------------------------------------------- |
-| **Proksi reyestri**          | `src/lib/db/proxies.ts`                      | Proksi qeydləri və əhatə dairəsi təyinatları üçün CRUD                    |
-| **Proksi dispetçeri**        | `open-sse/utils/proxyDispatcher.ts`          | Keşləmə ilə `undici` ProxyAgent/SOCKS dispetçerləri yaradır               |
-| **Proksi Fetch**             | `open-sse/utils/proxyFetch.ts`               | `fetch()` funksiyasını proksi dispetçerinin əlavə edilməsi ilə əhatələyir |
-| **Parametrlər marşrutu**     | `src/app/api/settings/proxy/route.ts`        | Köhnə proksi konfiqurasiyası API-si (GET/PUT/DELETE)                      |
-| **İdarəetmə marşrutu**       | `src/app/api/v1/management/proxies/route.ts` | Reyestr üçün CRUD API-si (GET/POST/PATCH/DELETE)                          |
-| **1proxy verilənlər bazası** | `src/lib/db/oneproxy.ts`                     | Pulsuz proksi bazarının davamlı saxlanması                                |
+| Komponent               | Fayl                                         | Rol                                                         |
+| ----------------------- | -------------------------------------------- | ----------------------------------------------------------- |
+| **Proksi reyestri**     | `src/lib/db/proxies.ts`                      | proxy girişləri üçün CRUD + əhatə dairəsi təyinatları       |
+| **Proksi dispetçer**    | `open-sse/utils/proxyDispatcher.ts`          | Keşləmə ilə `undici` ProxyAgent/SOCKS dispetçerləri yaradır |
+| **Proksi Alma**         | `open-sse/utils/proxyFetch.ts`               | Proksi dispetçer inyeksiyası ilə `fetch()` əhatə edir       |
+| **Parametrlər Marşrut** | `src/app/api/settings/proxy/route.ts`        | Köhnə proxy konfiqurasiyası API (GET/PUT/DELETE)            |
+| **İdarəetmə marşrutu**  | `src/app/api/v1/management/proxies/route.ts` | Qeydiyyat CRUD API (GET/POST/PATCH/DELETE)                  |
+| **1 proxy DB**          | `src/lib/db/oneproxy.ts`                     | Pulsuz proxy bazarının davamlılığı                          |
 
 ---
+
+## Yeni hesablar üçün defolt proksi vəziyyəti
+
+In** Parametrlər → Proxy → Qlobal konfiqurasiya** , istifadə edin** Yeni bağlantılar üçün defolt olaraq proksi-ni aktivləşdirin** yeni əlavə edilmiş provayder hesablarının ilkin proksi vəziyyətini seçmək üçün.
+
+Yeni parametr yeni əlavə edilmiş provayder hesablarının ilkin proksi vəziyyətinə nəzarət edir. O, mövcud hesabları dəyişdirmir və ya qlobal proxy keçidini əvəz etmir. Onun ilkin dəyəri əvvəlki davranışı qoruyur. Defolt olaraq deaktiv edilmiş proxy ilə gələcək hesablar yaratmaq üçün onu bir dəfə söndürün.
+
+Üstünlük mövcud Parametrlər API vasitəsilə `defaultNewConnectionProxyEnabled` kimi saxlanılır. Heç vaxt saxlanmadıqda standart olaraq `true` dir. `false` saxlanması yenidən başlamadan sonrakı yeni hesablar üçün qüvvəyə minir. `POST /api/providers` isteğe bağlı ciddi boolean `proxyEnabled` qəbul edir; açıq `true` və ya `false` yaradılması defoltundan üstündür. Dublikat hesabda buraxılma və ya OAuth yenidən qoşulma həmin hesabın saxlanmış vəziyyətini qoruyur. Fərdi hesablar daha sonra aktivləşdirilə və ya deaktiv edilə bilər.
+
+Seçilmiş provayder köçürmələri yeni hesablar üçün təyinat quraşdırmasının defoltundan istifadə edir və mövcud hesabları əvəz edərkən təyinat siyasətini qoruyur. Proksi keçidləri portativ ötürmə sahələri deyil. Tam ehtiyat nüsxəsinin bərpası və tarixi JSON/SQL miqrasiyası saxlanmış hesab dəyərləri və köhnə sxem defoltları daxil olmaqla, mövcud bərpa semantikasını saxlayır; tam parametrlərin bərpası da bu üstünlükləri bərpa edə bilər.
+
+Bu üstünlük proksi təyin etmir və ya onun sağlam və ya istifadədə olduğunu müəyyən etmir. Faktiki marşrutlaşdırma hələ də qlobal proksi keçidindən və müvafiq proksi konfiqurasiyasından asılıdır. Davamlı hesabı olmayan sintetik provayderlər, hesab yaratmazdan əvvəl OAuth trafiki, environment/system proksiləri və xarici backendlər şəbəkəsi onun əhatə dairəsindən kənardadır.
 
 ## 4 Səviyyəli Proksi Sistemi
 
-OmniRoute proksi konfiqurasiyasını prioritet sırasına görə müəyyən edilən **dörd müstəqil əhatə dairəsində** dəstəkləyir:
+OmniRoute proksi konfiqurasiyasını dəstəkləyir** dörd müstəqil əhatə dairəsi** , prioritet qaydada həll edilir:
 
 ```
-Prioritetin müəyyən edilməsi sırası (ən yüksək → ən aşağı):
+Priority Resolution Order (highest → lowest):
 
-  1. 🔵 Hesab/Bağlantı proksisi  →  hər API açarı / OAuth bağlantısı üçün
-  2. 🟡 Provayder proksisi       →  hər provayder üçün (məsələn, bütün OpenAI trafiki)
-  3. 🟠 Kombinasiya proksisi     →  hər kombinasiya/marşrutlaşdırma konfiqurasiyası üçün
-  4. 🟢 Qlobal proksi            →  bütün trafik, bütün provayderlər
+  1. 🔵 Account/Connection Proxy  →  per API key / OAuth connection
+  2. 🟡 Provider Proxy            →  per provider (e.g., all OpenAI traffic)
+  3. 🟠 Combo Proxy               →  per combo/routing configuration
+  4. 🟢 Global Proxy              →  all traffic, all providers
 ```
 
-### Müəyyən Etmə Prosesi Necə İşləyir
+### Qətnamə necə işləyir
 
-OmniRoute yuxarı səviyyəli provayderə sorğu göndərərkən hər səviyyəni ardıcıllıqla yoxlayan `resolveProxyForConnectionFromRegistry()` funksiyasını çağırır:
+OmniRoute yuxarı axın provayderinə sorğu göndərdikdə, hər səviyyəni ardıcıllıqla yoxlayan `resolveProxyForConnectionFromRegistry()` çağırır:
 
-1. **Hesab səviyyəsi** — Bu konkret bağlantı ID-si üçün proksi təyin edilibmi?
-2. **Provayder səviyyəsi** — Bu provayder üçün (məsələn, `openai`) proksi təyin edilibmi?
-3. **Qlobal səviyyə** — Qlobal proksi konfiqurasiya edilibmi?
-4. **Proksi yoxdur** — Provayderə birbaşa bağlantı.
+1. **Hesab səviyyəsi** — Bu xüsusi əlaqə ID üçün təyin edilmiş proxy varmı?
+2. **Provayder səviyyəsində** — Bu provayderə təyin edilmiş proksi varmı (məsələn, `openai`)?
+3. **Qlobal səviyyədə** — Qlobal proxy konfiqurasiya olunubmu?
+4. **Proksi yoxdur** — Provayderlə birbaşa əlaqə.
 
-İlk uyğunluq seçilir. Bu o deməkdir ki, qlobal proksini ehtiyat variant kimi təyin edə, lakin konkret provayderlər və ya bağlantılar üçün onu əvəz edə bilərsiniz.
+İlk matç qalib gəlir. Bu o deməkdir ki, siz qlobal proxy-ni ehtiyat kimi təyin edə bilərsiniz, lakin onu xüsusi provayderlər və ya əlaqələr üçün ləğv edə bilərsiniz.
 
-### Hansı Trafik Proksidən Keçir
+### Nə Proksiləşdirilir
 
-| Trafik növü            | Proksidən keçir? | Qeydlər                                                   |
-| ---------------------- | ---------------- | --------------------------------------------------------- |
-| Söhbət tamamlamaları   | ✅               | Bütün `/v1/chat/completions` sorğuları                    |
-| Vektor təqdimatları    | ✅               | `/v1/embeddings`                                          |
-| Şəkil generasiyası     | ✅               | `/v1/images/generations`                                  |
-| Audio (TTS/STT)        | ✅               | `/v1/audio/*`                                             |
-| OAuth token mübadiləsi | ✅               | `unsupported_country_region_territory` xətasını həll edir |
-| Bağlantı sınaqları     | ✅               | "Bağlantını sına" düyməsi proksidən istifadə edir         |
-| Tokenin yenilənməsi    | ✅               | Arxa planda OAuth yenilənməsi                             |
-| Model sinxronizasiyası | ✅               | Modellərin siyahıya alınması və aşkarlanması              |
+| Trafik növü            | Proksili? | Qeydlər                                          |
+| ---------------------- | --------- | ------------------------------------------------ |
+| Söhbət tamamlandı      | ✅        | Bütün `/v1/chat/completions` sorğuları           |
+| Yerləşdirmələr         | ✅        | `/v1/embeddings`                                 |
+| Şəkil generasiyası     | ✅        | `/v1/images/generations`                         |
+| Audio (TTS/STT)        | ✅        | `/v1/audio/*`                                    |
+| OAuth token mübadiləsi | ✅        | `unsupported_country_region_territory` həll edir |
+| Bağlantı testləri      | ✅        | "Bağlantı testi" düyməsi proksidən istifadə edir |
+| Token yeniləməsi       | ✅        | Fon OAuth yenilənməsi                            |
+| Model sinxronizasiyası | ✅        | Modelin siyahısı və kəşfi                        |
 
 ---
 
-## Proksi Reyestri (CRUD)
+## Proksi Qeydiyyatı (CRUD)
 
-Proksi reyestri bütün proksilərinizi saxlayan SQLite cədvəlidir (`proxy_registry`). Hər proksinin aşağıdakı sahələri var:
+Proksi reyestri bütün proksilərinizi saxlayan SQLite cədvəlidir (`proxy_registry`). Hər bir proxy var:
 
-| Sahə       | Növ      | Təsvir                                            |
-| ---------- | -------- | ------------------------------------------------- |
-| `id`       | UUID     | Unikal identifikator                              |
-| `name`     | Sətir    | İnsan tərəfindən oxuna bilən etiket               |
-| `type`     | Sətir    | Protokol: `http`, `https`, `socks5`               |
-| `host`     | Sətir    | Proksi host adı və ya IP ünvanı                   |
-| `port`     | Tam ədəd | Port nömrəsi                                      |
-| `username` | Sətir    | Doğrulama istifadəçi adı (saxlanarkən şifrələnir) |
-| `password` | Sətir    | Doğrulama parolu (saxlanarkən şifrələnir)         |
-| `region`   | Sətir    | Coğrafi region etiketi                            |
-| `notes`    | Sətir    | Sərbəst mətn qeydləri                             |
-| `status`   | Sətir    | `active` və ya `inactive`                         |
-| `source`   | Sətir    | `manual` və ya `oneproxy`                         |
+| Sahə       | Növ      | Təsvir                                       |
+| ---------- | -------- | -------------------------------------------- |
+| `id`       | UUID     | Unikal identifikator                         |
+| `name`     | Simli    | İnsan tərəfindən oxuna bilən etiket          |
+| `type`     | Simli    | Protokol: `http`, `https`, `socks5`          |
+| `host`     | Simli    | Proksi host adı və ya IP                     |
+| `port`     | Tam ədəd | Port nömrəsi                                 |
+| `username` | Simli    | Auth istifadəçi adı (istirahətdə şifrələnir) |
+| `password` | Simli    | Doğrulama parolu (istirahətdə şifrələnir)    |
+| `region`   | Simli    | Coğrafi bölgə etiketi                        |
+| `notes`    | Simli    | Pulsuz mətn qeydləri                         |
+| `status`   | Simli    | `active` və ya `inactive`                    |
+| `source`   | Simli    | `manual` və ya `oneproxy`                    |
 
-### Proksinin Yaradılması
+### Proksi yaradılması
 
-**İdarəetmə paneli vasitəsilə:**
+**İdarə Paneli vasitəsilə:**
 
-1. **Parametrlər → Proksi** bölməsinə keçin
-2. **Proksi əlavə et** düyməsinə klikləyin
-3. Növü, hostu, portu və istəyə bağlı doğrulama məlumatlarını doldurun
-4. Yadda saxlayın
+1. gedin** Parametrlər → Proxy**
+2. klikləyin** Proksi əlavə edin**
+3. Növ, host, port və isteğe bağlı auth etimadnaməsini doldurun
+4. Saxla
 
 **API vasitəsilə:**
 
@@ -163,7 +174,7 @@ curl -X POST http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-### Proksinin Yenilənməsi
+### Proksi yenilənir
 
 ```bash
 curl -X PATCH http://localhost:20128/api/v1/management/proxies \
@@ -175,56 +186,56 @@ curl -X PATCH http://localhost:20128/api/v1/management/proxies \
   }'
 ```
 
-> **Qeyd:** Açıq şəkildə boş olmayan əvəzləyici dəyərlər göndərmədiyiniz halda giriş məlumatları qorunur. `username`/`password` üçün boş sətirlər göndərildikdə saxlanılan dəyərlər dəyişməz qalır.
+> **Qeyd:** Siz açıq şəkildə boş olmayan əvəzləmələr göndərməsəniz, etimadnamələr qorunur. `username`/`password` üçün boş sətirlərin göndərilməsi saxlanılan dəyərləri saxlayacaq.
 
-### Proksinin Silinməsi
+### Proksinin silinməsi
 
 ```bash
-# Proksi hər hansı əhatə dairəsinə təyin edilibsə, uğursuz olur
+# Fails if proxy is assigned to any scope
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid"
 
-# Məcburi silmə (təyinatları da silir)
+# Force delete (removes assignments too)
 curl -X DELETE "http://localhost:20128/api/v1/management/proxies?id=proxy-uuid&force=1"
 ```
 
-### Proksilərin Siyahılanması
+### Proksilərin siyahısı
 
 ```bash
 curl "http://localhost:20128/api/v1/management/proxies?limit=50&offset=0"
 ```
 
-### Proksilərin Əhatə Dairələrinə Təyin Edilməsi
+### Əhatə dairələrinə Proksilərin Təyin edilməsi
 
 ```bash
-# Qlobal əhatə dairəsinə təyin et
+# Assign to global scope
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "global", "proxy": {"type":"http","host":"proxy.example.com","port":8080}}'
 
-# Konkret provayderə təyin et
+# Assign to a specific provider
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "provider", "id": "openai", "proxy": {"type":"socks5","host":"socks.example.com","port":1080}}'
 
-# Konkret bağlantıya/açara təyin et
+# Assign to a specific connection/key
 curl -X PUT http://localhost:20128/api/settings/proxy \
   -H "Content-Type: application/json" \
   -d '{"level": "key", "id": "connection-uuid", "proxy": {"type":"http","host":"key-proxy.com","port":3128}}'
 ```
 
-### Effektiv Proksinin Müəyyən Edilməsi
+### Effektiv Proksi həlli
 
-Verilmiş bağlantı üçün hansı proksidən istifadə ediləcəyini yoxlayın:
+Verilmiş əlaqə üçün hansı proksinin istifadə olunacağını yoxlayın:
 
 ```bash
 curl "http://localhost:20128/api/settings/proxy?resolve=connection-uuid"
 ```
 
-Müəyyən edilmiş proksini onun səviyyəsi (`account`, `provider` və ya `global`) və mənbəyi ilə birlikdə qaytarır.
+Səviyyəsi (`account`, `provider` və ya `global`) və mənbəyi ilə həll edilmiş proksi qaytarır.
 
-### Kütləvi Təyinat
+### Toplu Təyinat
 
-Bir proksini eyni anda bir neçə provayderə və ya bağlantıya təyin edin:
+Birdən çox provayderə və ya əlaqəyə bir proksi təyin edin:
 
 ```bash
 curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
@@ -236,186 +247,186 @@ curl -X POST http://localhost:20128/api/v1/management/proxies/bulk-assign \
   }'
 ```
 
-### İdxal/İxrac
+### Import/Export
 
-Proksilər **Ehtiyat Nüsxələmə/Bərpa** sisteminə daxildir. OmniRoute konfiqurasiyanızı ixrac etdikdə:
+Proksilər daxildir**Backup/Restore** sistemi. OmniRoute konfiqurasiyanızı ixrac edərkən:
 
-1. **İdarəetmə paneli → Parametrlər → Ehtiyat nüsxə** bölməsinə keçin
-2. **İxrac et** düyməsinə klikləyin — proksi reyestri və təyinatlar daxil edilir
-3. Bərpa etmək üçün **İdxal et** düyməsinə klikləyin və ehtiyat nüsxə faylını yükləyin
+1. gedin** İdarə paneli → Parametrləri → Yedəkləmə**
+2. klikləyin** İxrac** — proxy reyestri və tapşırıqlar daxildir
+3. Bərpa etmək üçün vurun** İdxal** və ehtiyat faylı yükləyin
 
-Proksi reyestri həmçinin **host+port üzrə upsert** əməliyyatını dəstəkləyir — artıq mövcud olan proksini (eyni host və portla) idxal etsəniz, dublikat yaratmaq əvəzinə mövcud proksi yenilənir.
+Proksi reyestr də dəstəkləyir** host + portu ilə upsert** — artıq mövcud olan bir proksi (eyni host və port) idxal etsəniz, o, dublikat yaratmaq əvəzinə yenilənir.
 
-### Köhnə Versiyadan Miqrasiya
+### Legacy Miqrasiya
 
-Əgər proksiləri köhnə versiyada (reyestrdən əvvəlki) konfiqurasiya etmisinizsə, OmniRoute onları avtomatik miqrasiya edir:
+Əgər proksiləri köhnə versiyada (əvvəlcədən qeydiyyat) konfiqurasiya etmisinizsə, OmniRoute onları avtomatik köçürür:
 
 ```
-Köhnə key_value yaddaşı → proxy_registry + proxy_assignments
+Legacy key_value store → proxy_registry + proxy_assignments
 ```
 
-Bu, təkmilləşdirmədən sonra ilk işə salınma zamanı bir dəfə baş verir. Yenidən icra etmək üçün `migrateLegacyProxyConfigToRegistry({ force: true })` istifadə edin.
+Bu, təkmilləşdirmədən sonra ilk işə salındıqda bir dəfə baş verir. Yenidən işləmək üçün `migrateLegacyProxyConfigToRegistry({ force: true })` istifadə edin.
 
 ---
 
-## 1proxy Pulsuz Proksi Bazarı
+## 1proxy Pulsuz Proksi Marketplace
 
-> 🆕 **Töhfə verən: [@oyi77](https://github.com/oyi77)** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Məsələ [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788))
+> 🆕** [@oyi77](https://github.com/oyi77) tərəfindən töhfə** — PR [#1847](https://github.com/diegosouzapw/OmniRoute/pull/1847) (Məsələ [#1788](https://github.com/diegosouzapw/OmniRoute/issues/1788) )
 
-OmniRoute dünyanın hər yerindən **yüzlərlə pulsuz, yoxlanılmış proksiyə** giriş təmin etmək üçün **[1proxy](https://1proxy-api.aitradepulse.com)** icma platforması ilə inteqrasiya olunur. Bu, öz proksi infrastrukturu olmayan istifadəçilər üçün idealdır.
+OmniRoute ilə inteqrasiya olunur** [1 proksi](https://1proxy-api.aitradepulse.com)** girişi təmin etmək üçün icma platforması** yüzlərlə pulsuz, təsdiqlənmiş proksi** dünyanın hər yerindən. Bu, öz proxy infrastrukturu olmayan istifadəçilər üçün mükəmməldir.
 
-### İş Prinsipi
+### Necə işləyir
 
 ```
-┌─────────────┐  Sinxronizasiya ┌─────────────────┐  Rotasiya   ┌──────────┐
-│  1proxy API │ ───────────────▶ │  proxy_registry  │ ───────────▶ │ Provayder│
-│   (xarici)  │  500 proksiyə   │  source=oneproxy │ keyfiyyətə  │   API    │
-└─────────────┘      qədər       └─────────────────┘    görə      └──────────┘
+┌─────────────┐     Sync      ┌─────────────────┐    Rotate     ┌──────────┐
+│  1proxy API │ ────────────▶ │  proxy_registry  │ ────────────▶ │ Provider │
+│  (external) │   up to 500   │  source=oneproxy │  by quality   │   API    │
+└─────────────┘    proxies    └─────────────────┘               └──────────┘
 ```
 
-1. **Sinxronizasiya** — OmniRoute yoxlanılmış proksiləri 1proxy API-dən əldə edir
-2. **Saxlama** — Proksilər eyni `proxy_registry` cədvəlində `source = 'oneproxy'` ilə saxlanılır
-3. **Filtrləmə** — Protokola, ölkəyə və keyfiyyət balına görə filtrləyin
-4. **Rotasiya** — Keyfiyyət, təsadüfi və ya ardıcıl strategiyalardan istifadə edərək ən yaxşı proksini seçin
-5. **Avtomatik zəiflətmə** — Uğursuz proksilərin keyfiyyət balı azaldılır; həddən aşağı düşdükdə → qeyri-aktiv kimi işarələnir
+1. **Sinxronizasiya** — OmniRoute təsdiqlənmiş proksiləri 1proxy API-dən alır
+2. **Mağaza** — Proksilər `source = 'oneproxy'` ilə eyni `proxy_registry` cədvəlində saxlanılır
+3. **Filtr** — Protokol, ölkə, keyfiyyət balı ilə süzün
+4. **Döndürün** — Keyfiyyətli, təsadüfi və ya ardıcıl strategiyalardan istifadə edərək ən yaxşı proksi seçin
+5. **Avtomatik deqradasiya** — Uğursuz proksilər keyfiyyət xalını azaldır; eşikdən aşağı → qeyri-aktiv olaraq qeyd edildi
 
-### Proksilərin Sinxronizasiyası
+### Proksilərin sinxronizasiyası
 
-**İdarəetmə Paneli Vasitəsilə:**
+**İdarə Paneli vasitəsilə:**
 
-1. **Parametrlər → 1proxy** bölməsinə keçin
-2. **"İndi Sinxronlaşdır"** düyməsinə klikləyin
-3. Statistikaya baxın: ümumi proksi sayı, aktiv proksilərin sayı, orta keyfiyyət və ölkələr üzrə bölgü
+1. gedin** Parametrlər → 1proxy** nişanı
+2. klikləyin** "İndi sinxronlaşdır"**
+3. Statistikaya baxın: ümumi etibarnamələr, aktiv sayı, orta keyfiyyət, ölkə üzrə bölgü
 
-**API Vasitəsilə:**
+**API vasitəsilə:**
 
 ```bash
-# Sinxronizasiyanı başladın
+# Trigger sync
 curl -X POST http://localhost:20128/api/settings/oneproxy \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Cavab:
+# Response:
 # { "success": true, "added": 127, "updated": 45, "failed": 2, "total": 172 }
 ```
 
-### Proksilərin Filtrlənməsi
+### Proksilərin filtrlənməsi
 
 ```bash
-# Protokola görə filtrləyin
+# Filter by protocol
 curl "http://localhost:20128/api/settings/oneproxy?protocol=socks5"
 
-# Ölkəyə görə filtrləyin
+# Filter by country
 curl "http://localhost:20128/api/settings/oneproxy?countryCode=US"
 
-# Minimum keyfiyyət balına görə filtrləyin
+# Filter by minimum quality score
 curl "http://localhost:20128/api/settings/oneproxy?minQuality=80"
 
-# Filtrləri birləşdirin
+# Combine filters
 curl "http://localhost:20128/api/settings/oneproxy?protocol=http&countryCode=DE&minQuality=70"
 ```
 
-### Proksi Keyfiyyət Balları
+### Proksi keyfiyyət balları
 
-Hər bir 1proxy proksisi metadata ilə təqdim olunur:
+Hər 1 proksi proksi metadata ilə gəlir:
 
 | Sahə            | Təsvir                                            |
 | --------------- | ------------------------------------------------- |
-| `qualityScore`  | 1proxy yoxlamasından alınan 0-100 balı            |
+| `qualityScore`  | 1 proksi təsdiqindən 0-100 reytinq                |
 | `latencyMs`     | Ölçülmüş şəbəkə gecikməsi                         |
 | `anonymity`     | `transparent`, `anonymous` və ya `elite`          |
 | `googleAccess`  | Proksinin Google xidmətlərinə daxil olub-olmaması |
 | `countryCode`   | İki hərfli ISO ölkə kodu                          |
-| `lastValidated` | Son yoxlamanın vaxt damğası                       |
+| `lastValidated` | Son doğrulamanın vaxt möhürü                      |
 
 Keyfiyyət balları dinamik şəkildə tənzimlənir:
 
-- **Uğursuz sorğular** balı 10 xal azaldır
-- **Bal ≤10 səviyyəsinə düşdükdə** → proksi `inactive` kimi işarələnir
-- Qeyri-aktiv proksilər rotasiyadan çıxarılır
+- **Uğursuz sorğular** xalı 10 bal azaltmaq
+- **Hesab ≤ 10-a enir** → proxy `inactive` ilə işarələnib
+- Qeyri-aktiv proksilər rotasiyadan xaric edilir
 
-### Rotasiya Strategiyaları
+### Rotasiya strategiyaları
 
 ```bash
-# Keyfiyyətə görə rotasiya (əvvəlcə ən yaxşı proksi) — standart
+# Rotate by quality (best proxy first) — default
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -H "Content-Type: application/json" \
   -d '{"strategy": "quality"}'
 
-# Təsadüfi rotasiya
+# Random rotation
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "random"}'
 
-# Ardıcıl (əvvəlcə ən uzun müddət əvvəl yoxlanılan)
+# Sequential (least recently validated first)
 curl -X POST http://localhost:20128/api/settings/oneproxy/rotate \
   -d '{"strategy": "sequential"}'
 ```
 
-### Dövrə Qırıcı
+### Circuit Breaker
 
-1proxy sinxronizasiyasının daxili dövrə qırıcısı var:
+1proxy sinxronizasiyası daxili elektrik açarına malikdir:
 
-- **Ardıcıl 5 sinxronizasiya uğursuzluğundan** sonra növbəti sinxronizasiya cəhdləri bloklanır
-- Bu əmrlə sıfırlayın: `resetOneproxyCircuitBreaker()` və ya serveri yenidən başladın
-- Sinxronizasiya statusu `GET /api/settings/oneproxy?action=status` ünvanında mövcuddur
+- sonra** 5 ardıcıl sinxronizasiya uğursuzluğu** , əlavə sinxronizasiya cəhdləri bloklanır
+- Sıfırlayın: `resetOneproxyCircuitBreaker()` və ya serveri yenidən başladın
+- Sinxronizasiya statusu `GET /api/settings/oneproxy?action=status`-da mövcuddur
 
-### 1proxy Proksilərinin Təmizlənməsi
+### 1 proksi proksilərin təmizlənməsi
 
 ```bash
-# Tək bir 1proxy proksisini silin
+# Delete a single 1proxy proxy
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?id=proxy-uuid"
 
-# BÜTÜN 1proxy proksilərini təmizləyin (əl ilə əlavə edilmiş proksilərə toxunulmur)
+# Clear ALL 1proxy proxies (manual proxies are untouched)
 curl -X DELETE "http://localhost:20128/api/settings/oneproxy?clearAll=1"
 ```
 
 ---
 
-## Aşkarlanmadan Yayınma və Gizlilik
+## Aşkarlanma və Gizlilik
 
-OmniRoute trafiki sadəcə proksi üzərindən yönləndirmir — həm də trafikin legitim görünməsini təmin edir:
+OmniRoute yalnız — proksi vasitəsilə trafiki yönləndirmir, həm də trafiki qanuni göstərir:
 
-### TLS Barmaq İzinin Saxtalaşdırılması
+### TLS Barmaq izi saxtakarlığı
 
-Brauzerə bənzər TLS barmaq izləri yaratmaq üçün `wreq-js` istifadə edir və brauzer olmayan TLS əlaqə qurma cəhdlərini işarələyən bot aşkarlama sistemlərindən yayınır.
+Qeyri-brauzer TLS əl sıxmalarını qeyd edən bot aşkarlama sistemlərindən yan keçərək, brauzerə bənzər TLS barmaq izləri yaratmaq üçün `wreq-js` istifadə edir.
 
-### CLI Barmaq İzinin Uyğunlaşdırılması
+### CLI Barmaq İzi Uyğunluğu
 
-**CLI Barmaq İzi Dəyişdiricisi** (`Parametrlər → Təhlükəsizlik`) HTTP başlıqlarını və JSON gövdəsindəki sahələri yerli CLI binar fayllarının (Claude Code, Codex və s.) dəqiq imzasına uyğunlaşdırmaq üçün yenidən sıralayır. Bu, proksi ilə **birlikdə** işləyir:
+The**CLI Barmaq izi keçidi** (`Settings → Security`) HTTP başlıqlarını və JSON əsas sahələrini yerli CLI ikili faylların (Claude Kodu, Codex və s.) dəqiq imzasına uyğunlaşdırmaq üçün yenidən sıralayır. Bu işləyir** üstündə** proxy:
 
 ```
-IP ünvanınız (bloklanıb) → Proksi IP-si (ABŞ) → Provayder API-si
-                           + TLS saxtalaşdırması
-                           + CLI barmaq izi
+Your IP (blocked) → Proxy IP (US) → Provider API
+                    + TLS spoof
+                    + CLI fingerprint
 ```
 
-Beləliklə, eyni vaxtda həm **IP maskalanması**, həm də **sorğunun autentikliyi** təmin edilir.
+Hər ikisini alırsınız**IP maskalanması** və** həqiqiliyini tələb edin** eyni vaxtda.
 
-### Proksi IP-sinin Qorunması
+### Proksi IP qorunması
 
-İdarəetmə panelindəki rəng kodlu nişanlar hansı proksi səviyyəsinin aktiv olduğunu göstərir:
+İdarə panelindəki rəng kodlu nişanlar hansı proksi səviyyəsinin aktiv olduğunu göstərir:
 
-| Nişan | Səviyyə   | Mənası                                           |
-| ----- | --------- | ------------------------------------------------ |
-| 🟢    | Qlobal    | Bütün trafik bu proksi üzərindən keçir           |
-| 🟡    | Provayder | Yalnız bu provayderin trafiki proksiləşdirilir   |
-| 🔵    | Bağlantı  | Bu konkret açar/hesab bu proksidən istifadə edir |
+| Nişan | Səviyyə   | Mənası                                             |
+| ----- | --------- | -------------------------------------------------- |
+| 🟢    | Qlobal    | Bütün trafik bu proxy vasitəsilə keçir             |
+| 🟡    | Provayder | Yalnız bu provayderin trafiki proksiləşdirilmişdir |
+| 🔵    | Əlaqə     | Bu xüsusi key/account bu proksidən istifadə edir   |
 
-Nişan həmçinin yoxlama üçün müəyyən edilmiş proksi IP-sini göstərir.
+Nişan, həmçinin yoxlama üçün həll edilmiş proksi IP göstərir.
 
 ---
 
-## Yuxarı Axın Proksi Rejimləri
+## Upstream Proxy Rejimləri
 
-CLIProxyAPI modelindən istifadə edən provayderlər üçün OmniRoute üç yuxarı axın proksi rejimini dəstəkləyir:
+CLIProxyAPI modelindən istifadə edən provayderlər üçün OmniRoute üç yuxarı proksi rejimini dəstəkləyir:
 
-| Rejim         | Təsvir                                                         |
-| ------------- | -------------------------------------------------------------- |
-| `native`      | OmniRoute proksi yönləndirməsini birbaşa idarə edir (standart) |
-| `cliproxyapi` | İdarəetməni xarici CLIProxyAPI instansiyasına ötürür           |
-| `fallback`    | Əvvəlcə yerli rejimi sınayır, sonra CLIProxyAPI-yə keçir       |
+| Rejim         | Təsvir                                                     |
+| ------------- | ---------------------------------------------------------- |
+| `native`      | OmniRoute proksi yönləndirməni birbaşa idarə edir (defolt) |
+| `cliproxyapi` | Xarici CLIProxyAPI instansiyasına nümayəndələr             |
+| `fallback`    | Əvvəlcə doğma dilini sınayır, CLIProxyAPI ya qayıdır       |
 
-Hər provayder üçün ayrıca konfiqurasiya edin:
+Hər provayder üçün konfiqurasiya edin:
 
 ```bash
 curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
@@ -425,130 +436,130 @@ curl -X PUT "http://localhost:20128/api/upstream-proxy/openai" \
 
 ---
 
-## İdarəetmə Panelinin İnterfeysi
+## İdarə paneli UI
 
-### Parametrlər → Proksi Vərəqi
+### Parametrlər → Proxy Tab
 
-- **Qlobal proksi** konfiqurasiyası (bütün trafik üçün bir dəfə təyin edilir)
-- **Hər provayder üzrə proksi** əvəzləmələri
-- **Hər bağlantı üzrə proksi** təyinatları
-- Konfiqurasiya edilmiş proksi vasitəsilə **bağlantı testi**
-- Aktiv proksi səviyyəsini göstərən **rəng kodlu nişanlar**
+- **Qlobal proxy** konfiqurasiya (bütün trafik üçün bir dəfə təyin olunur)
+- **Hər provayder proksi** üstələyir
+- **Hər bağlantı üçün proksi** tapşırıqlar
+- **Bağlantı testi** konfiqurasiya edilmiş proxy vasitəsilə
+- **Rəng kodlu nişanlar** aktiv proxy səviyyəsini göstərir
 
-### Parametrlər → 1proxy Vərəqi
+### Parametrlər → 1proxy Tab
 
-- Pulsuz proksiləri əldə etmək üçün **İndi Sinxronlaşdır** düyməsi
-- **Statistika kartları**: Ümumi, Aktiv, Orta Keyfiyyət, Son Sinxronizasiya
-- **Filtrlər**: Protokol, Ölkə Kodu, Minimum Keyfiyyət
-- Host, protokol, ölkə, keyfiyyət göstəricisi, gecikmə, anonimlik və Google-a girişi göstərən **proksi cədvəli**
-- Uğurlu/uğursuz cəhdlərin və ardıcıl uğursuzluqların sayının izlənildiyi **sinxronizasiya statusu** paneli
-- Bütün 1proxy qeydlərini silmək üçün **Hamısını Təmizlə**
-
----
-
-## API Arayışı
-
-### Proksi Parametrləri API-si
-
-| Metod    | Son Nöqtə                                      | Təsvir                               |
-| -------- | ---------------------------------------------- | ------------------------------------ |
-| `GET`    | `/api/settings/proxy`                          | Tam proksi konfiqurasiyasını əldə et |
-| `GET`    | `/api/settings/proxy?level=global`             | Qlobal proksini əldə et              |
-| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Provayder proksisini əldə et         |
-| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Effektiv proksini müəyyən et         |
-| `PUT`    | `/api/settings/proxy`                          | Proksi konfiqurasiyasını yenilə      |
-| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Səviyyədəki proksini sil             |
-
-### Proksi Reyestri API-si
-
-| Metod    | Son Nöqtə                                         | Təsvir                                   |
-| -------- | ------------------------------------------------- | ---------------------------------------- |
-| `GET`    | `/api/v1/management/proxies`                      | Bütün proksiləri siyahıla                |
-| `GET`    | `/api/v1/management/proxies?id=uuid`              | Proksini ID üzrə əldə et                 |
-| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Proksi təyinatlarını əldə et             |
-| `POST`   | `/api/v1/management/proxies`                      | Proksi yarat                             |
-| `PATCH`  | `/api/v1/management/proxies`                      | Proksini yenilə                          |
-| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Proksini sil                             |
-| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Məcburi sil                              |
-| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Kütləvi təyinat apar                     |
-| `GET`    | `/api/v1/management/proxies/assignments`          | Təyinatları siyahıla                     |
-| `GET`    | `/api/v1/management/proxies/health`               | Proksi sağlamlığı statistikasını əldə et |
-
-### Tunellər API-si
-
-OmniRoute instansiyanızı proksi üzərindən çıxış trafikini yönləndirmək əvəzinə ictimai internetdə (Cloudflare/ngrok/Tailscale) əlçatan etmək üçün [TUNNELS_GUIDE.md](./TUNNELS_GUIDE.md) sənədinə baxın. Tunelin REST API-si `/api/tunnels/{cloudflared,ngrok,tailscale}/*` altında yerləşir və yuxarıda sənədləşdirilmiş çıxış proksi zəncirindən müstəqildir.
-
-### 1proxy API-si
-
-| Metod    | Son Nöqtə                              | Təsvir                                           |
-| -------- | -------------------------------------- | ------------------------------------------------ |
-| `GET`    | `/api/settings/oneproxy`               | 1proxy proksilərini siyahıla                     |
-| `GET`    | `/api/settings/oneproxy?action=stats`  | Statistikanı və sinxronizasiya statusunu əldə et |
-| `GET`    | `/api/settings/oneproxy?action=status` | Yalnız sinxronizasiya statusunu əldə et          |
-| `POST`   | `/api/settings/oneproxy`               | Sinxronizasiyanı işə sal                         |
-| `POST`   | `/api/settings/oneproxy/rotate`        | Növbəti proksiyə keç                             |
-| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Birini sil                                       |
-| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Hamısını təmizlə                                 |
-
-### Yuxarı Axın Proksi API-si
-
-| Metod    | Son Nöqtə                         | Təsvir                                       |
-| -------- | --------------------------------- | -------------------------------------------- |
-| `GET`    | `/api/upstream-proxy/:providerId` | Yuxarı axın proksi konfiqurasiyasını əldə et |
-| `PUT`    | `/api/upstream-proxy/:providerId` | Yuxarı axın proksi rejimini təyin et         |
-| `DELETE` | `/api/upstream-proxy/:providerId` | Yuxarı axın proksi konfiqurasiyasını sil     |
+- **İndi Sinxronlaşdırın** pulsuz proksiləri əldə etmək üçün düymə
+- **Statistika kartları** : Ümumi, Aktiv, Orta Keyfiyyət, Son Sinxronizasiya
+- **Filtrlər** : Protokol, Ölkə Kodu, Min Keyfiyyət
+- **Proksi cədvəli** host, protokol, ölkə, keyfiyyət hesabı, gecikmə, anonimlik, Google girişi ilə
+- **Sinxronizasiya statusu** success/failure izləmə və ardıcıl uğursuzluq sayına malik panel
+- **Hamısını Sil** bütün 1 proksi girişini silmək üçün
 
 ---
 
-## Mühit Dəyişənləri
+## API İstinad
 
-| Dəyişən               | Standart | Təsvir                                                                                     |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `ENABLE_SOCKS5_PROXY` | `true`   | SOCKS5 proksi dəstəyini aktivləşdirir (`.env.example` daxilində standart dəyər `true`-dur) |
+### Proksi Parametrləri API
+
+| Metod    | Son nöqtə                                      | Təsvir                                |
+| -------- | ---------------------------------------------- | ------------------------------------- |
+| `GET`    | `/api/settings/proxy`                          | Tam proxy konfiqurasiyasını əldə edin |
+| `GET`    | `/api/settings/proxy?level=global`             | Qlobal proxy əldə edin                |
+| `GET`    | `/api/settings/proxy?level=provider&id=openai` | Provayder proksisini əldə edin        |
+| `GET`    | `/api/settings/proxy?resolve=connectionId`     | Effektiv proxy həll edin              |
+| `PUT`    | `/api/settings/proxy`                          | Proksi konfiqurasiyasını yeniləyin    |
+| `DELETE` | `/api/settings/proxy?level=provider&id=openai` | Səviyyədə proxy-ni silin              |
+
+### Proxy Registry API
+
+| Metod    | Son nöqtə                                         | Təsvir                        |
+| -------- | ------------------------------------------------- | ----------------------------- |
+| `GET`    | `/api/v1/management/proxies`                      | Bütün proksiləri sadalayın    |
+| `GET`    | `/api/v1/management/proxies?id=uuid`              | ID ilə proxy alın             |
+| `GET`    | `/api/v1/management/proxies?id=uuid&where_used=1` | Proksi təyinatları alın       |
+| `POST`   | `/api/v1/management/proxies`                      | Proksi yaradın                |
+| `PATCH`  | `/api/v1/management/proxies`                      | Proksini yeniləyin            |
+| `DELETE` | `/api/v1/management/proxies?id=uuid`              | Proksi silin                  |
+| `DELETE` | `/api/v1/management/proxies?id=uuid&force=1`      | Silməyə məcbur edin           |
+| `POST`   | `/api/v1/management/proxies/bulk-assign`          | Toplu təyinat                 |
+| `GET`    | `/api/v1/management/proxies/assignments`          | Tapşırıqları siyahıya alın    |
+| `GET`    | `/api/v1/management/proxies/health`               | Proksi sağlamlıq statistikası |
+
+### Tunellər API
+
+Proksi vasitəsilə gedəni yönləndirmək əvəzinə OmniRoute nümunənizi ictimai internetə (Cloudflare/ngrok/Tailscale) göstərmək üçün [TUNNELS_GUIDE.md-](./TUNNELS_GUIDE.md) ə baxın. Tuneli REST API `/api/tunnels/{cloudflared,ngrok,tailscale}/*` altında yaşayır və yuxarıda sənədləşdirilmiş gedən proxy zəncirinə ortoqonaldır.
+
+### 1 proxy API
+
+| Metod    | Son nöqtə                              | Təsvir                                     |
+| -------- | -------------------------------------- | ------------------------------------------ |
+| `GET`    | `/api/settings/oneproxy`               | 1 proksi proksi siyahıya alın              |
+| `GET`    | `/api/settings/oneproxy?action=stats`  | Stats + sinxronizasiya statusunu əldə edin |
+| `GET`    | `/api/settings/oneproxy?action=status` | Yalnız sinxronizasiya statusunu əldə edin  |
+| `POST`   | `/api/settings/oneproxy`               | Sinxronizasiyanı işə salın                 |
+| `POST`   | `/api/settings/oneproxy/rotate`        | Növbəti proksiyə çevirin                   |
+| `DELETE` | `/api/settings/oneproxy?id=uuid`       | Birini silin                               |
+| `DELETE` | `/api/settings/oneproxy?clearAll=1`    | Hamısını silin                             |
+
+### Upstream Proxy API
+
+| Metod    | Son nöqtə                         | Təsvir                                    |
+| -------- | --------------------------------- | ----------------------------------------- |
+| `GET`    | `/api/upstream-proxy/:providerId` | Yuxarı proksi konfiqurasiyasını əldə edin |
+| `PUT`    | `/api/upstream-proxy/:providerId` | Upstream proksi rejimini qurun            |
+| `DELETE` | `/api/upstream-proxy/:providerId` | Yuxarı proksi konfiqurasiyasını silin     |
 
 ---
 
-## Problemlərin Aradan Qaldırılması
+## Ətraf Mühit Dəyişənləri
 
-### "SOCKS5 proxy is disabled"
+| Dəyişən               | Defolt | Təsvir                                                                    |
+| --------------------- | ------ | ------------------------------------------------------------------------- |
+| `ENABLE_SOCKS5_PROXY` | `true` | SOCKS5 proksi dəstəyini aktivləşdirin ( `.env.example`-də defolt `true` ) |
 
-`.env` faylınızda `ENABLE_SOCKS5_PROXY=true` təyin edin və yenidən başladın.
+---
 
-### Proksi vasitəsilə "socket hang up" xətaları
+## Problemlərin aradan qaldırılması
 
-Boşdayanma bağlantılarını kəsən ucuz proksilərdə bu normaldır. OmniRoute bunu artıq aşağıdakı üsullarla idarə edir:
+### "SOCKS5 proksi deaktivdir"
 
-- Proksi bağlantılarında keep-alive funksiyasını deaktiv edir (`keepAliveTimeout: 1`)
-- Pipelining funksiyasını deaktiv edir (`pipelining: 0`)
-- Təkrar əl sıxmalarının qarşısını almaq üçün dispetçerləri keşləyir
+`.env` faylınızda `ENABLE_SOCKS5_PROXY=true` qurun və yenidən başladın.
 
-Problem davam edərsə, başqa proksini sınayın və ya 1proxy rotasiya funksiyasından istifadə edin.
+### proxy vasitəsilə "socket as up" xətaları
 
-### OAuth zamanı "unsupported_country_region_territory"
+Boş bağlantıları buraxan ucuz proksilərlə bu normaldır. OmniRoute artıq bunu idarə edir:
 
-OAuth axınını başlatmazdan **əvvəl** proksinin konfiqurasiya edildiyinə əmin olun. OmniRoute OAuth token mübadiləsini konfiqurasiya edilmiş proksi vasitəsilə yönləndirir. Əvvəlcə qlobal və ya provayder səviyyəli proksi təyin edin, sonra qoşulun.
+- Proksi bağlantılarında canlı saxlamağın deaktiv edilməsi (`keepAliveTimeout: 1`)
+- Boru kəmərinin deaktiv edilməsi (`pipelining: 0`)
+- Təkrar əl sıxmalarının qarşısını almaq üçün dispetçerləri keşləmə
+
+Davam edərsə, başqa proksi cəhd edin və ya 1proksi fırlanma xüsusiyyətindən istifadə edin.
+
+### OAuth zamanı "supported_country_region_territory"
+
+Proksinin konfiqurasiya edildiyinə əmin olun** əvvəl** OAuth axını başlayır. OmniRoute marşrutları OAuth token mübadiləsini konfiqurasiya edilmiş proxy vasitəsilə. Əvvəlcə qlobal və ya provayder səviyyəsində proksi təyin edin, sonra qoşulun.
 
 ### Proksi istifadə edilmir
 
-Həlletmə ardıcıllığını yoxlayın:
+Qətnamə qaydasını yoxlayın:
 
 1. `GET /api/settings/proxy?resolve=your-connection-id` ilə yoxlayın
-2. Proksinin `status` dəyərinin `active` (`inactive` deyil) olduğunu yoxlayın
-3. Proksi təyinatının əhatə dairəsinin bağlantınıza uyğun olduğuna əmin olun
+2. Proksi `status` `active` ( `inactive` deyil) olub olmadığını yoxlayın
+3. Proksi təyinat dairəsinin bağlantınıza uyğun olduğundan əmin olun
 
-### 1proxy sinxronizasiyası uğursuz olur
+### 1 proksi sinxronizasiya uğursuz oldu
 
-Sinxronizasiya statusunu yoxlayın:
+Sinxronizasiya vəziyyətini yoxlayın:
 
 ```bash
 curl "http://localhost:20128/api/settings/oneproxy?action=status"
 ```
 
-Əgər `consecutiveFailures >= 5` olarsa, dövrə kəsici işə düşüb. Sıfırlamaq üçün serveri yenidən başladın və ya əl ilə sıfırlanmasını gözləyin.
+`consecutiveFailures >= 5` olarsa, elektrik açarı işə salınmışdır. Sıfırlamaq üçün serveri yenidən başladın və ya əl ilə sıfırlanmasını gözləyin.
 
 ---
 
-## Verilənlər Bazası Sxemi
+## Verilənlər bazası sxemi
 
 ### `proxy_registry` Cədvəli
 
@@ -564,13 +575,13 @@ CREATE TABLE proxy_registry (
   region TEXT,
   notes TEXT,
   status TEXT DEFAULT 'active',
-  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' və ya 'oneproxy'
-  quality_score INTEGER,                     -- 0-100 (yalnız 1proxy)
-  latency_ms INTEGER,                        -- millisaniyə (yalnız 1proxy)
+  source TEXT NOT NULL DEFAULT 'manual',    -- 'manual' or 'oneproxy'
+  quality_score INTEGER,                     -- 0-100 (1proxy only)
+  latency_ms INTEGER,                        -- milliseconds (1proxy only)
   anonymity TEXT,                            -- transparent/anonymous/elite
-  google_access INTEGER DEFAULT 0,           -- Google-a daxil ola bilər? (1proxy)
-  last_validated TEXT,                       -- ISO zaman möhürü (1proxy)
-  country_code TEXT,                         -- ISO 2 hərfli kod (1proxy)
+  google_access INTEGER DEFAULT 0,           -- can access Google? (1proxy)
+  last_validated TEXT,                       -- ISO timestamp (1proxy)
+  country_code TEXT,                         -- ISO 2-letter code (1proxy)
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -583,7 +594,7 @@ CREATE TABLE proxy_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proxy_id TEXT NOT NULL REFERENCES proxy_registry(id),
   scope TEXT NOT NULL,        -- 'global', 'provider', 'account', 'combo'
-  scope_id TEXT,              -- provayder ID-si, bağlantı ID-si və ya kombinasiya ID-si
+  scope_id TEXT,              -- provider ID, connection ID, or combo ID
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(scope, scope_id)
@@ -592,42 +603,42 @@ CREATE TABLE proxy_assignments (
 
 ---
 
-## Proksi Sağlamlığının Yoxlanılması (v3.8.16+)
+## Proksi Sağlamlığının Yoxlanması (v3.8.16 +)
 
-OmniRoute-un **proksi sürətli uğursuzluq** mexanizmi (`src/lib/proxyHealth.ts`) sürətli TCP bağlantı yoxlaması vasitəsilə işləməyən proksiləri <2s ərzində aşkarlayır, sonra hər sorğu üzrə əlavə yükün qarşısını almaq üçün **nəticəni keşləyir**.
+OmniRoute's** proxy sürətli uğursuzluq** mexanizm (`src/lib/proxyHealth.ts`) sürətli TCP əlaqə yoxlanışı vasitəsilə < 2s-də ölü proksiləri aşkar edir, sonra** nəticəni yaddaşda saxlayır** hər sorğuya əlavə xərclərdən qaçınmaq üçün.
 
-### İş Prinsipi
+### Necə işləyir
 
 ```
-Sorğu ──▶ ProxyHealthCache.get(url)
+Request ──▶ ProxyHealthCache.get(url)
              │
-             ├─ Keşdə tapıldı + yenidir?  ──▶ keşlənmiş statusu qaytar
+             ├─ Cache hit + fresh?  ──▶ return cached status
              │
-             └─ Keşdə yoxdur / köhnədir?  ──▶ host:port ünvanına TCP bağlantısı
-                                              (taymaut: FAST_FAIL_TIMEOUT_MS)
-                                              ──▶ HEALTH_CACHE_TTL_MS müddətinə keşlə
-                                              ──▶ nəticəni qaytar
+             └─ Cache miss / stale?  ──▶ TCP connect to host:port
+                                          (timeout: FAST_FAIL_TIMEOUT_MS)
+                                          ──▶ cache for HEALTH_CACHE_TTL_MS
+                                          ──▶ return result
 ```
 
-Bu mexanizm olmasa, işləməyən proksi uğursuzluqla nəticələnməzdən əvvəl hər sorğunu tam `PROXY_TIMEOUT_MS` müddəti (standart olaraq 30s) ərzində bloklayardı.
+Bu olmadan, ölü bir proksi uğursuzluqdan əvvəl tam `PROXY_TIMEOUT_MS` (standart 30s) üçün hər sorğunu bloklayardı.
 
-### Tənzimlənə Bilən Mühit Dəyişənləri
+### Tənzimlənən Mühit Dəyişənləri
 
-| Dəyişən                      | Standart | Məqsəd                                             |
-| ---------------------------- | -------- | -------------------------------------------------- |
-| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`   | Hər sağlamlıq yoxlaması üçün TCP bağlantı taymautu |
-| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000`  | Sağlamlıq nəticəsinin keşlənmə müddəti             |
+| Dəyişən                      | Defolt  | Məqsəd                                                  |
+| ---------------------------- | ------- | ------------------------------------------------------- |
+| `PROXY_FAST_FAIL_TIMEOUT_MS` | `2000`  | sağlamlıq yoxlanışı üçün TCP bağlantısı fasiləsi        |
+| `PROXY_HEALTH_CACHE_TTL_MS`  | `30000` | Sağlamlıq nəticəsi nə qədər müddətə yaddaşda saxlanılır |
 
 **Tövsiyə olunan dəyərlər:**
 
-| Ssenari                          | Sürətli uğursuzluq taymautu | Keş TTL-i | Əsaslandırma                                                                           |
-| -------------------------------- | --------------------------- | --------- | -------------------------------------------------------------------------------------- |
-| Yüksək ötürücülüklü API şlüzü    | 1500ms                      | 60000ms   | Aqressiv sürətli uğursuzluq, yoxlamaları azaltmaq üçün daha uzun keş                   |
-| Coğrafi paylanmış qovşaqlar      | 3000ms                      | 15000ms   | Daha yavaş şəbəkələrə daha çox vaxt lazımdır; sürətli ehtiyat keçid üçün daha qısa keş |
-| Hazırlama / sınaq                | 1000ms                      | 10000ms   | Lokal proksilərdə sürətli iterasiya                                                    |
-| Gizlilik / aşkarlanmadan yayınma | 2500ms                      | 45000ms   | Sürət məhdudiyyətlərini işə sala biləcək sürətli yoxlamalardan yayınma                 |
+| Ssenari                     | Sürətli uğursuzluq fasiləsi | Cache TTL | Əsaslandırma                                                                         |
+| --------------------------- | --------------------------- | --------- | ------------------------------------------------------------------------------------ |
+| Yüksək ötürücülü API şlüzü  | 1500ms                      | 60000ms   | Çekləri azaltmaq üçün aqressiv uğursuzluq, daha uzun keş                             |
+| Geo-paylanmış qovşaqlar     | 3000ms                      | 15000ms   | Daha yavaş şəbəkələr daha çox vaxt tələb edir; sürətli uğursuzluq üçün daha qısa keş |
+| İnkişaf / sınaq             | 1000ms                      | 10000ms   | Yerli proksilərdə sürətli iterasiya                                                  |
+| Gizli / aşkarlanma əleyhinə | 2500ms                      | 45000ms   | Sürət limitlərinə səbəb ola biləcək sürətli araşdırmalardan çəkinin                  |
 
-### Proksi Sağlamlığının Yoxlanması
+### Proxy Sağlamlığının yoxlanılması
 
 ```ts
 import { getAllProxyHealthStatuses, invalidateProxyHealth } from "omniroute/proxyHealth";
@@ -637,62 +648,62 @@ for (const s of statuses) {
   console.log(`${s.proxyUrl} → healthy=${s.healthy}, stale=${s.stale}`);
 }
 
-// Konkret proksinin təkrar yoxlanmasını məcbur et
+// Force re-check a specific proxy
 invalidateProxyHealth("http://user:pass@203.0.113.7:8080");
 ```
 
-Keş qeydi `HEALTH_CACHE_TTL_MS` müddətini keçdikdə və növbəti sorğu yeni yoxlamanı başladacaqsa, `stale` bayrağı `true` olur.
+Keş girişi `HEALTH_CACHE_TTL_MS` keçdikdə `stale` bayrağı `true` olur və növbəti sorğu yeni yoxlamaya səbəb olacaq.
 
-### Proksi Növünə Görə Standart Dəyərlər
+### Baş Proksi Tip Defoltları
 
-Sağlamlıq yoxlaması URL sxeminə əsaslanan uyğun standart dəyərlərdən istifadə edir:
+Sağlamlıq yoxlaması URL sxeminə əsaslanan həssas defoltlardan istifadə edir:
 
-| Sxem                       | Standart port |
-| -------------------------- | ------------- |
-| `http://`                  | 8080          |
-| `https://`                 | 443           |
-| `socks5://` / `socks5h://` | 1080          |
+| Sxem                       | Defolt port |
+| -------------------------- | ----------- |
+| `http://`                  | 8080        |
+| `https://`                 | 443         |
+| `socks5://` / `socks5h://` | 1080        |
 
-URL-dəki fərdi portlar (`http://host:9999`) həmişə sxemin standart dəyərindən üstün tutulur.
+URL da (`http://host:9999`) xüsusi portlar həmişə standart sxemdən üstündür.
 
 ---
 
-## Proksi Analitikası və Müşahidəolunma
+## Proksi Analitika və Müşahidə Olunabilirlik
 
-OmniRoute operatorlara marşrutlaşdırma nümunələrini, gecikmə sıçrayışlarını və təkrarlanan nasazlıqları müəyyənləşdirməyə kömək etmək üçün hər proksi üzrə istifadəni izləyir.
+OmniRoute operatorlara marşrutlaşdırma nümunələri, gecikmə sıçrayışları və təkrarlanan uğursuzluqları diaqnoz etməyə kömək etmək üçün hər bir proksi istifadəsini izləyir.
 
-### Nələr İzlənilir
+### Nə İzlənir
 
-Konfiqurasiya edilmiş proksi vasitəsilə göndərilən hər sorğu üçün OmniRoute aşağıdakıları qeydə alır:
+Konfiqurasiya edilmiş proxy vasitəsilə hər sorğu üçün OmniRoute qeyd edir:
 
-| Metrika      | Təsvir                                                              |
-| ------------ | ------------------------------------------------------------------- |
-| `proxy_url`  | Tam proksi URL-i (autentifikasiya məlumatları maskalanmış şəkildə)  |
-| `provider`   | Yuxarı axın provayderinin ID-si (openai, anthropic və s.)           |
-| `latency_ms` | Proksi əlaqəsinin qurulması daxil olmaqla ümumi gediş-gəliş müddəti |
-| `connect_ms` | Yalnız TCP bağlantısının qurulma müddəti                            |
-| `status`     | Yuxarı axından alınan HTTP status kodu                              |
-| `error`      | Sorğu uğursuz olarsa, xəta sinfi                                    |
-| `timestamp`  | ISO 8601 UTC                                                        |
+| Metrik       | Təsvir                                             |
+| ------------ | -------------------------------------------------- |
+| `proxy_url`  | Tam proxy URL (identifikasiya məlumatları maskalı) |
+| `provider`   | Upstream provayder ID (açıq, antropik və s.)       |
+| `latency_ms` | Proksi əl sıxma daxil olmaqla ümumi gediş vaxtı    |
+| `connect_ms` | TCP yalnız əlaqə vaxtı                             |
+| `status`     | yuxarıdan HTTP status kodu                         |
+| `error`      | Sorğu uğursuz olarsa, xəta sinfi                   |
+| `timestamp`  | ISO 8601 UTC                                       |
 
-### Məlumatlara Giriş
+### Məlumata daxil olmaq
 
 ```bash
-# Son proksi hadisələri
+# Recent proxy events
 curl -H "Authorization: Bearer $OMNIROUTE_KEY" \
   "http://localhost:20128/api/usage/proxy-logs?limit=100"
 ```
 
-Faktiki son nöqtə `/api/usage/proxy-logs`-dur (bax: `src/app/api/usage/proxy-logs/route.ts`). Bu son nöqtə aşağıdakıları dəstəkləyir:
+Həqiqi son nöqtə `/api/usage/proxy-logs` (bax `src/app/api/usage/proxy-logs/route.ts`). Bu son nöqtə dəstəkləyir:
 
-- `GET /api/usage/proxy-logs` — proksi jurnallarını əldə etmək
-- `DELETE /api/usage/proxy-logs` — bütün proksi jurnallarını təmizləmək
+- `GET /api/usage/proxy-logs` — proksi qeydlərini əldə edin
+- `DELETE /api/usage/proxy-logs` — bütün proxy qeydlərini təmizləyin
 
-Lazım olduqda, ümumiləşdirilmiş statistik göstəriciləri SQL vasitəsilə birbaşa `proxy_logs` cədvəlindən sorğulamaq olar. İdarəetmə panelinin istifadəçi interfeysi ümumiləşdirilmiş görünüşlər təklif edə bilər.
+Lazım gələrsə, ümumi statistika birbaşa `proxy_logs` cədvəlindən SQL vasitəsilə sorğulana bilər. İdarə paneli UI ümumi görünüşlər təklif edə bilər.
 
 ### Ümumi Nümunələr
 
-**Qeyri-sabit proksini aşkarlamaq** (uğur və uğursuzluq arasında növbələşir):
+**Çılpaq proksi aşkar edin** ( success/failure arasında dəyişir):
 
 ```sql
 SELECT proxy_url,
@@ -706,7 +717,7 @@ HAVING error_pct > 5
 ORDER BY error_pct DESC;
 ```
 
-**Yavaş proksiləri tapmaq** (p95 gecikməsi > 2 san.):
+**Yavaş proksiləri tapın** (p95 gecikmə > 2s):
 
 ```sql
 WITH ranked AS (
@@ -723,96 +734,70 @@ ORDER BY latency_ms DESC;
 
 ---
 
-## Rotasiya Strategiyası üçün Qərar Ağacı
+## Rotasiya Strategiyası Qərar Ağacı
 
-Bir əhatə dairəsinə bir neçə proksi təyin edildikdə, OmniRoute hər sorğu üçün hansının istifadə ediləcəyini seçmək məqsədilə **rotasiya strategiyasından** istifadə edir. Strategiya əhatə dairəsi səviyyəsində konfiqurasiya edilir (qlobal, hər provayder, hər hesab və hər kombinasiya üzrə).
+Çoxsaylı proksilər əhatə dairəsinə təyin edildikdə, OmniRoute a istifadə edir** fırlanma strategiyası** hər sorğu üçün hansının istifadə olunacağını seçin. Strategiya əhatə səviyyəsində konfiqurasiya edilir (qlobal, hər provayder, hər hesab, hər kombi).
 
 ### Mövcud Strategiyalar
 
-| Strategiya           | Nə zaman istifadə edilməlidir                           | Kompromis                                                                                     |
-| -------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `quality` (standart) | Müxtəlif keyfiyyətli proksilərin olduğu istehsal mühiti | Yüksək reytinqli proksilərə üstünlük verir; aşağı reytinqli proksiləri istifadəsiz qoya bilər |
-| `random`             | Yükün paylanması, məxfilik                              | Bərabər paylanma; keyfiyyət siqnallarını nəzərə almır                                         |
-| `sequential`         | Sazlama, deterministik sınaq                            | Proksiləri ardıcıllıqla dövr edir; məntiqini anlamaq asandır                                  |
+| Strategiya         | Nə vaxt istifadə etməli                  | Mübadilə                                                                          |
+| ------------------ | ---------------------------------------- | --------------------------------------------------------------------------------- |
+| `quality` (defolt) | Qarışıq keyfiyyətli proksilərlə istehsal | Yüksək reytinqli proksilərə üstünlük verir; aşağı reytinqli olanlar ac qala bilər |
+| `random`           | Yük paylanması, məxfilik                 | bərabər paylama; keyfiyyət siqnallarına məhəl qoymur                              |
+| `sequential`       | Sazlama, deterministik test              | Proksilər arasında ardıcıl olaraq dövr edir; əsaslandırmaq asandır                |
 
-### Qərar Ağacı
+### Qərar ağacı
 
 ```
-                    Proksiləriniz üçün keyfiyyət balları varmı?
+                    Do you have quality scores for your proxies?
                     │
         ┌───────────┴───────────┐
         │                       │
-       BƏLİ                    XEYR
+       YES                     NO
         │                       │
-   Bütün proksilər             │
-   keyfiyyət baxımından         │
-   təxminən bərabərdirmi?       │
+   Are all proxies             │
+   roughly equal                  │
+   in quality?                   │
         │                       │
    ┌────┴────┐                  │
    │         │                  │
- BƏLİ      XEYR               İstifadə edin:
+  YES       NO                Use
    │         │              `random`
-   │         │              (bərabər paylanma
-   │         │              zamanla keyfiyyət
-   │         │              məlumatı toplayır)
+   │         │              (even spread
+   │         │              builds quality
+   │         │              data over time)
    │         │
-   │    İstifadə edin: `quality`
-   │    (müxtəlif keyfiyyət
-   │    səviyyələri üçün ən yaxşısı)
+   │    Use `quality`
+   │    (best for
+   │    mixed quality)
    │
-İstifadə edin: `random`
-(yükü bərabər
-paylayır)
+Use `random`
+(spread load
+evenly)
 ```
 
-## Öz Proksiləriniz üçün Avtomatik Nasazlıq İstisnası
+## Öz Proksiləriniz üçün Avtomatik Uğursuzluq İstisnası
 
-1proxy marketplace hovuzu artıq nasaz proksilərin prioritetini avtomatik olaraq azaldır (bax:
-[Proksi Keyfiyyət Balları](#proxy-quality-scores)). Reyestrə **sizin** əlavə etdiyiniz
-proksilər üçün fon rejimində işləyən sağlamlıq planlaşdırıcısı
-(`src/lib/proxyHealth/scheduler.ts`) heç nəyi silmədən eyni «işləməyən üzvü
-zəncirdən avtomatik çıxarma» davranışını təmin edir:
+1proksi bazarı hovuzu artıq özbaşına uğursuz proksiləri avtomatik pisləşdirir (bax: [Proksi Keyfiyyət Xalları](#proxy-quality-scores) ). Proksilər üçün** sən** reyestrə əlavə edildikdə, fon sağlamlığı planlaşdırıcısı (`src/lib/proxyHealth/scheduler.ts`) heç nəyi silmədən eyni "ölü üzvü avtomatik olaraq zəncirdən çıxarmaq" davranışını təmin edir:
 
 ```bash
-# .env — ardıcıl 3 uğursuz yoxlamadan sonra proksini proqram təminatı səviyyəsində deaktiv edin və
-# yoxlamalara yenidən cavab verməyə başladıqda onu avtomatik olaraq aktivləşdirin.
+# .env — soft-disable a proxy after 3 consecutive failed probes, re-enable it
+# automatically once it starts answering probes again.
 PROXY_AUTO_DISABLE=true
 PROXY_AUTO_REMOVE_AFTER=3
 ```
 
-Bunun çoxproksili zəncirə uyğunlaşması:
+Çox proksi zəncirinə necə uyğun gəlir:
 
-1. Planlaşdırıcı qeydiyyatdan keçmiş hər proksini hər `PROXY_HEALTH_INTERVAL_MS`
-   intervalında yoxlayır (standart olaraq 10 dəq.; minimum 1 dəq.).
-2. `PROXY_AUTO_REMOVE_AFTER` sayda ardıcıl **qəti** uğursuzluqdan sonra (real
-   bağlantı xətası — taymaut və ya yoxlama hədəfinin öz 5xx xətası heç vaxt nəzərə
-   alınmır, bax: [Proksi Sağlamlığının Yoxlanması](#proxy-health-checking-v3816)),
-   proksinin `status` dəyəri `dead` olaraq təyin edilir.
-3. `dead`, hovuz/rotasiya həlli tərəfindən istifadə edilən aktiv status filtrinin
-   istisna etdiyi statuslardan biridir, buna görə əhatə dairəsinin rotasiyası
-   (dairəvi / təsadüfi / sabit / gecikmə — bax:
-   [Rotasiya Strategiyası üzrə Qərar Ağacı](#rotation-strategy-decision-tree))
-   həmin proksini yeni sorğulara dərhal verməyi dayandırır. Hovuzdakı digər
-   proksilərə təsir göstərilmir və bütün hovuz heç vaxt xəbərdarlıq etmədən birbaşa
-   bağlantıya keçmir — [4 Səviyyəli Proksi Sistemi](#4-level-proxy-system)
-   bölməsindəki xəta zamanı bağlı qalma qoruyucusuna baxın.
-4. Planlaşdırıcı `dead` proksiləri eyni intervalda yoxlamağa davam edir. Növbəti
-   uğurlu yoxlama `status` dəyərini yenidən `active` vəziyyətinə keçirir və proksi
-   rotasiyaya qayıdır — əl ilə yenidən əlavə etmək tələb olunmur.
+1. Planlayıcı hər bir qeydə alınmış proksi-ni hər `PROXY_HEALTH_INTERVAL_MS` yoxlayır (standart 10 dəqiqə; minimum 1 dəq).
+2. Ardıcıl `PROXY_AUTO_REMOVE_AFTER` sonra** yekun** uğursuzluqlar (həqiqi əlaqə nasazlığı — a timeout və ya zond hədəfinin öz 5xx heç vaxt sayılmaz, bax [Proxy Sağlamlığının Yoxlanması](#proxy-health-checking-v3816) ), proksinin `status` `dead` olaraq təyin edilib.
+3. `dead` pool/rotation rezolyusiyasının istifadə etdiyi canlı status filtrinin istisna etdiyi statuslardan biridir, ona görə də əhatə dairəsinin fırlanması (dairəvi rejimli / təsadüfi / yapışqan / gecikmə — [Fırlanma Strategiyası Qərar Ağacına](#rotation-strategy-decision-tree) baxın) həmin proksinin yeni sorğulara verilməsini dərhal dayandırır. Hovuzdakı başqa heç bir proksi təsirlənmir və bütün hovuz heç vaxt səssizcə birbaşa əlaqəyə qayıtmır — [4-Səviyyəli Proksi Sistemi](#4-level-proxy-system) uğursuz qapalı qoruyucuya baxın.
+4. The scheduler keeps probing `dead` proxies on the same interval. The next successful probe flips `status` back to `active` and it re-enters rotation — no manual re-add required.
 
-Bu funksiya qəsdən **seçim əsasında aktivləşdirilir və dağıdıcı deyil**: standart
-olaraq planlaşdırıcı yalnız uğursuzluqları sayır və qeydə alır (`decision.ts`
-faylındakı C siyasətinə baxın), `PROXY_AUTO_DISABLE` isə heç vaxt sətri silmir —
-bunun üçün ayrıca, daha sərt `PROXY_AUTO_REMOVE` bayrağı nəzərdə tutulub. Hər
-ikisi `true` olaraq təyin edilərsə, `PROXY_AUTO_REMOVE` üstünlük təşkil edir
-(silinmək üzrə olan proksini bu arada proqram təminatı səviyyəsində deaktiv
-etməyin faydası yoxdur). Dəyişənlərin tam siyahısı üçün
-[Mühit Konfiqurasiyası](../reference/ENVIRONMENT.md) arayışına baxın.
+Bu qəsdəndir** qoşulma və dağıdıcı olmayan** : defolt olaraq planlayıcı yalnız uğursuzluqları hesablayır və qeyd edir ( `decision.ts`-da C siyasətinə baxın) və `PROXY_AUTO_DISABLE` heç vaxt ayrı, daha aqressiv `PROXY_AUTO_REMOVE` bayrağının məqsədi olan — cərgəsini silmir. Hər ikisi `true` olaraq təyin edilərsə, `PROXY_AUTO_REMOVE` qalib gəlir (silinmək üzrə olan proksi aralarındakı yumşaq deaktiv üçün heç bir faydası yoxdur). Tam dəyişən siyahısı üçün [Ətraf Mühitin Konfiqurasiyası](../reference/ENVIRONMENT.md) arayışına baxın.
 
 ---
 
-> 📖 **Əlaqəli sənədlər:**
+> 📖** Əlaqədar sənədlər:**
 >
-> - [İstifadəçi Təlimatı](../guides/USER_GUIDE.md) — Ümumi quraşdırma və konfiqurasiya
-> - [API Arayışı](../reference/API_REFERENCE.md) — Tam API sənədləri
-> - [Mühit Konfiqurasiyası](../reference/ENVIRONMENT.md) — Bütün mühit dəyişənləri
+> - [İstifadəçi Təlimatı](../guides/USER_GUIDE.md) — Ümumi quraşdırma və konfiqurasiya - [API İstinad](../reference/API_REFERENCE.md) — Tam API sənədləri - [Ətraf Mühit Konfiqurasiyası](../reference/ENVIRONMENT.md) — Bütün mühit dəyişənləri
