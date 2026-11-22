@@ -49,7 +49,7 @@ Každé nasazení poskytuje vlastní kopii specifikace na adrese `/openapi.yaml`
 
 ---
 
-## Chatová dokončení
+## Dokončení chatu
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### Vlastní hlavičky
+### Vlastní záhlaví
 
-| Hlavička                 | Směr      | Popis                                                                                                                                                                                                               |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Požadavek | Nastavte na `true` pro obejití mezipaměti                                                                                                                                                                           |
-| `x-omniroute-no-memory`  | Požadavek | Nastavte na `true` pro vynechání vložení paměti a dovedností pro tento požadavek (zrcadlí no-cache; zabraňuje režii tokenů/nákladů na každé volání)                                                                 |
-| `X-OmniRoute-Progress`   | Požadavek | Nastavte na `true` pro události průběhu                                                                                                                                                                             |
-| `X-Session-Id`           | Požadavek | Klíč trvalé relace pro afinitu externí relace                                                                                                                                                                       |
-| `x_session_id`           | Požadavek | Varianta s podtržítkem je také podporována (přímé HTTP)                                                                                                                                                             |
-| `X-OmniRoute-Session-Id` | Požadavek | Značka relace/konverzace zadaná volajícím (také se předává do paměti). Pokud je přítomna, uloží se doslovně do `call_logs.session_tag` pro přiřazení nákladů podle relace (#8249) — při absenci se nikdy negeneruje |
-| `Idempotency-Key`        | Požadavek | Klíč pro odstranění duplicit (časové okno 5 s)                                                                                                                                                                      |
-| `X-Request-Id`           | Požadavek | Alternativní klíč pro odstranění duplicit                                                                                                                                                                           |
-| `x-omniroute-connection` | Požadavek | Připnutí požadavku pro jeden model k připojení jednoho poskytovatele (účtu) podle jeho ID — viz [Připnutí účtu pro jednotlivý požadavek](#account-pinning-per-request)                                              |
-| `X-OmniRoute-Cache`      | Odpověď   | `HIT` nebo `MISS` (bez streamování)                                                                                                                                                                                 |
-| `X-OmniRoute-Idempotent` | Odpověď   | `true`, pokud byly odstraněny duplicity                                                                                                                                                                             |
-| `X-OmniRoute-Progress`   | Odpověď   | `enabled`, pokud je sledování průběhu aktivní                                                                                                                                                                       |
-| `X-OmniRoute-Session-Id` | Odpověď   | Efektivní ID relace použité službou OmniRoute                                                                                                                                                                       |
-| `X-OmniRoute-Request-Id` | Odpověď   | ID korelace požadavku (je-li známo)                                                                                                                                                                                 |
-| `X-OmniRoute-Version`    | Odpověď   | Verze sestavení OmniRoute (vždy přítomná)                                                                                                                                                                           |
-| `X-OmniRoute-Cost-Saved` | Odpověď   | Částka v USD, které se mezipaměť vyhnula při `HIT` (pouze při zásahu mezipaměti)                                                                                                                                    |
-| `X-OmniRoute-Decision`   | Odpověď   | Trasovací záznam směrování: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` je kombinovaná strategie nebo `single` pro požadavek bez kombinace) — vždy přítomný v odpovědích při dokončení            |
+| Záhlaví                  | Směr    | Popis                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Žádost  | Chcete-li obejít mezipaměť, nastavte na `true`                                                                                                                                                                                                                                                                                                                                   |
+| `x-omniroute-no-memory`  | Žádost  | Nastavením na `true` přeskočíte vkládání dovedností + paměti pro tento požadavek (zrcadlí se bez mezipaměti; zabrání režii token/cost na volání)                                                                                                                                                                                                                                 |
+| `x-omniroute-no-log`     | Žádost  | Nastavte na `true`, chcete-li z protokolů volání pro tento požadavek na odvození vynechat užitečné zatížení request/response (všechny trasy chatu: dokončení chatu, odpovědi, zprávy, dokončení, Gemini). Časové razítko, model, stav, trvání a počty tokenů jsou stále zaznamenávány. Zkombinujte s `x-omniroute-no-memory` a `x-omniroute-no-cache` pro úplné odhlášení obsahu |
+| `X-OmniRoute-Progress`   | Žádost  | Nastavte na `true` pro události postupu                                                                                                                                                                                                                                                                                                                                          |
+| `X-Session-Id`           | Žádost  | Sticky klíč relace pro externí příbuznost relace                                                                                                                                                                                                                                                                                                                                 |
+| `x_session_id`           | Žádost  | Přijímá se také varianta podtržení (přímá HTTP)                                                                                                                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Session-Id` | Žádost  | Značka session/conversation dodaná volajícím (také napájí paměť). Pokud je přítomen, přetrvává doslovně do `call_logs.session_tag` pro atribuci nákladů na relaci (#8249) — se nikdy nesyntetizuje, když není přítomen                                                                                                                                                           |
+| `Idempotency-Key`        | Žádost  | Odstraňovací klíč (okno 5s)                                                                                                                                                                                                                                                                                                                                                      |
+| `X-Request-Id`           | Žádost  | Alternativní dedup klíč                                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-connection` | Žádost  | Připněte požadavek jednoho modelu k jednomu připojení poskytovatele (účtu) podle jeho id — viz [Připnutí účtu na požadavek](#account-pinning-per-request)                                                                                                                                                                                                                        |
+| `X-OmniRoute-Cache`      | Odpověď | `HIT` nebo `MISS` (bez streamování)                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Idempotent` | Odpověď | `true` pokud je deduplikován                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Progress`   | Odpověď | `enabled` pokud je zapnuto sledování pokroku                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Session-Id` | Odpověď | Efektivní relace ID používaná OmniRoute                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Request-Id` | Odpověď | ID korelace požadavku (pokud je známo)                                                                                                                                                                                                                                                                                                                                           |
+| `X-OmniRoute-Version`    | Odpověď | Verze sestavení OmniRoute (vždy k dispozici)                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Cost-Saved` | Odpověď | USD mezipaměť se vyhýbala na HIT (pouze přístupy do mezipaměti)                                                                                                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Decision`   | Odpověď | Trasování směrování: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` je kombinovaná strategie nebo `single` pro nekombinovaný požadavek) — je vždy přítomen při dokončení odpovědí                                                                                                                                                                                 |
 
-> Poznámka k Nginx: pokud se spoléháte na hlavičky s podtržítky (například `x_session_id`), povolte `underscores_in_headers on;`.
+> Poznámka Nginx: pokud se spoléháte na podtržítka (například `x_session_id`), povolte `underscores_in_headers on;`.
 
-#### Připnutí účtu pro jednotlivý požadavek
+#### Připnutí účtu na žádost
 
-Pokud má poskytovatel několik připojení (účtů nebo klíčů), OmniRoute obvykle vybere jedno
-prostřednictvím své strategie výběru účtu. Požadavek může místo toho připnout jedno konkrétní připojení
-pomocí hlavičky `x-omniroute-connection`:
+Když má poskytovatel několik připojení (účtů nebo klíčů), OmniRoute obvykle vybere jedno prostřednictvím své strategie výběru účtu. Požadavek může místo toho připnout jedno konkrétní připojení s hlavičkou `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,24 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Kde ID najít.** Otevřete stránku poskytovatele v dashboardu
-  (**Dashboard → Providers → <provider>**) a klikněte na čip s ID `xxxxxxxx…` v řádku připojení —
-  zkopíruje se celé ID připojení.
-- **Které požadavky ho respektují.** Požadavky na jediný model (`provider/model`) na
-  `/v1/chat/completions`, `/v1/messages` a `/v1/responses`. Kombinace hlavičku ignorují: připněte
-  účet pro každý krok kombinace prostřednictvím vlastního připojení daného kroku.
-- **Připnutí je striktní, nikoli preferované.** Připnuté připojení se používá výhradně. Selhání
-  uvnitř požadavku zaznamená cooldown účtu, ale nepřepne na sourozenecký účet stejného poskytovatele.
-- **Cooldown a vyčerpání kvóty připnutí uvolní.** Dokud je připnuté připojení v cooldownu,
-  je vyčerpána kvóta nebo je připojení zablokováno zásadou kvóty, následné požadavky se přepnou
-  na ostatní připojení poskytovatele, přesně jako u provozu bez připnutí.
-- **Neznámá nebo deaktivovaná ID selžou.** ID, které není v aktivním fondu poskytovatele (bylo
-  smazáno, deaktivováno nebo patří jinému poskytovateli), nezanechá žádný způsobilý účet, takže
-  požadavek selže namísto tichého směrování jinam.
+- **Kde najít id.** Otevřete stránku poskytovatele na hlavním panelu (** Dashboard → Providers → <provider>** ) a klikněte na čip ID `xxxxxxxx…` na řádku připojení — zkopíruje celé ID připojení.
+- **Která žádá ctít to.** Požadavky na jeden model (`provider/model`) na `/v1/chat/completions`, `/v1/messages` a `/v1/responses`. Kombinace ignorují hlavičku: místo toho připněte účet na kombinovaný krok přes vlastní připojení kroku.
+- **Špendlík je přísný, není preferován.** Používá se výhradně kolíkové spojení. Selhání uvnitř požadavku zaznamená cooldown účtu, ale ano** ne** otočit na sourozenecký účet stejného poskytovatele.
+- **Cooldown a kvóta uvolní špendlík.** Zatímco se připnuté připojení ochlazuje, kvóta je vyčerpána nebo je blokována zásadou kvót, pozdější požadavky se vrátí k ostatním připojením poskytovatele, stejně jako nepřipnutý provoz.
+- **Neznámá nebo deaktivovaná ID selžou.** ID, které není v aktivním fondu poskytovatele (smazané, deaktivované nebo patřící jinému poskytovateli), nezanechá žádný způsobilý účet, takže požadavek selže namísto tichého směrování jinam.
 
-Claude Code odesílá vlastní hlavičky prostřednictvím `ANTHROPIC_CUSTOM_HEADERS`. Umístěte ji do bloku
-`env` v `~/.claude/settings.json`, nebo do projektového `.claude/settings.json`, abyste mohli pro každý
-projekt připnout jiný účet:
+Claude Code odesílá vlastní hlavičky přes `ANTHROPIC_CUSTOM_HEADERS`. Vložte jej do bloku `env` `~/.claude/settings.json` nebo do `.claude/settings.json` na úrovni projektu a připněte jiný účet na projekt:
 
 ```jsonc
 {
@@ -132,12 +120,11 @@ projekt připnout jiný účet:
 }
 ```
 
-Zdroj: `src/sse/handlers/chat.ts` (načtení hlavičky), `src/sse/services/auth.ts` a
-`src/sse/services/sessionAffinityPin.ts` (uvolnění připnutí a kontrola chybějícího připojení ve fondu).
+Zdroj: `src/sse/handlers/chat.ts` (čtení záhlaví), `src/sse/services/auth.ts` a `src/sse/services/sessionAffinityPin.ts` (uvolnění kolíků a kontrola chybějícího z fondu).
 
-> **Hlavičky s telemetrií nákladů:** úspěšné odpovědi bez streamování obsahují také sadu telemetrických hlaviček nákladů `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, vždy 10 desetinných míst; `0.0000000000` pro bezplatné služby nebo služby bez ceny), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` a `X-OmniRoute-Fallback-Attempts` (pouze pokud je hodnota > 0), dále `X-OmniRoute-Request-Id` a `X-OmniRoute-Version`. Tyto hlavičky generují chat completions, `/v1/responses`, `/v1/messages` **a koncové body médií** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` a `/v1/moderations` (vždy s nákladem `0`). Náklady na média se počítají podle modality (za obrázek, za sekundu, za znak, za vyhledávací jednotku), pokud je cena k dispozici, jinak je hodnota `0` (fail-open).
+> **Nákladové telemetrické hlavičky:** non-streaming úspěšné odpovědi také nesou `X-OmniRoute-*` sadu nákladů-telemetrie — `X-OmniRoute-Response-Cost` (USD, pevných 10 desetinných míst; `0.0000000000` pro free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` a `X-OmniRoute-Fallback-Attempts` (pouze když > 0), plus `X-OmniRoute-Request-Id` a `X-OmniRoute-Version` Ty jsou vydávány dokončením chatu, `/v1/responses`, `/v1/messages`,** a mediální koncové body** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` a `/v1/moderations` (vždy stojí `0`). Mediální náklady se počítají podle modality (na obrázek, za sekundu, na znak, na vyhledávací jednotku), pokud je cena k dispozici, jinak `0` (neúspěšné otevření).
 
-> **Sémantika nákladů při zásahu mezipaměti:** při zásahu sémantické mezipaměti (`X-OmniRoute-Cache-Hit: true`) se nevolá upstream, takže `X-OmniRoute-Response-Cost` je `0.0000000000` (**přírůstkový** náklad obsloužení zásahu). Původní/náklad, který by jinak vznikl, se uvádí samostatně v `X-OmniRoute-Cost-Saved`. Fakturační systémy by měly sčítat `X-OmniRoute-Response-Cost` (zásahy nic nestojí); analytika mezipaměti může agregovat `X-OmniRoute-Cost-Saved`.
+> **Sémantika nákladů na přístup do mezipaměti:** na sémantické mezipaměti HIT (`X-OmniRoute-Cache-Hit: true`) není provedeno žádné upstream volání, takže `X-OmniRoute-Response-Cost` je `0.0000000000` (** přírůstkové** náklady na obsluhu hitu). Náklady original/would-have-been se vykazují samostatně v `X-OmniRoute-Cost-Saved`. Fakturující spotřebitelé by měli sčítat `X-OmniRoute-Response-Cost` (hledání nestojí nic); Analýza mezipaměti může agregovat `X-OmniRoute-Cost-Saved`.
 
 ## Exkluzivní spravované zapůjčení relací
 
@@ -335,7 +322,7 @@ GET /v1/embeddings
 
 ---
 
-## Generování obrázků
+## Generování obrazu
 
 ```bash
 POST /v1/images/generations
@@ -349,43 +336,24 @@ Content-Type: application/json
 }
 ```
 
-Mezi dostupné poskytovatele patří OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana, **OpenRouter**, **ZenMux**, SD WebUI (lokální) a ComfyUI (lokální).
+Mezi dostupné poskytovatele patří OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (místní), ComfyUI (místní).
 
-`n` vrací `n` obrázků v `data[]`. Poskytovatelé, jejichž nadřazené API vrací jeden obrázek na volání
-(Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik,
-NVIDIA NIM, Cloudflare Workers AI), provedou `n` samostatných volání nadřazeného API,
-přičemž současně probíhají nejvýše 4. Pevná hodnota `seed` se posouvá podle indexu volání
-(`seed`, `seed + 1`, …), takže se obrázky liší, ale zůstávají reprodukovatelné. Hodnota `n` je
-omezena na 10. Pokud některé volání selže, požadavek jako celek selže. Seznam formátů pro
-rozvětvení volání je uveden v `SINGLE_IMAGE_FANOUT_FORMATS` v
-`open-sse/handlers/imageGeneration/fanOut.ts`.
+`n` vrátí obrázky `n` v `data[]`. Poskytovatelé, jejichž upstream API vrací jeden obrázek na volání (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI), obdrží `n` samostatných upstream volání, maximálně 4 za letu. Pevné `seed` je kompenzováno indexem volání (`seed`, `seed + 1`, …), takže obrázky se liší, ale zůstávají reprodukovatelné. `n` je omezeno na 10. Požadavek jako celek selže, pokud selže jakékoli volání. Seznam formátů rozvětvení je `SINGLE_IMAGE_FANOUT_FORMATS` v `open-sse/handlers/imageGeneration/fanOut.ts`.
 
-ZenMux znovu používá existující připojení s klíčem API a přijímá předpony `zenmux/` nebo `zm/`:
+Codex GPT Obrazové modely (`codex/gpt-image-*`) vracejí pouze PNG : upstream odpoví `200` PNG bajty, i když je požadováno `jpeg` nebo `webp`. Požadavek s jakýmkoli jiným `output_format` (`webp`, `jpeg`, ...) je odmítnut s HTTP 400 místo toho, aby byl tiše ignorován; vynechat nebo odeslat `png`. `output_compression` není přeposlán.
 
-- `zenmux/openai/gpt-image-2` používá rozhraní OpenAI Images API společnosti ZenMux. Mezi možnosti patří `size`,
-  `quality`, `n`, `output_format`, `output_compression`, `background` a `response_format`.
-- Ostatní vydavatelé, například `zm/meta/muse-image-1.0`, používají koncový bod Vertex AI
-  `:predict` společnosti ZenMux. `n` se mapuje na `sampleCount`, `aspect_ratio` na `aspectRatio` a
-  `image_size` (`1K`, `2K`, `4K`) na `sampleImageSize`. Hodnota `size` v pixelech poskytuje pouze poměr stran,
-  nikoli zaručené rozměry v pixelech. Podporované poměry stran, rozlišení a počty se liší podle modelu.
-- `zm/inclusionai/ming-image-0.1-design` volí vlastní rozměry. Vynechte `size`,
-  `aspect_ratio` a `image_size`; explicitní hodnoty vrátí HTTP 400. Pomocí `output_format` lze
-  vyžádat PNG, JPEG nebo WebP.
+ZenMux znovu používá stávající připojení klíče API a přijímá předpony `zenmux/` nebo `zm/` :
 
-Tato integrace podporuje generování obrázků z textu, nikoli úpravu referenčních obrázků. Výstup
-Vertex je normalizován na `data[].b64_json`; `response_format: "url"` vrací nadřazenou
-HTTPS URL nebo datovou URL base64, pokud jsou k dispozici pouze bajty obrázku. Prázdné nebo filtrované výstupy
-vracejí chybu namísto úspěšné odpovědi s prázdným obsahem. Přístup k modelům závisí na účtu ZenMux.
-Viz [Vertex API společnosti ZenMux](https://docs.zenmux.ai/api/vertexai/generate-images) a
-[Images API společnosti OpenAI](https://docs.zenmux.ai/api/openai/generate-an-image).
+- `zenmux/openai/gpt-image-2` používá obrázky ZenMuxOpenAI API. Možnosti zahrnují `size`, `quality`, `n`, `output_format`, `output_compression`, `background` a `response_format`.
+- Jiní vydavatelé, jako je `zm/meta/muse-image-1.0`, používají koncový bod ZenMuxAI `:predict`. `n` mapuje na `sampleCount`, `aspect_ratio` na `aspectRatio` a `image_size` (`1K`, `2K`, `4K`) na `sampleImageSize`. Pixel `size` poskytuje pouze poměr stran, nikoli zaručené rozměry pixelů. Podporované poměry, rozlišení a počty se liší podle modelu.
+- `zm/inclusionai/ming-image-0.1-design` volí své vlastní rozměry. Vynechat `size`, `aspect_ratio` a `image_size`; explicitní hodnoty vrátí HTTP 400. PNG, JPEG a WebP lze vyžádat pomocí `output_format`.
 
-Připojení pro přihlášení k Microsoft 365 Copilot obsluhuje `copilot-m365-web/m365-copilot-image`
-prostřednictvím integrovaného nástroje Copilotu pro obrázky: jeden tah Copilotu na obrázek (`n` 1–4), přičemž `size` řídí
-pouze orientaci a obrázky se vracejí přímo v odpovědi (`b64_json` nebo datová URL pro
-`response_format: "url"`). Viz [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
+This integration supports text-to-image generation, not reference-image editing. Vertex output is normalized to `data[].b64_json`; `response_format: "url"` returns an upstream HTTPS URL or a base64 data URL when only image bytes are available. Empty/filtered outputs return an error rather than an empty success. Model access depends on the ZenMux account. See [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) and [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+
+Přihlašovací připojení Microsoft 365 Copilot obsluhuje `copilot-m365-web/m365-copilot-image` prostřednictvím vestavěného obrazového nástroje Copilot: jedno otočení Copilot na obraz (`n` 1–4), `size` řídí pouze orientaci a obrazy se vrací inline (`b64_json` nebo data URL pro `response_format: "url"`). Viz [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 
 ```bash
-# Seznam všech modelů pro generování obrázků
+# List all image models
 GET /v1/images/generations
 ```
 

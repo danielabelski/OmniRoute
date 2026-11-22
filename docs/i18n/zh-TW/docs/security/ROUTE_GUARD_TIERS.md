@@ -8,7 +8,7 @@
 
 所有 OmniRoute 管理 API 路由均歸類為三種保護層級之一。分類是靜態的，定義於 `src/server/authz/routeGuard.ts`，並會在執行任何其他驗證分支之前進行評估。
 
-## 層級
+## 等級
 
 ### 1 級— LOCAL_ONLY
 
@@ -39,7 +39,7 @@
 | `/api/settings/mitm`                                                                                     | 啟用MITM攔截（系統級代理狀態）                                                   |
 | `/api/issue-agent/`                                                                                      | 問題代理—針對儲存庫產生本機工具                                                  |
 | `/api/plugins/`, `/api/plugins`                                                                          | 插件— load/execute透過`worker_threads` + `child_process`                         |
-| `/api/middleware/`                                                                                       | 用戶中間件— loads/executes操作員代碼進程內                                       |
+| `/api/middleware/`                                                                                       | 用戶中間件— loads/executes操作員程式碼進程中                                     |
 | `/api/system/version`                                                                                    | 自動更新（僅限POST ； GET/HEAD/OPTIONS除外） —產生`git checkout` + `npm install` |
 | `/api/db-backups/exportAll`                                                                              | 為導出存檔產生`tar`                                                              |
 | `/api/local/`                                                                                            | 一鍵式本機啟動器（今天是Redis ） —產生podman/docker                              |
@@ -65,7 +65,11 @@
 
 當且僅當請求攜帶其元資料包括`manage`範圍（或`admin`）的`Authorization: Bearer <api-key>`時，也可以從非環回存取LOCAL_ONLY路徑MAY的子集。剝離是透過`LOCAL_ONLY_MANAGE_SCOPE_BYPASS_PREFIXES`按路徑明確閘控的，因此任何新LOCAL_ONLY路徑的預設值仍然是嚴格環回。未經身份驗證的請求和具有非管理金鑰的請求仍會被`403 LOCAL_ONLY`拒絕。
 
-今天唯一可繞過的前綴是`/api/mcp/`。 `/api/cli-tools/runtime/`和`/api/services/`被刻意排除，因為它們可以產生任意子程序（`npm install`、 `node`），而這正是LOCAL_ONLY層所要防止的CVE類別。
+預設可繞過前綴是`/api/mcp/`和`/api/resilience/connections`。第二個是唯讀JSON ，不產生任何內容；它位於清單中，以便 Resilience > Connections 在遠端儀表板（託管實例、隧道、反向代理）上載入以取得經過驗證的儀表板會話或`manage`鑰，而匿名遠端呼叫者在`requireLogin=false`時仍然會獲得`403 LOCAL_ONLY` — 。儲存了自己的清單的安裝會保留該清單。 `/api/cli-tools/runtime/`和`/api/services/`被刻意排除，因為它們可以產生任意子程序（`npm install`、 `node`），而這正是LOCAL_ONLY層所要防止的CVE類別。
+
+#### 讀取方法豁免
+
+有些LOCAL_ONLY路徑僅對`GET`/`HEAD`/`OPTIONS`豁免，透過精確路徑（`LOCAL_ONLY_API_GET_EXEMPTIONS`）：讀取不執行生成，寫入方法執行。 `GET /api/skills/executions`是其中之一—它列出了儲存的執行行（兩個SQLite讀取），因此技能>執行會載入到遠端儀表板上，而運行技能並到達沙箱容器產生的`POST /api/skills/executions`則保持僅環回。豁免讀取屬於MANAGEMENT層。
 
 **#7895 — `mcp:connect`狹義範圍：** `/api/mcp/`剝離ALSO接受持有窄`mcp:connect`範圍 (`src/shared/constants/managementScopes.ts::MCP_CONNECT_SCOPE`) 的 Bearer key，透過`src/server/authz/policies/management.ts`中的`hasMcpConnectOrManageScope()`檢查。其範圍為`/api/mcp/` ONLY — `mcp:connect`在任何其他管理路由上不授予任何內容（包括所有其他LOCAL_ONLY旁路前綴，如果添加的話），並且故意將其從`MANAGEMENT_API_KEY_SCOPES`中排除。持有`manage`/`admin`金鑰仍然像以前一樣透過剝離；對於不需要廣泛管理存取權限的僅使用 MCP 的遠端呼叫者來說， `mcp:connect`是一種權限較低的替代方案。
 
@@ -84,7 +88,7 @@
 如果您在反向代理或隧道（nginx、Caddy、 Cloudflare Tunnel、 Tailscale、Ngrok）後面執行OmniRoute ，環回檢查仍會保護—之上的可產生的路由，客戶端位址非環回的請求將被`403 LOCAL_ONLY`拒絕**在 auth 運行之前**，因此洩漏的JWT無法到達生成點。操作員仍有兩項職責：
 
 - **不要透過將客戶端IP偽造為環回來「修復」403。**設定`X-Forwarded-For: 127.0.0.1`或將來源位址重寫為環回的代理，將準確地重新開啟本層關閉的RCE類別。透過代理—公開dashboard/API ，而不是可產生的路由。
-- **盡量減少管理範圍旁路。**只有`/api/mcp/`是可繞過的，並且只能使用`manage` -scoped API密鑰。 `SPAWN_CAPABLE_PREFIXES`永遠無法加入繞過清單中— zod 架構會拒絕它們，而`isLocalOnlyBypassableByManageScope`在運行時會拒絕它們（縱深防禦），這就是儀表板所說的「無法繞過」。同一個拒絕清單還包含一些不會產生但絕對不能遠端存取的LOCAL_ONLY路由— `/api/oauth/kiro/auto-import` （讀取主機本機Kiro憑證檔案）、 `/api/discovery/`和`/api/issue-agent/`。執行時間快照載入程式也會從儲存的設定行中刪除此類項目，且舊版JSON匯入 (`/api/settings/import-json`) 永遠不會寫入旁通金鑰。每個`LOCAL_ONLY_API_PREFIXES`條目必須位於拒絕清單中或被審核為符合旁路資格 (`tests/unit/authz/local-only-bypass-spawn-denylist.test.ts`)。 `/api/providers/`下的動態分段和靜態路徑產生功能路由（例如`/login`、 `/refresh-cursor`）由`src/shared/constants/spawnCapablePrefixes.ts`中基於正則表達式的`SPAWN_CAPABLE_PATTERNS` / `SPAWN_CAPABLE_PATTERN_ANCESTORS`同伴覆蓋，而不是由平面`SPAWN_CAPABLE_PREFIXES`數組—覆蓋，平面數組必須覆蓋整個`/api/providers/`前綴才能捕獲它們，從而過度擴大了提供者CRUD板。
+- **盡量減少管理範圍旁路。**預設情況下，只有`/api/mcp/`和只讀`/api/resilience/connections`是可繞過的，並且只能使用`manage` -scoped API金鑰或經過驗證的儀表板會話。 `SPAWN_CAPABLE_PREFIXES`永遠無法加入繞過清單中— zod 模式會拒絕它們，而`isLocalOnlyBypassableByManageScope`在運行時會拒絕它們（縱深防禦），這就是儀表板所說的「無法繞過」。同一個拒絕清單還包含一些不會產生但絕對不能遠端存取的LOCAL_ONLY路由— `/api/oauth/kiro/auto-import` （讀取主機本機Kiro憑證檔案）、 `/api/discovery/`和`/api/issue-agent/`。執行時間快照載入程式也會從儲存的設定行中刪除此類項目，且舊版JSON匯入 (`/api/settings/import-json`) 永遠不會寫入旁通金鑰。每個`LOCAL_ONLY_API_PREFIXES`條目必須位於拒絕清單中或被審核為符合旁路資格 (`tests/unit/authz/local-only-bypass-spawn-denylist.test.ts`)。 `/api/providers/`下的動態分段和靜態路徑產生功能路由（例如`/login`、 `/refresh-cursor`）由`src/shared/constants/spawnCapablePrefixes.ts`中基於正規表示式的`SPAWN_CAPABLE_PATTERNS` / `SPAWN_CAPABLE_PATTERN_ANCESTORS`同伴覆蓋，而不是由平面`SPAWN_CAPABLE_PREFIXES`數組—覆蓋，平面數組必須覆蓋整個`/api/providers/`前綴才能捕獲它們，從而過度擴大了提供者zqz覆蓋，平面數組必須覆蓋整個zqba前綴才能捕獲它們，從而過度擴大了提供者CRUD覆蓋。
 
 **審核訪問**—驗證沒有任何脫離主機的內容到達這些路由：
 
@@ -113,11 +117,11 @@
 
 | 小路                                      | 原因                                     |
 | ----------------------------------------- | ---------------------------------------- |
-| `/api/shutdown`                           | 終止伺服器進程                           |
+| `/api/shutdown`                           | Terminates the server process            |
 | `/api/settings/database`                  | 資料庫匯出、匯入和擦除                   |
 | `/api/db-backups`                         | 完整資料庫備份存檔訪問                   |
 | `/api/settings/export-json`               | 匯出完整的設定 blob（包括機密）          |
-| `/api/settings/import-json`               | 替換完整設定 blob                        |
+| `/api/settings/import-json`               | Replaces the full settings blob          |
 | `/api/providers/health-autopilot/actions` | 執行自動駕駛修復操作                     |
 | `/api/settings/obsidian`                  | 為任何保管庫根鑄造可重複使用的WebDAV信用 |
 | `/api/relay/tokens`                       | 鑄造、列出、編輯和撤銷中繼代幣           |
@@ -135,13 +139,13 @@
 
 `/api/settings/obsidian`覆蓋其`/webdav`子項： `POST`指向WebDAV檔案服務—該服務由Next.js之前的自訂節點層提供，在此管道—之外，位於呼叫者選擇的根，並回顯新生成的基本憑證， `DELETE`輪換它們，父`POST` Obsidian REST API 。 GHSA-62vw僅屏蔽了`GET`密碼外洩；此次發行仍處於失效開放層（GHSA-7pq4-8pvv-rx7r）。 `enableObsidianVaultSync()`另外拒絕位於內部或包含資料目錄的保管庫。
 
-#### 憑證導出和恢復僅限運營商
+#### 憑證匯出和復原僅限操作員
 
 上面的層只決定是否需要_some_憑證。下載儲存憑證的路由在處理程序中新增了第二次檢查： `GET /api/settings/export-json` （解密的提供者連線和原始API金鑰）、 `GET /api/db-backups/export` （ SQLite檔案）和`GET /api/db-backups/exportAll` （完整存檔）呼叫`requireOperatorCredential()` (`src/lib/api/operatorCredential.ts`)。它接受儀表板會話、本機CLI主題或停用登入的實例，並將`403`應答到任何範圍的API金鑰（包括`manage`和`admin`）和`oma_`存取權杖。破壞性對應物具有相同的邊界： `POST /api/db-backups/import` （包括上傳的`.sqlite`、 `dryRun=true` ）、 `POST /api/db-backups` （透過 id 恢復儲存的備份）和`POST /api/settings/import-json` （舊版JSON恢復）取代即時資料庫或整個settings/connections/API-key集，因此電腦憑證也無法觸發它們。銷毀還原點具有相同的邊界： `DELETE /api/db-backups` （清理—保留最新的 N/刪除早於 D 天的內容）和`PATCH /api/db-backups` （保留設定），因為持久保留正是`cleanupDbBackups()`在每次自動備份 (`src/lib/db/backup.ts`) 之後應用的內容，因此可以保存`keepLatest: 1`電腦憑證將刪除下一個快照上的所有內容。列出和建立備份（`GET`/`PUT /api/db-backups`）保持普通管理身份驗證。同步令牌發行 (`POST /api/sync/tokens`) 使用相同的幫助程序，以及可信任環回內部服務令牌。
 
 ### 全新安裝的引導程式僅由真正的對等方環回— ，而不是`Host`
 
-如果沒有設定管理密碼（也沒有`INITIAL_PASSWORD`）， `src/shared/utils/apiAuth.ts`中的`isAuthRequired()`會保持匿名引導程式開啟**僅適用於環回對等體**。環回是根據受信任的對等點訊號決定的，按順序：帶有令牌標記的真實TCP對等點（`PEER_IP_HEADER` + `VIA_PROXY_HEADER`，策略看到的內容）、管道自己的`AUTHZ_HEADER_PEER_LOCALITY`判決（路由處理程序看到的內容，僅在設定`OMNIROUTE_PEER_STAMP_TOKEN`時受信任）或直接呼叫者的真實套接字對等點。 `Host` / `nextUrl.hostname`永遠不會被諮詢，第一個密碼寫入（`POST /api/settings/require-login`）處於相同的約束下，而不是向每個網路對等點（GHSA-7pq4-8pvv-rx7r）開放。 `managementPolicy`明確地傳遞自己的`peerContext`判決，因此ORIGINAL （預剝離）請求的標頭永遠不會決定它。
+如果沒有設定管理密碼（也沒有`INITIAL_PASSWORD`）， `src/shared/utils/apiAuth.ts`中的`isAuthRequired()`會保持匿名引導程式開啟**僅適用於環回對等體**。環回是根據受信任的對等點訊號決定的，按順序：帶有令牌標記的真實TCP對等點（`PEER_IP_HEADER` + `VIA_PROXY_HEADER`，策略所看到的內容）、管道自己的`AUTHZ_HEADER_PEER_LOCALITY`判決（路由處理程序所看到的內容，僅在設定`OMNIROUTE_PEER_STAMP_TOKEN`時才受信任）或直接呼叫者的真實套接字對等點。 `Host` / `nextUrl.hostname`永遠不會被諮詢，第一個密碼寫入（`POST /api/settings/require-login`）處於相同的約束下，而不是向每個網路對等點（GHSA-7pq4-8pvv-rx7r）開放。 `managementPolicy`明確地傳遞自己的`peerContext`判決，因此ORIGINAL （預剝離）請求的標頭永遠不會決定它。
 
 ### 第 3 層— MANAGEMENT （預設）
 

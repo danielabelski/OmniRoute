@@ -83,65 +83,68 @@ parmak izi değişikliklerini açıkça yetkilendirilmiş canlı bir hesapla do�
 
 ---
 
-## Claude Code Gizlilik Paketi
+## Claude Kodu Gizli Paketi
 
-`cliCompatMode` açık olduğunda OmniRoute, giden Claude isteklerini `claude-cli` trafiğinden ayırt edilemeyecek şekilde yeniden biçimlendirir. Üç modül birlikte çalışır:
+`cliCompatMode` açık olduğunda OmniRoute, giden Claude isteklerini `claude-cli` trafiğinden ayırt edilemeyecek şekilde yeniden şekillendirir. Üç modül işbirliği yapıyor:
 
 ### `claudeCodeFingerprint.ts`
 
-Faturalandırma başlığına gömülen 3 karakterli `cc_version` parmak izini hesaplar:
+Faturalandırma başlığına gömülü 3 karakterli `cc_version` parmak izini hesaplar:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (sabit kodlanmıştır; resmî istemciyle eşleşir)
-- Girdiler: İlk kullanıcı mesajı metninin 4, 7 ve 20. indekslerindeki karakterler + sürüm dizesi
+- `FINGERPRINT_SALT = "59cf53e54c78"` (sabit kodlanmış; resmi müşteriyle eşleşir)
+- Girişler: ilk kullanıcı mesajı metni + sürüm dizesinin 4, 7, 20 dizinindeki karakterler
 - Çıktı: 3 karakterli onaltılık önek
 
-### `claudeCodeCCH.ts` (İstemci İçerik Karması)
+### `claudeCodeCCH.ts` (İstemci İçeriği Karması)
 
-Resmî Claude Code CLI'ın Bun/Zig aracılığıyla hesapladığı sunucu taraflı bütünlük denetimidir. OmniRoute bunu `xxhash-wasm` ile yeniden uygular:
+Sunucu tarafı bütünlüğü, Bun/Zig. OmniRoute ile `xxhash-wasm` yeniden uygulamaları aracılığıyla CLI hesapladığı resmi Claude Kodunu kontrol eder:
 
-1. Gövdeyi `cch=00000;` yer tutucusuyla serileştirin
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Sıfırlarla doldurulmuş, 5 karakterli küçük harfli onaltılık değer
-4. `cch=00000;` ifadesini hesaplanan belirteçle değiştirin
+1. Gövdeyi `cch=00000;` yer tutucuyla serileştirin
+2. Karma görünümünü iki düz metin değişimiyle şu sırayla oluşturun (`hashView()`):
+   - `/"model":"[^"]*"/g` her eşleşmesi `"model":""` — olur, eşleşme ilk `"` durur, dolayısıyla kaçışlı alıntıya (`"model":"a\"b"`) sahip bir değer, müşterinin yaptığı gibi yalnızca bu alıntıya kadar boşaltılır.
+   - `/"max_tokens":\d+,|,?"max_tokens":\d+/g` her eşleşmesi kaldırılır — yalnızca sayısal değerler, herhangi bir derinlikte
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Sıfır dolgulu 5 karakterli küçük harfli altıgen
+5. `cch=00000;` hesaplanan jetonla değiştirin
 
 Sabitler:
 
-- Başlangıç değeri: `0x6e52736ac806831e`
+- Tohum: `0x4d659218e32a3268` ( Claude Code 2.1.252 ve 2.1.322'nin geri döngü yakalamalarıyla eşleşir)
 - Desen: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Üst sistem filtrelerinin bunları grep ile aramasını engellemek için "hassas" istemci adlarının ilk karakterinden sonra bir Unicode **sıfır genişlikli birleştirici** (`U+200D`) ekler. Varsayılan sözcük listesi:
+Unicode ekler** sıfır genişlikli marangoz** (`U+200D`) "hassas" istemci adlarının ilk karakterinden sonra kullanılır, böylece yukarı akış filtreleri bunları göremez. Varsayılan kelime listesi:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Şunlara uygulanır: `system` blokları, tüm `messages[].content` alanları ve `tools[].description` / `tools[].function.description`. Operatör tarafından `setSensitiveWords()` aracılığıyla geçersiz kılınabilir.
+Uygulandığı yerler: `system` blokları, tüm `messages[].content` ve `tools[].description` / `tools[].function.description`. `setSensitiveWords()` aracılığıyla operatör tarafından geçersiz kılınabilir.
 
 ### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` sağlayıcıları
 
-Yalnızca "gerçek Claude Code" trafiğini kabul eden üçüncü taraf Anthropic aktarıcıları için:
+Yalnızca "gerçek Claude Kodu" trafiğini kabul eden üçüncü taraf Anthropic geçişleri için:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- Varsayılan olarak `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- Bağlantı başına "Redaksiyonlu düşünme betasını etkinleştir" seçeneği, bir CC Compatible üst sistemi özellikle redaksiyonlu düşünme akışları gerektirdiğinde `redact-thinking-2026-02-12` ekler
-- Bağlantı başına "Özetlenmiş düşünme gösterimini etkinleştir" seçeneği, `providerSpecificData.requestDefaults.summarizeThinking` değerini saklar ve henüz bir gösterim modu ayarlanmamış CC Compatible düşünme isteklerine `display: "summarized"` ekler
+- varsayılan olarak `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
+- Bağlantı başına "Redaksiyon düşünme beta'yı etkinleştir" düğmesi, CC Uyumlu bir yukarı akış özellikle düzeltilmiş düşünme akışları gerektirdiğinde `redact-thinking-2026-02-12` ekler
+- Bağlantı başına "Özetlenmiş düşünme ekranını etkinleştir" geçişi `providerSpecificData.requestDefaults.summarizeThinking` depolar ve CC `display: "summarized"` ekler Halihazırda bir görüntüleme modu ayarlamamış uyumlu düşünme istekleri
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x ailesi)
 - Varsayılan yol: `/v1/messages?beta=true`
 
 Aynı paketteki kardeş modüller:
 
-- `claudeCodeConstraints.ts` — sıcaklık + önbellek denetimi kuralları
+- `claudeCodeConstraints.ts` — sıcaklık + önbellek kontrolü kuralları
 - `claudeCodeToolRemapper.ts` — araç adı yeniden eşleme
-- `claudeCodeExtraRemap.ts` — ek yük normalleştirme
+- `claudeCodeExtraRemap.ts` — ekstra yük normalizasyonu
 
 ---
 

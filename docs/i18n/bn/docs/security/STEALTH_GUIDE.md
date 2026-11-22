@@ -73,65 +73,68 @@ OmniRoute এমন প্রোভাইডারগুলোর সঙ্গ�
 
 ---
 
-## Claude Code স্টেলথ বান্ডল
+## Claude কোড স্টিলথ বান্ডেল
 
-`cliCompatMode` চালু থাকলে, OmniRoute বহির্গামী Claude অনুরোধগুলোকে এমনভাবে পুনর্গঠন করে যাতে সেগুলো `claude-cli` ট্র্যাফিক থেকে আলাদা করা না যায়। তিনটি মডিউল একসঙ্গে কাজ করে:
+যখন `cliCompatMode` চালু থাকে, OmniRoute বহির্গামী Claude অনুরোধগুলিকে নতুন আকার দেয় যাতে সেগুলি `claude-cli` ট্র্যাফিক থেকে আলাদা করা যায় না। তিনটি মডিউল সহযোগিতা করে:
 
 ### `claudeCodeFingerprint.ts`
 
-বিলিং হেডারে এম্বেড করা ৩-অক্ষরের `cc_version` ফিঙ্গারপ্রিন্ট গণনা করে:
+বিলিং হেডারে এমবেড করা 3-char `cc_version` ফিঙ্গারপ্রিন্ট গণনা করে:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (হার্ডকোড করা; অফিসিয়াল ক্লায়েন্টের সঙ্গে মেলে)
-- ইনপুট: প্রথম ব্যবহারকারী বার্তার টেক্সটের ৪, ৭ ও ২০ নম্বর ইনডেক্সের অক্ষর + সংস্করণ স্ট্রিং
-- আউটপুট: ৩-অক্ষরের হেক্স প্রিফিক্স
+- `FINGERPRINT_SALT = "59cf53e54c78"` (হার্ডকোডেড; অফিসিয়াল ক্লায়েন্ট মেলে)
+- ইনপুট: প্রথম ব্যবহারকারী বার্তা পাঠ্য + সংস্করণ স্ট্রিং এর সূচী 4, 7, 20 এ অক্ষর
+- আউটপুট: 3-char হেক্স উপসর্গ
 
-### `claudeCodeCCH.ts` (ক্লায়েন্ট কনটেন্ট হ্যাশ)
+### `claudeCodeCCH.ts` (ক্লায়েন্ট সামগ্রী হ্যাশ)
 
-অফিসিয়াল Claude Code CLI Bun/Zig-এর মাধ্যমে যে সার্ভার-সাইড অখণ্ডতা যাচাই গণনা করে। OmniRoute `xxhash-wasm` দিয়ে এটি পুনরায় বাস্তবায়ন করে:
+সার্ভার-সাইড অখণ্ডতা `xxhash-wasm` এর সাথে Bun/Zig. OmniRoute পুনরায় প্রয়োগের মাধ্যমে অফিসিয়াল Claude কোড CLI কম্পিউটগুলি পরীক্ষা করে:
 
-1. `cch=00000;` প্লেসহোল্ডারসহ বডি সিরিয়ালাইজ করুন
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. শূন্য দিয়ে প্যাড করা ৫-অক্ষরের ছোট হাতের হেক্স
-4. `cch=00000;`-কে গণনা করা টোকেন দিয়ে প্রতিস্থাপন করুন
+1. `cch=00000;` প্লেসহোল্ডার দিয়ে বডি সিরিয়ালাইজ করুন
+2. দুটি প্লেইন-টেক্সট প্রতিস্থাপনের সাথে হ্যাশ ভিউ তৈরি করুন, এই ক্রমে (`hashView()`):
+   - `/"model":"[^"]*"/g` এর প্রতিটি ম্যাচ `"model":""` — হয়ে যায় ম্যাচটি প্রথম `"` এ থেমে যায়, তাই ক্লায়েন্টের মতো একটি এস্কেপড কোট (`"model":"a\"b"`) সহ একটি মান শুধুমাত্র সেই উদ্ধৃতি পর্যন্ত খালি করা হয়
+   - `/"max_tokens":\d+,|,?"max_tokens":\d+/g` এর প্রতিটি ম্যাচ — শুধুমাত্র সাংখ্যিক মান, যেকোনো গভীরতায় সরানো হয়
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. জিরো-প্যাডেড 5-অক্ষরের ছোট হাতের হেক্স
+5. গণনা করা টোকেন দিয়ে `cch=00000;` প্রতিস্থাপন করুন
 
 ধ্রুবক:
 
-- সিড: `0x6e52736ac806831e`
+- বীজ: `0x4d659218e32a3268` ( Claude কোড 2.1.252 এবং 2.1.322 এর লুপব্যাক ক্যাপচারের সাথে মিলে যায়)
 - প্যাটার্ন: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-“সংবেদনশীল” ক্লায়েন্ট নামের প্রথম অক্ষরের পরে একটি Unicode **zero-width joiner** (`U+200D`) সন্নিবেশ করে, যাতে আপস্ট্রিম ফিল্টারগুলো `grep` দিয়ে সেগুলো খুঁজে না পায়। ডিফল্ট শব্দতালিকা:
+একটি ইউনিকোড সন্নিবেশ করান** শূন্য-প্রস্থ যোগদানকারী** (`U+200D`) "সংবেদনশীল" ক্লায়েন্ট নামের প্রথম অক্ষরের পরে তাই আপস্ট্রিম ফিল্টারগুলি তাদের গ্রেপ করতে পারে না। ডিফল্ট শব্দ তালিকা:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-যেখানে প্রয়োগ করা হয়: `system` ব্লক, সব `messages[].content`, এবং `tools[].description` / `tools[].function.description`। অপারেটর `setSensitiveWords()`-এর মাধ্যমে এটি ওভাররাইড করতে পারেন।
+এতে প্রযোজ্য: `system` ব্লক, সমস্ত `messages[].content`, এবং `tools[].description` / `tools[].function.description`। `setSensitiveWords()` এর মাধ্যমে অপারেটর-ওভাররিডেবল।
 
-### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` প্রোভাইডার
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` প্রদানকারী
 
-শুধু “আসল Claude Code” ট্র্যাফিক গ্রহণ করে এমন তৃতীয়-পক্ষের Anthropic রিলের জন্য:
+তৃতীয় পক্ষের Anthropic রিলেগুলির জন্য যা শুধুমাত্র "বাস্তব Claude কোড" ট্রাফিক গ্রহণ করে:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- ডিফল্টভাবে `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- প্রতি-সংযোগের “Enable redact-thinking beta” টগলটি `redact-thinking-2026-02-12` যোগ করে, যখন কোনো CC Compatible আপস্ট্রিমের জন্য বিশেষভাবে রিড্যাক্ট করা থিংকিং স্ট্রিম প্রয়োজন হয়
-- প্রতি-সংযোগের “Enable summarized thinking display” টগলটি `providerSpecificData.requestDefaults.summarizeThinking` সংরক্ষণ করে এবং যেসব CC Compatible থিংকিং অনুরোধে আগে থেকেই কোনো ডিসপ্লে মোড সেট করা নেই, সেগুলোতে `display: "summarized"` যোগ করে
+- ডিফল্টরূপে`anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
+- প্রতি-সংযোগ "রিডাক্ট-থিঙ্কিং বিটা সক্ষম করুন" টগলটি `redact-thinking-2026-02-12` যোগ করে যখন একটি CC সামঞ্জস্যপূর্ণ আপস্ট্রিমের জন্য বিশেষভাবে রিডাক্টেড চিন্তাধারার প্রয়োজন হয়
+- প্রতি-সংযোগ "সংক্ষিপ্ত চিন্তা প্রদর্শন সক্ষম করুন" টগল করে `providerSpecificData.requestDefaults.summarizeThinking` সঞ্চয় করে এবং CC এ `display: "summarized"` যোগ করে সামঞ্জস্যপূর্ণ চিন্তার অনুরোধ যা ইতিমধ্যে একটি প্রদর্শন মোড সেট করেনি
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x পরিবার)
-- ডিফল্ট পাথ: `/v1/messages?beta=true`
+- ডিফল্ট পথ: `/v1/messages?beta=true`
 
-একই বান্ডলের সহযোগী মডিউল:
+একই বান্ডেলে বোন মডিউল:
 
-- `claudeCodeConstraints.ts` — temperature + cache-control নিয়ম
-- `claudeCodeToolRemapper.ts` — টুলের নাম পুনরায় ম্যাপ করা
-- `claudeCodeExtraRemap.ts` — অতিরিক্ত পেলোড স্বাভাবিকীকরণ
+- `claudeCodeConstraints.ts` — তাপমাত্রা + ক্যাশে-নিয়ন্ত্রণ নিয়ম
+- `claudeCodeToolRemapper.ts` — টুল-নাম রিম্যাপিং
+- `claudeCodeExtraRemap.ts` — অতিরিক্ত পেলোড স্বাভাবিককরণ
 
 ---
 

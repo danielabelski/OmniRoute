@@ -128,32 +128,33 @@ tsohon `request_detail_logs`, da kayan tarihin buƙatu na cikin gida da ke ƙar�
 An ayyana tsoffin ƙimomi a cikin `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Ficewa daga `noLog` (ga kowane maɓallin API)
+## `noLog` Fita (kowace maɓalli API )
 
-Ana iya yi wa maɓallan API alama domin kada a yi rajistar zirga-zirgar kiransu
-zuwa sabis na gaba. Alamar tana cikin teburin `api_keys` (`no_log INTEGER DEFAULT 0`)
-kuma ana kwafarta zuwa saitin cikin ƙwaƙwalwa domin binciken hanya mai sauri.
+Za a iya tuta maɓallan API don haka ba a shigar da zirga-zirgar kiran su na ƙasa ba. Tuta tana zaune akan teburin `api_keys` (`no_log INTEGER DEFAULT 0`) kuma ana misalta shi cikin saiti na cikin ƙwaƙwalwar ajiya don duban hanya mai zafi.
 
 ```bash
-# Ƙirƙiri maɓalli da ba a yin rajistarsa (ana buƙatar tantancewar gudanarwa)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
-  -d '{"name": "Maɓallin sirri", "noLog": true}'
+  -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Masu taimako (`src/lib/compliance/index.ts`):
+Mataimaka (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — kunna ko kashe shigarwar cikin ƙwaƙwalwa
-- `isNoLog(apiKeyId)` — ana dubawa a hanyar buƙata; idan hakan bai yiwu ba, yana
-  komawa ga karatun `api_keys.no_log` da aka adana na tsawon 30 s
-- `NO_LOG_API_KEY_IDS` (env, waɗanda waƙafi ya raba) — ana ɗora su tun farko cikin
-  saitin ƙwaƙwalwa lokacin farawa; yana da amfani idan ba za ku iya sauya ginshiƙin
-  kai tsaye ba
+- `setNoLog(apiKeyId, true|false)` — jujjuya shigar da ke cikin ƙwaƙwalwar ajiya
+- `isNoLog(apiKeyId)` — aka duba akan hanyar neman; ya koma karatu na 30s daga `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, waƙafi-rabu) — an riga an ɗora shi cikin saitin in-memory akan taya; mai amfani lokacin da ba za ku iya kunna ginshiƙi kai tsaye ba
 
-Aukuwar binciken gudanarwa (shiga, sauye-sauyen mai samarwa, kiran kayan aikin MCP,
-da sauransu) **ba sa** ƙarƙashin tasirin `noLog` — rajistar zirga-zirgar kowace
-buƙata ce kawai ake ficewa daga cikinta.
+Abubuwan dubawa na gudanarwa (shigarwa, canje-canjen mai bada, kiran kayan aikin MCP, da sauransu) sune** ba** abin da `noLog` — ya shafa kawai an daina shigar da zirga-zirga ta kowace-buƙata.
+
+### Fitar da kowane buƙatun (`x-omniroute-no-log`)
+
+Abokin ciniki zai iya zaɓar buƙatun fayyace guda ɗaya daga dagewar biyan kuɗi ba tare da ƙirƙirar maɓallin keɓewa ba. Aika `x-omniroute-no-log: true` akan buƙatun (`1` da `yes` suma an karɓi su, harka-marasa hankali). Ya shafi kowane hanyar taɗi-iyali da ke bi ta mai sarrafa taɗi: Ƙarshen Taɗi, Amsoshi, Saƙonni, Kammalawa da kuma hanyar da ta dace da Gemini. Har yanzu ana rubuta layin kiran kira tare da tambarin lokaci, samfurinsa, mai bayarwa, matsayi, tsawon lokaci da ƙididdiga, amma `request_body`, `response_body`, taƙaitaccen bayani da bututun kayan tarihi ba a cire su ba.
+
+Kan kai shine ORed tare da maɓallin maɓalli: maɓalli na no-log ba ya tsaya ba tare da la'akari da taken ba, kuma babban kan ba zai iya sake kunna shiga don maɓallin no-log ba. Ana cire taken kafin a tura buƙatar zuwa sama.
+
+Wannan taken yana yi** ba** musaki cirewar žwažwalwar ajiya ko ma'ajin ma'anar. Aika `x-omniroute-no-memory: true` da `x-omniroute-no-cache: true` tare da shi lokacin da buƙatun ba dole ba ne ya ci gaba da yin abun ciki a cikin waɗancan tsarin.
 
 ## REST API
 

@@ -128,31 +128,33 @@ de verouderde `request_detail_logs` en lokale aanvraagartefacten onder
 De standaardwaarden zijn gedefinieerd in `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Afmelden voor logregistratie met `noLog` (per API-sleutel)
+## `noLog` Opt-Out (per API sleutel)
 
-API-sleutels kunnen worden gemarkeerd zodat hun verdere aanroepverkeer niet wordt vastgelegd. De
-vlag bevindt zich in de tabel `api_keys` (`no_log INTEGER DEFAULT 0`) en wordt
-gespiegeld naar een set in het geheugen voor snelle zoekacties in veelgebruikte codepaden.
+API sleutels kunnen worden gemarkeerd, zodat hun downstream-gespreksverkeer niet wordt geregistreerd. De vlag bevindt zich in de `api_keys` tabel (`no_log INTEGER DEFAULT 0`) en wordt gespiegeld in een set in het geheugen voor hot-path-zoekopdrachten.
 
 ```bash
-# Maak een sleutel zonder logregistratie aan (beheerderauthenticatie vereist)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Hulpfuncties (`src/lib/compliance/index.ts`):
+Helpers (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — schakelt de vermelding in het geheugen in of uit
-- `isNoLog(apiKeyId)` — wordt gecontroleerd in het aanvraagpad; valt terug op een gedurende 30 s
-  gecachete uitlezing van `api_keys.no_log`
-- `NO_LOG_API_KEY_IDS` (omgevingsvariabele, kommagescheiden) — wordt tijdens het opstarten vooraf in de set in het geheugen
-  geladen; nuttig wanneer u de kolom niet rechtstreeks kunt wijzigen
+- `setNoLog(apiKeyId, true|false)` — schakel het item in het geheugen in
+- `isNoLog(apiKeyId)` — gecontroleerd op het verzoekpad; valt terug naar een leestijd van 30 seconden in de cache van `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, door komma's gescheiden) — vooraf geladen in de in-memory set tijdens het opstarten; handig als u de kolom niet rechtstreeks kunt schakelen
 
-Administratieve auditgebeurtenissen (aanmeldingen, providerwijzigingen, aanroepen van MCP-tools enzovoort)
-worden **niet** beïnvloed door `noLog` — alleen de registratie van verkeer per aanvraag wordt
-uitgeschakeld.
+Administratieve auditgebeurtenissen (login, providerwijzigingen, MCP tooloproepen, etc.) zijn dat wel** niet** beïnvloed door `noLog` — alleen verkeersregistratie per verzoek is uitgeschakeld.
+
+### Opt-out per verzoek (`x-omniroute-no-log`)
+
+Een client kan een enkel inferentieverzoek kiezen uit de persistentie van de payload zonder een speciale sleutel te maken. Stuur `x-omniroute-no-log: true` op verzoek (`1` en `yes` worden ook geaccepteerd, hoofdletterongevoelig). Het is van toepassing op elke chatfamilieroute die door de chathandler loopt: chatvoltooiingen, reacties, berichten, voltooiingen en het Gemini-compatibele pad. De call-log-rij wordt nog steeds geschreven met zijn tijdstempel, model, provider, status, duur en tokentellingen, maar `request_body`, `response_body`, verzoeksamenvattingen en pijplijnartefacten worden weggelaten.
+
+De header is ORed met de sleutelvlag: een no-log-sleutel blijft no-log, ongeacht de header, en de header kan het loggen van een no-log-sleutel niet opnieuw inschakelen. De header wordt verwijderd voordat het verzoek stroomopwaarts wordt doorgestuurd.
+
+Deze kop wel** niet** schakel Geheugenextractie of de semantische cache uit. Stuur `x-omniroute-no-memory: true` en `x-omniroute-no-cache: true` ernaast als het verzoek ook de inhoud in die subsystemen niet mag behouden.
 
 ## REST-API
 

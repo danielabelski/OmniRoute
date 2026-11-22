@@ -116,25 +116,33 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 預設值定義於 `src/lib/logEnv.ts`（`DEFAULT_APP_LOG_RETENTION_DAYS = 7`、`DEFAULT_CALL_LOG_RETENTION_DAYS = 7`）。
 
-## `noLog` 選擇退出（依 API 金鑰）
+## `noLog`選擇退出（每個API金鑰）
 
-API 金鑰可加上標記，使其下游呼叫流量不會被記錄。此標記儲存在 `api_keys` 資料表中（`no_log INTEGER DEFAULT 0`），並同步至記憶體內集合，以供關鍵路徑快速查詢。
+API金鑰可以被標記，這樣它們的下游呼叫流量就不會被記錄。此標誌位於`api_keys`表 (`no_log INTEGER DEFAULT 0`) 上，並被鏡像到記憶體集中以進行熱路徑查找。
 
 ```bash
-# 建立不記錄日誌的金鑰（需要管理驗證）
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-輔助函式（`src/lib/compliance/index.ts`）：
+幫助者（`src/lib/compliance/index.ts`）：
 
-- `setNoLog(apiKeyId, true|false)` — 切換記憶體內項目
-- `isNoLog(apiKeyId)` — 在請求路徑上檢查；若無結果，則改為讀取已快取 30 秒的 `api_keys.no_log`
-- `NO_LOG_API_KEY_IDS`（環境變數，以逗號分隔）— 啟動時預先載入記憶體內集合；適用於無法直接切換該欄位的情況
+- `setNoLog(apiKeyId, true|false)` —切換記憶體條目
+- `isNoLog(apiKeyId)` —檢查請求路徑；回退到`api_keys.no_log`的 30 秒快取讀取
+- `NO_LOG_API_KEY_IDS` （env，逗號分隔） —在啟動時預先載入到記憶體集中；當您無法直接切換列時很有用
 
-管理稽核事件（登入、提供者變更、MCP 工具呼叫等）**不會**受到 `noLog` 影響；只有每次請求的流量記錄會被選擇退出。
+管理審計事件（登入、提供者變更、 MCP工具呼叫等）**不是**受`noLog` —影響，僅選擇退出每個請求的流量日誌記錄。
+
+### 按請求選擇退出 (`x-omniroute-no-log`)
+
+客戶端可以從有效負載持久性中選擇單一推理請求，而無需建立專用金鑰。根據請求發送`x-omniroute-no-log: true` （也接受`1`和`yes` ，不區分大小寫）。它適用於透過聊天處理程序運行的每個聊天系列路由：聊天完成、回應、訊息、完成和 Gemini 相容路徑。呼叫日誌行仍包含其時間戳記、模型、提供者、狀態、持續時間和令牌計數，但省略了`request_body`、 `response_body`、請求摘要和管道工件。
+
+標頭是帶有金鑰標誌的ORed ：無論標頭如何，無日誌金鑰都保持無日誌，且標頭無法重新啟用無日誌金鑰的日誌記錄。在將請求轉發到上游之前，標頭將被剝離。
+
+這個標頭的作用是**不是**禁用記憶體提取或語義快取。當請求也無法在這些子系統中保留內容時，將`x-omniroute-no-memory: true`和`x-omniroute-no-cache: true`與它一起傳送。
 
 ## REST API
 

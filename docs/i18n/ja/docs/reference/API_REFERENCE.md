@@ -49,7 +49,7 @@ OpenAI 互換プロトコルとプロバイダー機能マトリックスに焦�
 
 ---
 
-## チャット補完
+## チャットの完了
 
 ```bash
 POST /v1/chat/completions
@@ -67,31 +67,32 @@ Content-Type: application/json
 
 ### カスタムヘッダー
 
-| Header                   | Direction  | Description                                                                                                                                                                                               |
-| ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | リクエスト | キャッシュをバイパスするには `true` に設定                                                                                                                                                                |
-| `x-omniroute-no-memory`  | リクエスト | このリクエストでメモリとスキルの注入をスキップするには `true` に設定（no-cache をミラーリングし、呼び出しごとのトークン／コストのオーバーヘッドを回避）                                                   |
-| `X-OmniRoute-Progress`   | リクエスト | 進行状況イベントを有効にするには `true` に設定                                                                                                                                                            |
-| `X-Session-Id`           | リクエスト | 外部セッションアフィニティ用のスティッキーセッションキー                                                                                                                                                  |
-| `x_session_id`           | リクエスト | アンダースコア形式も受け付け（直接 HTTP）                                                                                                                                                                 |
-| `X-OmniRoute-Session-Id` | リクエスト | 呼び出し元が指定するセッション／会話タグ（メモリにも供給）。存在する場合は、セッションごとのコスト帰属（#8249）のため `call_logs.session_tag` にそのまま永続化される — 存在しない場合は決して生成されない |
-| `Idempotency-Key`        | リクエスト | 重複排除キー（5 秒間）                                                                                                                                                                                    |
-| `X-Request-Id`           | リクエスト | 代替の重複排除キー                                                                                                                                                                                        |
-| `x-omniroute-connection` | リクエスト | 単一モデルのリクエストを ID で 1 つのプロバイダー接続（アカウント）に固定 — [リクエストごとのアカウント固定](#account-pinning-per-request)を参照                                                          |
-| `X-OmniRoute-Cache`      | レスポンス | `HIT` または `MISS`（非ストリーミング）                                                                                                                                                                   |
-| `X-OmniRoute-Idempotent` | レスポンス | 重複排除された場合は `true`                                                                                                                                                                               |
-| `X-OmniRoute-Progress`   | レスポンス | 進行状況の追跡が有効な場合は `enabled`                                                                                                                                                                    |
-| `X-OmniRoute-Session-Id` | レスポンス | OmniRoute が使用した実効セッション ID                                                                                                                                                                     |
-| `X-OmniRoute-Request-Id` | レスポンス | リクエストの相関 ID（判明している場合）                                                                                                                                                                   |
-| `X-OmniRoute-Version`    | レスポンス | OmniRoute のビルドバージョン（常に存在）                                                                                                                                                                  |
-| `X-OmniRoute-Cost-Saved` | レスポンス | HIT 時にキャッシュによって回避された USD 額（キャッシュヒット時のみ）                                                                                                                                     |
-| `X-OmniRoute-Decision`   | レスポンス | ルーティングトレース: `strategy=<name>; provider=<alias>; latency_ms=<n>`（`<name>` はコンボ戦略、またはコンボ以外のリクエストでは `single`） — 完了レスポンスには常に存在                                |
+| ヘッダ                   | 方向       | 説明                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | リクエスト | キャッシュをバイパスするには`true`に設定します                                                                                                                                                                                                                                                                                                                      |
+| `x-omniroute-no-memory`  | リクエスト | このリクエストのメモリ+スキル インジェクションをスキップするには、 `true`に設定します (キャッシュなしでミラーリングし、呼び出しごとのtoken/costオーバーヘッドを回避します)。                                                                                                                                                                                        |
+| `x-omniroute-no-log`     | リクエスト | この推論リクエストの通話ログからrequest/responseペイロードを省略するには、 `true`に設定します (すべてのチャット ファミリ ルート: チャット完了、応答、メッセージ、完了、 Gemini)。タイムスタンプ、モデル、ステータス、期間、トークン数は引き続き記録されます。 `x-omniroute-no-memory`および`x-omniroute-no-cache`と組み合わせて完全なコンテンツのオプトアウトを実現 |
+| `X-OmniRoute-Progress`   | リクエスト | 進行状況イベントの場合は`true`に設定します                                                                                                                                                                                                                                                                                                                          |
+| `X-Session-Id`           | リクエスト | 外部セッション アフィニティ用のスティッキー セッション キー                                                                                                                                                                                                                                                                                                         |
+| `x_session_id`           | リクエスト | アンダースコアのバリアントも受け入れられます (直接HTTP)                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Session-Id` | リクエスト | 呼び出し元が提供するsession/conversationタグ (メモリにも供給されます)。存在する場合、セッションごとのコスト属性 (#8249) のために`call_logs.session_tag`に逐語的に永続化されます。存在しない場合、 —合成されません                                                                                                                                                   |
+| `Idempotency-Key`        | リクエスト | 重複排除キー (5 秒のウィンドウ)                                                                                                                                                                                                                                                                                                                                     |
+| `X-Request-Id`           | リクエスト | 代替の重複排除キー                                                                                                                                                                                                                                                                                                                                                  |
+| `x-omniroute-connection` | リクエスト | ID —によって単一モデルのリクエストを 1 つのプロバイダー接続 (アカウント) に固定する[「リクエストごとのアカウントの固定」を](#account-pinning-per-request)参照してください。                                                                                                                                                                                         |
+| `X-OmniRoute-Cache`      | 応答       | `HIT`または`MISS` (非ストリーミング)                                                                                                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Idempotent` | 応答       | 重複排除されている場合は`true`                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Progress`   | 応答       | `enabled`進行状況の追跡がオンの場合                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Session-Id` | 応答       | OmniRouteによって使用される有効なセッションID                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Request-Id` | 応答       | リクエスト相関 ID (既知の場合)                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Version`    | 応答       | OmniRouteビルド バージョン (常に存在)                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Cost-Saved` | 応答       | USD HITで回避されたキャッシュ (キャッシュ ヒットのみ)                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Decision`   | 応答       | ルーティング トレース: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>`はコンボ戦略、または非コンボ リクエストの場合は`single` ) —完了応答に常に存在します。                                                                                                                                                                                           |
 
-> Nginx に関する注意: アンダースコア付きヘッダー（例: `x_session_id`）に依存する場合は、`underscores_in_headers on;` を有効にしてください。
+> Nginx 注: アンダースコア ヘッダー (たとえば`x_session_id`) に依存する場合は、 `underscores_in_headers on;`を有効にしてください。
 
-#### リクエストごとのアカウント固定
+#### リクエストごとのアカウントの固定
 
-プロバイダーに複数の接続（アカウントまたはキー）がある場合、OmniRoute は通常、アカウント選択戦略を通じて 1 つを選択します。リクエストでは、代わりに `x-omniroute-connection` ヘッダーを使用して特定の接続 1 つに固定できます。
+プロバイダーが複数の接続 (アカウントまたはキー) を持っている場合、 OmniRoute通常、アカウント選択戦略を通じて 1 つを選択します。代わりに、リクエストは`x-omniroute-connection`ヘッダーを使用して 1 つの特定の接続を固定できます。
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -101,15 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **ID の確認方法。** ダッシュボードでプロバイダーページ
-  （**Dashboard → Providers → <provider>**）を開き、接続行にある `xxxxxxxx…` ID チップをクリックします。
-  完全な接続 ID がコピーされます。
-- **どのリクエストで有効か。** `/v1/chat/completions`、`/v1/messages`、`/v1/responses` に対する単一モデルリクエスト（`provider/model`）。コンボではヘッダーが無視されます。代わりに、各コンボステップの接続を通じて、ステップごとにアカウントを固定してください。
-- **固定は優先設定ではなく、厳密な指定です。** 固定された接続だけが排他的に使用されます。リクエスト内で障害が発生すると、そのアカウントのクールダウンが記録されますが、同じプロバイダーの別アカウントへは切り替わりません。
-- **クールダウンとクォータによって固定が解除されます。** 固定された接続がクールダウン中、クォータを使い切っている、またはクォータポリシーによってブロックされている場合、後続のリクエストは、固定されていないトラフィックとまったく同じように、プロバイダーの他の接続へフォールバックします。
-- **不明または無効な ID は失敗します。** プロバイダーのアクティブプールに存在しない ID（削除済み、無効化済み、または別のプロバイダーに属する ID）では利用可能なアカウントがなくなるため、リクエストは別の場所へ暗黙的にルーティングされず、失敗します。
+- **ID を見つける場所。**ダッシュボードでプロバイダー ページを開きます (**ダッシュボード→プロバイダー→ <provider>** ) 接続行の`xxxxxxxx…` id チップをクリックすると、完全な接続 ID が—されます。
+- **どのリクエストもそれを尊重します。** `/v1/chat/completions`、 `/v1/messages`および`/v1/responses`上の単一モデル リクエスト (`provider/model`)。コンボはヘッダーを無視します。代わりに、ステップ自体の接続を通じてコンボ ステップごとにアカウントを固定します。
+- **ピンは厳密であり、好みではありません。**ピン接続は排他的に使用されます。リクエスト内の失敗はアカウントのクールダウンを記録しますが、**ない**同じプロバイダーの兄弟アカウントにローテーションします。
+- **クールダウンとクォータによりピンが解放されます。**固定された接続が冷却されたり、クォータが使い果たされたり、クォータ ポリシーによってブロックされたりしている間、その後のリクエストは、固定されていないトラフィックとまったく同様に、プロバイダーの他の接続にフォールバックします。
+- **不明な ID または無効な ID は失敗します。**プロバイダーのアクティブなプールにない ID (削除、非アクティブ化、または別のプロバイダーに属している) には適格なアカウントが残らないため、リクエストは別の場所にサイレントにルーティングされずに失敗します。
 
-Claude Code は `ANTHROPIC_CUSTOM_HEADERS` を通じてカスタムヘッダーを送信します。`~/.claude/settings.json` の `env` ブロックに設定するか、プロジェクトごとに異なるアカウントを固定する場合は、プロジェクトレベルの `.claude/settings.json` に設定してください。
+Claudeコードは、 `ANTHROPIC_CUSTOM_HEADERS`を介してカスタム ヘッダーを送信します。これを`~/.claude/settings.json`の`env`ブロックに配置するか、プロジェクト レベルの`.claude/settings.json`に配置して、プロジェクトごとに異なるアカウントを固定します。
 
 ```jsonc
 {
@@ -121,12 +120,11 @@ Claude Code は `ANTHROPIC_CUSTOM_HEADERS` を通じてカスタムヘッダー�
 }
 ```
 
-ソース: `src/sse/handlers/chat.ts`（ヘッダーの読み取り）、`src/sse/services/auth.ts` および
-`src/sse/services/sessionAffinityPin.ts`（固定の解除とプールからの欠落チェック）。
+ソース: `src/sse/handlers/chat.ts` (ヘッダー読み取り)、 `src/sse/services/auth.ts`および`src/sse/services/sessionAffinityPin.ts` (ピンの解放とプールからの欠落チェック)。
 
-> **コストテレメトリヘッダー:** ストリーミングではない成功レスポンスには、`X-OmniRoute-*` コストテレメトリセットも含まれます — `X-OmniRoute-Response-Cost`（USD、小数点以下 10 桁固定。無料または価格未設定の場合は `0.0000000000`）、`X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`、`X-OmniRoute-Model`、`X-OmniRoute-Provider`、`X-OmniRoute-Latency-Ms`、`X-OmniRoute-Cache-Hit`、`X-OmniRoute-Fallback-Attempts`（0 より大きい場合のみ）、さらに `X-OmniRoute-Request-Id` と `X-OmniRoute-Version` です。これらはチャット補完、`/v1/responses`、`/v1/messages`、**およびメディアエンドポイント** — `/v1/embeddings`、`/v1/images/generations`、`/v1/audio/speech`、`/v1/audio/transcriptions`、`/v1/rerank`、`/v1/videos/generations`、`/v1/music/generations`、`/v1/moderations` — から出力されます（常にコストは `0`）。メディアのコストは、価格が利用可能な場合、モダリティごと（画像ごと、秒ごと、文字ごと、検索単位ごと）に計算され、それ以外の場合は `0` になります（fail-open）。
+> **コスト テレメトリ ヘッダー:**非ストリーミング成功応答には、 `X-OmniRoute-*`コスト テレメトリ セット— `X-OmniRoute-Response-Cost` (USD、固定小数点 10 桁、 free/unpricedの場合は`0.0000000000` )、 `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`、 `X-OmniRoute-Model`、 `X-OmniRoute-Provider`、 `X-OmniRoute-Latency-Ms`、 `X-OmniRoute-Cache-Hit`、および`X-OmniRoute-Fallback-Attempts` ( > 0 の場合のみ)、および`X-OmniRoute-Request-Id`および`X-OmniRoute-Version`も含まれます。 。これらは、チャット補完、 `/v1/responses`、 `/v1/messages`、**およびメディアエンドポイント**— `/v1/embeddings`、 `/v1/images/generations`、 `/v1/audio/speech`、 `/v1/audio/transcriptions`、 `/v1/rerank`、 `/v1/videos/generations`、 `/v1/music/generations`、および`/v1/moderations` (常に`0`がかかります)。メディアコストは、価格設定が可能な場合はモダリティごと (画像ごと、秒ごと、文字ごと、検索ユニットごと) に計算され、それ以外の場合は`0` (フェールオープン) で計算されます。
 
-> **キャッシュヒット時のコストの意味:** セマンティックキャッシュが HIT（`X-OmniRoute-Cache-Hit: true`）した場合、アップストリームへの呼び出しは行われないため、`X-OmniRoute-Response-Cost` は `0.0000000000` になります（ヒットを提供するための**増分**コスト）。元のコスト／発生していたはずのコストは、`X-OmniRoute-Cost-Saved` で別途報告されます。課金処理では `X-OmniRoute-Response-Cost`（ヒットのコストはゼロ）を合計し、キャッシュ分析では `X-OmniRoute-Cost-Saved` を集計できます。
+> **キャッシュヒットコストのセマンティクス:**セマンティック キャッシュHIT (`X-OmniRoute-Cache-Hit: true`) ではアップストリーム呼び出しは行われないため、 `X-OmniRoute-Response-Cost`は`0.0000000000` (**増分**ヒットを提供するコスト)。 original/would-have-beenコストは、 `X-OmniRoute-Cost-Saved`で個別にレポートされます。請求する消費者は`X-OmniRoute-Response-Cost`合計する必要があります (ヒットには費用がかかりません)。キャッシュ分析は`X-OmniRoute-Cost-Saved`を集約できます。
 
 ## 排他的マネージドセッションリース
 
@@ -322,6 +320,8 @@ Content-Type: application/json
 利用可能なプロバイダーには、 OpenAI (GPT Image 2)、 xAI (Grok Image)、 Together AI (FLUX)、 Fireworks AI、Nebius (FLUX)、Hyperbolic、 NanoBanana、**OpenRouter** 、**ZenMux** 、 SD WebUI (ローカル)、 ComfyUI (ローカル)。
 
 `n` `data[]`内の`n`イメージを返します。アップストリームAPIが呼び出しごとに 1 つの画像を返すプロバイダー (Black Forest Labs、Stability AI、Leonardo、Ideogram、Haiper、Hyperbolic、 Magnific/Freepik、 NVIDIA NIM、 Cloudflare Workers AI) は、 `n`の個別のアップストリーム呼び出し (最大 4 つが実行中) を取得します。固定`seed`は呼び出しインデックス (`seed`、 `seed + 1`、…) によってオフセットされるため、イメージは異なりますが、再現可能です。 `n`上限は 10 です。いずれかの呼び出しが失敗すると、リクエストは全体として失敗します。ファンアウト形式のリストは、 `open-sse/handlers/imageGeneration/fanOut.ts`の`SINGLE_IMAGE_FANOUT_FORMATS`です。
+
+Codex GPTイメージ モデル (`codex/gpt-image-*`) はPNGのみを返します。アップストリームは、 `jpeg`または`webp`が要求された場合でも、 PNGバイトで`200`応答します。他の`output_format` (`webp`、 `jpeg`、...) を使用したリクエストは、黙って無視されるのではなく、 HTTP 400 で拒否されます。省略するか、 `png`を送信してください。 `output_compression`は転送されません。
 
 ZenMux既存の API キー接続を再利用し、 `zenmux/`または`zm/`プレフィックスを受け入れます。
 
@@ -1636,10 +1636,10 @@ GET /api/telemetry/summary
 ## 予算
 
 ```bash
-# すべての API キーの予算ステータスを取得
+# Get budget status for all API keys
 GET /api/usage/budget
 
-# 予算を設定または更新
+# Set or update a budget
 POST /api/usage/budget
 Content-Type: application/json
 
@@ -1653,7 +1653,7 @@ Content-Type: application/json
 }
 ```
 
-> **スキーマに関する注意** (`setBudgetSchema`): `apiKeyId` は必須です。`dailyLimitUsd`、`weeklyLimitUsd`、または `monthlyLimitUsd` の少なくとも1つは0より大きい値である必要があります。オプションフィールド: `warningThreshold` (0–1)、`resetInterval` (`daily` | `weekly` | `monthly`)、`resetTime` (`HH:MM`)。従来の `{keyId, limit, period}` 形式では `400 Bad Request` が返されます。
+> **スキーマノート**(`setBudgetSchema`): `apiKeyId`は必須です。 `dailyLimitUsd`、 `weeklyLimitUsd`、または`monthlyLimitUsd`の少なくとも 1 つはゼロより大きくなければなりません。オプションのフィールド: `warningThreshold` (0–1)、 `resetInterval` (`daily` | `weekly` | `monthly`)、 `resetTime` (`HH:MM`)。従来の`{keyId, limit, period}`シェイプは`400 Bad Request`を返します。
 
 ## トークン制限
 

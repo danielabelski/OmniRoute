@@ -65,7 +65,11 @@ Ezek az útvonalak gyermekfolyamatokat hoznak létre, vagy futásidejű kódot h
 
 A LOCAL_ONLY MAY útvonalak részhalmaza akkor és csak akkor érhető el nem visszahurkolásból, ha a kérés olyan `Authorization: Bearer <api-key>` tartalmaz, amelynek metaadatai tartalmazzák a `manage` hatókört (vagy `admin`). A carve-out kifejezetten útvonalonként kapuzott `LOCAL_ONLY_MANAGE_SCOPE_BYPASS_PREFIXES` keresztül, így minden új LOCAL_ONLY útvonal alapértelmezett értéke szigorú visszacsatolás marad. A nem hitelesített kéréseket és a nem kezelési kulcsokkal rendelkező kéréseket `403 LOCAL_ONLY` továbbra is elutasítja.
 
-Ma az egyetlen kikerülhető előtag `/api/mcp/`. `/api/cli-tools/runtime/` és `/api/services/` szándékosan ki vannak zárva, mert tetszőleges részfolyamatokat hozhatnak létre (`npm install`, `node`), amely pontosan az a CVE osztály, amelyet a LOCAL_ONLY szint meg kell akadályoznia.
+Az alapértelmezett kihagyható előtagok `/api/mcp/` és `/api/resilience/connections`. A második a csak olvasható JSON amely semmit sem hoz létre; szerepel a listán, így a Resilience > Connections egy távoli irányítópultra (felügyelt példány, alagút, fordított proxy) töltődik be egy hitelesített irányítópult-munkamenethez vagy egy `manage` billentyűhöz, míg a névtelen távoli hívó továbbra is megkapja `403 LOCAL_ONLY` — akkor is, ha `requireLogin=false`. A saját listát eltároló telepítés megtartja ezt a listát. `/api/cli-tools/runtime/` és `/api/services/` szándékosan ki vannak zárva, mert tetszőleges részfolyamatokat (`npm install`, `node`) hozhatnak létre, ami pontosan az a CVE osztály, amelyet a LOCAL_ONLY réteg meg kell akadályoznia.
+
+#### Az olvasási módszer alóli mentesség
+
+Néhány LOCAL_ONLY útvonal csak `GET`/`HEAD`/`OPTIONS` esetén mentesül, pontos elérési út (`LOCAL_ONLY_API_GET_EXEMPTIONS`) szerint: az olvasás nem hajt végre spawn-ot, az írási módszerek igen. `GET /api/skills/executions` egyike ezeknek — tárolt végrehajtási sorokat sorol fel (két SQLite olvasás), így a Skills > Executions egy távoli irányítópultra töltődik be, míg `POST /api/skills/executions`, amely egy képességet futtat és eléri a sandbox konténer spawnját, csak visszacsatolásos marad. A mentesített olvasás a MANAGEMENT szintre esik.
 
 **#7895 — `mcp:connect` szűk hatókör:** a `/api/mcp/` carve-out ALSO elfogad egy Bearer kulcsot, amely a keskeny `mcp:connect` hatókört (`src/shared/constants/managementScopes.ts::MCP_CONNECT_SCOPE`) tartalmazza, a `src/server/authz/policies/management.ts` `hasMcpConnectOrManageScope()` -n keresztül ellenőrizve. Ez `/api/mcp/` ONLY — hatókörbe tartozik, `mcp:connect` nem ad semmit semmilyen más kezelési útvonalon (beleértve az összes többi LOCAL_ONLY bypass előtagot is, ha valaha is hozzáadásra kerül), és szándékosan ki van zárva `MANAGEMENT_API_KEY_SCOPES`-ból. A `manage`/`admin` tartó kulcs továbbra is pontosan úgy adja át a kivágást, mint korábban; `mcp:connect` alacsonyabb jogosultságokkal rendelkező alternatíva a távoli, csak MCP-t használó hívók számára, akiknek nincs szükségük széles körű felügyeleti hozzáférésre.
 
@@ -84,7 +88,7 @@ Ma az egyetlen kikerülhető előtag `/api/mcp/`. `/api/cli-tools/runtime/` és 
 Ha OmniRoute egy fordított proxy vagy alagút mögött futtatja (nginx, Caddy, Cloudflare Tunnel, Tailscale, Ngrok), a visszacsatolási ellenőrzés továbbra is védi a spawn-képes útvonalakat — felett, ha a kérést, amelynek ügyfélcíme nem loopback, `403 LOCAL_ONLY` elutasítja.** mielőtt lefutna az aut** , tehát a kiszivárgott JWT nem tud elérni spawn-t. Két kezelői felelősség marad:
 
 - **Ne "javítsa meg" a 403-at úgy, hogy a kliens IP visszahurkolja.** `X-Forwarded-For: 127.0.0.1` beállítása, vagy egy proxy, amely átírja a forráscímet loopback-re, pontosan azt a RCE osztályt nyitja meg újra, amelyet ez a réteg bezár. Tedd közzé a dashboard/API a proxy — keresztül, soha ne a spawn-képes útvonalakat.
-- **A kezelési hatókör megkerülése minimális legyen.** Csak `/api/mcp/` kikerülhető, és csak `manage` -scoped API kulccsal. A `SPAWN_CAPABLE_PREFIXES` soha nem adható hozzá a bypass listához — a zod séma elutasítja, `isLocalOnlyBypassableByManageScope` pedig letagadja futás közben (defence-in-depth), amit a műszerfal a "nem lehet megkerülhetővé tenni" alatt ért. Ugyanez a tiltólista tartalmaz néhány LOCAL_ONLY útvonalat is, amelyek nem jönnek létre, de soha nem lehetnek távolról elérhetőek: — `/api/oauth/kiro/auto-import` (olvassa a host-local Kiro hitelesítő fájlokat), `/api/discovery/` és `/api/issue-agent/`. A futásidejű pillanatkép-betöltő szintén kidobja az ilyen bejegyzéseket a tárolt beállítások sorából, és a régi JSON import (`/api/settings/import-json`) soha nem írja ki a bypass kulcsokat. Minden `LOCAL_ONLY_API_PREFIXES` bejegyzésnek szerepelnie kell a tiltólistán, vagy át kell tekinteni, mint kikerülhető (`tests/unit/authz/local-only-bypass-spawn-denylist.test.ts`). A dinamikus szegmensű és statikus útvonalú spawn-képes útvonalakat `/api/providers/` alatt (pl. `/login`, `/refresh-cursor`) a `src/shared/constants/spawnCapablePrefixes.ts` regex alapú `SPAWN_CAPABLE_PATTERNS` / `SPAWN_CAPABLE_PATTERN_ANCESTORS` kísérője fedi le, nem pedig a lapos `SPAWN_CAPABLE_PREFIXES` tömb — a lapos tömbnek le kell fednie a teljes `/api/providers/` útvonal előtagot, egy távoli t jogszerűen használja CRUD szolgáltatóhoz.
+- **Keep the manage-scope bypass minimal.** By default only `/api/mcp/` and the read-only `/api/resilience/connections` are bypassable, and only with a `manage`-scoped API key or an authenticated dashboard session. The `SPAWN_CAPABLE_PREFIXES` can never be added to the bypass list — the zod schema rejects them and `isLocalOnlyBypassableByManageScope` denies them at runtime (defence-in-depth), which is what the dashboard means by "cannot be made bypassable". The same deny-list also holds a few LOCAL_ONLY routes that do not spawn but must never be remotely reachable either — `/api/oauth/kiro/auto-import` (reads host-local Kiro credential files), `/api/discovery/` and `/api/issue-agent/`. The runtime snapshot loader also drops such entries from a stored settings row, and the legacy JSON import (`/api/settings/import-json`) never writes the bypass keys. Every `LOCAL_ONLY_API_PREFIXES` entry must be either in the deny-list or reviewed as bypass-eligible (`tests/unit/authz/local-only-bypass-spawn-denylist.test.ts`). Dynamic-segment and static-path spawn-capable routes under `/api/providers/` (e.g. `/login`, `/refresh-cursor`) are covered by the regex-based `SPAWN_CAPABLE_PATTERNS` / `SPAWN_CAPABLE_PATTERN_ANCESTORS` companion in `src/shared/constants/spawnCapablePrefixes.ts`, not by the flat `SPAWN_CAPABLE_PREFIXES` array — the flat array would have to cover the entire `/api/providers/` prefix to catch them, over-broadening a route tree remote dashboards legitimately use for provider CRUD.
 
 **Hozzáférés ellenőrzése** — annak ellenőrzésére, hogy a gépen kívüli gép nem éri el ezeket az útvonalakat:
 
@@ -96,12 +100,12 @@ Ha OmniRoute egy fordított proxy vagy alagút mögött futtatja (nginx, Caddy, 
 
 Egyes útvonalaknak elérhetőnek kell maradniuk egy távoli irányítópultról, de futtassanak egy gazdagépoldali vizsgálót (`which <binary>`, `<binary> --version`, `tailscale status --json`) a helyi hívók számára. Nem LOCAL_ONLY a `GET`; ehelyett a kezelő `getRequestPeerLocality()` (`src/shared/utils/apiAuth.ts`) paranccsal olvassa be a megbízható peer verdiktet, és csak `loopback` / `lan` hívók számára futtatja a vizsgálatot. A `remote` hívó ugyanazt a válaszformát kapja, amely nem spawning forrásokból épül fel (fenntartott állapot, beállítások, fs ellenőrzések), `probed: false` jelzéssel.
 
-| Útvonal                                                          | A szonda kimaradt a távoli hívóknál                                   |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `POST /api/providers/{id}/test`, `/api/providers/test-batch`     | CLI futásidejű próba (`allowLocalRuntimeProbe`) és CLI-fallback spawn |
-| `GET /api/headroom/status`                                       | `which headroom` és a python `--version` próbák                       |
-| `GET /api/tunnels/tailscale`, `GET /api/tunnels/tailscale/check` | `which tailscale`, `tailscale status/funnel --json`, `which brew`     |
-| `GET /api/tunnels/cloudflared` (GET-mentes a LOCAL_ONLY től)     | `which cloudflared` PATH keresés                                      |
+| Útvonal                                                          | A szonda kimaradt a távoli hívóknál                                    |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `POST /api/providers/{id}/test`, `/api/providers/test-batch`     | CLI futásidejű próba (`allowLocalRuntimeProbe`) és CLI-visszaeső spawn |
+| `GET /api/headroom/status`                                       | `which headroom` és a python `--version` próbák                        |
+| `GET /api/tunnels/tailscale`, `GET /api/tunnels/tailscale/check` | `which tailscale`, `tailscale status/funnel --json`, `which brew`      |
+| `GET /api/tunnels/cloudflared` (GET-mentes a LOCAL_ONLY től)     | `which cloudflared` PATH keresés                                       |
 
 Az új olvasási útvonal, amely a gazdagépet vizsgálja, ugyanazt a mintát követi, vagy egyenesen LOCAL_ONLY besorolású.
 
@@ -111,25 +115,25 @@ Az új olvasási útvonal, amely a gazdagépet vizsgálja, ugyanazt a mintát k�
 
 Ezek az utak rombolóak vagy visszafordíthatatlanok. Ha engedélyezi őket a „jelszó nélküli” telepítésben, az azt jelentené, hogy ugyanazon LAN bárki törölheti az adatbázist, vagy megölheti a szerverfolyamatot.
 
-| Útvonal                                   | Ok                                                               |
-| ----------------------------------------- | ---------------------------------------------------------------- |
-| `/api/shutdown`                           | Leállítja a szerver folyamatot                                   |
-| `/api/settings/database`                  | Adatbázis exportálása, importálása és törlése                    |
-| `/api/db-backups`                         | Teljes adatbázis-mentési archívum hozzáférés                     |
-| `/api/settings/export-json`               | Exportálja a teljes beállítási blobot (beleértve a titkokat is)  |
-| `/api/settings/import-json`               | Lecseréli a teljes beállítási blobot                             |
-| `/api/providers/health-autopilot/actions` | Automatikus pilóta javítási műveleteket hajt végre               |
-| `/api/settings/obsidian`                  | Újrafelhasználható WebDAV cred-eket ment minden trezorgyökérhez  |
-| `/api/relay/tokens`                       | A közvetítő tokeneket menti, listázza, szerkeszti és visszavonja |
-| `/api/agent-skills/generate`              | Képességmappákat ír és metsz a gazdagépen                        |
-| `/api/skills/marketplace/install`         | Globális képességet telepít minden kulcshoz                      |
-| `/api/skills/skillssh/install`            | Globális képességet telepít minden kulcshoz                      |
-| `/api/cli-tools/apply`                    | Átírja az operátor gazdagépének CLI konfigurációját              |
-| `/api/cli-tools/guide-settings`           | Útmutatóvezérelt CLI konfigurációs fájlokat ír                   |
-| `/api/cli-tools/hermes-agent-settings`    | Megírja a Hermes ügynök konfigurációját                          |
-| `/api/cli-tools/backups`                  | Visszaállítja és törli CLI konfigurációs biztonsági másolatait   |
-| `/api/log-export`                         | A hívásnaplókat egy konfigurált rendeltetési helyre szállítja    |
-| `/api/restart`                            | Újraindítja a szerver folyamatot                                 |
+| Útvonal                                   | Ok                                                              |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| `/api/shutdown`                           | Leállítja a szerver folyamatot                                  |
+| `/api/settings/database`                  | Adatbázis exportálása, importálása és törlése                   |
+| `/api/db-backups`                         | Teljes adatbázis-mentési archívum hozzáférés                    |
+| `/api/settings/export-json`               | Exportálja a teljes beállítási blobot (beleértve a titkokat is) |
+| `/api/settings/import-json`               | Lecseréli a teljes beállítási blobot                            |
+| `/api/providers/health-autopilot/actions` | Automatikus pilóta javítási műveleteket hajt végre              |
+| `/api/settings/obsidian`                  | Újrafelhasználható WebDAV cred-eket ment minden trezorgyökérhez |
+| `/api/relay/tokens`                       | A relé tokeneket menti, listázza, szerkeszti és visszavonja     |
+| `/api/agent-skills/generate`              | Képességmappákat ír és metsz a gazdagépen                       |
+| `/api/skills/marketplace/install`         | Globális képességet telepít minden kulcshoz                     |
+| `/api/skills/skillssh/install`            | Globális képességet telepít minden kulcshoz                     |
+| `/api/cli-tools/apply`                    | Átírja az operátor gazdagépének CLI konfigurációját             |
+| `/api/cli-tools/guide-settings`           | Útmutatóvezérelt CLI konfigurációs fájlokat ír                  |
+| `/api/cli-tools/hermes-agent-settings`    | Megírja a Hermes ügynök konfigurációját                         |
+| `/api/cli-tools/backups`                  | Visszaállítja és törli CLI konfigurációs biztonsági másolatait  |
+| `/api/log-export`                         | A hívásnaplókat egy konfigurált rendeltetési helyre szállítja   |
+| `/api/restart`                            | Újraindítja a szerver folyamatot                                |
 
 **Válasz szabálysértésre:** `401 Authentication required`
 

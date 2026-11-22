@@ -129,32 +129,33 @@ vanhan `request_detail_logs`-taulun sekä paikalliset pyyntöartefaktit hakemist
 Oletusarvot määritellään tiedostossa `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## `noLog`-poissulkeminen (API-avainkohtainen)
+## `noLog` Opt-Out (per API avain)
 
-API-avaimet voidaan merkitä niin, ettei niiden jatkokutsuliikennettä kirjata
-lokiin. Merkintä sijaitsee `api_keys`-taulussa (`no_log INTEGER DEFAULT 0`) ja
-peilataan muistissa olevaan joukkoon nopeita hakupolun tarkistuksia varten.
+API -näppäimet voidaan merkitä, jotta niiden alavirran puheluliikennettä ei kirjata lokiin. Lippu asuu `api_keys` taulukossa (`no_log INTEGER DEFAULT 0`) ja on peilattu muistissa olevaan joukkoon hot-path-hakuja varten.
 
 ```bash
-# Luo lokiin kirjaamaton avain (hallinnan todennus vaaditaan)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Apufunktiot (`src/lib/compliance/index.ts`):
+Auttajat (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — ottaa muistissa olevan merkinnän käyttöön tai poistaa sen käytöstä
-- `isNoLog(apiKeyId)` — tarkistetaan pyyntöpolulla; käyttää vararatkaisuna
-  `api_keys.no_log`-arvon 30 sekunniksi välimuistiin tallennettua lukua
-- `NO_LOG_API_KEY_IDS` (ympäristömuuttuja, pilkuilla eroteltu) — ladataan
-  muistissa olevaan joukkoon käynnistyksen yhteydessä; hyödyllinen, kun
-  sarakkeen arvoa ei voi muuttaa suoraan
+- `setNoLog(apiKeyId, true|false)` — vaihtaa muistissa olevan merkinnän
+- `isNoLog(apiKeyId)` — tarkistettu pyyntöpolulla; palaa 30 s välimuistiin `api_keys.no_log` stä
+- `NO_LOG_API_KEY_IDS` (env, pilkuilla erotettu) — esiladattu muistiin käynnistyksen yhteydessä; hyödyllinen, kun et voi vaihtaa saraketta suoraan
 
-`noLog` **ei** vaikuta hallinnollisiin tarkastuslokitapahtumiin (kirjautumiset,
-palveluntarjoajien muutokset, MCP-työkalukutsut jne.) — ainoastaan
-pyyntökohtainen liikenteen lokikirjaus jätetään pois.
+Hallinnolliset tarkastustapahtumat (sisäänkirjautuminen, palveluntarjoajan muutokset, MCP työkalukutsut jne.) ovat** ei** `noLog` vaikuttaa — vain pyyntökohtainen liikenteen kirjaus on poistettu käytöstä.
+
+### Pyyntökohtainen opt-out (`x-omniroute-no-log`)
+
+Asiakas voi valita yksittäisen päättelypyynnön hyötykuorman pysyvyydestä luomatta omaa avainta. Lähetä pyynnöstä `x-omniroute-no-log: true` (myös `1` ja `yes` hyväksytään, kirjainkoolla ei ole merkitystä). Se koskee jokaista chat-perhereittiä, joka kulkee chat-käsittelijän läpi: keskustelun päättymiset, vastaukset, viestit, täydennykset ja Gemini-yhteensopiva polku. Puhelulokin riville kirjoitetaan edelleen sen aikaleima, malli, toimittaja, tila, kesto ja merkkien määrä, mutta `request_body`, `response_body`, pyyntöjen yhteenvedot ja liukuhihnan artefaktit jätetään pois.
+
+Otsikko on ORed avainlipulla: no-log-avain pysyy ei-log-tilassa otsikosta riippumatta, eikä otsikko voi ottaa uudelleen käyttöön no-log-avaimen kirjaamista. Otsikko poistetaan ennen kuin pyyntö välitetään eteenpäin.
+
+Tämä otsikko tekee** ei** poista Muistin purkaminen tai semanttinen välimuisti käytöstä. Lähetä `x-omniroute-no-memory: true` ja `x-omniroute-no-cache: true` sen rinnalla, kun pyyntö ei saa säilyttää sisältöä myöskään näissä alijärjestelmissä.
 
 ## REST API
 

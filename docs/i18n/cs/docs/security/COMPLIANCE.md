@@ -129,33 +129,33 @@ a místní artefakty požadavků v `${DATA_DIR}/call_logs/`.
 Výchozí hodnoty jsou definovány v `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Odhlášení z protokolování pomocí `noLog` (pro jednotlivé API klíče)
+## `noLog` Opt-Out (za klíč API )
 
-API klíče lze označit tak, aby se provoz jejich následných volání
-neprotokoloval. Příznak je uložen v tabulce `api_keys`
-(`no_log INTEGER DEFAULT 0`) a zrcadlen do sady v paměti pro rychlé
-vyhledávání na kritické cestě.
+Klíče API lze označit příznakem, aby se jejich provoz příchozích hovorů nezaprotokoloval. Příznak žije v tabulce `api_keys` (`no_log INTEGER DEFAULT 0`) a je zrcadlen do sady v paměti pro vyhledávání hot-path.
 
 ```bash
-# Vytvoření klíče bez protokolování (vyžaduje autentizaci pro správu)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Pomocné funkce (`src/lib/compliance/index.ts`):
+Pomocníci (`src/lib/compliance/index.ts`):
 
 - `setNoLog(apiKeyId, true|false)` — přepíná záznam v paměti
-- `isNoLog(apiKeyId)` — kontroluje se na cestě požadavku; pokud záznam není
-  nalezen, použije se čtení z `api_keys.no_log` uložené do mezipaměti na 30 s
-- `NO_LOG_API_KEY_IDS` (proměnná prostředí, hodnoty oddělené čárkami) — při
-  spuštění se předem načte do sady v paměti; je užitečná, pokud sloupec nelze
-  přepínat přímo
+- `isNoLog(apiKeyId)` — zkontrolováno na cestě požadavku; spadne zpět na 30 s uložené čtení z `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, oddělené čárkami) — předinstalované do sady v paměti při spouštění; užitečné, když nemůžete přímo přepínat sloupec
 
-Administrativní auditní události (přihlášení, změny poskytovatelů, volání
-nástrojů MCP atd.) nejsou nastavením `noLog` **ovlivněny** — odhlášení se
-vztahuje pouze na protokolování provozu jednotlivých požadavků.
+Události administrativního auditu (přihlášení, změny poskytovatele, volání nástroje MCP atd.) jsou** ne** ovlivněno `noLog` — je odhlášeno pouze protokolování provozu na základě požadavku.
+
+### Odhlášení na základě žádosti (`x-omniroute-no-log`)
+
+Klient může odhlásit jeden požadavek na odvození z perzistence užitečného zatížení bez vytvoření vyhrazeného klíče. Pošlete `x-omniroute-no-log: true` na žádost (`1` a `yes` jsou také přijímány, nerozlišují se malá a velká písmena). Platí pro každou rodinnou trasu chatu, která prochází obslužným programem chatu: Dokončení chatu, Odpovědi, Zprávy, Dokončení a cesta kompatibilní s Gemini. Řádek protokolu volání je stále zapsán s jeho časovým razítkem, modelem, poskytovatelem, stavem, trváním a počty tokenů, ale `request_body`, `response_body`, souhrny požadavků a artefakty kanálu jsou vynechány.
+
+Hlavička je ORed s příznakem klíče: klíč bez protokolu zůstane bez protokolu bez ohledu na hlavičku a hlavička nemůže znovu povolit protokolování pro klíč bez protokolu. Záhlaví je odstraněno před předáním požadavku proti proudu.
+
+Tato hlavička ano** ne** zakázat extrakci paměti nebo sémantickou mezipaměť. Pošlete `x-omniroute-no-memory: true` a `x-omniroute-no-cache: true` vedle něj, když požadavek nesmí přetrvávat ani v těchto subsystémech.
 
 ## REST API
 

@@ -77,64 +77,67 @@ OmniRoute त्यस्ता प्रदायकहरूसँग एक�
 
 ---
 
-## Claude Code स्टेल्थ बन्डल
+## Claude कोड स्टेल्थ बन्डल
 
-`cliCompatMode` सक्रिय हुँदा, OmniRoute ले बाहिर जाने Claude अनुरोधहरूलाई `claude-cli` ट्राफिकबाट छुट्याउन नसकिने गरी पुनःआकार दिन्छ। तीनवटा मोड्युलले सहकार्य गर्छन्:
+जब `cliCompatMode` सक्रिय हुन्छ, OmniRoute बाहिर जाने Claude अनुरोधहरूलाई पुन: आकार दिन्छ जसले गर्दा तिनीहरू `claude-cli` ट्राफिकबाट भिन्न हुन्छन्। तीन मोड्युल सहयोग:
 
 ### `claudeCodeFingerprint.ts`
 
-बिलिङ हेडरमा समावेश गरिएको 3-अक्षरको `cc_version` फिङ्गरप्रिन्ट गणना गर्छ:
+बिलिङ हेडरमा सम्मिलित 3-char `cc_version` फिंगरप्रिन्ट गणना गर्दछ:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (हार्डकोड गरिएको; आधिकारिक क्लाइन्टसँग मेल खान्छ)
-- इनपुटहरू: पहिलो प्रयोगकर्ता सन्देशको पाठमा इन्डेक्स 4, 7, 20 का अक्षरहरू + संस्करण स्ट्रिङ
-- आउटपुट: 3-अक्षरको हेक्स प्रिफिक्स
+- `FINGERPRINT_SALT = "59cf53e54c78"` (हार्डकोड गरिएको; आधिकारिक ग्राहकसँग मेल खान्छ)
+- इनपुटहरू: पहिलो प्रयोगकर्ता सन्देश पाठ + संस्करण स्ट्रिङको अनुक्रमणिका 4, 7, 20 मा अक्षरहरू
+- आउटपुट: 3-char हेक्स उपसर्ग
 
-### `claudeCodeCCH.ts` (क्लाइन्ट सामग्री ह्यास)
+### `claudeCodeCCH.ts` (ग्राहक सामग्री ह्यास)
 
-आधिकारिक Claude Code CLI ले Bun/Zig मार्फत गणना गर्ने सर्भर-साइड अखण्डता जाँच। OmniRoute ले यसलाई `xxhash-wasm` प्रयोग गरेर पुनःकार्यान्वयन गर्छ:
+सर्भर-साइड अखण्डताले `xxhash-wasm` को साथ Bun/Zig. OmniRoute reimplements मार्फत आधिकारिक Claude कोड CLI कम्प्युटहरू जाँच गर्नुहोस्:
 
-1. बडीलाई `cch=00000;` प्लेसहोल्डरसहित सिरियलाइज गर्ने
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. शून्यले प्याड गरिएको 5-अक्षरको लोअरकेस हेक्स
-4. `cch=00000;` लाई गणना गरिएको टोकनले प्रतिस्थापन गर्ने
+1. `cch=00000;` प्लेसहोल्डरको साथ शरीरलाई क्रमबद्ध गर्नुहोस्
+2. यस क्रममा (`hashView()`):
+   - `/"model":"[^"]*"/g` को प्रत्येक खेल `"model":""` — बन्छ, खेल पहिलो `"` मा रोकिन्छ, त्यसैले एस्केप गरिएको उद्धरण (`"model":"a\"b"`) भएको मान त्यो उद्धरणसम्म मात्र खाली हुन्छ, ग्राहकले जस्तै
+   - `/"max_tokens":\d+,|,?"max_tokens":\d+/g` को प्रत्येक मिलान — मात्र संख्यात्मक मानहरू हटाइन्छ, कुनै पनि गहिराइमा
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. शून्य-प्याड गरिएको ५-चार लोअरकेस हेक्स
+5. `cch=00000;` गणना गरिएको टोकनसँग बदल्नुहोस्
 
-स्थिर मानहरू:
+स्थिरता:
 
-- सिड: `0x6e52736ac806831e`
-- प्याटर्न: `/\bcch=([0-9a-f]{5});/`
+- बीज: `0x4d659218e32a3268` ( Claude कोड 2.1.252 र 2.1.322 को लुपब्याक क्याप्चरहरू मेल खान्छ)
+- ढाँचा: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-अपस्ट्रिम फिल्टरहरूले तिनलाई grep गर्न नसकून् भनेर "संवेदनशील" क्लाइन्ट नामहरूको पहिलो अक्षरपछि Unicode **zero-width joiner** (`U+200D`) घुसाउँछ। पूर्वनिर्धारित शब्द सूची:
+युनिकोड सम्मिलित गर्दछ** शून्य चौडाइ योजक** (`U+200D`) "संवेदनशील" ग्राहक नामहरूको पहिलो क्यारेक्टर पछि, त्यसैले अपस्ट्रीम फिल्टरहरूले तिनीहरूलाई ग्रेप गर्न सक्दैन। पूर्वनिर्धारित शब्द सूची:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-यसमा लागू हुन्छ: `system` ब्लकहरू, सबै `messages[].content`, र `tools[].description` / `tools[].function.description`। अपरेटरले `setSensitiveWords()` मार्फत ओभरराइड गर्न सक्छ।
+लागू गरिएको: `system` ब्लकहरू, सबै `messages[].content`, र `tools[].description` / `tools[].function.description`। `setSensitiveWords()` मार्फत अपरेटर-ओभररिडेबल।
 
 ### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` प्रदायकहरू
 
-केवल "वास्तविक Claude Code" ट्राफिक स्वीकार गर्ने तेस्रो-पक्ष Anthropic रिलेहरूका लागि:
+"वास्तविक Claude कोड" ट्राफिक मात्र स्वीकार गर्ने तेस्रो-पक्ष Anthropic रिलेहरूको लागि:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- पूर्वनिर्धारित रूपमा `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- प्रति-कनेक्सन "Enable redact-thinking beta" टगलले CC Compatible अपस्ट्रिमलाई विशेष रूपमा संशोधित थिङ्किङ स्ट्रिमहरू आवश्यक पर्दा `redact-thinking-2026-02-12` थप्छ
-- प्रति-कनेक्सन "Enable summarized thinking display" टगलले `providerSpecificData.requestDefaults.summarizeThinking` भण्डारण गर्छ र पहिल्यै डिस्प्ले मोड सेट नगरिएका CC Compatible थिङ्किङ अनुरोधहरूमा `display: "summarized"` थप्छ
+- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` पूर्वनिर्धारित रूपमा
+- प्रति-जडान "redact-thinking beta सक्षम गर्नुहोस्" टगलले `redact-thinking-2026-02-12` थप्छ जब CC मिल्ने अपस्ट्रिमलाई विशेष रूपमा रिडेक्ट गरिएको सोच स्ट्रिमहरू आवश्यक पर्दछ।
+- प्रति-जडान "संक्षेपित सोच प्रदर्शन सक्षम गर्नुहोस्" टगल स्टोरहरू `providerSpecificData.requestDefaults.summarizeThinking` र `display: "summarized"` CC मा थप्छ जुन पहिले देखि नै प्रदर्शन मोड सेट नगरिएको छ।
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x परिवार)
-- पूर्वनिर्धारित पाथ: `/v1/messages?beta=true`
+- पूर्वनिर्धारित मार्ग: `/v1/messages?beta=true`
 
-सोही बन्डलका सहायक मोड्युलहरू:
+एउटै बन्डलमा बहिनी मोड्युलहरू:
 
-- `claudeCodeConstraints.ts` — तापक्रम + क्यास-कन्ट्रोल नियमहरू
-- `claudeCodeToolRemapper.ts` — टुल-नाम रिम्यापिङ
+- `claudeCodeConstraints.ts` — तापमान + क्यास-नियन्त्रण नियमहरू
+- `claudeCodeToolRemapper.ts` — उपकरण-नाम पुन: म्यापिङ
 - `claudeCodeExtraRemap.ts` — अतिरिक्त पेलोड सामान्यीकरण
 
 ---

@@ -49,7 +49,7 @@ Kull deployment jipprovdi l-kopja tiegħu tal-ispeċifikazzjoni f’`/openapi.ya
 
 ---
 
-## Tlestijiet taċ-Chat
+## Tlestija taċ-Chat
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### Headers Personalizzati
+### Headers tad-dwana
 
-| Header                   | Direction | Description                                                                                                                                                                                                                                                    |
-| ------------------------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Rikjesta  | Issettja għal `true` biex taqbeż il-cache                                                                                                                                                                                                                      |
-| `x-omniroute-no-memory`  | Rikjesta  | Issettja għal `true` biex taqbeż l-injezzjoni tal-memorja + skills għal din ir-rikjesta (tirrifletti no-cache; tevita l-ispiża tat-tokens overhead għal kull sejħa)                                                                                            |
-| `X-OmniRoute-Progress`   | Rikjesta  | Issettja għal `true` għall-avvenimenti tal-progress                                                                                                                                                                                                            |
-| `X-Session-Id`           | Rikjesta  | Ċavetta ta’ sessjoni persistenti għall-affinità ta’ sessjoni esterna                                                                                                                                                                                           |
-| `x_session_id`           | Rikjesta  | Il-varjant b’underscore huwa aċċettat ukoll (HTTP dirett)                                                                                                                                                                                                      |
-| `X-OmniRoute-Session-Id` | Rikjesta  | Tag tas-sessjoni/konversazzjoni pprovdut minn min iċempel (jintuża wkoll għall-memorja). Meta jkun preżenti, jinħażen verbatim f’`call_logs.session_tag` għall-attribuzzjoni tal-ispiża skont is-sessjoni (#8249) — qatt ma jiġi sintetizzat meta jkun assenti |
-| `Idempotency-Key`        | Rikjesta  | Ċavetta għat-tneħħija tad-duplikati (tieqa ta’ 5s)                                                                                                                                                                                                             |
-| `X-Request-Id`           | Rikjesta  | Ċavetta alternattiva għat-tneħħija tad-duplikati                                                                                                                                                                                                               |
-| `x-omniroute-connection` | Rikjesta  | Twaħħal rikjesta għal mudell wieħed ma’ konnessjoni waħda ta’ fornitur (kont) permezz tal-ID tagħha — ara [Twaħħil ta’ kont għal kull rikjesta](#account-pinning-per-request)                                                                                  |
-| `X-OmniRoute-Cache`      | Tweġiba   | `HIT` jew `MISS` (mhux streaming)                                                                                                                                                                                                                              |
-| `X-OmniRoute-Idempotent` | Tweġiba   | `true` jekk tneħħew id-duplikati                                                                                                                                                                                                                               |
-| `X-OmniRoute-Progress`   | Tweġiba   | `enabled` jekk it-traċċar tal-progress ikun attivat                                                                                                                                                                                                            |
-| `X-OmniRoute-Session-Id` | Tweġiba   | L-ID effettiv tas-sessjoni użat minn OmniRoute                                                                                                                                                                                                                 |
-| `X-OmniRoute-Request-Id` | Tweġiba   | ID ta’ korrelazzjoni tar-rikjesta (meta magħruf)                                                                                                                                                                                                               |
-| `X-OmniRoute-Version`    | Tweġiba   | Verżjoni tal-build ta’ OmniRoute (dejjem preżenti)                                                                                                                                                                                                             |
-| `X-OmniRoute-Cost-Saved` | Tweġiba   | USD li l-cache evita f’`HIT` (hits tal-cache biss)                                                                                                                                                                                                             |
-| `X-OmniRoute-Decision`   | Tweġiba   | Traċċa tar-routing: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` hija l-istrateġija kombinata, jew `single` għal rikjesta mhux kombinata) — dejjem preżenti fit-tweġibiet ta’ tlestija                                                        |
+| Header                   | Direzzjoni | Deskrizzjoni                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Talba      | Issettja għal `true` biex tevita l-cache                                                                                                                                                                                                                                                                                                                                                                               |
+| `x-omniroute-no-memory`  | Talba      | Issettjat għal `true` biex taqbeż l-injezzjoni tal-ħiliet + tal-memorja għal din it-talba (mirrors no-cache; tevita l-overhead token/cost għal kull sejħa)                                                                                                                                                                                                                                                             |
+| `x-omniroute-no-log`     | Talba      | Issettja għal `true` biex tħalli barra request/response payloads mir-reġistri tas-sejħiet għal din it-talba għall-inferenza (ir-rotot kollha tal-familja taċ-chat: Tlestija taċ-Chat, Risposti, Messaġġi, Tlestiriet, Gemini). It-timbru taż-żmien, il-mudell, l-istatus, it-tul u l-għadd tat-tokens għadhom irreġistrati. Għaqqad ma `x-omniroute-no-memory` u `x-omniroute-no-cache` għal opt-out tal-kontenut sħiħ |
+| `X-OmniRoute-Progress`   | Talba      | Issettjat għal `true` għal avvenimenti ta' progress                                                                                                                                                                                                                                                                                                                                                                    |
+| `X-Session-Id`           | Talba      | Ċavetta tas-sessjoni li twaħħal għall-affinità tas-sessjoni esterna                                                                                                                                                                                                                                                                                                                                                    |
+| `x_session_id`           | Talba      | Varjant ta' underscore aċċettat ukoll (diretta HTTP)                                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Session-Id` | Talba      | Tikketta session/conversation fornuta minn min iċempel (tagħti wkoll il-memorja). Meta preżenti, ppersistew verbatim għal `call_logs.session_tag` għall-attribuzzjoni tal-ispiża għal kull sessjoni (#8249) — qatt ma sintetizzat meta assenti                                                                                                                                                                         |
+| `Idempotency-Key`        | Talba      | Dedup key (tieqa ta' 5s)                                                                                                                                                                                                                                                                                                                                                                                               |
+| `X-Request-Id`           | Talba      | Ċavetta ta' dedup alternattiva                                                                                                                                                                                                                                                                                                                                                                                         |
+| `x-omniroute-connection` | Talba      | Pin talba ta' mudell wieħed għal konnessjoni ta' fornitur wieħed (kont) bl-id tagħha — ara [Pinning tal-kont għal kull talba](#account-pinning-per-request)                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Cache`      | Rispons    | `HIT` jew `MISS` (mhux streaming)                                                                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Idempotent` | Rispons    | `true` jekk deduplikat                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Progress`   | Rispons    | `enabled` jekk progress tracking fuq                                                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Session-Id` | Rispons    | Sessjoni effettiva ID użata minn OmniRoute                                                                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Request-Id` | Rispons    | Itlob id-korrelazzjoni (meta tkun magħrufa)                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Version`    | Rispons    | OmniRoute build version (dejjem preżenti)                                                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Cost-Saved` | Rispons    | USD the cache evitata fuq HIT (cache hits biss)                                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Decision`   | Rispons    | Traċċa tar-rotot: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` hija l-istrateġija kombinata, jew `single` għal talba mhux kombinata) — dejjem preżenti fit-tweġibiet tat-tlestija                                                                                                                                                                                                                     |
 
-> Nota dwar Nginx: jekk tiddependi fuq headers b’underscore (pereżempju `x_session_id`), attiva `underscores_in_headers on;`.
+> Nota Nginx: jekk tiddependi fuq headers ta' underscore (per eżempju `x_session_id`), abilita `underscores_in_headers on;`.
 
-#### Twaħħil ta’ kont għal kull rikjesta
+#### Pinning tal-kont għal kull talba
 
-Meta fornitur ikollu diversi konnessjonijiet (kontijiet jew ċwievet), OmniRoute normalment jagħżel waħda
-permezz tal-istrateġija tiegħu għall-għażla tal-kont. Rikjesta tista’ minflok twaħħal konnessjoni speċifika waħda
-bil-header `x-omniroute-connection`:
+Meta fornitur ikollu diversi konnessjonijiet (kontijiet jew ċwievet), OmniRoute normalment tagħżel waħda permezz tal-istrateġija tal-għażla tal-kont tagħha. Talba tista' minflok tippinja konnessjoni speċifika waħda mal-header `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,23 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Fejn issib l-id.** Iftaħ il-paġna tal-fornitur fid-dashboard
-  (**Dashboard → Providers → <provider>**) u kklikkja fuq iċ-ċippa tal-id `xxxxxxxx…` fuq ringiela ta’
-  konnessjoni — dan jikkopja l-id sħiħ tal-konnessjoni.
-- **Liema talbiet jirrispettawh.** Talbiet b’mudell wieħed (`provider/model`) fuq
-  `/v1/chat/completions`, `/v1/messages` u `/v1/responses`. Il-kombinazzjonijiet jinjoraw il-header:
-  iffissa kont għal kull pass tal-kombinazzjoni permezz tal-konnessjoni tal-pass innifsu.
-- **L-iffissar huwa strett, mhux preferenza.** Il-konnessjoni ffissata tintuża esklussivament. Falliment
-  waqt it-talba jirreġistra l-perjodu ta’ stennija tal-kont iżda **ma** jaqlebx għal kont ieħor tal-istess fornitur.
-- **Il-perjodu ta’ stennija u l-kwota jneħħu l-iffissar.** Waqt li l-konnessjoni ffissata tkun fil-perjodu ta’
-  stennija, tkun eżawriet il-kwota jew tkun imblukkata minn politika tal-kwota, it-talbiet sussegwenti jaqgħu lura għal
-  konnessjonijiet oħra tal-fornitur, eżatt bħal traffiku li ma jkunx iffissat.
-- **Ids mhux magħrufa jew diżattivati jfallu.** Id li ma jkunx fil-ġabra attiva tal-fornitur (imħassar,
-  diżattivat, jew li jappartjeni għal fornitur ieħor) ma jħalli l-ebda kont eliġibbli, għalhekk it-talba
-  tfalli minflok ma tiġi rrutjata x’imkien ieħor mingħajr avviż.
+- **Fejn issib l-id.** Iftaħ il-paġna tal-fornitur fid-dashboard (** Dashboard → Providers → <provider>** ) u kklikkja ċ-ċippa `xxxxxxxx…` id fuq ringiela tal-konnessjoni — tikkopja l-id tal-konnessjoni sħiħa.
+- **Liema talbiet jonorawha.** Talbiet għal mudell wieħed (`provider/model`) fuq `/v1/chat/completions`, `/v1/messages` u `/v1/responses`. Combos jinjora l-header: pin kont għal kull pass combo permezz tal-konnessjoni tal-pass stess minflok.
+- **Il-pin hija stretta, mhux preferenza.** Il-konnessjoni pinnjata tintuża esklussivament. Falliment fit-talba jirreġistra t-tkessiħ tal-kont iżda jagħmel dan** le** iddawwar għal kont tal-aħwa tal-istess fornitur.
+- **It-tkessiħ u l-kwota jirrilaxxaw il-pin.** Waqt li l-konnessjoni pinnjata qed tkessaħ, ikkwota eżawrita jew imblukkata minn politika tal-kwota, it-talbiet aktar tard jaqgħu lura għall-konnessjonijiet l-oħra tal-fornitur, eżattament bħal traffiku mhux ippinjat.
+- **Ids mhux magħrufa jew b'diżabilità ifallu.** Id li ma jkunx fil-grupp attiv tal-fornitur (imħassar, diżattivat, jew li jappartjeni għal fornitur ieħor) ma jħalli l-ebda kont eliġibbli, u għalhekk it-talba tonqos minflok siektament rotta x'imkien ieħor.
 
-Claude Code jibgħat headers personalizzati permezz ta’ `ANTHROPIC_CUSTOM_HEADERS`. Poġġih fil-blokka `env`
-ta’ `~/.claude/settings.json`, jew f’`.claude/settings.json` fil-livell tal-proġett biex tiffissa kont differenti għal kull proġett:
+Claude Code jibgħat headers tad-dwana permezz ta `ANTHROPIC_CUSTOM_HEADERS`. Poġġiha fil-blokk `env` ta' `~/.claude/settings.json`, jew `.claude/settings.json` fil-livell tal-proġett biex tippinja kont differenti għal kull proġett:
 
 ```jsonc
 {
@@ -131,12 +120,11 @@ ta’ `~/.claude/settings.json`, jew f’`.claude/settings.json` fil-livell tal-
 }
 ```
 
-Sors: `src/sse/handlers/chat.ts` (qari tal-header), `src/sse/services/auth.ts` u
-`src/sse/services/sessionAffinityPin.ts` (rilaxx tal-iffissar u l-kontroll li l-id tkun nieqsa mill-ġabra).
+Sors: `src/sse/handlers/chat.ts` (header read), `src/sse/services/auth.ts` u `src/sse/services/sessionAffinityPin.ts` (rilaxx tal-pin u l-kontroll missing-from-pool).
 
-> **Headers tat-telemetrija tal-ispiża:** it-tweġibiet ta’ suċċess mhux streaming iġorru wkoll is-sett tat-telemetrija tal-ispiża `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, 10 ċifri deċimali fissi; `0.0000000000` għal dawk b’xejn/mingħajr prezz), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, u `X-OmniRoute-Fallback-Attempts` (biss meta > 0), flimkien ma’ `X-OmniRoute-Request-Id` u `X-OmniRoute-Version`. Dawn jinħarġu minn chat completions, `/v1/responses`, `/v1/messages`, **u mill-endpoints tal-midja** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, u `/v1/moderations` (dejjem bi spiża `0`). L-ispiża tal-midja tiġi kkalkulata skont il-modalità (għal kull immaġni, għal kull sekonda, għal kull karattru, għal kull unità ta’ tfittxija) meta l-ipprezzar ikun disponibbli; inkella tkun `0` (fail-open).
+> **Cost telemetry headers:** non-streaming success responses also carry the `X-OmniRoute-*` cost-telemetry set — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimals; `0.0000000000` for free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, and `X-OmniRoute-Fallback-Attempts` (only when > 0), plus `X-OmniRoute-Request-Id` and `X-OmniRoute-Version`. These are emitted by chat completions, `/v1/responses`, `/v1/messages`, **and the media endpoints** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, and `/v1/moderations` (always cost `0`). Media cost is computed per modality (per-image, per-second, per-character, per search-unit) when pricing is available, otherwise `0` (fail-open).
 
-> **Semantika tal-ispiża ta’ cache-hit:** fuq HIT tal-cache semantiku (`X-OmniRoute-Cache-Hit: true`) ma ssir l-ebda sejħa upstream, għalhekk `X-OmniRoute-Response-Cost` tkun `0.0000000000` (l-ispiża **inkrementali** biex jiġi servut il-hit). L-ispiża oriġinali/kif kienet tkun tiġi rrappurtata separatament f’`X-OmniRoute-Cost-Saved`. Il-konsumaturi tal-kontijiet għandhom jgħoddu flimkien `X-OmniRoute-Response-Cost` (il-hits ma jiswew xejn); l-analitiċi tal-cache jistgħu jiġbru flimkien `X-OmniRoute-Cost-Saved`.
+> **Semantika tal-ispiża cache-hit:** fuq semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`) ma ssir l-ebda sejħa upstream, għalhekk `X-OmniRoute-Response-Cost` huwa `0.0000000000` (il-** inkrementali** l-ispiża tas-servizz tal-hit). L-ispiża original/would-have-been hija rrappurtata separatament `X-OmniRoute-Cost-Saved`. Il-konsumaturi tal-kontijiet għandhom jammontaw għal `X-OmniRoute-Response-Cost` (il-hits ma jiswew xejn); cache analytics tista 'taggrega `X-OmniRoute-Cost-Saved`.
 
 ## Kirjiet ta' Sessjonijiet Immaniġġjati Esklussivi
 
@@ -342,6 +330,8 @@ Content-Type: application/json
 Fornituri disponibbli jinkludu OpenAI (GPT Image 2 ), xAI (Grok Image ), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (lokali), ComfyUI (lokali).
 
 `n` jirritorna immaġini `n` `data[]`. Fornituri li API upstream tagħhom jirritorna immaġni waħda għal kull sejħa (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) jiksbu `n` sejħiet upstream separati, l-iktar 4 waqt it-titjira. `seed` fiss huwa kkumpensat bl-indiċi tas-sejħa (`seed`, `seed + 1`, ...), għalhekk l-immaġini huma differenti iżda jibqgħu riproduċibbli. `n` huwa limitat għal 10. It-talba tfalli kollha kemm hi jekk xi sejħa tonqos. Il-lista ta' formati ta' fan-out hija `SINGLE_IMAGE_FANOUT_FORMATS` `open-sse/handlers/imageGeneration/fanOut.ts`.
+
+Codex GPT Mudelli tal-immaġini (`codex/gpt-image-*`) jirritorna PNG biss: l-upstream iwieġeb `200` PNG bytes anke meta jintalab `jpeg` jew `webp`. Talba bi kwalunkwe `output_format` ieħor (`webp`, `jpeg`, ...) tiġi miċħuda HTTP 400 minflok ma tiġi injorata skiet; tħalliha barra jew ibgħat `png`. `output_compression` ma jintbagħatx.
 
 ZenMux jerġa' juża l-konnessjoni eżistenti taċ-ċavetta API u jaċċetta prefissi `zenmux/` jew `zm/` :
 

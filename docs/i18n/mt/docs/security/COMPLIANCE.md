@@ -128,33 +128,33 @@ taħt `${DATA_DIR}/call_logs/`.
 Il-valuri predefiniti huma definiti f’`src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Għażla ta’ Esklużjoni `noLog` (għal kull API key)
+## `noLog` Opt-Out (għal kull ċavetta API )
 
-L-API keys jistgħu jiġu mmarkati sabiex it-traffiku tas-sejħiet downstream
-tagħhom ma jiġix irreġistrat. Il-marka tinsab fit-tabella `api_keys`
-(`no_log INTEGER DEFAULT 0`) u tiġi riflessa f’sett fil-memorja għal
-tfittxijiet fil-perkors kritiku.
+API keys jistgħu jiġu mmarkati sabiex it-traffiku downstream tas-sejħa tagħhom ma jiġix irreġistrat. Il-bandiera tgħix fuq it-tabella `api_keys` (`no_log INTEGER DEFAULT 0`) u hija riflessa f'sett fil-memorja għal lookups hot-path.
 
 ```bash
-# Oħloq key mingħajr reġistrazzjoni (awtentikazzjoni tal-ġestjoni meħtieġa)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Funzjonijiet ta’ għajnuna (`src/lib/compliance/index.ts`):
+Helpers (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — taqleb l-entrata fil-memorja
-- `isNoLog(apiKeyId)` — tiġi ċċekkjata fil-perkors tat-talba; jekk meħtieġ,
-  taqa’ lura għal qari b’cache ta’ 30 s minn `api_keys.no_log`
-- `NO_LOG_API_KEY_IDS` (varjabbli tal-ambjent, separati b’virgoli) — jitgħabbew
-  minn qabel fis-sett fil-memorja waqt l-istartjar; utli meta ma tkunx tista’
-  taqleb il-kolonna direttament
+- `setNoLog(apiKeyId, true|false)` — toggle l-entrata fil-memorja
+- `isNoLog(apiKeyId)` — iċċekkjat fuq il-mogħdija tat-talba; jaqa 'lura għal 30 s cached jinqara minn `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, comma-separated) — mgħobbi minn qabel fis-sett fil-memorja fuq il-boot; utli meta ma tistax taqleb il-kolonna direttament
 
-L-avvenimenti amministrattivi ta’ awditjar (login, bidliet fil-fornituri,
-sejħiet tal-għodod MCP, eċċ.) **mhumiex** affettwati minn `noLog` — l-għażla
-ta’ esklużjoni tapplika biss għar-reġistrazzjoni tat-traffiku għal kull talba.
+Avvenimenti ta 'awditjar amministrattiv (login, bidliet fil-fornitur, sejħiet għall-għodda MCP, eċċ.) huma** le** affettwati minn `noLog` — illoggjar tat-traffiku għal kull talba biss huwa opt out.
+
+### Opt-out għal kull talba (`x-omniroute-no-log`)
+
+Klijent jista' jagħżel talba ta' inferenza waħda mill-persistenza tat-tagħbija mingħajr ma joħloq ċavetta ddedikata. Ibgħat `x-omniroute-no-log: true` fuq it-talba (`1` u `yes` huma aċċettati wkoll, mhux sensittivi għall-każi). Japplika għal kull rotta tal-familja taċ-chat li tgħaddi mill-immaniġġjar taċ-chat: Tlestija taċ-Chat, Risposti, Messaġġi, Tlestiriet u l-mogħdija kompatibbli ma 'Gemini. Ir-ringiela tar-reġistru tas-sejħiet għadha miktuba bil-timestamp, il-mudell, il-fornitur, l-istatus, it-tul u l-għadd tat-tokens tagħha, iżda `request_body`, `response_body`, is-sommarji tat-talbiet u l-artifacts tal-pipeline jitħallew barra.
+
+L-header huwa ORed bil-bandiera taċ-ċavetta: ċavetta no-log tibqa 'no-log irrispettivament mill-header, u l-header ma jistax jerġa' jippermetti logging għal ċavetta no-log. L-intestatura hija mqaxxar qabel it-talba tintbagħat upstream.
+
+Dan header jagħmel** le** tiddiżattiva l-estrazzjoni tal-memorja jew il-cache semantiku. Ibgħat `x-omniroute-no-memory: true` u `x-omniroute-no-cache: true` maġenbu meta t-talba lanqas ma trid tippersisti kontenut f'dawk is-subsistemi.
 
 ## API REST
 

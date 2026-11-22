@@ -49,7 +49,7 @@ Setiap deployment menyediakan salinan spesifikasinya sendiri di `/openapi.yaml`,
 
 ---
 
-## Pelengkapan Sembang
+## Selesai Sembang
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Pengepala Tersuai
 
-| Header                   | Arah       | Penerangan                                                                                                                                                                                                                    |
-| ------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Permintaan | Tetapkan kepada `true` untuk memintas cache                                                                                                                                                                                   |
-| `x-omniroute-no-memory`  | Permintaan | Tetapkan kepada `true` untuk melangkau suntikan memori + kemahiran bagi permintaan ini (mencerminkan no-cache; mengelakkan overhed token/kos setiap panggilan)                                                                |
-| `X-OmniRoute-Progress`   | Permintaan | Tetapkan kepada `true` untuk peristiwa kemajuan                                                                                                                                                                               |
-| `X-Session-Id`           | Permintaan | Kunci sesi lekat untuk afiniti sesi luaran                                                                                                                                                                                    |
-| `x_session_id`           | Permintaan | Varian garis bawah juga diterima (HTTP langsung)                                                                                                                                                                              |
-| `X-OmniRoute-Session-Id` | Permintaan | Tag sesi/perbualan yang dibekalkan pemanggil (juga disalurkan kepada memori). Apabila hadir, disimpan secara verbatim ke `call_logs.session_tag` untuk atribusi kos mengikut sesi (#8249) — tidak pernah dijana apabila tiada |
-| `Idempotency-Key`        | Permintaan | Kunci deduplikasi (tetingkap 5s)                                                                                                                                                                                              |
-| `X-Request-Id`           | Permintaan | Kunci deduplikasi alternatif                                                                                                                                                                                                  |
-| `x-omniroute-connection` | Permintaan | Ikat permintaan model tunggal kepada satu sambungan penyedia (akaun) mengikut idnya — lihat [Pengikatan akaun bagi setiap permintaan](#account-pinning-per-request)                                                           |
-| `X-OmniRoute-Cache`      | Respons    | `HIT` atau `MISS` (bukan penstriman)                                                                                                                                                                                          |
-| `X-OmniRoute-Idempotent` | Respons    | `true` jika dideduplikasi                                                                                                                                                                                                     |
-| `X-OmniRoute-Progress`   | Respons    | `enabled` jika penjejakan kemajuan diaktifkan                                                                                                                                                                                 |
-| `X-OmniRoute-Session-Id` | Respons    | ID sesi berkesan yang digunakan oleh OmniRoute                                                                                                                                                                                |
-| `X-OmniRoute-Request-Id` | Respons    | ID korelasi permintaan (apabila diketahui)                                                                                                                                                                                    |
-| `X-OmniRoute-Version`    | Respons    | Versi binaan OmniRoute (sentiasa hadir)                                                                                                                                                                                       |
-| `X-OmniRoute-Cost-Saved` | Respons    | USD yang dijimatkan oleh cache pada `HIT` (hanya cache hit)                                                                                                                                                                   |
-| `X-OmniRoute-Decision`   | Respons    | Jejak penghalaan: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ialah strategi gabungan, atau `single` untuk permintaan bukan gabungan) — sentiasa hadir pada respons penyelesaian                            |
+| Pengepala                | Arah       | Penerangan                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Permintaan | Tetapkan kepada `true` untuk memintas cache                                                                                                                                                                                                                                                                                                                                                 |
+| `x-omniroute-no-memory`  | Permintaan | Tetapkan kepada `true` untuk melangkau suntikan kemahiran + memori untuk permintaan ini (cermin tanpa cache; mengelakkan overhed token/cost setiap panggilan)                                                                                                                                                                                                                               |
+| `x-omniroute-no-log`     | Permintaan | Tetapkan kepada `true` untuk mengecualikan muatan request/response daripada log panggilan untuk permintaan inferens ini (semua laluan keluarga sembang: Selesai Sembang, Respons, Mesej, Penyelesaian, Gemini). Cap masa, model, status, tempoh dan kiraan token masih direkodkan. Gabungkan dengan `x-omniroute-no-memory` dan `x-omniroute-no-cache` untuk memilih keluar kandungan penuh |
+| `X-OmniRoute-Progress`   | Permintaan | Tetapkan kepada `true` untuk acara kemajuan                                                                                                                                                                                                                                                                                                                                                 |
+| `X-Session-Id`           | Permintaan | Kunci sesi melekit untuk perkaitan sesi luaran                                                                                                                                                                                                                                                                                                                                              |
+| `x_session_id`           | Permintaan | Varian garis bawah juga diterima ( HTTP langsung )                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Session-Id` | Permintaan | Tag session/conversation yang dibekalkan pemanggil (juga menyuap memori). Apabila ada, verbatim berterusan kepada `call_logs.session_tag` untuk atribusi kos setiap sesi (#8249) — tidak pernah disintesis apabila tiada                                                                                                                                                                    |
+| `Idempotency-Key`        | Permintaan | Kunci nyahup (tetingkap 5s)                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-Request-Id`           | Permintaan | Kunci pembayaran alternatif                                                                                                                                                                                                                                                                                                                                                                 |
+| `x-omniroute-connection` | Permintaan | Semat permintaan model tunggal kepada satu sambungan pembekal (akaun) dengan id — lihat [Semat akaun setiap permintaan](#account-pinning-per-request)                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Cache`      | Respon     | `HIT` atau `MISS` (bukan penstriman)                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Idempotent` | Respon     | `true` jika dinyahduplikasi                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Progress`   | Respon     | `enabled` jika penjejakan kemajuan dihidupkan                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | Respon     | Sesi berkesan ID digunakan oleh OmniRoute                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Request-Id` | Respon     | Minta id korelasi (apabila diketahui)                                                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Version`    | Respon     | versi binaan OmniRoute (sentiasa ada)                                                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Cost-Saved` | Respon     | USD cache yang dielakkan pada HIT (cache hits sahaja)                                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Decision`   | Respon     | Jejak laluan: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ialah strategi kombo, atau `single` untuk permintaan bukan gabungan) — sentiasa hadir pada respons pelengkap                                                                                                                                                                                                    |
 
 > Nota Nginx: jika anda bergantung pada pengepala garis bawah (contohnya `x_session_id`), dayakan `underscores_in_headers on;`.
 
-#### Pengikatan akaun bagi setiap permintaan
+#### Penyematan akaun setiap permintaan
 
-Apabila penyedia mempunyai beberapa sambungan (akaun atau kunci), OmniRoute biasanya memilih salah satu
-melalui strategi pemilihan akaunnya. Sebaliknya, permintaan boleh mengikat satu sambungan tertentu
-dengan pengepala `x-omniroute-connection`:
+Apabila pembekal mempunyai beberapa sambungan (akaun atau kunci), OmniRoute biasanya memilih satu melalui strategi pemilihan akaunnya. Permintaan sebaliknya boleh menyematkan satu sambungan khusus dengan pengepala `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,25 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Tempat untuk mencari id.** Buka halaman penyedia dalam papan pemuka
-  (**Dashboard → Providers → <provider>**) dan klik cip id `xxxxxxxx…` pada baris sambungan —
-  ia menyalin id sambungan penuh.
-- **Permintaan yang menghormatinya.** Permintaan model tunggal (`provider/model`) pada
-  `/v1/chat/completions`, `/v1/messages` dan `/v1/responses`. Gabungan mengabaikan pengepala ini:
-  tetapkan akaun bagi setiap langkah gabungan melalui sambungan langkah itu sendiri.
-- **Pin adalah ketetapan, bukan keutamaan.** Sambungan yang dipinkan digunakan secara eksklusif. Jika
-  berlaku kegagalan dalam permintaan, ia merekodkan tempoh penyejukan akaun tetapi **tidak** beralih
-  kepada akaun lain daripada penyedia yang sama.
-- **Tempoh penyejukan dan kuota melepaskan pin.** Selagi sambungan yang dipinkan dalam tempoh
-  penyejukan, kehabisan kuota atau disekat oleh dasar kuota, permintaan seterusnya akan beralih kepada
-  sambungan lain penyedia, sama seperti trafik tanpa pin.
-- **Id yang tidak diketahui atau dilumpuhkan akan gagal.** Id yang tiada dalam kumpulan aktif penyedia
-  (dipadamkan, dinyahaktifkan atau milik penyedia lain) tidak meninggalkan akaun yang layak, maka
-  permintaan gagal dan bukannya dihalakan secara senyap ke tempat lain.
+- **Di mana untuk mencari id.** Buka halaman penyedia dalam papan pemuka (** Papan pemuka → Pembekal → <provider>** ) dan klik cip id `xxxxxxxx…` pada baris sambungan — ia menyalin id sambungan penuh.
+- **Yang meminta menghormatinya.** Permintaan model tunggal (`provider/model`) pada `/v1/chat/completions`, `/v1/messages` dan `/v1/responses`. Kombo mengabaikan pengepala: sematkan akaun setiap langkah kombo melalui sambungan langkah itu sendiri.
+- **Pin adalah ketat, bukan keutamaan.** Sambungan yang disematkan digunakan secara eksklusif. Kegagalan dalam permintaan merekodkan tempoh bertenang akaun tetapi tidak** bukan** putar ke akaun adik beradik penyedia yang sama.
+- **Cooldown dan kuota lepaskan pin.** Semasa sambungan yang disematkan sedang menyejuk, kehabisan kuota atau disekat oleh dasar kuota, permintaan kemudiannya kembali kepada sambungan pembekal yang lain, sama seperti trafik yang dinyahsemat.
+- **Id tidak diketahui atau dilumpuhkan gagal.** Id yang tiada dalam kumpulan aktif penyedia (dipadamkan, dinyahaktifkan atau milik pembekal lain) tidak meninggalkan akaun yang layak, jadi permintaan itu gagal dan bukannya menghala ke tempat lain secara senyap.
 
-Claude Code menghantar pengepala tersuai melalui `ANTHROPIC_CUSTOM_HEADERS`. Letakkannya dalam blok
-`env` bagi `~/.claude/settings.json`, atau dalam `.claude/settings.json` peringkat projek untuk
-menetapkan akaun yang berbeza bagi setiap projek:
+Kod Claude menghantar pengepala tersuai melalui `ANTHROPIC_CUSTOM_HEADERS`. Letakkannya dalam blok `env` `~/.claude/settings.json`, atau dalam `.claude/settings.json` peringkat projek untuk menyematkan akaun berbeza bagi setiap projek:
 
 ```jsonc
 {
@@ -133,12 +120,11 @@ menetapkan akaun yang berbeza bagi setiap projek:
 }
 ```
 
-Sumber: `src/sse/handlers/chat.ts` (pembacaan pengepala), `src/sse/services/auth.ts` dan
-`src/sse/services/sessionAffinityPin.ts` (pelepasan pin dan semakan sambungan yang tiada dalam kumpulan).
+Sumber: `src/sse/handlers/chat.ts` (kepala dibaca), `src/sse/services/auth.ts` dan `src/sse/services/sessionAffinityPin.ts` (pelepasan pin dan semakan hilang-dari-kolam).
 
-> **Pengepala telemetri kos:** respons berjaya tanpa penstriman turut membawa set telemetri kos `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, tetap 10 tempat perpuluhan; `0.0000000000` untuk percuma/tanpa harga), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` dan `X-OmniRoute-Fallback-Attempts` (hanya apabila > 0), serta `X-OmniRoute-Request-Id` dan `X-OmniRoute-Version`. Semua ini dijana oleh penyempurnaan chat, `/v1/responses`, `/v1/messages`, **dan titik akhir media** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` dan `/v1/moderations` (sentiasa dengan kos `0`). Kos media dikira mengikut modaliti (setiap imej, setiap saat, setiap aksara, setiap unit carian) apabila harga tersedia, jika tidak `0` (gagal terbuka).
+> **Pengepala telemetri kos:** respons kejayaan bukan penstriman turut membawa set telemetri kos `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, tetap 10 perpuluhan; `0.0000000000` untuk free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, dan `X-OmniRoute-Fallback-Attempts` (hanya apabila > 0), tambah `X-OmniRoute-Request-Id` dan `X-OmniRoute-Version`. Ini dipancarkan oleh pelengkapan sembang, `/v1/responses`, `/v1/messages`,** dan titik akhir media** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` dan `/v1/moderations` (sentiasa kos `0`). Kos media dikira setiap modaliti (setiap imej, sesaat, setiap aksara, setiap unit carian) apabila harga tersedia, jika tidak `0` (gagal dibuka).
 
-> **Semantik kos capaian cache:** pada HIT cache semantik (`X-OmniRoute-Cache-Hit: true`), tiada panggilan huluan dibuat, maka `X-OmniRoute-Response-Cost` ialah `0.0000000000` (kos **tambahan** untuk menyediakan capaian tersebut). Kos asal/yang sepatutnya berlaku dilaporkan secara berasingan dalam `X-OmniRoute-Cost-Saved`. Pengguna pengebilan hendaklah menjumlahkan `X-OmniRoute-Response-Cost` (capaian cache tidak berkos); analitik cache boleh mengagregatkan `X-OmniRoute-Cost-Saved`.
+> **Semantik kos terkena cache:** pada HIT cache semantik (`X-OmniRoute-Cache-Hit: true`) tiada panggilan huluan dibuat, jadi `X-OmniRoute-Response-Cost` ialah `0.0000000000` (** pertambahan** kos melayani pukulan). Kos original/would-have-been dilaporkan secara berasingan dalam `X-OmniRoute-Cost-Saved`. Pengguna pengebilan hendaklah menjumlahkan `X-OmniRoute-Response-Cost` (tiada kos hit); analitik cache boleh mengagregat `X-OmniRoute-Cost-Saved`.
 
 ## Pajakan Sesi Terurus Eksklusif
 
@@ -354,6 +340,8 @@ Content-Type: application/json
 Penyedia yang tersedia termasuk OpenAI (GPT Imej 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hiperbolik, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (tempatan), ComfyUI (tempatan).
 
 `n` mengembalikan imej `n` dalam `data[]`. Penyedia yang API hulunya mengembalikan satu imej setiap panggilan (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) mendapat `n` panggilan huluan berasingan, paling banyak 4 dalam penerbangan. `seed` tetap diimbangi oleh indeks panggilan (`seed`, `seed + 1`, …), jadi imej berbeza tetapi kekal boleh dihasilkan semula. `n` dihadkan pada 10. Permintaan gagal secara keseluruhan jika sebarang panggilan gagal. Senarai format kipas keluar ialah `SINGLE_IMAGE_FANOUT_FORMATS` dalam `open-sse/handlers/imageGeneration/fanOut.ts`.
+
+Codex GPT Model imej (`codex/gpt-image-*`) mengembalikan PNG sahaja: huluan menjawab `200` dengan bait PNG walaupun apabila `jpeg` atau `webp` diminta. Permintaan dengan mana-mana `output_format` lain (`webp`, `jpeg`, ...) ditolak dengan HTTP 400 dan bukannya diabaikan secara senyap; tinggalkan atau hantar `png`. `output_compression` tidak dimajukan.
 
 ZenMux menggunakan semula sambungan kunci API sedia ada dan menerima awalan `zenmux/` atau `zm/` :
 

@@ -81,65 +81,68 @@ før der hævdes paritet med en upstream-browser.
 
 ---
 
-## Claude Code Stealth-pakke
+## Claude Code Stealth Bundle
 
-Når `cliCompatMode` er slået til, omformer OmniRoute udgående Claude-anmodninger, så de ikke kan skelnes fra `claude-cli`-trafik. Tre moduler samarbejder:
+Når `cliCompatMode` er slået til, omformer OmniRoute udgående Claude anmodninger, så de ikke kan skelnes fra `claude-cli` -trafik. Tre moduler samarbejder:
 
 ### `claudeCodeFingerprint.ts`
 
-Beregner det 3 tegn lange `cc_version`-fingeraftryk, der er indlejret i faktureringsheaderen:
+Beregner det 3-char `cc_version` fingeraftryk, der er indlejret i faktureringshovedet:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (hardkodet; matcher den officielle klient)
-- Input: tegn ved indeks 4, 7 og 20 i teksten i den første brugermeddelelse + versionsstreng
-- Output: 3 tegn langt hex-præfiks
+- `FINGERPRINT_SALT = "59cf53e54c78"` (hardcoded; matcher officiel klient)
+- Input: tegn ved indeks 4, 7, 20 af den første brugermeddelelsestekst + version streng
+- Udgang: 3-char hex-præfiks
 
-### `claudeCodeCCH.ts` (hash af klientindhold)
+### `claudeCodeCCH.ts` (Client Content Hash)
 
-Integritetskontrol på serversiden, som den officielle Claude Code CLI beregner via Bun/Zig. OmniRoute genimplementerer den med `xxhash-wasm`:
+Tjek integritet på serversiden den officielle Claude Code CLI beregner via Bun/Zig. OmniRoute genimplementerer med `xxhash-wasm`:
 
-1. Serialiser body med pladsholderen `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. 5 tegn langt hex med små bogstaver, udfyldt med foranstillede nuller
-4. Erstat `cch=00000;` med det beregnede token
+1. Serialiser brødteksten med `cch=00000;` pladsholder
+2. Byg hash-visningen med to almindelig tekst-erstatninger i denne rækkefølge (`hashView()`):
+   - hver match af `/"model":"[^"]*"/g` bliver `"model":""` — kampen stopper ved den første `"`, så en værdi med et undladt citat (`"model":"a\"b"`) tømmes kun op til det citat, som klienten gør
+   - hver match af `/"max_tokens":\d+,|,?"max_tokens":\d+/g` fjernes — kun numeriske værdier, på enhver dybde
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Nulpolstret 5-char små hex
+5. Erstat `cch=00000;` med det beregnede token
 
 Konstanter:
 
-- Seed: `0x6e52736ac806831e`
+- Seed: `0x4d659218e32a3268` (matcher loopback-optagelser af Claude -kode 2.1.252 og 2.1.322)
 - Mønster: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Indsætter en Unicode-**zero-width joiner** (`U+200D`) efter det første tegn i "følsomme" klientnavne, så upstream-filtre ikke kan finde dem med grep. Standardordliste:
+Indsætter en Unicode** snedker i nul bredde** (`U+200D`) efter det første tegn i "følsomme" klientnavne, så upstream-filtre ikke kan gribe dem. Standard ordliste:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Anvendes på: `system`-blokke, alt `messages[].content` og `tools[].description` / `tools[].function.description`. Kan tilsidesættes af operatøren via `setSensitiveWords()`.
+Anvendt på: `system` blokke, alle `messages[].content`, og `tools[].description` / `tools[].function.description`. Operatør-overstyrelig via `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`-udbydere
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` udbydere
 
-Til tredjeparts-Anthropic-relæer, der kun accepterer trafik fra "rigtig Claude Code":
+For tredjeparts Anthropic -relæer, der kun accepterer "rigtig Claude kode"-trafik:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
 - `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` som standard
-- Indstillingen "Enable redact-thinking beta" for hver forbindelse tilføjer `redact-thinking-2026-02-12`, når en CC Compatible-upstream specifikt kræver redigerede ræsonneringsstreams
-- Indstillingen "Enable summarized thinking display" for hver forbindelse gemmer `providerSpecificData.requestDefaults.summarizeThinking` og føjer `display: "summarized"` til CC Compatible-ræsonneringsanmodninger, der ikke allerede har angivet en visningstilstand
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x-familien)
+- Per-forbindelsen "Aktiver redact-thinking beta" tilføjer `redact-thinking-2026-02-12`, når en CC -kompatibel upstream specifikt kræver redigerede tankestrømme
+- Per-forbindelsen "Aktiver opsummeret visning af visning" gemmer `providerSpecificData.requestDefaults.summarizeThinking` og tilføjer `display: "summarized"` til CC Kompatible tankeanmodninger, der ikke allerede har indstillet en visningstilstand
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x-familie)
 - Standardsti: `/v1/messages?beta=true`
 
-Relaterede moduler i samme pakke:
+Søstermoduler i samme bundt:
 
-- `claudeCodeConstraints.ts` — regler for temperatur + cachekontrol
-- `claudeCodeToolRemapper.ts` — omdannelse af værktøjsnavne
-- `claudeCodeExtraRemap.ts` — yderligere normalisering af payload
+- `claudeCodeConstraints.ts` — temperatur + cache-kontrol regler
+- `claudeCodeToolRemapper.ts` — værktøj-navn omlægning
+- `claudeCodeExtraRemap.ts` — normalisering af ekstra nyttelast
 
 ---
 

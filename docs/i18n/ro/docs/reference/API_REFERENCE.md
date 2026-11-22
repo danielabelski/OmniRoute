@@ -49,7 +49,7 @@ Fiecare implementare își servește propria copie a specificației la `/openapi
 
 ---
 
-## Completări de chat
+## Finalizări de chat
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Anteturi personalizate
 
-| Header                   | Direction | Description                                                                                                                                                                                                                                             |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Cerere    | Setați la `true` pentru a ocoli cache-ul                                                                                                                                                                                                                |
-| `x-omniroute-no-memory`  | Cerere    | Setați la `true` pentru a omite injectarea memoriei și a competențelor pentru această cerere (oglindește no-cache; evită costurile suplimentare de tokeni/cost per apel)                                                                                |
-| `X-OmniRoute-Progress`   | Cerere    | Setați la `true` pentru evenimente de progres                                                                                                                                                                                                           |
-| `X-Session-Id`           | Cerere    | Cheie de sesiune persistentă pentru afinitatea sesiunii externe                                                                                                                                                                                         |
-| `x_session_id`           | Cerere    | Varianta cu caracter de subliniere este, de asemenea, acceptată (HTTP direct)                                                                                                                                                                           |
-| `X-OmniRoute-Session-Id` | Cerere    | Etichetă de sesiune/conversație furnizată de apelant (alimentează și memoria). Când este prezentă, este păstrată textual în `call_logs.session_tag` pentru atribuirea costurilor per sesiune (#8249) — nu este niciodată generată automat când lipsește |
-| `Idempotency-Key`        | Cerere    | Cheie de deduplicare (fereastră de 5 s)                                                                                                                                                                                                                 |
-| `X-Request-Id`           | Cerere    | Cheie alternativă de deduplicare                                                                                                                                                                                                                        |
-| `x-omniroute-connection` | Cerere    | Fixează o cerere către un singur model la o conexiune de furnizor (cont) după identificatorul acesteia — consultați [Fixarea contului per cerere](#account-pinning-per-request)                                                                         |
-| `X-OmniRoute-Cache`      | Răspuns   | `HIT` sau `MISS` (fără streaming)                                                                                                                                                                                                                       |
-| `X-OmniRoute-Idempotent` | Răspuns   | `true` dacă cererea a fost deduplicată                                                                                                                                                                                                                  |
-| `X-OmniRoute-Progress`   | Răspuns   | `enabled` dacă urmărirea progresului este activată                                                                                                                                                                                                      |
-| `X-OmniRoute-Session-Id` | Răspuns   | ID-ul efectiv al sesiunii utilizat de OmniRoute                                                                                                                                                                                                         |
-| `X-OmniRoute-Request-Id` | Răspuns   | ID-ul de corelare al cererii (când este cunoscut)                                                                                                                                                                                                       |
-| `X-OmniRoute-Version`    | Răspuns   | Versiunea build-ului OmniRoute (prezentă întotdeauna)                                                                                                                                                                                                   |
-| `X-OmniRoute-Cost-Saved` | Răspuns   | Valoarea în USD economisită de cache la un `HIT` (doar pentru accesările din cache)                                                                                                                                                                     |
-| `X-OmniRoute-Decision`   | Răspuns   | Urmărirea rutării: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` este strategia combinată sau `single` pentru o cerere care nu este combinată) — prezentă întotdeauna în răspunsurile de finalizare                                     |
+| Antet                    | Direcţie | Descriere                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Cerere   | Setați la `true` pentru a ocoli memoria cache                                                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-no-memory`  | Cerere   | Setați la `true` pentru a omite injecția de abilități + de memorie pentru această solicitare (oglindește no-cache; evită supraîncărcarea token/cost per apel)                                                                                                                                                                                                                                                          |
+| `x-omniroute-no-log`     | Cerere   | Setați la `true` pentru a omite încărcăturile utile request/response din jurnalele de apeluri pentru această solicitare de inferență (toate rutele familiei de chat: Terminări chat, Răspunsuri, Mesaje, Terminări, Gemini). Timpul, modelul, starea, durata și numărul de simboluri sunt încă înregistrate. Combinați cu `x-omniroute-no-memory` și `x-omniroute-no-cache` pentru o renunțare completă a conținutului |
+| `X-OmniRoute-Progress`   | Cerere   | Setați la `true` pentru evenimentele de progres                                                                                                                                                                                                                                                                                                                                                                        |
+| `X-Session-Id`           | Cerere   | Cheie de sesiune persistentă pentru afinitatea sesiunii externe                                                                                                                                                                                                                                                                                                                                                        |
+| `x_session_id`           | Cerere   | Varianta de subliniere acceptată (direct HTTP)                                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Session-Id` | Cerere   | Etichetă session/conversation furnizată de apelant (alimentează și memoria). Când este prezent, a continuat textul `call_logs.session_tag` pentru atribuirea costurilor pe sesiune (#8249) — nu a fost niciodată sintetizat când este absent                                                                                                                                                                           |
+| `Idempotency-Key`        | Cerere   | Tasta Dedup (fereastră 5s)                                                                                                                                                                                                                                                                                                                                                                                             |
+| `X-Request-Id`           | Cerere   | Cheie alternativă de deducție                                                                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-connection` | Cerere   | Fixați o solicitare cu un singur model la o conexiune de furnizor (cont) după id-ul său — consultați [Fixarea contului pe cerere](#account-pinning-per-request)                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Cache`      | Răspuns  | `HIT` sau `MISS` (non-streaming)                                                                                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Idempotent` | Răspuns  | `true` dacă este deduplicat                                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Progress`   | Răspuns  | `enabled` dacă urmărirea progresului este activată                                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Session-Id` | Răspuns  | Sesiune eficientă ID folosită de OmniRoute                                                                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Request-Id` | Răspuns  | Solicitați codul de corelare (când este cunoscut)                                                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Version`    | Răspuns  | versiunea OmniRoute build (întotdeauna prezentă)                                                                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Cost-Saved` | Răspuns  | USD cache-ul evitat pe un HIT (numai accesări cache)                                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Decision`   | Răspuns  | Urmărire de rutare: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` este strategia combinată sau `single` pentru o solicitare non-combo) — întotdeauna prezent la răspunsurile de finalizare                                                                                                                                                                                                             |
 
-> Notă pentru Nginx: dacă vă bazați pe antete cu caractere de subliniere (de exemplu, `x_session_id`), activați `underscores_in_headers on;`.
+> Notă Nginx: dacă vă bazați pe anteturile de subliniere (de exemplu `x_session_id`), activați `underscores_in_headers on;`.
 
-#### Fixarea contului per cerere
+#### Fixarea contului la fiecare solicitare
 
-Când un furnizor are mai multe conexiuni (conturi sau chei), OmniRoute selectează în mod normal una
-folosind strategia sa de selectare a contului. În schimb, o cerere poate fixa o conexiune
-specifică folosind antetul `x-omniroute-connection`:
+Atunci când un furnizor are mai multe conexiuni (conturi sau chei), OmniRoute alege în mod normal una prin strategia sa de selecție a contului. În schimb, o solicitare poate fixa o conexiune specifică cu antetul `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,26 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Unde găsești id-ul.** Deschide pagina furnizorului în dashboard
-  (**Dashboard → Providers → <provider>**) și fă clic pe cipul cu id-ul `xxxxxxxx…` dintr-un rând
-  de conexiune — acesta copiază id-ul complet al conexiunii.
-- **Ce solicitări îl respectă.** Solicitările pentru un singur model (`provider/model`) de pe
-  `/v1/chat/completions`, `/v1/messages` și `/v1/responses`. Combinațiile ignoră antetul: fixează
-  un cont pentru fiecare pas al combinației prin conexiunea proprie a pasului.
-- **Fixarea este strictă, nu o preferință.** Conexiunea fixată este utilizată exclusiv. Un
-  eșec în timpul solicitării înregistrează perioada de răcire a contului, dar **nu** trece la un
-  cont asociat al aceluiași furnizor.
-- **Perioada de răcire și cota eliberează fixarea.** În timp ce conexiunea fixată se află în
-  perioada de răcire, cota este epuizată sau accesul este blocat de o politică de cotă,
-  solicitările ulterioare revin la celelalte conexiuni ale furnizorului, exact ca traficul fără
-  fixare.
-- **ID-urile necunoscute sau dezactivate eșuează.** Un ID care nu se află în grupul activ al
-  furnizorului (șters, dezactivat sau aparținând altui furnizor) nu lasă niciun cont eligibil,
-  astfel încât solicitarea eșuează în loc să fie direcționată în tăcere în altă parte.
+- **Unde găsiți id-ul.** Deschideți pagina furnizorului în tabloul de bord (** Tabloul de bord → Furnizori → <provider>** ) și faceți clic pe cipul `xxxxxxxx…` id de pe un rând de conexiune — acesta copiază ID-ul complet de conexiune.
+- **Care cereri îl onorează.** Solicitări cu un singur model (`provider/model`) pe `/v1/chat/completions`, `/v1/messages` și `/v1/responses`. Combo-urile ignoră antetul: fixați un cont pentru fiecare pas combo prin conexiunea proprie a pasului.
+- **Pinul este strict, nu o preferință.** Conexiunea prin pin este utilizată exclusiv. Un eșec în interiorul solicitării înregistrează timpul de răcire al contului, dar o face** nu** rotiți la un cont de frate al aceluiași furnizor.
+- **Cooldown și cota eliberează pinul.** În timp ce conexiunea fixată se răcește, se epuizează cota sau este blocată de o politică de cotă, solicitările ulterioare revin la celelalte conexiuni ale furnizorului, exact ca traficul nefixat.
+- **ID-urile necunoscute sau dezactivate eșuează.** Un ID care nu se află în pool-ul activ al furnizorului (șters, dezactivat sau aparținând altui furnizor) nu lasă niciun cont eligibil, astfel încât solicitarea eșuează în loc să fie direcționată în mod silențios în altă parte.
 
-Claude Code trimite antete personalizate prin `ANTHROPIC_CUSTOM_HEADERS`. Adaugă-l în blocul
-`env` din `~/.claude/settings.json` sau într-un fișier `.claude/settings.json` la nivel de
-proiect pentru a fixa un cont diferit pentru fiecare proiect:
+Codul Claude trimite anteturi personalizate prin `ANTHROPIC_CUSTOM_HEADERS`. Puneți-l în blocul `env` din `~/.claude/settings.json` sau într-un `.claude/settings.json` la nivel de proiect pentru a fixa un cont diferit per proiect:
 
 ```jsonc
 {
@@ -134,12 +120,11 @@ proiect pentru a fixa un cont diferit pentru fiecare proiect:
 }
 ```
 
-Sursă: `src/sse/handlers/chat.ts` (citirea antetului), `src/sse/services/auth.ts` și
-`src/sse/services/sessionAffinityPin.ts` (eliberarea fixării și verificarea absenței din grup).
+Sursa: `src/sse/handlers/chat.ts` (citirea antetului), `src/sse/services/auth.ts` și `src/sse/services/sessionAffinityPin.ts` (eliberarea pinului și verificarea lipsei din grup).
 
-> **Antete de telemetrie a costurilor:** răspunsurile reușite care nu sunt de tip streaming includ, de asemenea, setul de telemetrie a costurilor `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, 10 zecimale fixe; `0.0000000000` pentru gratuit/fără preț), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` și `X-OmniRoute-Fallback-Attempts` (doar când > 0), plus `X-OmniRoute-Request-Id` și `X-OmniRoute-Version`. Acestea sunt emise de completările de chat, `/v1/responses`, `/v1/messages` **și endpointurile media** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` și `/v1/moderations` (cost întotdeauna `0`). Costul media este calculat pentru fiecare modalitate (per imagine, per secundă, per caracter, per unitate de căutare) atunci când prețurile sunt disponibile, altfel `0` (fail-open).
+> **Cost telemetry headers:** non-streaming success responses also carry the `X-OmniRoute-*` cost-telemetry set — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimals; `0.0000000000` for free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, and `X-OmniRoute-Fallback-Attempts` (only when > 0), plus `X-OmniRoute-Request-Id` and `X-OmniRoute-Version`. These are emitted by chat completions, `/v1/responses`, `/v1/messages`, **and the media endpoints** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, and `/v1/moderations` (always cost `0`). Media cost is computed per modality (per-image, per-second, per-character, per search-unit) when pricing is available, otherwise `0` (fail-open).
 
-> **Semantica costului pentru accesările din cache:** la un HIT în cache-ul semantic (`X-OmniRoute-Cache-Hit: true`) nu se efectuează niciun apel upstream, astfel încât `X-OmniRoute-Response-Cost` este `0.0000000000` (costul **incremental** al servirii accesării). Costul inițial/care ar fi fost efectuat este raportat separat în `X-OmniRoute-Cost-Saved`. Consumatorii de facturare ar trebui să însumeze `X-OmniRoute-Response-Cost` (accesările nu costă nimic); analizele cache-ului pot agrega `X-OmniRoute-Cost-Saved`.
+> **Semantica costului accesării în cache:** pe un cache semantic HIT (`X-OmniRoute-Cache-Hit: true`) nu se efectuează niciun apel în amonte, deci `X-OmniRoute-Response-Cost` este `0.0000000000` (** incrementale** costul deservirii loviturii). Costul original/would-have-been este raportat separat în `X-OmniRoute-Cost-Saved`. Consumatorii de facturare ar trebui să însumeze `X-OmniRoute-Response-Cost` (accesările nu costă nimic); analiza cache poate agrega `X-OmniRoute-Cost-Saved`.
 
 ## Închirieri exclusive de sesiuni gestionate
 
@@ -316,7 +301,7 @@ GET /v1/embeddings
 
 ---
 
-## Generarea imaginilor
+## Generare de imagini
 
 ```bash
 POST /v1/images/generations
@@ -330,38 +315,24 @@ Content-Type: application/json
 }
 ```
 
-Printre furnizorii disponibili se numără OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana, **OpenRouter**, **ZenMux**, SD WebUI (local), ComfyUI (local).
+Furnizorii disponibili includ OpenAI (GPT Imagine 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (local), ComfyUI (local).
 
-`n` returnează `n` imagini în `data[]`. Furnizorii ale căror API-uri upstream returnează câte o imagine per apel
-(Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik,
-NVIDIA NIM, Cloudflare Workers AI) efectuează `n` apeluri upstream separate, cu cel mult 4 în curs simultan. Un
-`seed` fix este incrementat cu indicele apelului (`seed`, `seed + 1`, …), astfel încât imaginile diferă, dar rămân reproductibile. `n` este limitat la 10. Întreaga solicitare eșuează dacă vreun apel eșuează. Lista formatelor pentru execuție distribuită este `SINGLE_IMAGE_FANOUT_FORMATS` din
-`open-sse/handlers/imageGeneration/fanOut.ts`.
+`n` returnează imaginile `n` în `data[]`. Furnizorii al căror API în amonte returnează o imagine per apel (Laboratoarele Pădurea Neagră, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) primesc `n` apeluri separate în amonte, cel mult 4 în zbor. Un `seed` fix este compensat de indexul de apel (`seed`, `seed + 1`, …), astfel încât imaginile diferă, dar rămân reproductibile. `n` este limitat la 10. Cererea eșuează în ansamblu dacă orice apel eșuează. Lista de formate fan-out este `SINGLE_IMAGE_FANOUT_FORMATS` în `open-sse/handlers/imageGeneration/fanOut.ts`.
 
-ZenMux reutilizează conexiunea existentă bazată pe cheia API și acceptă prefixele `zenmux/` sau `zm/`:
+Codex GPT Modelele de imagine (`codex/gpt-image-*`) returnează numai PNG : în amonte răspunde `200` cu octeți PNG chiar și atunci când este solicitat `jpeg` sau `webp`. O cerere cu orice alt `output_format` (`webp`, `jpeg`, ...) este respinsă cu HTTP 400 în loc să fie ignorată în tăcere; omite-l sau trimite `png`. `output_compression` nu este transmis.
 
-- `zenmux/openai/gpt-image-2` utilizează API-ul Images al OpenAI oferit de ZenMux. Opțiunile includ `size`,
-  `quality`, `n`, `output_format`, `output_compression`, `background` și `response_format`.
-- Alți editori, precum `zm/meta/muse-image-1.0`, utilizează endpointul Vertex AI `:predict` al ZenMux. `n` este mapat la `sampleCount`, `aspect_ratio` la `aspectRatio`, iar `image_size`
-  (`1K`, `2K`, `4K`) la `sampleImageSize`. O valoare `size` exprimată în pixeli furnizează doar un raport de aspect,
-  nu dimensiuni în pixeli garantate. Raporturile, rezoluțiile și numărul de imagini acceptate variază în funcție de model.
-- `zm/inclusionai/ming-image-0.1-design` își alege propriile dimensiuni. Omite `size`,
-  `aspect_ratio` și `image_size`; valorile explicite returnează HTTP 400. PNG, JPEG și WebP
-  pot fi solicitate cu `output_format`.
+ZenMux reutiliza conexiunea existentă a cheii API și acceptă prefixele `zenmux/` sau `zm/` :
 
-Această integrare acceptă generarea de imagini din text, nu și editarea imaginilor de referință. Ieșirea Vertex
-este normalizată la `data[].b64_json`; `response_format: "url"` returnează un URL HTTPS upstream sau un URL de date base64 atunci când sunt disponibile doar octeții imaginii. Ieșirile goale/filtrate
-returnează o eroare în locul unui succes fără conținut. Accesul la modele depinde de contul ZenMux.
-Consultă [API-ul Vertex al ZenMux](https://docs.zenmux.ai/api/vertexai/generate-images) și
-[API-ul Images al OpenAI](https://docs.zenmux.ai/api/openai/generate-an-image).
+- `zenmux/openai/gpt-image-2` folosește ZenMux lui OpenAI Imagini API. Opțiunile includ `size`, `quality`, `n`, `output_format`, `output_compression`, `background` și `response_format`.
+- Alți editori, cum ar fi `zm/meta/muse-image-1.0`, folosesc punctul final Vertex AI `:predict` al lui ZenMux. `n` se mapează la `sampleCount`, `aspect_ratio` la `aspectRatio` și `image_size` (`1K`, `2K`, `4K`) la `sampleImageSize`. Un pixel `size` furnizează doar un raport de aspect, dimensiunile pixelilor nu sunt garantate. Ratele, rezoluțiile și numărul acceptate variază în funcție de model.
+- `zm/inclusionai/ming-image-0.1-design` își alege propriile dimensiuni. Omiteți `size`, `aspect_ratio` și `image_size`; valorile explicite returnează HTTP 400. PNG, JPEG și WebP pot fi solicitate cu `output_format`.
 
-O conexiune de autentificare Microsoft 365 Copilot oferă `copilot-m365-web/m365-copilot-image`
-prin instrumentul de imagini încorporat al Copilot: câte o interacțiune Copilot per imagine (`n` 1–4), `size` controlează
-doar orientarea, iar imaginile sunt returnate inline (`b64_json` sau un URL de date pentru
-`response_format: "url"`). Consultă [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
+Această integrare acceptă generarea text-to-image, nu editarea imaginii de referință. Ieșirea vârfurilor este normalizată la `data[].b64_json`; `response_format: "url"` returnează un HTTPS URL în amonte sau un URL de date base64 când sunt disponibili doar octeții de imagine. Ieșirile Empty/filtered returnează o eroare mai degrabă decât un succes gol. Accesul la model depinde de contul ZenMux. Vezi [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) și [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+
+O conexiune de conectare Microsoft 365 Copilot servește `copilot-m365-web/m365-copilot-image` prin instrumentul de imagine încorporat al Copilot: o tură Copilot pe imagine (`n` 1–4), `size` direcționând numai orientarea și imaginile returnate în linie (`b64_json`, sau un URL de date pentru `response_format: "url"`). Vezi [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 
 ```bash
-# Listează toate modelele de imagini
+# List all image models
 GET /v1/images/generations
 ```
 

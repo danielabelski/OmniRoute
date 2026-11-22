@@ -49,7 +49,7 @@ Elke implementatie biedt een eigen exemplaar van de specificatie op `/openapi.ya
 
 ---
 
-## Chatvoltooiingen
+## Chat-voltooiingen
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### Aangepaste headers
+### Aangepaste kopteksten
 
-| Header                   | Richting | Beschrijving                                                                                                                                                                                                                                  |
-| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Verzoek  | Instellen op `true` om de cache te omzeilen                                                                                                                                                                                                   |
-| `x-omniroute-no-memory`  | Verzoek  | Instellen op `true` om het injecteren van geheugen + vaardigheden voor dit verzoek over te slaan (spiegelt no-cache; voorkomt de overhead van tokens/kosten per aanroep)                                                                      |
-| `X-OmniRoute-Progress`   | Verzoek  | Instellen op `true` voor voortgangsgebeurtenissen                                                                                                                                                                                             |
-| `X-Session-Id`           | Verzoek  | Sticky-sessiesleutel voor externe sessie-affiniteit                                                                                                                                                                                           |
-| `x_session_id`           | Verzoek  | Variant met underscore wordt ook geaccepteerd (direct HTTP)                                                                                                                                                                                   |
-| `X-OmniRoute-Session-Id` | Verzoek  | Door de aanroeper opgegeven sessie-/conversietag (wordt ook aan geheugen doorgegeven). Indien aanwezig, letterlijk opgeslagen in `call_logs.session_tag` voor kostentoewijzing per sessie (#8249) — nooit samengesteld wanneer deze ontbreekt |
-| `Idempotency-Key`        | Verzoek  | Deduplicatiesleutel (venster van 5 seconden)                                                                                                                                                                                                  |
-| `X-Request-Id`           | Verzoek  | Alternatieve deduplicatiesleutel                                                                                                                                                                                                              |
-| `x-omniroute-connection` | Verzoek  | Een verzoek voor één model vastzetten op één providerverbinding (account) op basis van de id — zie [Account vastzetten per verzoek](#account-pinning-per-request)                                                                             |
-| `X-OmniRoute-Cache`      | Antwoord | `HIT` of `MISS` (niet-streaming)                                                                                                                                                                                                              |
-| `X-OmniRoute-Idempotent` | Antwoord | `true` als er is gededupliceerd                                                                                                                                                                                                               |
-| `X-OmniRoute-Progress`   | Antwoord | `enabled` als voortgangsregistratie actief is                                                                                                                                                                                                 |
-| `X-OmniRoute-Session-Id` | Antwoord | Effectieve sessie-ID die door OmniRoute wordt gebruikt                                                                                                                                                                                        |
-| `X-OmniRoute-Request-Id` | Antwoord | Correlatie-id van het verzoek (indien bekend)                                                                                                                                                                                                 |
-| `X-OmniRoute-Version`    | Antwoord | Buildversie van OmniRoute (altijd aanwezig)                                                                                                                                                                                                   |
-| `X-OmniRoute-Cost-Saved` | Antwoord | USD die de cache heeft bespaard bij een HIT (alleen cache-hits)                                                                                                                                                                               |
-| `X-OmniRoute-Decision`   | Antwoord | Routeringstracering: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` is de combinatiestrategie, of `single` voor een verzoek zonder combinatie) — altijd aanwezig in voltooiingsantwoorden                                      |
+| Koptekst                 | Richting | Beschrijving                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Verzoek  | Stel in op `true` om de cache te omzeilen                                                                                                                                                                                                                                                                                                                                                       |
+| `x-omniroute-no-memory`  | Verzoek  | Stel in op `true` om de injectie van geheugen + -vaardigheden voor dit verzoek over te slaan (spiegelt geen cache; vermijdt de token/cost overhead per oproep)                                                                                                                                                                                                                                  |
+| `x-omniroute-no-log`     | Verzoek  | Stel dit in op `true` om request/response payloads weg te laten uit oproeplogboeken voor dit inferentieverzoek (alle chatfamilieroutes: chatvoltooiingen, antwoorden, berichten, voltooiingen, Gemini). Tijdstempel, model, status, duur en tokentellingen worden nog steeds vastgelegd. Combineer met `x-omniroute-no-memory` en `x-omniroute-no-cache` voor een opt-out voor volledige inhoud |
+| `X-OmniRoute-Progress`   | Verzoek  | Stel in op `true` voor voortgangsgebeurtenissen                                                                                                                                                                                                                                                                                                                                                 |
+| `X-Session-Id`           | Verzoek  | Sticky sessiesleutel voor externe sessie-affiniteit                                                                                                                                                                                                                                                                                                                                             |
+| `x_session_id`           | Verzoek  | Underscore-variant ook geaccepteerd (directe HTTP)                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Session-Id` | Verzoek  | Door de beller geleverde session/conversation tag (voedt ook het geheugen). Indien aanwezig, woordelijk voortgezet met `call_logs.session_tag` voor toewijzing van kosten per sessie (#8249) — nooit gesynthetiseerd indien afwezig                                                                                                                                                             |
+| `Idempotency-Key`        | Verzoek  | Ontdubbelingssleutel (5s-venster)                                                                                                                                                                                                                                                                                                                                                               |
+| `X-Request-Id`           | Verzoek  | Alternatieve ontdubbelingssleutel                                                                                                                                                                                                                                                                                                                                                               |
+| `x-omniroute-connection` | Verzoek  | Een aanvraag voor één model vastmaken aan één providerverbinding (account) met de id — zie [Account vastzetten per aanvraag](#account-pinning-per-request)                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Cache`      | Antwoord | `HIT` of `MISS` (niet-streaming)                                                                                                                                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Idempotent` | Antwoord | `true` indien ontdubbeld                                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Progress`   | Antwoord | `enabled` als voortgangsregistratie is ingeschakeld                                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Session-Id` | Antwoord | Effectieve sessie ID gebruikt door OmniRoute                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Request-Id` | Antwoord | Correlatie-id aanvragen (indien bekend)                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Version`    | Antwoord | OmniRoute build-versie (altijd aanwezig)                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Cost-Saved` | Antwoord | USD de cache vermeden op een HIT (alleen cachehits)                                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Decision`   | Antwoord | Routing trace: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` is de combostrategie, of `single` voor een niet-comboverzoek) — is altijd aanwezig bij voltooiingsantwoorden                                                                                                                                                                                                       |
 
-> Nginx-opmerking: als je vertrouwt op headers met underscores (bijvoorbeeld `x_session_id`), schakel dan `underscores_in_headers on;` in.
+> Nginx-opmerking: als u vertrouwt op underscore-headers (bijvoorbeeld `x_session_id`), schakel dan `underscores_in_headers on;` in.
 
-#### Account vastzetten per verzoek
+#### Account pinnen per verzoek
 
-Wanneer een provider meerdere verbindingen (accounts of sleutels) heeft, kiest OmniRoute er normaal gesproken één
-via zijn accountselectiestrategie. Een verzoek kan in plaats daarvan één specifieke verbinding vastzetten
-met de header `x-omniroute-connection`:
+Wanneer een provider meerdere verbindingen heeft (accounts of sleutels), kiest OmniRoute er normaal gesproken één via zijn accountselectiestrategie. Een verzoek kan in plaats daarvan één specifieke verbinding vastzetten met de `x-omniroute-connection` header:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,25 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Waar u de id kunt vinden.** Open de providerpagina in het dashboard
-  (**Dashboard → Providers → <provider>**) en klik op de `xxxxxxxx…`-idchip op een verbindingsrij —
-  hiermee wordt de volledige verbindings-id gekopieerd.
-- **Welke aanvragen deze id gebruiken.** Aanvragen voor één model (`provider/model`) op
-  `/v1/chat/completions`, `/v1/messages` en `/v1/responses`. Combinaties negeren de header: pin
-  een account per combinatiestap via de eigen verbinding van die stap.
-- **De pin is strikt, geen voorkeur.** De vastgezette verbinding wordt uitsluitend gebruikt. Als er
-  binnen de aanvraag een fout optreedt, wordt de cooldown van het account geregistreerd, maar wordt
-  niet overgeschakeld naar een ander account van dezelfde provider.
-- **Cooldown en quotum geven de pin vrij.** Terwijl de vastgezette verbinding in cooldown is,
-  het quotum heeft opgebruikt of door een quotumbeleid is geblokkeerd, vallen latere aanvragen terug
-  op de andere verbindingen van de provider, precies zoals niet-gepinde aanvragen.
-- **Onbekende of uitgeschakelde id's mislukken.** Een id die niet in de actieve pool van de provider
-  staat (verwijderd, gedeactiveerd of behorend tot een andere provider) laat geen eligible account
-  over. Daarom mislukt de aanvraag in plaats van stilzwijgend elders te worden gerouteerd.
+- **Waar vind je de id.** Open de providerpagina in het dashboard (** Dashboard → Providers → <provider>** ) en klik op de `xxxxxxxx…` id-chip op een verbindingsrij. — kopieert de volledige verbindings-id.
+- **Welke verzoeken eren het.** Verzoeken voor één model (`provider/model`) op `/v1/chat/completions`, `/v1/messages` en `/v1/responses`. Combo's negeren de header: pin een account per combostap via de eigen verbinding van de stap.
+- **De pin is streng, geen voorkeur.** Er wordt uitsluitend gebruik gemaakt van de vastgezette verbinding. Een fout in het verzoek registreert de cooldown van het account, maar dat gebeurt wel** niet** overstappen naar een broer of zus-account van dezelfde provider.
+- **Cooldown en quota geven de pin vrij.** Terwijl de vastgezette verbinding aan het afkoelen is, de quota uitgeput is of geblokkeerd wordt door een quotabeleid, vallen latere verzoeken terug naar de andere verbindingen van de provider, net als bij niet-vastgezet verkeer.
+- **Onbekende of uitgeschakelde ID's mislukken.** Een ID die niet in de actieve pool van de provider zit (verwijderd, gedeactiveerd of bij een andere provider hoort) laat geen in aanmerking komend account achter, dus het verzoek mislukt in plaats van stilletjes ergens anders naartoe te routeren.
 
-Claude Code verstuurt aangepaste headers via `ANTHROPIC_CUSTOM_HEADERS`. Plaats deze in het `env`-blok
-van `~/.claude/settings.json`, of in een `.claude/settings.json` op projectniveau om per project een
-ander account vast te zetten:
+Claude Code verzendt aangepaste headers via `ANTHROPIC_CUSTOM_HEADERS`. Plaats het in het `env` blok van `~/.claude/settings.json`, of in een `.claude/settings.json` op projectniveau om per project een ander account vast te zetten:
 
 ```jsonc
 {
@@ -133,12 +120,11 @@ ander account vast te zetten:
 }
 ```
 
-Bron: `src/sse/handlers/chat.ts` (headeruitlezing), `src/sse/services/auth.ts` en
-`src/sse/services/sessionAffinityPin.ts` (vrijgave van de pin en de controle op ontbrekende verbindingen in de pool).
+Bron: `src/sse/handlers/chat.ts` (header lezen), `src/sse/services/auth.ts` en `src/sse/services/sessionAffinityPin.ts` (pinvrijgave en de ontbrekende-van-pool-controle).
 
-> **Headers voor kostenmetrieken:** succesvolle niet-streamingantwoorden bevatten ook de `X-OmniRoute-*`-set voor kostenmetrieken — `X-OmniRoute-Response-Cost` (USD, exact 10 decimalen; `0.0000000000` voor gratis of niet-geprijsde aanvragen), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` en `X-OmniRoute-Fallback-Attempts` (alleen wanneer > 0), plus `X-OmniRoute-Request-Id` en `X-OmniRoute-Version`. Deze worden uitgegeven door chat completions, `/v1/responses`, `/v1/messages` **en de media-eindpunten** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` en `/v1/moderations` (altijd met kosten `0`). Mediakosten worden per modaliteit berekend (per afbeelding, per seconde, per teken, per zoekeenheid) wanneer prijsinformatie beschikbaar is; anders zijn de kosten `0` (fail-open).
+> **Kostentelemetriekopteksten:** niet-streaming succesreacties bevatten ook de `X-OmniRoute-*` -kostentelemetrieset — `X-OmniRoute-Response-Cost` (USD, vaste 10 decimalen; `0.0000000000` voor free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` en `X-OmniRoute-Fallback-Attempts` (alleen als > 0), plus `X-OmniRoute-Request-Id` en `X-OmniRoute-Version`. Deze worden uitgezonden door chatvoltooiingen, `/v1/responses`, `/v1/messages`,** en de media-eindpunten** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` en `/v1/moderations` (kost altijd `0`). De mediakosten worden berekend per modaliteit (per afbeelding, per seconde, per teken, per zoekeenheid) wanneer prijzen beschikbaar zijn, anders `0` (fail-open).
 
-> **Semantiek van kosten bij cache-hits:** bij een HIT in de semantische cache (`X-OmniRoute-Cache-Hit: true`) wordt er geen upstream-aanroep gedaan, waardoor `X-OmniRoute-Response-Cost` `0.0000000000` is (de **incrementele** kosten voor het leveren van de hit). De oorspronkelijke kosten of de kosten die zouden zijn gemaakt, worden afzonderlijk gerapporteerd in `X-OmniRoute-Cost-Saved`. Factureringssystemen moeten `X-OmniRoute-Response-Cost` optellen (hits kosten niets); cache-analyses kunnen `X-OmniRoute-Cost-Saved` aggregeren.
+> **Semantiek van cache-hitkosten:** op een semantische cache HIT (`X-OmniRoute-Cache-Hit: true`) wordt er geen stroomopwaartse aanroep gedaan, dus `X-OmniRoute-Response-Cost` is `0.0000000000` (de** toenemend** kosten voor het serveren van de hit). De original/would-have-been kosten worden afzonderlijk gerapporteerd in `X-OmniRoute-Cost-Saved`. Factureringsconsumenten moeten `X-OmniRoute-Response-Cost` optellen (hits kosten niets); cache-analyses kunnen `X-OmniRoute-Cost-Saved` aggregeren.
 
 ## Exclusieve beheerde sessieleases
 
@@ -358,7 +344,7 @@ GET /v1/embeddings
 
 ---
 
-## Beeld genereren
+## Beeldgeneratie
 
 ```bash
 POST /v1/images/generations
@@ -376,13 +362,15 @@ Beschikbare providers zijn onder meer OpenAI (GPT Image 2), xAI (Grok Image), To
 
 `n` retourneert `n` afbeeldingen in `data[]`. Providers waarvan de upstream API één afbeelding per oproep retourneert (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) krijgen `n` afzonderlijke upstream-oproepen, maximaal 4 tijdens de vlucht. Een vaste `seed` wordt gecompenseerd door de oproepindex (`seed`, `seed + 1`, …), dus de afbeeldingen verschillen maar blijven reproduceerbaar. `n` is beperkt tot 10. Het verzoek mislukt als geheel als een oproep mislukt. De lijst met fan-outformaten is `SINGLE_IMAGE_FANOUT_FORMATS` in `open-sse/handlers/imageGeneration/fanOut.ts`.
 
+Codex GPT Beeldmodellen (`codex/gpt-image-*`) retourneren alleen PNG : de stroomopwaartse antwoordt `200` met PNG bytes, zelfs wanneer `jpeg` of `webp` wordt gevraagd. Een verzoek met een andere `output_format` (`webp`, `jpeg`, ...) wordt afgewezen met HTTP 400 in plaats van stilzwijgend genegeerd; laat het weg of stuur `png`. `output_compression` wordt niet doorgestuurd.
+
 ZenMux hergebruikt de bestaande API-sleutelverbinding en accepteert `zenmux/` of `zm/` voorvoegsels:
 
 - `zenmux/openai/gpt-image-2` gebruikt ZenMux's OpenAI Images API. Opties zijn onder meer `size`, `quality`, `n`, `output_format`, `output_compression`, `background` en `response_format`.
 - Andere uitgevers, zoals `zm/meta/muse-image-1.0`, gebruiken het Vertex AI `:predict` eindpunt van ZenMux. `n` wordt toegewezen aan `sampleCount`, `aspect_ratio` aan `aspectRatio`, en `image_size` (`1K`, `2K`, `4K`) aan `sampleImageSize`. Een pixel `size` levert alleen een beeldverhouding, geen gegarandeerde pixelafmetingen. Ondersteunde verhoudingen, resoluties en aantallen variëren per model.
 - `zm/inclusionai/ming-image-0.1-design` kiest haar eigen dimensies. Laat `size`, `aspect_ratio` en `image_size` weg; expliciete waarden retourneren HTTP 400. PNG, JPEG en WebP kunnen worden aangevraagd met `output_format`.
 
-Deze integratie ondersteunt het genereren van tekst naar afbeeldingen, niet het bewerken van referentieafbeeldingen. Vertex-uitvoer wordt genormaliseerd naar `data[].b64_json`; `response_format: "url"` retourneert een stroomopwaartse HTTPS URL of een base64-gegevens URL wanneer alleen afbeeldingsbytes beschikbaar zijn. Empty/filtered -uitvoer retourneert een fout in plaats van een leeg succes. Toegang tot modellen is afhankelijk van het ZenMux account. Zie [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) en [OpenAI afbeeldingen API](https://docs.zenmux.ai/api/openai/generate-an-image).
+Deze integratie ondersteunt het genereren van tekst naar afbeeldingen, niet het bewerken van referentieafbeeldingen. Vertex-uitvoer wordt genormaliseerd naar `data[].b64_json`; `response_format: "url"` retourneert een stroomopwaartse HTTPS URL of een base64-gegevens URL wanneer alleen afbeeldingsbytes beschikbaar zijn. Empty/filtered uitvoer retourneert een fout in plaats van een leeg succes. Toegang tot modellen is afhankelijk van het ZenMux account. Zie [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) en [OpenAI afbeeldingen API](https://docs.zenmux.ai/api/openai/generate-an-image).
 
 Een Microsoft 365 Copilot -inlogverbinding bedient `copilot-m365-web/m365-copilot-image` via de ingebouwde afbeeldingstool van Copilot: één Copilot -beurt per afbeelding (`n` 1–4), `size` stuurt alleen de oriëntatie, en afbeeldingen worden inline geretourneerd (`b64_json`, of een data URL voor `response_format: "url"`). Zie [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 

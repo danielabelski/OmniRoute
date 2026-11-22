@@ -73,65 +73,68 @@ de testele locale de contract. Validați modificările amprentei folosind un con
 
 ---
 
-## Pachetul Stealth Claude Code
+## Claude Code Stealth Bundle
 
-Când `cliCompatMode` este activat, OmniRoute remodelează cererile Claude trimise astfel încât acestea să nu poată fi deosebite de traficul `claude-cli`. Trei module colaborează:
+Când `cliCompatMode` este activat, OmniRoute remodelează solicitările Claude de ieșire, astfel încât acestea să nu se distingă de traficul `claude-cli`. Trei module colaborează:
 
 ### `claudeCodeFingerprint.ts`
 
-Calculează amprenta `cc_version` de 3 caractere încorporată în antetul de facturare:
+Calculează amprenta digitală `cc_version` de 3 caractere încorporată în antetul de facturare:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (codificat direct; corespunde clientului oficial)
-- Intrări: caracterele de la indicii 4, 7 și 20 din textul primului mesaj al utilizatorului + șirul versiunii
-- Ieșire: prefix hexazecimal de 3 caractere
+- `FINGERPRINT_SALT = "59cf53e54c78"` (codat; se potrivește cu clientul oficial)
+- Intrări: caractere la indexul 4, 7, 20 al primului text mesaj utilizator șir versiune +
+- Ieșire: prefix hexadecimal de 3 caractere
 
-### `claudeCodeCCH.ts` (Hashul conținutului clientului)
+### `claudeCodeCCH.ts` (Client Content Hash)
 
-Verificare a integrității pe server, calculată de CLI-ul oficial Claude Code prin Bun/Zig. OmniRoute o reimplementează cu `xxhash-wasm`:
+Verificați integritatea serverului codul oficial Claude CLI calculează prin reimplementări Bun/Zig. OmniRoute cu `xxhash-wasm`:
 
-1. Serializează corpul cu substituentul `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Valoare hexazecimală cu litere mici, de 5 caractere, completată cu zerouri
-4. Înlocuiește `cch=00000;` cu tokenul calculat
+1. Serializați corpul cu substituent `cch=00000;`
+2. Construiți vizualizarea hash cu două înlocuiri de text simplu, în această ordine (`hashView()`):
+   - fiecare potrivire a lui `/"model":"[^"]*"/g` devine `"model":""` — potrivirea se oprește la primul `"`, deci o valoare cu un citat escape (`"model":"a\"b"`) este golită doar până la acel citat, așa cum face clientul
+   - fiecare potrivire de `/"max_tokens":\d+,|,?"max_tokens":\d+/g` este eliminată — numai valori numerice, la orice adâncime
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Hex minuscule de 5 caractere cu zero-căptușit
+5. Înlocuiți `cch=00000;` cu simbolul calculat
 
-Constante:
+constante:
 
-- Seed: `0x6e52736ac806831e`
-- Șablon: `/\bcch=([0-9a-f]{5});/`
+- Seed: `0x4d659218e32a3268` (se potrivește cu capturile loopback ale codului Claude 2.1.252 și 2.1.322)
+- Model: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Inserează un caracter Unicode **zero-width joiner** (`U+200D`) după primul caracter al numelor de clienți „sensibile”, astfel încât filtrele din amonte să nu le poată găsi prin grep. Lista implicită de cuvinte:
+Inserează un Unicode** tamplar cu latime zero** (`U+200D`) după primul caracter al numelor de clienți „sensibile”, astfel încât filtrele din amonte nu le pot grep. Lista de cuvinte implicită:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Se aplică pentru: blocurile `system`, întregul conținut `messages[].content` și `tools[].description` / `tools[].function.description`. Poate fi suprascris de operator prin `setSensitiveWords()`.
+Se aplică la: blocuri `system`, toate `messages[].content` și `tools[].description` / `tools[].function.description`. Operator poate fi anulat prin `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — furnizori `anthropic-compatible-cc-*`
+### furnizorii `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`
 
-Pentru relee Anthropic terțe care acceptă numai trafic „Claude Code autentic”:
+Pentru releele Anthropic terțe care acceptă numai trafic „cod Claude real”:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
 - `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` în mod implicit
-- Comutatorul per conexiune „Activează versiunea beta redact-thinking” adaugă `redact-thinking-2026-02-12` când un serviciu CC Compatible din amonte necesită în mod explicit fluxuri de raționament redactate
-- Comutatorul per conexiune „Activează afișarea raționamentului rezumat” stochează `providerSpecificData.requestDefaults.summarizeThinking` și adaugă `display: "summarized"` la cererile de raționament CC Compatible care nu au setat deja un mod de afișare
+- Comutatorul „Activați beta de gândire redactată” pe conexiune adaugă `redact-thinking-2026-02-12` atunci când un flux compatibil CC în amonte necesită în mod specific fluxuri de gândire redactate
+- Comutatorul „Activați afișarea de gândire rezumată” pe conexiune stochează `providerSpecificData.requestDefaults.summarizeThinking` și adaugă `display: "summarized"` la CC Solicitări de gândire compatibile care nu au setat deja un mod de afișare
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (familia Opus/Sonnet 4.x)
-- Cale implicită: `/v1/messages?beta=true`
+- Calea implicită: `/v1/messages?beta=true`
 
-Module asociate din același pachet:
+Module surori din același pachet:
 
-- `claudeCodeConstraints.ts` — reguli pentru temperatură + controlul memoriei cache
-- `claudeCodeToolRemapper.ts` — remaparea numelor instrumentelor
-- `claudeCodeExtraRemap.ts` — normalizarea suplimentară a sarcinii utile
+- `claudeCodeConstraints.ts` — temperature + reguli de control al memoriei cache
+- `claudeCodeToolRemapper.ts` — remaparea numelui instrumentului
+- `claudeCodeExtraRemap.ts` — normalizare suplimentară a sarcinii utile
 
 ---
 

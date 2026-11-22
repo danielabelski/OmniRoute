@@ -53,65 +53,68 @@ Các hồ sơ được gói đã ghim hỗ trợ, nhưng mức độ chấp nh�
 
 ---
 
-## Gói ẩn mình Claude Code
+## Gói tàng hình mã Claude
 
-Khi `cliCompatMode` được bật, OmniRoute định hình lại các yêu cầu Claude gửi đi để chúng không thể phân biệt được với lưu lượng từ `claude-cli`. Ba mô-đun phối hợp với nhau:
+Khi `cliCompatMode` được bật, OmniRoute sẽ định hình lại các yêu cầu Claude gửi đi để chúng không thể phân biệt được với lưu lượng truy cập `claude-cli`. Ba mô-đun cộng tác:
 
 ### `claudeCodeFingerprint.ts`
 
-Tính toán dấu vân tay `cc_version` gồm 3 ký tự được nhúng trong tiêu đề thanh toán:
+Tính toán dấu vân tay `cc_version` 3 ký tự được nhúng trong tiêu đề thanh toán:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (được mã hóa cứng; khớp với ứng dụng khách chính thức)
-- Đầu vào: các ký tự tại chỉ mục 4, 7, 20 của văn bản tin nhắn người dùng đầu tiên + chuỗi phiên bản
-- Đầu ra: tiền tố hex gồm 3 ký tự
+- `FINGERPRINT_SALT = "59cf53e54c78"` (mã hóa cứng; khớp với khách hàng chính thức)
+- Đầu vào: các ký tự ở chỉ số 4, 7, 20 của chuỗi phiên bản + văn bản tin nhắn của người dùng đầu tiên
+- Đầu ra: tiền tố hex 3-char
 
-### `claudeCodeCCH.ts` (Hàm băm nội dung ứng dụng khách)
+### `claudeCodeCCH.ts` (Băm nội dung khách hàng)
 
-Kiểm tra tính toàn vẹn phía máy chủ mà Claude Code CLI chính thức tính toán thông qua Bun/Zig. OmniRoute triển khai lại bằng `xxhash-wasm`:
+Kiểm tra tính toàn vẹn phía máy chủ Mã Claude chính thức CLI tính toán thông qua các lần triển khai lại Bun/Zig. OmniRoute với `xxhash-wasm`:
 
-1. Tuần tự hóa phần thân với phần giữ chỗ `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Chuỗi hex chữ thường gồm 5 ký tự, được đệm bằng số 0
-4. Thay thế `cch=00000;` bằng token đã tính toán
+1. Nối tiếp nội dung với phần giữ chỗ `cch=00000;`
+2. Xây dựng chế độ xem băm bằng hai thay thế văn bản thuần túy, theo thứ tự sau (`hashView()`):
+   - mỗi trận đấu của `/"model":"[^"]*"/g` trở thành `"model":""` — trận đấu dừng ở `"` đầu tiên, do đó, một giá trị có trích dẫn thoát (`"model":"a\"b"`) chỉ được làm trống cho đến trích dẫn đó, như khách hàng làm
+   - mọi trận đấu của `/"max_tokens":\d+,|,?"max_tokens":\d+/g` đều bị xóa — chỉ các giá trị số, ở bất kỳ độ sâu nào
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Hex chữ thường 5 ký tự không đệm
+5. Thay thế `cch=00000;` bằng mã thông báo được tính toán
 
-Các hằng số:
+Hằng số:
 
-- Seed: `0x6e52736ac806831e`
-- Mẫu: `/\bcch=([0-9a-f]{5});/`
+- Seed: `0x4d659218e32a3268` (khớp với các ảnh chụp vòng lặp của Mã Claude 2.1.252 và 2.1.322)
+- Hoa văn: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Chèn một **ký tự nối có độ rộng bằng 0** Unicode (`U+200D`) sau ký tự đầu tiên của các tên ứng dụng khách "nhạy cảm" để bộ lọc thượng nguồn không thể tìm chúng bằng grep. Danh sách từ mặc định:
+Chèn một Unicode** công cụ nối có chiều rộng bằng không** (`U+200D`) sau ký tự đầu tiên của tên khách hàng "nhạy cảm" để các bộ lọc ngược dòng không thể grep chúng. Danh sách từ mặc định:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Áp dụng cho: các khối `system`, toàn bộ `messages[].content` và `tools[].description` / `tools[].function.description`. Người vận hành có thể ghi đè thông qua `setSensitiveWords()`.
+Áp dụng cho: khối `system`, tất cả `messages[].content` và `tools[].description` / `tools[].function.description`. Toán tử có thể ghi đè thông qua `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — các nhà cung cấp `anthropic-compatible-cc-*`
+### nhà cung cấp `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`
 
-Dành cho các relay Anthropic bên thứ ba chỉ chấp nhận lưu lượng "Claude Code thực":
+Đối với chuyển tiếp Anthropic của bên thứ ba chỉ chấp nhận lưu lượng truy cập "Mã Claude thực":
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
 - `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` theo mặc định
-- Nút chuyển "Bật bản beta ẩn nội dung suy luận" cho từng kết nối sẽ thêm `redact-thinking-2026-02-12` khi một thượng nguồn Tương thích CC yêu cầu cụ thể các luồng suy luận đã được ẩn
-- Nút chuyển "Bật hiển thị suy luận tóm tắt" cho từng kết nối sẽ lưu `providerSpecificData.requestDefaults.summarizeThinking` và thêm `display: "summarized"` vào các yêu cầu suy luận Tương thích CC chưa đặt chế độ hiển thị
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (họ Opus/Sonnet 4.x)
+- Nút chuyển đổi "Bật phiên bản beta tư duy sắp xếp lại" trên mỗi kết nối sẽ thêm `redact-thinking-2026-02-12` khi dòng ngược tương thích CC đặc biệt yêu cầu các luồng suy nghĩ được sắp xếp lại
+- Nút chuyển đổi "Bật hiển thị tư duy tóm tắt" trên mỗi kết nối lưu trữ `providerSpecificData.requestDefaults.summarizeThinking` và thêm `display: "summarized"` vào CC Các yêu cầu tư duy tương thích chưa đặt chế độ hiển thị
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (gia đình Opus/Sonnet 4.x)
 - Đường dẫn mặc định: `/v1/messages?beta=true`
 
-Các mô-đun liên quan trong cùng gói:
+Các mô-đun chị em trong cùng một gói:
 
-- `claudeCodeConstraints.ts` — các quy tắc về temperature + cache-control
-- `claudeCodeToolRemapper.ts` — ánh xạ lại tên công cụ
-- `claudeCodeExtraRemap.ts` — chuẩn hóa payload bổ sung
+- `claudeCodeConstraints.ts` — nhiệt độ + quy tắc kiểm soát bộ đệm
+- ánh xạ lại tên công cụ `claudeCodeToolRemapper.ts` —
+- `claudeCodeExtraRemap.ts` — chuẩn hóa tải trọng bổ sung
 
 ---
 

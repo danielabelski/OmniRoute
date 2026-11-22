@@ -72,65 +72,68 @@ OmniRoute 會與邊緣節點主動對非官方用戶端進行指紋辨識（TLS 
 
 ---
 
-## Claude Code 隱匿套件
+## Claude代碼隱形捆綁包
 
-當 `cliCompatMode` 開啟時，OmniRoute 會重塑傳出的 Claude 請求，使其與 `claude-cli` 流量無法區分。由三個模組協同運作：
+當`cliCompatMode`啟動時， OmniRoute會重新調整傳出Claude請求的形狀，以便它們與`claude-cli`流量無法區分。三個模組協作：
 
 ### `claudeCodeFingerprint.ts`
 
-計算嵌入計費標頭中的 3 字元 `cc_version` 指紋：
+計算嵌入在帳單標頭中的 3 字元`cc_version`指紋：
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"`（硬編碼；與官方用戶端一致）
-- 輸入：第一則使用者訊息文字中索引 4、7、20 的字元，以及版本字串
-- 輸出：3 字元十六進位前綴
+- `FINGERPRINT_SALT = "59cf53e54c78"` （硬編碼；匹配官方客戶端）
+- 輸入：第一個用戶訊息文字+版本字串的索引 4、7、20 處的字符
+- 輸出：3 個字元的十六進位前綴
 
-### `claudeCodeCCH.ts`（用戶端內容雜湊）
+### `claudeCodeCCH.ts` （客戶端內容哈希）
 
-這是官方 Claude Code CLI 透過 Bun/Zig 計算的伺服器端完整性檢查。OmniRoute 使用 `xxhash-wasm` 重新實作：
+伺服器端完整性檢查官方Claude程式碼CLI透過Bun/Zig.計算OmniRoute使用`xxhash-wasm`重新實作：
 
-1. 使用 `cch=00000;` 預留位置序列化請求主體
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. 以零補齊為 5 字元的小寫十六進位值
-4. 將 `cch=00000;` 替換為計算出的權杖
+1. 使用`cch=00000;`佔位符序列化正文
+2. 按以下順序使用兩個純文字替換建立哈希視圖 (`hashView()`)：
+   - `/"model":"[^"]*"/g`的每個匹配都變成`"model":""` —匹配在第一個`"`停止，因此帶有轉義引號 (`"model":"a\"b"`) 的值僅清空到該引號，就像客戶端一樣
+   - `/"max_tokens":\d+,|,?"max_tokens":\d+/g`的每個匹配都被刪除—在任何深度僅數字值
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. 零填充的 5 個字元小寫十六進位
+5. 將`cch=00000;`替換為計算出的令牌
 
 常數：
 
-- 種子：`0x6e52736ac806831e`
-- 模式：`/\bcch=([0-9a-f]{5});/`
+- 種子： `0x4d659218e32a3268` （與Claude代碼 2.1.252 和 2.1.322 的環回捕獲匹配）
+- 圖案： `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-在「敏感」用戶端名稱的第一個字元後插入 Unicode **零寬連接符**（`U+200D`），使上游篩選器無法透過 grep 找到它們。預設字詞清單：
+插入 Unicode**零寬度連接符**(`U+200D`) 在「敏感」客戶端名稱的第一個字元之後，因此上游過濾器無法對它們進行 grep。預設單字列表：
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-套用於：`system` 區塊、所有 `messages[].content`，以及 `tools[].description` / `tools[].function.description`。操作者可透過 `setSensitiveWords()` 覆寫。
+應用於： `system`塊、所有`messages[].content`和`tools[].description` / `tools[].function.description`。操作員可透過`setSensitiveWords()`重寫。
 
-### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` 提供者
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`提供者
 
-供僅接受「真正 Claude Code」流量的第三方 Anthropic 中繼服務使用：
+對於僅接受「真實Claude代碼」流量的第三方Anthropic中繼：
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`（預設）
-- 當 CC Compatible 上游明確要求經刪節的思考串流時，每個連線的「啟用 redact-thinking beta」切換選項會加入 `redact-thinking-2026-02-12`
-- 每個連線的「啟用摘要式思考顯示」切換選項會儲存 `providerSpecificData.requestDefaults.summarizeThinking`，並在尚未設定顯示模式的 CC Compatible 思考請求中加入 `display: "summarized"`
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"`（Opus/Sonnet 4.x 系列）
-- 預設路徑：`/v1/messages?beta=true`
+- 預設為`anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
+- 當CC相容上游特別需要編輯思維流時，每個連接的「啟用編輯思維測試版」切換會添加`redact-thinking-2026-02-12`
+- 每個連接的「啟用匯總思維顯示」切換儲存`providerSpecificData.requestDefaults.summarizeThinking`並將`display: "summarized"`加入CC尚未設定顯示模式的相容思維請求
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` （Opus/Sonnet 4.x 系列）
+- 預設路徑： `/v1/messages?beta=true`
 
-同一套件中的相關模組：
+同一捆綁包中的姐妹模組：
 
-- `claudeCodeConstraints.ts` — temperature 與快取控制規則
-- `claudeCodeToolRemapper.ts` — 工具名稱重新對應
-- `claudeCodeExtraRemap.ts` — 額外的承載資料正規化
+- `claudeCodeConstraints.ts` —溫度+快取控制規則
+- `claudeCodeToolRemapper.ts` —工具名稱重新映射
+- `claudeCodeExtraRemap.ts` —額外有效負載標準化
 
 ---
 

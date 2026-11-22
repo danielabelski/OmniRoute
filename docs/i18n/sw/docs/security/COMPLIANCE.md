@@ -129,30 +129,33 @@ huita `POST /api/settings/purge-request-history`, ambayo hufuta `call_logs`,
 Chaguo-msingi zimefafanuliwa katika `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Kujiondoa kwa `noLog` (kwa kila ufunguo wa API)
+## `noLog` Opt-Out (kwa kila kitufe cha API )
 
-Funguo za API zinaweza kuwekewa alama ili trafiki yao ya simu zinazofuata isirekodiwe. Alama hiyo
-huhifadhiwa kwenye jedwali la `api_keys` (`no_log INTEGER DEFAULT 0`) na huakisiwa
-kwenye seti ya kumbukumbu ya ndani kwa ajili ya utafutaji wa njia inayotumiwa sana.
+API funguo zinaweza kualamishwa ili trafiki yao ya simu ya chini isiingizwe. Bendera inaishi kwenye jedwali la `api_keys` (`no_log INTEGER DEFAULT 0`) na inaakisiwa katika seti ya kumbukumbu kwa ajili ya utafutaji wa njia motomoto.
 
 ```bash
-# Unda ufunguo usiorekodi kumbukumbu (uthibitishaji wa usimamizi unahitajika)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Vitendaji saidizi (`src/lib/compliance/index.ts`):
+Wasaidizi (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — washa au zima ingizo la kumbukumbu ya ndani
-- `isNoLog(apiKeyId)` — hukaguliwa kwenye njia ya ombi; ikishindikana hutumia usomaji ulioakibishwa kwa sekunde 30
-  kutoka `api_keys.no_log`
-- `NO_LOG_API_KEY_IDS` (kigezo cha mazingira, zilizotenganishwa kwa koma) — hupakiwa mapema kwenye seti ya kumbukumbu ya ndani
-  wakati wa kuwasha; ni muhimu wakati huwezi kubadilisha safu wima moja kwa moja
+- `setNoLog(apiKeyId, true|false)` — kugeuza ingizo la kumbukumbu
+- `isNoLog(apiKeyId)` — imeangaliwa kwenye njia ya ombi; inarudi kwa 30 s cached kusomwa kutoka `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, imetenganishwa kwa koma) — iliyopakiwa awali kwenye seti ya kumbukumbu kwenye buti; muhimu wakati huwezi kugeuza safu moja kwa moja
 
-Matukio ya ukaguzi wa kiutawala (kuingia, mabadiliko ya watoa huduma, simu za zana za MCP, n.k.)
-**hayaathiriwi** na `noLog` — ni kurekodi trafiki ya kila ombi pekee kunakozimwa.
+Matukio ya ukaguzi wa kiutawala (kuingia, mabadiliko ya mtoaji, simu za zana MCP, n.k.) ni** sivyo** iliyoathiriwa na `noLog` — uwekaji kumbukumbu wa trafiki kwa kila ombi pekee ndio umeondolewa.
+
+### kwa ombi la kuchagua kutoka (`x-omniroute-no-log`)
+
+Mteja anaweza kuchagua ombi moja la makisio kutoka kwa kuendelea kwa upakiaji bila kuunda ufunguo maalum. Tuma `x-omniroute-no-log: true` kwa ombi (`1` na `yes` pia zinakubaliwa, hazijalishi). Inatumika kwa kila njia ya gumzo-familia inayopitia kidhibiti cha gumzo: Kukamilika kwa Gumzo, Majibu, Ujumbe, Kamilisho na njia inayooana na Gemini. Safu mlalo ya rajisi ya simu bado imeandikwa kwa muhuri wa muda, modeli, mtoaji, hali, muda na hesabu za tokeni, lakini `request_body`, `response_body`, muhtasari wa ombi na vizalia vya programu vya bomba vimeachwa.
+
+Kichwa ni ORed chenye bendera muhimu: ufunguo wa hakuna-logi hukaa bila logi bila kujali kichwa, na kichwa hakiwezi kuwezesha upya ukataji wa ufunguo wa kuto-logi. Kijajuu kinavuliwa kabla ya ombi kutumwa juu ya mkondo.
+
+Kichwa hiki kinafanya hivyo** sivyo** Lemaza uchimbaji wa Kumbukumbu au kashe ya kisemantiki. Tuma `x-omniroute-no-memory: true` na `x-omniroute-no-cache: true` kando yake wakati ombi lazima liendelee kuwa na maudhui katika mifumo hiyo midogo.
 
 ## API ya REST
 

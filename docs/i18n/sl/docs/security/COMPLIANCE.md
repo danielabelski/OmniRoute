@@ -131,32 +131,33 @@ tabelo `request_detail_logs` in lokalne artefakte zahtev v
 Privzete vrednosti so določene v `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Izključitev `noLog` (za posamezen ključ API)
+## `noLog` Opt-Out (na ključ API )
 
-Ključe API je mogoče označiti tako, da se promet njihovih nadaljnjih klicev ne
-beleži. Oznaka je shranjena v tabeli `api_keys` (`no_log INTEGER DEFAULT 0`) in
-se zrcali v množico v pomnilniku za hitre poizvedbe na kritični poti.
+ključe API je mogoče označiti z zastavico, tako da se njihov nadaljnji klicni promet ne beleži. Zastavica živi v tabeli `api_keys` (`no_log INTEGER DEFAULT 0`) in se zrcali v nabor v pomnilniku za iskanje po vročih poteh.
 
 ```bash
-# Ustvarite ključ brez beleženja (zahtevano je skrbniško preverjanje pristnosti)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Pomožne funkcije (`src/lib/compliance/index.ts`):
+Pomočniki (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — vklopi ali izklopi vnos v pomnilniku
-- `isNoLog(apiKeyId)` — preveri se na poti zahteve; če vnos ni na voljo, uporabi
-  predpomnjeno branje vrednosti `api_keys.no_log` z veljavnostjo 30 s
-- `NO_LOG_API_KEY_IDS` (okoljska spremenljivka, vrednosti ločene z vejicami) —
-  ob zagonu se vnaprej naloži v množico v pomnilniku; uporabno, kadar stolpca ne
-  morete spreminjati neposredno
+- `setNoLog(apiKeyId, true|false)` — preklop vnosa v pomnilniku
+- `isNoLog(apiKeyId)` — preverjeno na poti zahteve; pade nazaj na 30 s predpomnjeno branje iz `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, ločeno z vejicami) — vnaprej naložen v nabor v pomnilniku ob zagonu; uporabno, ko ne morete neposredno preklopiti stolpca
 
-`noLog` **ne** vpliva na skrbniške revizijske dogodke (prijave, spremembe
-ponudnikov, klice orodij MCP itd.) — izključiti je mogoče le beleženje prometa
-posameznih zahtev.
+Administrativni revizijski dogodki (prijava, spremembe ponudnika, klici orodja MCP itd.) so** ne** vpliva `noLog` — samo beleženje prometa na zahtevo je onemogočeno.
+
+### Zavrnitev na zahtevo (`x-omniroute-no-log`)
+
+Odjemalec lahko izloči eno samo zahtevo za sklepanje iz obstojnosti koristne obremenitve, ne da bi ustvaril namenski ključ. Na zahtevo pošljite `x-omniroute-no-log: true` (sprejeta sta tudi `1` in `yes`, ne razlikujeta med velikimi in malimi črkami). Velja za vsako družinsko pot klepeta, ki teče skozi upravljalnik klepeta: zaključki klepeta, odgovori, sporočila, zaključki in pot, združljiva z Gemini. Vrstica dnevnika klicev je še vedno zapisana s časovnim žigom, modelom, ponudnikom, statusom, trajanjem in številom žetonov, vendar so `request_body`, `response_body`, povzetki zahtev in artefakti cevovoda izpuščeni.
+
+Glava je ORed z zastavico ključa: ključ brez dnevnika ostane brez dnevnika ne glede na glavo in glava ne more znova omogočiti beleženja za ključ brez dnevnika. Glava se odstrani, preden se zahteva posreduje navzgor.
+
+Ta glava je** ne** onemogočite ekstrakcijo pomnilnika ali semantični predpomnilnik. Zraven pošljite `x-omniroute-no-memory: true` in `x-omniroute-no-cache: true`, ko tudi zahteva ne sme obdržati vsebine v teh podsistemih.
 
 ## REST API
 

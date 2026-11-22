@@ -49,7 +49,7 @@ Ang bawat deployment ay naghahatid ng sarili nitong kopya ng spec sa `/openapi.y
 
 ---
 
-## Mga Chat Completion
+## Mga Pagkumpleto ng Chat
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### Mga Custom Header
+### Mga Custom na Header
 
-| Header                   | Direction  | Description                                                                                                                                                                                                                              |
-| ------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Kahilingan | Itakda sa `true` upang lampasan ang cache                                                                                                                                                                                                |
-| `x-omniroute-no-memory`  | Kahilingan | Itakda sa `true` upang laktawan ang pag-inject ng memory + skills para sa kahilingang ito (kapareho ng no-cache; iniiwasan ang overhead ng token/gastos sa bawat tawag)                                                                  |
-| `X-OmniRoute-Progress`   | Kahilingan | Itakda sa `true` para sa mga event ng progreso                                                                                                                                                                                           |
-| `X-Session-Id`           | Kahilingan | Sticky session key para sa external session affinity                                                                                                                                                                                     |
-| `x_session_id`           | Kahilingan | Tinatanggap din ang variant na may underscore (direct HTTP)                                                                                                                                                                              |
-| `X-OmniRoute-Session-Id` | Kahilingan | Tag ng session/conversation na ibinibigay ng caller (ipinapasa rin sa memory). Kapag mayroon, sine-save nang eksakto sa `call_logs.session_tag` para sa pagtatalaga ng gastos kada session (#8249) — hindi kailanman ginagawa kapag wala |
-| `Idempotency-Key`        | Kahilingan | Dedup key (5s na palugit)                                                                                                                                                                                                                |
-| `X-Request-Id`           | Kahilingan | Alternatibong dedup key                                                                                                                                                                                                                  |
-| `x-omniroute-connection` | Kahilingan | I-pin ang isang single-model na kahilingan sa isang koneksyon ng provider (account) ayon sa ID nito — tingnan ang [Pag-pin ng account kada kahilingan](#account-pinning-per-request)                                                     |
-| `X-OmniRoute-Cache`      | Tugon      | `HIT` o `MISS` (hindi streaming)                                                                                                                                                                                                         |
-| `X-OmniRoute-Idempotent` | Tugon      | `true` kung na-deduplicate                                                                                                                                                                                                               |
-| `X-OmniRoute-Progress`   | Tugon      | `enabled` kung naka-on ang pagsubaybay sa progreso                                                                                                                                                                                       |
-| `X-OmniRoute-Session-Id` | Tugon      | Aktuwal na session ID na ginamit ng OmniRoute                                                                                                                                                                                            |
-| `X-OmniRoute-Request-Id` | Tugon      | ID ng correlation ng kahilingan (kapag alam)                                                                                                                                                                                             |
-| `X-OmniRoute-Version`    | Tugon      | Bersyon ng build ng OmniRoute (laging naroroon)                                                                                                                                                                                          |
-| `X-OmniRoute-Cost-Saved` | Tugon      | USD na naiwasan ng cache sa isang `HIT` (mga cache hit lamang)                                                                                                                                                                           |
-| `X-OmniRoute-Decision`   | Tugon      | Trace ng pagruruta: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ang combo strategy, o `single` para sa kahilingang hindi combo) — laging naroroon sa mga response kapag kumpleto na                                    |
+| Header                   | Direksyon  | Paglalarawan                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Kahilingan | Itakda sa `true` upang i-bypass ang cache                                                                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-no-memory`  | Kahilingan | Itakda sa `true` para laktawan ang memory + skills injection para sa kahilingang ito (mirrors no-cache; iniiwasan ang per-call token/cost overhead)                                                                                                                                                                                                                                                                                |
+| `x-omniroute-no-log`     | Kahilingan | Itakda sa `true` upang alisin ang mga request/response na payload mula sa mga log ng tawag para sa kahilingang ito sa paghihinuha (lahat ng mga ruta ng chat-family: Mga Pagkumpleto ng Chat, Mga Tugon, Mga Mensahe, Mga Pagkumpleto, Gemini). Ang timestamp, modelo, status, tagal at mga bilang ng token ay naitala pa rin. Pagsamahin sa `x-omniroute-no-memory` at `x-omniroute-no-cache` para sa isang buong content opt-out |
+| `X-OmniRoute-Progress`   | Kahilingan | Itakda sa `true` para sa mga kaganapan sa pag-unlad                                                                                                                                                                                                                                                                                                                                                                                |
+| `X-Session-Id`           | Kahilingan | Malagkit na session key para sa external na session affinity                                                                                                                                                                                                                                                                                                                                                                       |
+| `x_session_id`           | Kahilingan | Tinanggap din ang variant ng underscore (direktang HTTP)                                                                                                                                                                                                                                                                                                                                                                           |
+| `X-OmniRoute-Session-Id` | Kahilingan | session/conversation tag na binigay ng tumatawag (nagpapakain din ng memorya). Kapag naroroon, nanatili sa verbatim sa `call_logs.session_tag` para sa per-session cost attribution (#8249) — na hindi na-synthesize kapag wala                                                                                                                                                                                                    |
+| `Idempotency-Key`        | Kahilingan | Dedup key (5s window)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `X-Request-Id`           | Kahilingan | Alternatibong susi sa pag-de-de-up                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `x-omniroute-connection` | Kahilingan | I-pin ang isang solong-modelo na kahilingan sa isang koneksyon ng provider (account) sa pamamagitan ng id nito — tingnan [ang Pag-pin ng account bawat kahilingan](#account-pinning-per-request)                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Cache`      | Tugon      | `HIT` o `MISS` (hindi nag-stream)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Idempotent` | Tugon      | `true` kung i-deduplicate                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Progress`   | Tugon      | `enabled` kung naka-on ang pagsubaybay sa pag-unlad                                                                                                                                                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Session-Id` | Tugon      | Epektibong session ID na ginagamit ng OmniRoute                                                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Request-Id` | Tugon      | Humiling ng correlation id (kapag alam)                                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Version`    | Tugon      | bersyon ng OmniRoute build (palaging naroroon)                                                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Cost-Saved` | Tugon      | USD ang cache na iniwasan sa isang HIT (cache hit lang)                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Decision`   | Tugon      | Pagsubaybay sa pagruruta: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ay ang combo strategy, o `single` para sa isang non-combo na kahilingan) — ay palaging naroroon sa pagkumpleto ng mga tugon                                                                                                                                                                                                                |
 
-> Tala sa Nginx: kung umaasa ka sa mga header na may underscore (halimbawa, `x_session_id`), paganahin ang `underscores_in_headers on;`.
+> Nginx note: kung umaasa ka sa mga underscore na header (halimbawa `x_session_id`), paganahin ang `underscores_in_headers on;`.
 
-#### Pag-pin ng account kada kahilingan
+#### Pag-pin ng account sa bawat kahilingan
 
-Kapag ang isang provider ay may ilang koneksyon (mga account o key), karaniwang pumipili ang OmniRoute ng isa
-gamit ang strategy nito sa pagpili ng account. Sa halip, maaaring i-pin ng isang kahilingan ang isang partikular na koneksyon
-gamit ang header na `x-omniroute-connection`:
+Kapag ang isang provider ay may ilang koneksyon (mga account o key), karaniwang pumipili ng isa ang OmniRoute sa pamamagitan ng diskarte nito sa pagpili ng account. Sa halip, ang isang kahilingan ay maaaring mag-pin ng isang partikular na koneksyon sa `x-omniroute-connection` header:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,24 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Saan makikita ang id.** Buksan ang provider page sa dashboard
-  (**Dashboard → Providers → <provider>**) at i-click ang `xxxxxxxx…` id chip sa isang connection
-  row — kokopyahin nito ang buong connection id.
-- **Aling mga request ang kumikilala rito.** Mga single-model request (`provider/model`) sa
-  `/v1/chat/completions`, `/v1/messages` at `/v1/responses`. Hindi pinapansin ng mga combo ang header:
-  i-pin ang isang account para sa bawat combo step sa pamamagitan ng sariling connection ng step.
-- **Mahigpit ang pin, hindi ito preference.** Eksklusibong gagamitin ang naka-pin na connection. Kapag
-  nagkaroon ng failure sa loob ng request, itatala ang cooldown ng account ngunit **hindi** lilipat sa
-  sibling account ng parehong provider.
-- **Inaalis ng cooldown at quota ang pin.** Habang naka-cooldown ang naka-pin na connection,
-  naubusan ng quota o na-block ng quota policy, ang mga susunod na request ay gagamit ng ibang
-  connection ng provider, gaya mismo ng unpinned traffic.
-- **Nagdudulot ng failure ang hindi kilala o disabled na id.** Ang id na wala sa active pool ng provider
-  (na-delete, na-deactivate, o kabilang sa ibang provider) ay walang ineligible na account, kaya
-  magfa-fail ang request sa halip na tahimik na i-route sa ibang lugar.
+- **Saan mahahanap ang id.** Buksan ang pahina ng provider sa dashboard (** Dashboard → Mga Provider → <provider>** ) at i-click ang `xxxxxxxx…` id chip sa isang connection row — kinokopya nito ang buong connection id.
+- **Aling mga kahilingan parangalan ito.** Mga kahilingan sa solong modelo (`provider/model`) sa `/v1/chat/completions`, `/v1/messages` at `/v1/responses`. Binabalewala ng mga combo ang header: sa halip ay mag-pin ng account sa bawat combo step sa pamamagitan ng sariling koneksyon ng hakbang.
+- **Ang pin ay mahigpit, hindi isang kagustuhan.** Eksklusibong ginagamit ang naka-pin na koneksyon. Ang isang pagkabigo sa loob ng kahilingan ay nagtatala ng cooldown ng account ngunit ginagawa nito** hindi** i-rotate sa isang kapatid na account ng parehong provider.
+- **Cooldown at quota ilabas ang pin.** Habang ang naka-pin na koneksyon ay lumalamig, naubos ang quota o na-block ng isang patakaran sa quota, ang mga kahilingan sa ibang pagkakataon ay bumabalik sa iba pang mga koneksyon ng provider, eksakto tulad ng hindi naka-pin na trapiko.
+- **Hindi alam o hindi pinagana ang mga id.** Ang isang id na wala sa aktibong pool ng provider (tinanggal, na-deactivate, o pagmamay-ari ng ibang provider) ay hindi nag-iiwan ng karapat-dapat na account, kaya nabigo ang kahilingan sa halip na tahimik na mag-ruta sa ibang lugar.
 
-Nagpapadala ang Claude Code ng mga custom header sa pamamagitan ng `ANTHROPIC_CUSTOM_HEADERS`. Ilagay ito sa `env` block
-ng `~/.claude/settings.json`, o sa project-level na `.claude/settings.json` para mag-pin ng ibang account bawat project:
+Nagpapadala Claude Code ng mga custom na header sa pamamagitan ng `ANTHROPIC_CUSTOM_HEADERS`. Ilagay ito sa `env` block ng `~/.claude/settings.json`, o sa isang `.claude/settings.json` sa antas ng proyekto upang mag-pin ng ibang account sa bawat proyekto:
 
 ```jsonc
 {
@@ -132,12 +120,11 @@ ng `~/.claude/settings.json`, o sa project-level na `.claude/settings.json` para
 }
 ```
 
-Source: `src/sse/handlers/chat.ts` (pagbasa ng header), `src/sse/services/auth.ts` at
-`src/sse/services/sessionAffinityPin.ts` (pag-release ng pin at pag-check kung nawawala sa pool).
+Source: `src/sse/handlers/chat.ts` (header read), `src/sse/services/auth.ts` at `src/sse/services/sessionAffinityPin.ts` (pin release at ang missing-from-pool check).
 
-> **Mga header ng cost telemetry:** ang mga non-streaming success response ay naglalaman din ng `X-OmniRoute-*` cost-telemetry set — `X-OmniRoute-Response-Cost` (USD, fixed na 10 decimal; `0.0000000000` para sa libre/walang presyo), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, at `X-OmniRoute-Fallback-Attempts` (kapag > 0 lamang), pati `X-OmniRoute-Request-Id` at `X-OmniRoute-Version`. Ipinapadala ang mga ito ng chat completions, `/v1/responses`, `/v1/messages`, **at ng mga media endpoint** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, at `/v1/moderations` (palaging cost na `0`). Kinakalkula ang media cost ayon sa modality (bawat larawan, bawat segundo, bawat character, bawat search-unit) kapag available ang pricing; kung hindi, `0` (fail-open).
+> **Mga header ng telemetry ng gastos:** Ang mga sagot sa tagumpay na hindi nag-stream ay nagdadala din ng `X-OmniRoute-*` cost-telemetry set — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimal; `0.0000000000` for free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, at `X-OmniRoute-Fallback-Attempts` (lamang kapag > 0), plus `X-OmniRoute-Request-Id` at `X-OmniRoute-Version`. Ang mga ito ay ibinubuga ng mga pagkumpleto ng chat, `/v1/responses`, `/v1/messages`,** at ang mga endpoint ng media** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, at `/v1/moderations` (palaging nagkakahalaga `0`). Kinakalkula ang gastos ng media sa bawat modality (bawat larawan, bawat segundo, bawat karakter, bawat unit ng paghahanap) kapag available ang pagpepresyo, kung hindi man ay `0` (fail-open).
 
-> **Semantics ng cost kapag cache hit:** kapag may semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`), walang upstream call na ginagawa, kaya ang `X-OmniRoute-Response-Cost` ay `0.0000000000` (ang **incremental** na cost ng pag-serve sa hit). Hiwalay na iniuulat ang orihinal/would-have-been cost sa `X-OmniRoute-Cost-Saved`. Dapat pagsamahin ng mga consumer ng billing ang `X-OmniRoute-Response-Cost` (walang cost ang mga hit); maaaring i-aggregate ng cache analytics ang `X-OmniRoute-Cost-Saved`.
+> **Semantics ng gastos sa cache-hit:** sa isang semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`) walang upstream na tawag na ginawa, kaya `X-OmniRoute-Response-Cost` ay `0.0000000000` (ang** incremental** gastos ng paghahatid ng hit). Ang halaga original/would-have-been ay iniulat nang hiwalay sa `X-OmniRoute-Cost-Saved`. Ang mga mamimili sa pagsingil ay dapat magsama `X-OmniRoute-Response-Cost` (walang halaga ang mga hit); Ang cache analytics ay maaaring magsama-sama ng `X-OmniRoute-Cost-Saved`.
 
 ## Eksklusibong Pinamamahalaang Lease ng Session
 
@@ -356,13 +343,15 @@ Kasama sa mga available na provider ang OpenAI (GPT Image 2), xAI (Grok Image), 
 
 ibinabalik `n` ang mga `n` na larawan sa `data[]`. Ang mga provider na ang upstream API ay nagbabalik ng isang larawan sa bawat tawag (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) ay nakakakuha ng `n` na magkakahiwalay na upstream na tawag, hindi hihigit sa 4 sa paglipad. Ang isang nakapirming `seed` ay na-offset ng call index (`seed`, `seed + 1`, …), kaya ang mga imahe ay naiiba ngunit nananatiling reproducible. `n` ay nililimitahan sa 10. Ang kahilingan ay nabigo sa kabuuan kung ang anumang tawag ay nabigo. Ang listahan ng mga fan-out na format ay `SINGLE_IMAGE_FANOUT_FORMATS` sa `open-sse/handlers/imageGeneration/fanOut.ts`.
 
+Codex GPT Ang mga modelo ng imahe (`codex/gpt-image-*`) ay nagbabalik PNG lamang: ang upstream ay sumasagot `200` gamit ang mga PNG byte kahit na `jpeg` o `webp` ay hiniling. Ang isang kahilingan sa anumang iba pang `output_format` (`webp`, `jpeg`, ...) ay tinanggihan ng HTTP 400 sa halip na tahimik na hindi pinansin; alisin ito o ipadala `png`. `output_compression` ay hindi naipapasa.
+
 Muling ginagamit ZenMux ang umiiral nang API-key na koneksyon at tumatanggap ng `zenmux/` o `zm/` prefix:
 
 - `zenmux/openai/gpt-image-2` ay gumagamit ng ZenMux's OpenAI Images API. Kasama sa mga opsyon ang `size`, `quality`, `n`, `output_format`, `output_compression`, `background`, at `response_format`.
 - Ang ibang mga publisher, gaya ng `zm/meta/muse-image-1.0`, ay gumagamit ng ZenMux's Vertex AI `:predict` endpoint. `n` mapa sa `sampleCount`, `aspect_ratio` sa `aspectRatio`, at `image_size` (`1K`, `2K`, `4K`) sa `sampleImageSize`. Ang isang pixel `size` ay nagbibigay lamang ng isang aspect ratio, hindi garantisadong mga dimensyon ng pixel. Ang mga sinusuportahang ratio, resolusyon, at bilang ay nag-iiba ayon sa modelo.
 - pinipili `zm/inclusionai/ming-image-0.1-design` ang sarili nitong mga sukat. Alisin `size`, `aspect_ratio`, at `image_size`; Ang mga tahasang halaga ay nagbabalik HTTP 400. PNG, JPEG, at WebP ay maaaring hilingin gamit ang `output_format`.
 
-Sinusuportahan ng pagsasamang ito ang pagbuo ng text-to-image, hindi ang pag-edit ng reference-image. Ang output ng vertex ay na-normalize sa `data[].b64_json`; `response_format: "url"` ay nagbabalik ng upstream HTTPS URL o isang base64 na data URL kapag ang mga byte ng imahe lamang ang magagamit. Ang mga output Empty/filtered ay nagbabalik ng isang error sa halip na isang walang laman na tagumpay. Ang pag-access ng modelo ay depende sa ZenMux account. Tingnan ang [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) at [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+Sinusuportahan ng pagsasamang ito ang pagbuo ng text-to-image, hindi ang pag-edit ng reference-image. Ang output ng vertex ay na-normalize sa `data[].b64_json`; `response_format: "url"` ay nagbabalik ng upstream HTTPS URL o isang base64 na data URL kapag ang mga image byte lang ang available. Ang mga output Empty/filtered ay nagbabalik ng isang error sa halip na isang walang laman na tagumpay. Ang pag-access ng modelo ay nakasalalay sa ZenMux account. Tingnan ang [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) at [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
 
 Ang Microsoft 365 Copilot sign-in connection ay nagsisilbi `copilot-m365-web/m365-copilot-image` sa pamamagitan ng built-in na tool ng imahe ng Copilot: isang Copilot turn sa bawat larawan (`n` 1–4), `size` steering lang ang orientation, at mga larawang ibinalik inline (`b64_json`, o isang data URL para sa `response_format: "url"`). Tingnan ang [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 

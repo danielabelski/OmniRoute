@@ -49,7 +49,7 @@ OpenAI 호환 프로토콜과 제공업체 기능 매트릭스에 초점을 맞�
 
 ---
 
-## 채팅 완성
+## 채팅 완료
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### 사용자 지정 헤더
+### 맞춤 헤더
 
-| Header                   | 방향 | 설명                                                                                                                                                                                 |
-| ------------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `X-OmniRoute-No-Cache`   | 요청 | 캐시를 우회하려면 `true`로 설정                                                                                                                                                      |
-| `x-omniroute-no-memory`  | 요청 | 이 요청에 대한 메모리 + 스킬 주입을 건너뛰려면 `true`로 설정 (no-cache를 미러링하며 호출별 토큰/비용 오버헤드를 방지)                                                                |
-| `X-OmniRoute-Progress`   | 요청 | 진행률 이벤트를 사용하려면 `true`로 설정                                                                                                                                             |
-| `X-Session-Id`           | 요청 | 외부 세션 어피니티를 위한 고정 세션 키                                                                                                                                               |
-| `x_session_id`           | 요청 | 밑줄 변형도 허용됨 (직접 HTTP)                                                                                                                                                       |
-| `X-OmniRoute-Session-Id` | 요청 | 호출자가 제공하는 세션/대화 태그 (메모리에도 전달됨). 값이 있으면 세션별 비용 귀속을 위해 `call_logs.session_tag`에 있는 그대로 영속화됨 (#8249) — 값이 없을 때는 절대 생성되지 않음 |
-| `Idempotency-Key`        | 요청 | 중복 제거 키 (5초 윈도우)                                                                                                                                                            |
-| `X-Request-Id`           | 요청 | 대체 중복 제거 키                                                                                                                                                                    |
-| `x-omniroute-connection` | 요청 | ID를 기준으로 단일 모델 요청을 하나의 공급자 연결(계정)에 고정 — [요청별 계정 고정](#account-pinning-per-request) 참조                                                               |
-| `X-OmniRoute-Cache`      | 응답 | `HIT` 또는 `MISS` (스트리밍하지 않는 경우)                                                                                                                                           |
-| `X-OmniRoute-Idempotent` | 응답 | 중복 제거된 경우 `true`                                                                                                                                                              |
-| `X-OmniRoute-Progress`   | 응답 | 진행률 추적이 활성화된 경우 `enabled`                                                                                                                                                |
-| `X-OmniRoute-Session-Id` | 응답 | OmniRoute에서 사용한 유효 세션 ID                                                                                                                                                    |
-| `X-OmniRoute-Request-Id` | 응답 | 요청 상관관계 ID (확인 가능한 경우)                                                                                                                                                  |
-| `X-OmniRoute-Version`    | 응답 | OmniRoute 빌드 버전 (항상 포함됨)                                                                                                                                                    |
-| `X-OmniRoute-Cost-Saved` | 응답 | 캐시가 `HIT`일 때 캐시로 절감된 USD (캐시 적중 시에만)                                                                                                                               |
-| `X-OmniRoute-Decision`   | 응답 | 라우팅 추적: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>`은 조합 전략이며, 조합이 아닌 요청에서는 `single`) — 완료 응답에 항상 포함됨                               |
+| 헤더                     | 방향 | 설명                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | 요구 | 캐시를 우회하려면 `true` 로 설정하세요.                                                                                                                                                                                                                                                                   |
+| `x-omniroute-no-memory`  | 요구 | 이 요청에 대한 메모리 + 기술 주입을 건너뛰려면 `true` 로 설정합니다(캐시 없음 미러링, 호출별 token/cost 오버헤드 방지).                                                                                                                                                                                   |
+| `x-omniroute-no-log`     | 요구 | 이 추론 요청에 대한 호출 로그에서 request/response 페이로드를 생략하려면 `true` 로 설정합니다(모든 채팅 계열 경로: 채팅 완료, 응답, 메시지, 완료, Gemini). 타임스탬프, 모델, 상태, 기간 및 토큰 개수는 계속 기록됩니다. 전체 콘텐츠 차단을 위해 `x-omniroute-no-memory` 및 `x-omniroute-no-cache` 와 결합 |
+| `X-OmniRoute-Progress`   | 요구 | 진행 이벤트를 위해 `true` 로 설정                                                                                                                                                                                                                                                                         |
+| `X-Session-Id`           | 요구 | 외부 세션 선호도를 위한 고정 세션 키                                                                                                                                                                                                                                                                      |
+| `x_session_id`           | 요구 | 밑줄 변형도 허용됩니다(직접 HTTP).                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Session-Id` | 요구 | 호출자가 제공하는 session/conversation 태그(메모리에도 공급) 존재하는 경우 세션당 비용 귀속을 위해 `call_logs.session_tag` 에 그대로 유지됩니다(#8249). — 부재 시 절대 합성되지 않습니다.                                                                                                                 |
+| `Idempotency-Key`        | 요구 | 중복 제거 키(5초 창)                                                                                                                                                                                                                                                                                      |
+| `X-Request-Id`           | 요구 | 대체 중복 제거 키                                                                                                                                                                                                                                                                                         |
+| `x-omniroute-connection` | 요구 | 단일 모델 요청을 하나의 공급자 연결(계정)에 해당 ID — 로 고정합니다 [. 요청당 계정 고정을](#account-pinning-per-request) 참조하세요.                                                                                                                                                                      |
+| `X-OmniRoute-Cache`      | 응답 | `HIT` 또는 `MISS` (비스트리밍)                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Idempotent` | 응답 | 중복이 제거된 경우 `true`                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Progress`   | 응답 | 진행 상황 추적이 켜져 있는 경우 `enabled`                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Session-Id` | 응답 | OmniRoute 가 사용하는 효과적인 세션 ID                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Request-Id` | 응답 | 요청 상관 관계 ID(알려진 경우)                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Version`    | 응답 | OmniRoute 빌드 버전(항상 존재)                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Cost-Saved` | 응답 | USD HIT 에서 캐시를 피합니다(캐시 적중만 해당).                                                                                                                                                                                                                                                           |
+| `X-OmniRoute-Decision`   | 응답 | 라우팅 추적: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` 는 콤보 전략이거나 콤보가 아닌 요청의 경우 `single` ) — 항상 완료 응답에 나타납니다.                                                                                                                                           |
 
-> Nginx 참고: 밑줄이 포함된 헤더(예: `x_session_id`)에 의존하는 경우 `underscores_in_headers on;`을 활성화하세요.
+> Nginx 참고: 밑줄 헤더(예: `x_session_id`)를 사용하는 경우 `underscores_in_headers on;` 활성화하세요.
 
-#### 요청별 계정 고정
+#### 요청당 계정 고정
 
-공급자에 여러 연결(계정 또는 키)이 있는 경우 OmniRoute는 일반적으로 계정 선택 전략을
-통해 하나를 선택합니다. 대신 요청에서 `x-omniroute-connection` 헤더를 사용하여 특정 연결 하나를
-고정할 수 있습니다.
+공급자에 여러 연결(계정 또는 키)이 있는 경우 OmniRoute 일반적으로 계정 선택 전략을 통해 하나를 선택합니다. 대신 요청은 `x-omniroute-connection` 헤더를 사용하여 하나의 특정 연결을 고정할 수 있습니다.
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,16 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **id를 찾는 위치.** 대시보드의 프로바이더 페이지
-  (**대시보드 → 프로바이더 → <provider>**)를 열고 연결 행에서 `xxxxxxxx…` id 칩을 클릭하세요
-  — 전체 connection id가 복사됩니다.
-- **이를 적용하는 요청.** `/v1/chat/completions`, `/v1/messages` 및 `/v1/responses`의 단일 모델 요청(`provider/model`)입니다. 콤보는 헤더를 무시합니다. 대신 각 콤보 단계의 자체 connection을 통해 단계별로 계정을 고정하세요.
-- **고정은 선호가 아니라 엄격하게 적용됩니다.** 고정된 connection만 사용됩니다. 요청 내부에서 오류가 발생하면 해당 계정의 cooldown이 기록되지만, 같은 프로바이더의 다른 계정으로 전환하지는 않습니다.
-- **Cooldown과 quota가 고정을 해제합니다.** 고정된 connection이 cooldown 중이거나 quota를 모두 소진했거나 quota 정책에 의해 차단된 동안에는, 이후 요청이 고정되지 않은 트래픽과 동일하게 프로바이더의 다른 connection으로 fallback됩니다.
-- **알 수 없거나 비활성화된 id는 실패합니다.** 프로바이더의 활성 풀에 없는 id(삭제되었거나, 비활성화되었거나, 다른 프로바이더에 속한 id)는 사용 가능한 계정을 남기지 않으므로, 요청이 다른 곳으로 자동 라우팅되지 않고 실패합니다.
+- **아이디 찾는 곳.** 대시보드에서 공급자 페이지를 엽니다(** 대시보드 → 제공자 → <provider>** ) 연결 행 — 에서 `xxxxxxxx…` id 칩을 클릭하면 전체 연결 ID가 복사됩니다.
+- **그것을 존중하는 요청입니다.** `/v1/chat/completions`, `/v1/messages` 및 `/v1/responses` 에 대한 단일 모델 요청(`provider/model`). 콤보는 헤더를 무시합니다. 대신 단계 자체 연결을 통해 콤보 단계당 계정을 고정합니다.
+- **핀은 엄격한 것이지 선호하는 것은 아닙니다.** 고정 연결은 독점적으로 사용됩니다. 요청 내부의 실패는 계정의 쿨다운을 기록하지만** ~ 아니다** 동일한 제공업체의 형제 계정으로 교체하세요.
+- **쿨다운 및 할당량이 핀을 해제합니다.** 고정된 연결이 냉각되고, 할당량이 소진되거나 할당량 정책에 의해 차단되는 동안 이후 요청은 고정 해제된 트래픽과 마찬가지로 공급자의 다른 연결로 대체됩니다.
+- **알 수 없거나 비활성화된 ID는 실패합니다.** 공급자의 활성 풀에 없는 ID(삭제, 비활성화 또는 다른 공급자에 속함)는 적격 계정을 남기지 않으므로 자동으로 다른 곳으로 라우팅되는 대신 요청이 실패합니다.
 
-Claude Code는 `ANTHROPIC_CUSTOM_HEADERS`를 통해 사용자 지정 헤더를 전송합니다. 이를
-`~/.claude/settings.json`의 `env` 블록에 추가하거나, 프로젝트별로 다른 계정을 고정하려면 프로젝트 수준의 `.claude/settings.json`에 추가하세요:
+Claude 코드는 `ANTHROPIC_CUSTOM_HEADERS` 통해 사용자 정의 헤더를 보냅니다. `~/.claude/settings.json` 의 `env` 블록에 넣거나 프로젝트 수준 `.claude/settings.json` 에 넣어 프로젝트별로 다른 계정을 고정합니다.
 
 ```jsonc
 {
@@ -124,12 +120,11 @@ Claude Code는 `ANTHROPIC_CUSTOM_HEADERS`를 통해 사용자 지정 헤더를 �
 }
 ```
 
-소스: `src/sse/handlers/chat.ts` (헤더 읽기), `src/sse/services/auth.ts` 및
-`src/sse/services/sessionAffinityPin.ts` (고정 해제 및 풀에서 누락된 항목 확인).
+출처: `src/sse/handlers/chat.ts` (헤더 읽기), `src/sse/services/auth.ts` 및 `src/sse/services/sessionAffinityPin.ts` (핀 해제 및 풀에서 누락 확인).
 
-> **비용 텔레메트리 헤더:** 스트리밍하지 않는 성공 응답에도 `X-OmniRoute-*` 비용 텔레메트리 세트가 포함됩니다 — `X-OmniRoute-Response-Cost` (USD, 소수점 이하 10자리 고정; 무료/가격 미책정인 경우 `0.0000000000`), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, `X-OmniRoute-Fallback-Attempts` (0보다 큰 경우에만), 그리고 `X-OmniRoute-Request-Id` 및 `X-OmniRoute-Version`입니다. 이러한 헤더는 chat completions, `/v1/responses`, `/v1/messages`, **그리고 미디어 엔드포인트** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` 및 `/v1/moderations` (항상 비용 `0`) — 에서 생성됩니다. 미디어 비용은 가격 정보가 제공되는 경우 모달리티별(이미지당, 초당, 문자당, 검색 단위당)로 계산되며, 그렇지 않으면 `0`입니다(fail-open).
+> **비용 원격 분석 헤더:** 비스트리밍 성공 응답에는 `X-OmniRoute-*` 비용 원격 측정 세트 — `X-OmniRoute-Response-Cost` (USD, 고정 소수점 10자리; free/unpriced 의 경우 `0.0000000000` ), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, `X-OmniRoute-Fallback-Attempts` ( > 0인 경우에만), `X-OmniRoute-Request-Id` 및 `X-OmniRoute-Version` 포함됩니다. 이는 채팅 완료, `/v1/responses`, `/v1/messages` 에 의해 방출됩니다.** 미디어 엔드포인트** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` 및 `/v1/moderations` (항상 `0` 비용). 미디어 비용은 가격이 제공되는 경우 형식(이미지당, 초당, 문자당, 검색 단위당)별로 계산되며, 그렇지 않은 경우 `0` (페일오픈)입니다.
 
-> **캐시 적중 비용 의미:** 시맨틱 캐시 적중(`X-OmniRoute-Cache-Hit: true`)에서는 upstream 호출이 수행되지 않으므로 `X-OmniRoute-Response-Cost`는 `0.0000000000`입니다(적중 결과를 제공하는 데 드는 **증분** 비용). 원래 비용/발생했을 비용은 `X-OmniRoute-Cost-Saved`에 별도로 보고됩니다. 결제 처리 소비자는 `X-OmniRoute-Response-Cost`를 합산해야 하며(적중 비용은 없음), 캐시 분석에서는 `X-OmniRoute-Cost-Saved`를 집계할 수 있습니다.
+> **캐시 적중 비용 의미:** 시맨틱 캐시 HIT (`X-OmniRoute-Cache-Hit: true`)에서는 업스트림 호출이 이루어지지 않으므로 `X-OmniRoute-Response-Cost` 는 `0.0000000000` 입니다(** 증분** 조회수 제공 비용). original/would-have-been 비용은 `X-OmniRoute-Cost-Saved` 에 별도로 보고됩니다. 청구 소비자는 `X-OmniRoute-Response-Cost` 합산해야 합니다(조회수에는 비용이 발생하지 않음). 캐시 분석은 `X-OmniRoute-Cost-Saved` 집계할 수 있습니다.
 
 ## 독점 관리 세션 임대
 
@@ -348,6 +343,8 @@ Content-Type: application/json
 사용 가능한 공급자에는 OpenAI (GPT 이미지 2), xAI (Grok 이미지), Together AI (FLUX), Fireworks AI, Nebius(FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (로컬), ComfyUI (로컬).
 
 `n` `data[]` 에 `n` 이미지를 반환합니다. 업스트림 API 호출당 하나의 이미지를 반환하는 제공자(Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI)는 최대 4개의 `n` 별도 업스트림 호출을 수신합니다. 고정된 `seed` 은 호출 인덱스(`seed`, `seed + 1`, …)에 의해 오프셋되므로 이미지는 다르지만 재현 가능합니다. `n` 는 10으로 제한됩니다. 호출이 실패하면 요청이 전체적으로 실패합니다. 팬아웃 형식 목록은 `open-sse/handlers/imageGeneration/fanOut.ts` 의 `SINGLE_IMAGE_FANOUT_FORMATS` 입니다.
+
+Codex GPT 이미지 모델(`codex/gpt-image-*`)은 PNG 만 반환합니다. 업스트림은 `jpeg` 또는 `webp` 요청된 경우에도 PNG 바이트로 `200` 응답합니다. 다른 `output_format` (`webp`, `jpeg`, ...)에 대한 요청은 자동으로 무시되는 대신 HTTP 400으로 거부됩니다. 생략하거나 `png` 보내십시오. `output_compression` 전달되지 않습니다.
 
 ZenMux 기존 API 키 연결을 재사용하고 `zenmux/` 또는 `zm/` 접두사를 허용합니다.
 
@@ -1709,10 +1706,10 @@ GET /api/telemetry/summary
 ## 예산
 
 ```bash
-# 모든 API 키의 예산 상태 가져오기
+# Get budget status for all API keys
 GET /api/usage/budget
 
-# 예산 설정 또는 업데이트
+# Set or update a budget
 POST /api/usage/budget
 Content-Type: application/json
 
@@ -1726,7 +1723,7 @@ Content-Type: application/json
 }
 ```
 
-> **스키마 참고** (`setBudgetSchema`): `apiKeyId`는 필수이며, `dailyLimitUsd`, `weeklyLimitUsd`, `monthlyLimitUsd` 중 하나 이상이 0보다 커야 합니다. 선택적 필드: `warningThreshold` (0–1), `resetInterval` (`daily` | `weekly` | `monthly`), `resetTime` (`HH:MM`). 기존 `{keyId, limit, period}` 형식은 `400 Bad Request`를 반환합니다.
+> **스키마 메모** (`setBudgetSchema`): `apiKeyId` 필요합니다. `dailyLimitUsd`, `weeklyLimitUsd` 또는 `monthlyLimitUsd` 중 적어도 하나는 0보다 커야 합니다. 선택 필드: `warningThreshold` (0–1), `resetInterval` (`daily` | `weekly` | `monthly`), `resetTime` (`HH:MM`). 레거시 `{keyId, limit, period}` 형태는 `400 Bad Request` 반환합니다.
 
 ## 토큰 제한
 

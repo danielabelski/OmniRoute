@@ -73,65 +73,68 @@ kafin a yi iƙirarin daidaito da browser na sabis na sama.
 
 ---
 
-## Kunshin Ɓoye-Ɓoye na Claude Code
+## Claude Code Stealth Bundle
 
-Lokacin da aka kunna `cliCompatMode`, OmniRoute yana sake fasalta buƙatun Claude masu fita ta yadda ba za a iya bambanta su da zirga-zirgar `claude-cli` ba. Module uku ne suke haɗin gwiwa:
+Lokacin da `cliCompatMode` ke kunne, OmniRoute yana sake fasalin buƙatun Claude masu fita don haka ba za a iya bambanta su da zirga-zirgar `claude-cli` ba. Na'urori uku suna aiki tare:
 
 ### `claudeCodeFingerprint.ts`
 
-Yana ƙididdige alamar yatsa mai haruffa 3 ta `cc_version` da aka saka a cikin taken lissafin kuɗi:
+Yana ƙididdige sawun yatsa mai char 3 `cc_version` da aka saka a cikin kan lissafin kuɗi:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (an saka kai tsaye; ya yi daidai da client na hukuma)
-- Abubuwan shigarwa: haruffan da ke index 4, 7, 20 na rubutun saƙon mai amfani na farko + igiyar version
-- Sakamako: farkon hex mai haruffa 3
+- `FINGERPRINT_SALT = "59cf53e54c78"` (hardcoded; matches na hukuma abokin ciniki)
+- Abubuwan shigarwa: chars a index 4, 7, 20 na saƙon mai amfani na farko na sigar sigar sigar +
+- Fitowa: 3-char hex prefix
 
-### `claudeCodeCCH.ts` (Hash ɗin Abun Cikin Client)
+### `claudeCodeCCH.ts` (Client Content Hash)
 
-Binciken inganci a ɓangaren server wanda Claude Code CLI na hukuma ke ƙididdigewa ta Bun/Zig. OmniRoute ya sake aiwatar da shi da `xxhash-wasm`:
+Mutuncin gefen uwar garken duba lambar Claude hukuma OmniRoute CLI Bun/Zig. `xxhash-wasm`:
 
-1. Mayar da body zuwa tsari tare da madadin `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Ƙaramin hex mai haruffa 5 wanda aka cika da sifili a gaba
-4. Maye gurbin `cch=00000;` da token ɗin da aka ƙididdige
+1. Serialize jiki tare da wurin `cch=00000;`
+2. Gina ra'ayin hash tare da maye gurbin rubutu a sarari guda biyu, a cikin wannan tsari (`hashView()`):
+   - kowane wasa na `/"model":"[^"]*"/g` ya zama `"model":""` — wasan yana tsayawa a farkon `"`, don haka ƙimar da aka tserewa (`"model":"a\"b"`) ana zubar da ita kawai har zuwa waccan magana, kamar yadda abokin ciniki ya yi.
+   - kowane matches na `/"max_tokens":\d+,|,?"max_tokens":\d+/g` ana cire — ƙimar lambobi kawai, a kowane zurfin
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Babban hex mai sifili 5 mai sifili
+5. Maye gurbin `cch=00000;` tare da alamar lissafi
 
-Ƙa'idodi:
+Constants:
 
-- Seed: `0x6e52736ac806831e`
-- Pattern: `/\bcch=([0-9a-f]{5});/`
+- Iri: `0x4d659218e32a3268` (matches lapback riko na Claude Code 2.1.252 da 2.1.322)
+- Tsarin: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Yana saka Unicode **zero-width joiner** (`U+200D`) bayan harafin farko na sunayen client masu "hankali" domin matatan upstream ba za su iya gano su da grep ba. Jerin kalmomin tsoho:
+Saka Unicode** sifili-nisa mai haɗawa** (`U+200D`) bayan halayen farko na sunayen abokan ciniki "m" don haka masu tacewa ba za su iya grep su ba. Jerin kalmomi na asali:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Ana amfani da shi ga: tubalan `system`, duk `messages[].content`, da `tools[].description` / `tools[].function.description`. Mai gudanarwa zai iya sauya shi ta `setSensitiveWords()`.
+Aiwatar zuwa: tubalan `system`, duk `messages[].content`, da `tools[].description` / `tools[].function.description`. Mai aiki-masu wuce gona da iri ta hanyar `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — masu samar da `anthropic-compatible-cc-*`
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` bayarwa
 
-Ga relay na Anthropic na ɓangare na uku waɗanda kawai suke karɓar zirga-zirgar "Claude Code na gaske":
+Don relays Anthropic na ɓangare na uku waɗanda kawai ke karɓar zirga-zirgar "lambar Claude na gaske":
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` ne ta tsohuwa
-- Maɓallin kowane haɗi na "Enable redact-thinking beta" yana ƙara `redact-thinking-2026-02-12` lokacin da wani CC Compatible upstream yake buƙatar rafukan tunani da aka ɓoye musamman
-- Maɓallin kowane haɗi na "Enable summarized thinking display" yana adana `providerSpecificData.requestDefaults.summarizeThinking` kuma yana ƙara `display: "summarized"` ga buƙatun tunani na CC Compatible waɗanda ba su riga sun saita yanayin nuni ba
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (iyalan Opus/Sonnet 4.x)
-- Path na tsoho: `/v1/messages?beta=true`
+- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` by default
+- Haɗin kai "Enable redact-thinking beta" jujjuya yana ƙara `redact-thinking-2026-02-12` lokacin da CC Mai jituwa na sama yana buƙatar gyara rafukan tunani.
+- Haɗin haɗin kai "Ku kunna taƙaitaccen nunin tunani" kunna ajiyar `providerSpecificData.requestDefaults.summarizeThinking` kuma yana ƙara `display: "summarized"` zuwa CC Buƙatun tunani masu jituwa waɗanda basu riga sun saita yanayin nuni ba.
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` ( iyali Opus/Sonnet 4.x)
+- Hanyar da aka saba: `/v1/messages?beta=true`
 
-Module masu alaƙa a cikin wannan kunshi:
+Sister modules a cikin guda guda:
 
-- `claudeCodeConstraints.ts` — ƙa'idodin temperature + cache-control
-- `claudeCodeToolRemapper.ts` — sake daidaita sunayen tool
-- `claudeCodeExtraRemap.ts` — ƙarin daidaita payload
+- `claudeCodeConstraints.ts` — zazzabi + dokokin sarrafa cache
+- `claudeCodeToolRemapper.ts` — kayan aiki-name remapping
+- `claudeCodeExtraRemap.ts` — karin kayan aiki normalization
 
 ---
 

@@ -115,12 +115,12 @@ CREATE TABLE IF NOT EXISTS audit_log (
 기본값은 `src/lib/logEnv.ts`에 정의되어 있습니다
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## `noLog` 로그 제외 설정(API 키별)
+## `noLog` 옵트아웃( API 키당)
 
-API 키에 플래그를 설정하여 해당 키의 다운스트림 호출 트래픽이 기록되지 않도록 할 수 있습니다. 이 플래그는 `api_keys` 테이블(`no_log INTEGER DEFAULT 0`)에 저장되며, 빠른 경로 조회를 위해 인메모리 세트에도 반영됩니다.
+다운스트림 통화 트래픽이 기록되지 않도록 API 키에 플래그를 지정할 수 있습니다. 플래그는 `api_keys` 테이블(`no_log INTEGER DEFAULT 0`)에 있으며 핫 경로 조회를 위해 메모리 내 세트에 미러링됩니다.
 
 ```bash
-# 로그를 기록하지 않는 키 생성(관리자 인증 필요)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
@@ -129,11 +129,19 @@ curl -X POST http://localhost:20128/api/keys \
 
 도우미(`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — 인메모리 항목 설정 또는 해제
-- `isNoLog(apiKeyId)` — 요청 경로에서 확인하며, 항목이 없으면 30초 동안 캐시되는 `api_keys.no_log` 조회로 대체
-- `NO_LOG_API_KEY_IDS`(환경 변수, 쉼표로 구분) — 부팅 시 인메모리 세트에 미리 로드됩니다. 열을 직접 변경할 수 없을 때 유용합니다.
+- `setNoLog(apiKeyId, true|false)` — 메모리 내 항목 토글
+- 요청 경로에서 `isNoLog(apiKeyId)` — 확인되었습니다. `api_keys.no_log` 에서 30초 동안 캐시된 읽기로 대체됩니다.
+- `NO_LOG_API_KEY_IDS` (env, 쉼표로 구분) — 부팅 시 인메모리 세트에 미리 로드됩니다. 열을 직접 전환할 수 없을 때 유용합니다.
 
-관리 감사 이벤트(로그인, 공급자 변경, MCP 도구 호출 등)는 `noLog`의 영향을 **받지 않습니다**. 제외되는 것은 요청별 트래픽 로깅뿐입니다.
+관리 감사 이벤트(로그인, 공급자 변경, MCP 도구 호출 등)는** ~ 아니다** `noLog` 의 영향을 받습니다. — 요청별 트래픽 로깅만 옵트아웃됩니다.
+
+### 요청별 옵트아웃(`x-omniroute-no-log`)
+
+클라이언트는 전용 키를 생성하지 않고도 페이로드 지속성에서 단일 추론 요청을 선택할 수 있습니다. 요청 시 `x-omniroute-no-log: true` 보냅니다(`1` 및 `yes` 도 허용되며 대소문자를 구분하지 않음). 이는 채팅 처리기를 통해 실행되는 모든 채팅 제품군 경로(채팅 완료, 응답, 메시지, 완료 및 Gemini 호환 경로)에 적용됩니다. 콜 로그 행은 여전히 타임스탬프, 모델, 공급자, 상태, 기간 및 토큰 수와 함께 기록되지만 `request_body`, `response_body`, 요청 요약 및 파이프라인 아티팩트는 생략됩니다.
+
+헤더는 키 플래그가 있는 ORed 입니다. 로그 없는 키는 헤더에 관계없이 로그 없는 상태를 유지하며 헤더는 로그 없는 키에 대한 로깅을 다시 활성화할 수 없습니다. 요청이 업스트림으로 전달되기 전에 헤더가 제거됩니다.
+
+이 헤더는** ~ 아니다** 메모리 추출 또는 의미론적 캐시를 비활성화합니다. 요청이 해당 하위 시스템의 콘텐츠를 유지해서는 안 되는 경우 `x-omniroute-no-memory: true` 및 `x-omniroute-no-cache: true` 함께 보냅니다.
 
 ## REST API
 

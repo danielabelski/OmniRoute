@@ -76,65 +76,68 @@ Web Cookie トランスポートで共有されるアダプターです。各軽
 
 ---
 
-## Claude Code ステルスバンドル
+## Claudeコード ステルス バンドル
 
-`cliCompatMode` が有効な場合、OmniRoute は送信する Claude リクエストを変形し、`claude-cli` のトラフィックと見分けがつかないようにします。以下の 3 つのモジュールが連携します。
+`cliCompatMode`がオンの場合、 OmniRoute発信Claudeリクエストを再形成して、 `claude-cli`トラフィックと区別できなくなります。 3 つのモジュールが連携します。
 
 ### `claudeCodeFingerprint.ts`
 
-課金ヘッダーに埋め込まれる 3 文字の `cc_version` フィンガープリントを計算します。
+請求ヘッダーに埋め込まれた 3 文字の`cc_version`フィンガープリントを計算します。
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"`（ハードコード済み。公式クライアントと一致）
-- 入力: 最初のユーザーメッセージ本文のインデックス 4、7、20 にある文字 + バージョン文字列
-- 出力: 3 文字の 16 進数プレフィックス
+- `FINGERPRINT_SALT = "59cf53e54c78"` (ハードコード; 公式クライアントと一致)
+- 入力: 最初のユーザー メッセージ テキストのインデックス 4、7、20 の文字+バージョン文字列
+- 出力: 3 文字の 16 進接頭辞
 
-### `claudeCodeCCH.ts`（クライアントコンテンツハッシュ）
+### `claudeCodeCCH.ts` (クライアント コンテンツ ハッシュ)
 
-公式 Claude Code CLI が Bun/Zig を介して計算する、サーバー側の整合性チェックです。OmniRoute はこれを `xxhash-wasm` で再実装しています。
+公式Claudeコードのサーバー側整合性チェックCLI Bun/Zig.経由で計算しますOmniRouteは`xxhash-wasm`で再実装されます。
 
-1. `cch=00000;` プレースホルダーを使用して本文をシリアライズ
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. 5 文字になるようゼロ埋めした小文字の 16 進数
-4. `cch=00000;` を計算済みトークンに置換
+1. `cch=00000;`プレースホルダーを使用して本文をシリアル化する
+2. 2 つのプレーンテキスト置換をこの順序で使用してハッシュ ビューを構築します (`hashView()`)。
+   - `/"model":"[^"]*"/g`のすべての一致は`"model":""` —になります。一致は最初の`"`で停止します。そのため、エスケープされた引用符 (`"model":"a\"b"`) を含む値は、クライアントと同様に、その引用符までのみ空になります。
+   - `/"max_tokens":\d+,|,?"max_tokens":\d+/g`の一致はすべて削除されます。 —任意の深さの数値のみです。
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. ゼロ埋めされた 5 文字の小文字 16 進数
+5. `cch=00000;`計算されたトークンに置き換えます
 
 定数:
 
-- シード: `0x6e52736ac806831e`
+- シード: `0x4d659218e32a3268` ( Claudeコード 2.1.252 および 2.1.322 のループバック キャプチャと一致)
 - パターン: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-「機密性の高い」クライアント名の最初の文字の後に Unicode の**ゼロ幅接合子**（`U+200D`）を挿入し、上流のフィルターが grep できないようにします。デフォルトの単語リスト:
+Unicodeを挿入します**ゼロ幅ジョイナー**(`U+200D`) が「機密」クライアント名の最初の文字の後にあるため、上流のフィルターはそれらを grep できません。デフォルトの単語リスト:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-適用対象: `system` ブロック、すべての `messages[].content`、および `tools[].description` / `tools[].function.description`。オペレーターは `setSensitiveWords()` を使用して上書きできます。
+適用対象: `system`ブロック、すべての`messages[].content`、および`tools[].description` / `tools[].function.description`。 `setSensitiveWords()`を介して演算子でオーバーライド可能。
 
-### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` プロバイダー
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`プロバイダー
 
-「本物の Claude Code」トラフィックのみを受け入れるサードパーティー製 Anthropic リレー向け:
+「実際のClaudeコード」トラフィックのみを受け入れるサードパーティのAnthropicリレーの場合:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- デフォルトでは `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- 接続ごとの「Enable redact-thinking beta」トグルは、CC Compatible の上流が編集済み思考ストリームを明示的に必要とする場合に、`redact-thinking-2026-02-12` を追加します
-- 接続ごとの「Enable summarized thinking display」トグルは `providerSpecificData.requestDefaults.summarizeThinking` を保存し、表示モードがまだ設定されていない CC Compatible の思考リクエストに `display: "summarized"` を追加します
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"`（Opus/Sonnet 4.x ファミリー）
-- デフォルトパス: `/v1/messages?beta=true`
+- デフォルトでは`anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
+- CC互換のアップストリームが特に編集された思考ストリームを必要とする場合、接続ごとの「編集思考ベータを有効にする」トグルにより`redact-thinking-2026-02-12`が追加されます。
+- 接続ごとの「要約された思考表示を有効にする」トグルは、 `providerSpecificData.requestDefaults.summarizeThinking`を保存し、 `display: "summarized"` CCに追加します まだ表示モードが設定されていない互換性のある思考リクエスト
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x ファミリ)
+- デフォルトのパス: `/v1/messages?beta=true`
 
-同じバンドル内の関連モジュール:
+同じバンドル内の姉妹モジュール:
 
-- `claudeCodeConstraints.ts` — temperature + cache-control のルール
-- `claudeCodeToolRemapper.ts` — ツール名の再マッピング
-- `claudeCodeExtraRemap.ts` — 追加のペイロード正規化
+- `claudeCodeConstraints.ts` —温度+キャッシュ制御ルール
+- `claudeCodeToolRemapper.ts` —ツール名の再マッピング
+- `claudeCodeExtraRemap.ts` —追加ペイロードの正規化
 
 ---
 

@@ -126,31 +126,33 @@ naslijeđeni `request_detail_logs` i lokalni artefakti zahtjeva u
 Zadane vrijednosti definirane su u `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Isključivanje putem `noLog` (po API ključu)
+## `noLog` isključivanje (po API ključu)
 
-API ključevi mogu se označiti tako da se promet njihovih nizvodnih poziva ne bilježi. Oznaka
-se nalazi u tablici `api_keys` (`no_log INTEGER DEFAULT 0`) i zrcali se
-u skupu u memoriji radi brzih provjera na kritičnom putu.
+API ključevi mogu biti označeni tako da se njihov nizvodni promet poziva ne bilježi. Oznaka živi na `api_keys` tablici (`no_log INTEGER DEFAULT 0`) i zrcali se u skupu u memoriji za traženje vruće staze.
 
 ```bash
-# Stvorite ključ bez bilježenja (potrebna je upravljačka autentifikacija)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Pomoćne funkcije (`src/lib/compliance/index.ts`):
+Pomoćnici (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — uključuje ili isključuje unos u memoriji
-- `isNoLog(apiKeyId)` — provjerava se na putu zahtjeva; ako nema rezultata, koristi se očitanje
-  `api_keys.no_log` iz predmemorije u trajanju od 30 s
-- `NO_LOG_API_KEY_IDS` (varijabla okruženja, vrijednosti odvojene zarezima) — unaprijed se učitava u skup u memoriji
-  pri pokretanju; korisno kada stupac ne možete izravno mijenjati
+- `setNoLog(apiKeyId, true|false)` — prebacivanje unosa u memoriju
+- `isNoLog(apiKeyId)` — provjeren na putu zahtjeva; vraća se na 30 s predmemorirano čitanje iz `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, odvojen zarezom) — unaprijed učitan u skup u memoriji pri dizanju; korisno kada ne možete izravno prebacivati stupac
 
-Administrativni revizijski događaji (prijava, promjene pružatelja usluga, pozivi MCP alata itd.)
-**nisu** obuhvaćeni postavkom `noLog` — isključuje se samo bilježenje prometa
-po zahtjevu.
+Administrativni revizijski događaji (prijava, promjene pružatelja usluga, pozivi MCP alata itd.) su** ne** pod utjecajem `noLog` — isključeno je samo bilježenje prometa po zahtjevu.
+
+### Isključivanje po zahtjevu (`x-omniroute-no-log`)
+
+Klijent može isključiti jedan zahtjev za zaključivanje iz postojanosti korisnog opterećenja bez stvaranja namjenskog ključa. Pošaljite `x-omniroute-no-log: true` na zahtjev (`1` i `yes` su također prihvaćeni, bez obzira na velika i mala slova). Primjenjuje se na svaku obiteljsku rutu chata koja prolazi kroz rukovatelja chatom: dovršeci razgovora, odgovori, poruke, dovršeci i put kompatibilan s Gemini. Redak zapisnika poziva i dalje je zapisan sa svojom vremenskom oznakom, modelom, pružateljem, statusom, trajanjem i brojem tokena, ali `request_body`, `response_body`, sažeci zahtjeva i artefakti cjevovoda su izostavljeni.
+
+Zaglavlje je ORed s oznakom ključa: ključ bez dnevnika ostaje bez dnevnika bez obzira na zaglavlje, a zaglavlje ne može ponovno omogućiti bilježenje za ključ bez dnevnika. Zaglavlje se uklanja prije nego što se zahtjev proslijedi uzvodno.
+
+Ovo zaglavlje radi** ne** onemogućite izdvajanje memorije ili semantičku predmemoriju. Pošaljite `x-omniroute-no-memory: true` i `x-omniroute-no-cache: true` uz njega kada zahtjev ne smije postojati sadržaj ni u tim podsustavima.
 
 ## REST API
 

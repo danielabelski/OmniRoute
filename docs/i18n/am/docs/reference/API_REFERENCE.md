@@ -49,7 +49,7 @@
 
 ---
 
-## የውይይት ማጠናቀቂያዎች
+## የውይይት ማጠናቀቅ
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### ብጁ ራስጌዎች
 
-| Header                   | Direction | Description                                                                                                                                                   |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | ጥያቄ       | መሸጎጫን ለማለፍ `true` ያድርጉ                                                                                                                                        |
-| `x-omniroute-no-memory`  | ጥያቄ       | ለዚህ ጥያቄ የማስታወሻ + ክህሎቶች መጨመርን ለመዝለል `true` ያድርጉ (ከno-cache ጋር ተመሳሳይ ነው፤ በእያንዳንዱ ጥሪ የሚከሰተውን የቶከን/ወጪ ተጨማሪ ጫና ያስወግዳል)                                             |
-| `X-OmniRoute-Progress`   | ጥያቄ       | የእድገት ክስተቶችን ለማንቃት `true` ያድርጉ                                                                                                                                |
-| `X-Session-Id`           | ጥያቄ       | ለውጫዊ የክፍለ ጊዜ ተያያዥነት የሚጠቅም ቋሚ የክፍለ ጊዜ ቁልፍ                                                                                                                      |
-| `x_session_id`           | ጥያቄ       | የአስረጎድ ልዩነቱም ይቀበላል (ቀጥተኛ HTTP)                                                                                                                                |
-| `X-OmniRoute-Session-Id` | ጥያቄ       | በጠሪው የሚቀርብ የክፍለ ጊዜ/ውይይት መለያ (እንዲሁም ለማስታወሻ ይላካል)። በሚኖርበት ጊዜ ለእያንዳንዱ ክፍለ ጊዜ የወጪ መመደብ በቀጥታ ወደ `call_logs.session_tag` ይቀመጣል (#8249) — በሌለበት ጊዜ ፈጽሞ በራስ-ሰር አይፈጠርም |
-| `Idempotency-Key`        | ጥያቄ       | የድግግሞሽ መከላከያ ቁልፍ (የ5 ሰከንድ ጊዜ መስኮት)                                                                                                                            |
-| `X-Request-Id`           | ጥያቄ       | አማራጭ የድግግሞሽ መከላከያ ቁልፍ                                                                                                                                         |
-| `x-omniroute-connection` | ጥያቄ       | አንድ-ሞዴል ጥያቄን በመለያው ለአንድ አቅራቢ ግንኙነት (መለያ) ላይ ያስቀምጡ — [በእያንዳንዱ ጥያቄ የመለያ ማስቀመጥ](#account-pinning-per-request) ይመልከቱ                                              |
-| `X-OmniRoute-Cache`      | ምላሽ       | `HIT` ወይም `MISS` (ዥረት በማይጠቀምበት)                                                                                                                               |
-| `X-OmniRoute-Idempotent` | ምላሽ       | ድግግሞሽ መከላከያ ከተፈጸመ `true`                                                                                                                                      |
-| `X-OmniRoute-Progress`   | ምላሽ       | የእድገት ክትትል እየሰራ ከሆነ `enabled`                                                                                                                                 |
-| `X-OmniRoute-Session-Id` | ምላሽ       | በOmniRoute የተጠቀመበት ውጤታማ የክፍለ ጊዜ መለያ                                                                                                                           |
-| `X-OmniRoute-Request-Id` | ምላሽ       | የጥያቄ ተዛማጅነት መለያ (በሚታወቅበት ጊዜ)                                                                                                                                  |
-| `X-OmniRoute-Version`    | ምላሽ       | የOmniRoute ግንባታ ስሪት (ሁልጊዜ ይኖራል)                                                                                                                               |
-| `X-OmniRoute-Cost-Saved` | ምላሽ       | በ`HIT` ላይ መሸጎጫው ያስቀረው በUSD የተገለጸ ወጪ (የመሸጎጫ ግጥሚያዎች ብቻ)                                                                                                         |
-| `X-OmniRoute-Decision`   | ምላሽ       | የማዘዋወሪያ ዱካ፦ `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` የጥምር ስትራቴጂ ነው፣ ወይም ጥምር ላልሆነ ጥያቄ `single` ነው) — በማጠናቀቂያ ምላሾች ላይ ሁልጊዜ ይኖራል            |
+| ራስጌ                      | አቅጣጫ | መግለጫ                                                                                                                                                                                                                                                                      |
+| ------------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | ጥያቄ  | መሸጎጫውን ለማለፍ ወደ `true` አቀናብር                                                                                                                                                                                                                                               |
+| `x-omniroute-no-memory`  | ጥያቄ  | ለዚህ ጥያቄ የማህደረ ትውስታ + ችሎታ መርፌን ለመዝለል ወደ `true` አቀናብር (መሸጎጫ የሌለው መሸጎጫ፤ በየጥሪው token/cost ላይ ያለውን ነገር ያስወግዳል)                                                                                                                                                                 |
+| `x-omniroute-no-log`     | ጥያቄ  | ለዚህ የአስተያየት ጥያቄ (ሁሉም የውይይት-ቤተሰብ መንገዶች፡ የውይይት ማጠናቀቂያ፣ ምላሾች፣ መልእክቶች፣ ማጠናቀቂያዎች፣ Gemini) ከጥሪ request/response ማስታወሻዎች ለመተው ወደ `true` አቀናብር። የጊዜ ማህተም፣ ሞዴል፣ ሁኔታ፣ ቆይታ እና የማስመሰያ ቆጠራዎች አሁንም ተመዝግበዋል። ለሙሉ ይዘት መርጦ ለመውጣት `x-omniroute-no-memory` እና `x-omniroute-no-cache` ጋር ያዋህዱ |
+| `X-OmniRoute-Progress`   | ጥያቄ  | ለሂደት ክስተቶች ወደ `true` አቀናብር                                                                                                                                                                                                                                                |
+| `X-Session-Id`           | ጥያቄ  | ተለጣፊ የክፍለ-ጊዜ ቁልፍ ለውጫዊ ክፍለ-ጊዜ ቅርበት                                                                                                                                                                                                                                         |
+| `x_session_id`           | ጥያቄ  | የስር ነጥብ ልዩነት እንዲሁ ተቀባይነት አለው (ቀጥታ HTTP)                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Session-Id` | ጥያቄ  | በጠሪው የቀረበ session/conversation መለያ (እንዲሁም ማህደረ ትውስታን ይመገባል)። በሚገኝበት ጊዜ፣ ለክፍለ-ጊዜ ወጪ መለያ (#8249) — በቃል በቃል እስከ `call_logs.session_tag` በሌለበት ጊዜ ፈጽሞ አልተሰራም።                                                                                                                 |
+| `Idempotency-Key`        | ጥያቄ  | የተቀነሰ ቁልፍ (5 ሰ መስኮት)                                                                                                                                                                                                                                                      |
+| `X-Request-Id`           | ጥያቄ  | ተለዋጭ የማስወገጃ ቁልፍ                                                                                                                                                                                                                                                           |
+| `x-omniroute-connection` | ጥያቄ  | የነጠላ ሞዴል ጥያቄን ከአንድ አቅራቢ ግንኙነት (መለያ) ጋር በመታወቂያ — ይሰኩት [በጥያቄ መለያ መሰካትን](#account-pinning-per-request) ይመልከቱ                                                                                                                                                                 |
+| `X-OmniRoute-Cache`      | ምላሽ  | `HIT` ወይም `MISS` (የማይተላለፍ)                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Idempotent` | ምላሽ  | `true` ከተቀነሰ                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Progress`   | ምላሽ  | `enabled` የሂደት ክትትል በርቶ ከሆነ                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | ምላሽ  | በ OmniRoute ጥቅም ላይ የዋለው ውጤታማ ክፍለ ጊዜ ID                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Request-Id` | ምላሽ  | የግንኙነት መታወቂያ ይጠይቁ (ሲታወቅ)                                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Version`    | ምላሽ  | OmniRoute ግንባታ ስሪት (ሁልጊዜ አለ)                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Cost-Saved` | ምላሽ  | USD መሸጎጫው በ HIT ላይ ተወግዷል (መሸጎጫ ብቻ ነው)                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Decision`   | ምላሽ  | የማዞሪያ ዱካ `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ጥምር ስትራቴጂ ነው፣ ወይም `single` ላልሆነ ጥምር ጥያቄ) — ሁልጊዜ በማጠናቀቂያ ምላሾች ላይ ይገኛል።                                                                                                                              |
 
-> Nginx ማስታወሻ፦ በአስረጎድ የተጻፉ ራስጌዎችን (ለምሳሌ `x_session_id`) የሚጠቀሙ ከሆነ፣ `underscores_in_headers on;` ያንቁ።
+> Nginx ማስታወሻ፡ ከስር ራስጌዎች (ለምሳሌ `x_session_id`) ላይ የምትተማመን ከሆነ `underscores_in_headers on;` አንቃ።
 
-#### በእያንዳንዱ ጥያቄ የመለያ ማስቀመጥ
+#### የመለያ መሰካት በጥያቄ
 
-አንድ አቅራቢ ብዙ ግንኙነቶች (መለያዎች ወይም ቁልፎች) ሲኖሩት፣ OmniRoute በመደበኛነት አንዱን የሚመርጠው
-በመለያ ምርጫ ስትራቴጂው ነው። ነገር ግን አንድ ጥያቄ በ`x-omniroute-connection` ራስጌ
-አማካኝነት አንድ የተወሰነ ግንኙነት ላይ ሊቆልፍ ይችላል፦
+አቅራቢው ብዙ ግንኙነቶች (መለያዎች ወይም ቁልፎች) ሲኖረው፣ OmniRoute በመደበኛነት አንዱን በአካውንት ምርጫ ስልት ይመርጣል። ጥያቄ በምትኩ አንድ የተወሰነ ግንኙነት ከ `x-omniroute-connection` ራስጌ ጋር መሰካት ይችላል፡-
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,20 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **መታወቂያውን የት ማግኘት እንደሚችሉ።** በዳሽቦርዱ ውስጥ የአቅራቢውን ገጽ
-  (**ዳሽቦርድ → አቅራቢዎች → <provider>**) ይክፈቱ እና በግንኙነት
-  ረድፍ ላይ ያለውን `xxxxxxxx…` የመታወቂያ ቺፕ ይጫኑ — ይህም ሙሉውን የግንኙነት መታወቂያ ይቀዳል።
-- **የትኞቹ ጥያቄዎች እንደሚያከብሩት።** በ`/v1/chat/completions`፣ `/v1/messages` እና
-  `/v1/responses` ላይ የሚቀርቡ የነጠላ-ሞዴል ጥያቄዎች (`provider/model`) ብቻ ናቸው። ኮምቦዎች ራስጌውን ችላ ይላሉ፤
-  በምትኩ ለእያንዳንዱ የኮምቦ ደረጃ መለያ በደረጃው የራሱ ግንኙነት በኩል ይወስኑ።
-- **መለያው ጥብቅ ነው፣ ምርጫ ብቻ አይደለም።** የተመረጠው ግንኙነት ብቻ ጥቅም ላይ ይውላል። በጥያቄው ውስጥ የሚከሰት አለመሳካት የመለያውን የማቀዝቀዣ ጊዜ ይመዘግባል፣ ነገር ግን
-  ወደ ከተመሳሳይ አቅራቢ የሚገኝ ሌላ መለያ አይቀይርም።
-- **የማቀዝቀዣ ጊዜ እና ኮታ መለቀቅ መለያውን ያስለቅቃሉ።** የተመረጠው ግንኙነት በማቀዝቀዣ ጊዜ ላይ እያለ፣
-  ኮታው ሲሞላ ወይም በኮታ ፖሊሲ ሲከለከል፣ ቀጣይ ጥያቄዎች ወደ ሌሎች የአቅራቢው ግንኙነቶች ይመለሳሉ፤ ይህም መለያ ሳይመረጥ ከሚላክ ትራፊክ ጋር በትክክል ተመሳሳይ ነው።
-- **የማይታወቁ ወይም የተሰናከሉ መለያዎች አይሳካላቸውም።** በአቅራቢው ንቁ ስብስብ ውስጥ የሌለ መለያ (የተሰረዘ፣
-  የተቦዘነ ወይም የሌላ አቅራቢ ንብረት የሆነ) ብቁ መለያ እንዳይኖር ያደርጋል፤ ስለዚህ ጥያቄው በዝምታ ወደ ሌላ ቦታ ከመላክ ይልቅ ይሳካል።
+- **መታወቂያውን የት ማግኘት እንደሚቻል።** በዳሽቦርዱ ውስጥ የአቅራቢውን ገጽ ይክፈቱ (** ዳሽቦርድ → አቅራቢዎች → <provider>** ) እና በግንኙነት ረድፍ ላይ የ `xxxxxxxx…` id ቺፕን ጠቅ ያድርጉ — ሙሉውን የግንኙነት መታወቂያ ይቀዳል።
+- **የትኞቹ ጥያቄዎች ያከብራሉ.** ነጠላ ሞዴል ጥያቄዎች (`provider/model`) በ `/v1/chat/completions`፣ `/v1/messages` እና `/v1/responses` ላይ። ኮምቦዎች የራስጌውን ቸል ይላሉ፡ በእያንዳንዱ ጥምር ደረጃ መለያን በምትኩ በደረጃው ግኑኝነት ይሰኩት።
+- **ፒኑ ጥብቅ ነው, ምርጫ አይደለም.** የተሰካው ግንኙነት ብቻ ጥቅም ላይ ይውላል። በጥያቄው ውስጥ አለመሳካት የመለያውን መቀዝቀዝ ይመዘግባል ነገር ግን ያደርጋል** አይደለም** ወደ ተመሳሳዩ አቅራቢ ወደ ወንድም እህት መለያ አሽከርክር።
+- **ማቀዝቀዝ እና ኮታ ፒኑን ይለቃሉ።** የተሰካው ግንኙነት እየቀዘቀዘ፣ በኮታ ተሟጦ ወይም በኮታ ፖሊሲ ሲታገድ፣ በኋላ ጥያቄዎች ልክ እንደ ያልተሰካ ትራፊክ ወደ ሌሎች የአቅራቢው ግንኙነቶች ይመለሳሉ።
+- **ያልታወቁ ወይም የተሰናከሉ መታወቂያዎች አልተሳኩም።** በአቅራቢው ንቁ ገንዳ ውስጥ ያልሆነ መታወቂያ (ተሰርዟል፣ ቦዝኗል፣ ወይም የሌላ አቅራቢ አባል መሆን) ምንም ብቁ መለያ አይተዉም፣ ስለዚህ በጸጥታ ወደ ሌላ ቦታ ከማዞር ይልቅ ጥያቄው አልተሳካም።
 
-Claude Code ብጁ ራስጌዎችን በ`ANTHROPIC_CUSTOM_HEADERS` ይልካል። ይህን በ`~/.claude/settings.json` ውስጥ ባለው የ`env` እገዳ ውስጥ ያስቀምጡ፣ ወይም ለእያንዳንዱ ፕሮጀክት የተለየ መለያ ለመመደብ በፕሮጀክት-ደረጃ `.claude/settings.json` ውስጥ ያስቀምጡ፦
+Claude ኮድ ብጁ ራስጌዎችን በ `ANTHROPIC_CUSTOM_HEADERS` ይልካል። በ `~/.claude/settings.json` የ `env` ብሎክ ወይም በፕሮጀክት-ደረጃ `.claude/settings.json` ውስጥ በፕሮጀክት የተለየ መለያ ላይ ያስቀምጡት
 
 ```jsonc
 {
@@ -128,12 +120,11 @@ Claude Code ብጁ ራስጌዎችን በ`ANTHROPIC_CUSTOM_HEADERS` ይልካል
 }
 ```
 
-ምንጭ፦ `src/sse/handlers/chat.ts` (የራስጌ ንባብ)፣ `src/sse/services/auth.ts` እና
-`src/sse/services/sessionAffinityPin.ts` (መለያውን መልቀቅ እና ከስብስቡ የጎደለውን መለያ መፈተሽ)።
+ምንጭ `src/sse/handlers/chat.ts` (ራስጌ ማንበብ)፣ `src/sse/services/auth.ts` እና `src/sse/services/sessionAffinityPin.ts` (ሚስማር መለቀቅ እና ከመዋኛ ገንዳ የጠፋ ቼክ)።
 
-> **የወጪ ቴሌሜትሪ ራስጌዎች፦** የማይሰራጩ የስኬት ምላሾች የ`X-OmniRoute-*` የወጪ ቴሌሜትሪ ስብስብንም ይይዛሉ — `X-OmniRoute-Response-Cost` (በUSD፣ በቋሚ 10 ዲሲማል አሃዞች፤ ለነፃ/ዋጋ ላልተመደበ `0.0000000000`)፣ `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`፣ `X-OmniRoute-Model`፣ `X-OmniRoute-Provider`፣ `X-OmniRoute-Latency-Ms`፣ `X-OmniRoute-Cache-Hit` እና `X-OmniRoute-Fallback-Attempts` (ከ0 በላይ ሲሆን ብቻ)፣ እንዲሁም `X-OmniRoute-Request-Id` እና `X-OmniRoute-Version`። እነዚህ የሚመነጩት በቻት ማጠናቀቂያዎች፣ `/v1/responses`፣ `/v1/messages` **እና በሚዲያ ኤንድፖይንቶች** — `/v1/embeddings`፣ `/v1/images/generations`፣ `/v1/audio/speech`፣ `/v1/audio/transcriptions`፣ `/v1/rerank`፣ `/v1/videos/generations`፣ `/v1/music/generations` እና `/v1/moderations` (ሁልጊዜ ወጪው `0`) — ነው። የሚዲያ ወጪ ዋጋ ሲኖር በእያንዳንዱ ሞዳሊቲ (በእያንዳንዱ ምስል፣ በእያንዳንዱ ሰከንድ፣ በእያንዳንዱ ቁምፊ፣ በእያንዳንዱ የፍለጋ ክፍል) ይሰላል፤ ካልሆነ ግን `0` ይሆናል (fail-open)።
+> **ወጪ ቴሌሜትሪ ራስጌዎች፡-** ያልተለቀቁ የስኬት ምላሾች `X-OmniRoute-*` ወጪ-ቴሌሜትሪ ስብስብ — `X-OmniRoute-Response-Cost` (USD፣ ቋሚ 10 አስርዮሽ፣ `0.0000000000` ለ free/unpriced)፣ `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`፣ `X-OmniRoute-Model`፣ `X-OmniRoute-Provider`፣ `X-OmniRoute-Latency-Ms`፣ `X-OmniRoute-Cache-Hit`፣ እና `X-OmniRoute-Fallback-Attempts` ( > 0 ብቻ) እንዲሁም `X-OmniRoute-Request-Id` እና `X-OmniRoute-Version` ይይዛሉ። እነዚህ በቻት ማጠናቀቂያዎች፣ `/v1/responses`፣ `/v1/messages`፣** እና የመገናኛ ብዙሃን የመጨረሻ ነጥቦች** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, እና `/v1/moderations` (ሁልጊዜ `0` ወጪ). የሚዲያ ወጪ የሚሰላው በአንድ ሞዳሊቲ (በምስል፣ በሰከንድ፣ በቁምፊ፣ በፍለጋ ክፍል) ዋጋ ሲገኝ ነው፣ ካልሆነ `0` (ክፍት-ክፍት)።
 
-> **የካሽ-መምታት የወጪ ትርጉም፦** በሴማንቲክ-ካሽ HIT (`X-OmniRoute-Cache-Hit: true`) ላይ ወደ ላይኛው አገልጋይ ጥሪ አይደረግም፤ ስለዚህ `X-OmniRoute-Response-Cost` `0.0000000000` ነው (የተመታውን ውጤት ለማቅረብ የሚያስፈልገው **ተጨማሪ** ወጪ)። ዋናው/ሊከሰት የነበረው ወጪ በ`X-OmniRoute-Cost-Saved` ውስጥ በተለየ ይመዘገባል። የክፍያ ስርዓት ተጠቃሚዎች `X-OmniRoute-Response-Cost` ን መደመር አለባቸው (መምታቶች ምንም ወጪ የላቸውም)፤ የካሽ ትንታኔዎች ደግሞ `X-OmniRoute-Cost-Saved` ን በመደመር ማጠቃለል ይችላሉ።
+> **መሸጎጫ-የተመታ ወጪ ትርጉም፡** በትርጉም መሸጎጫ HIT (`X-OmniRoute-Cache-Hit: true`) ላይ ምንም የወዲያ ጥሪ አይደረግም፣ ስለዚህ `X-OmniRoute-Response-Cost` `0.0000000000` ነው (የ** ጭማሪ** ድብደባውን የማገልገል ዋጋ)። የ original/would-have-been ወጪ በ `X-OmniRoute-Cost-Saved` ውስጥ በተናጠል ሪፖርት ተደርጓል። የሂሳብ አከፋፈል ሸማቾች `X-OmniRoute-Response-Cost` መደመር አለባቸው (መምታት ምንም ዋጋ የለውም)። የመሸጎጫ ትንታኔዎች ድምር `X-OmniRoute-Cost-Saved`.
 
 ## ልዩ የሚተዳደሩ የክፍለ-ጊዜ ሊዝዎች
 
@@ -332,6 +323,8 @@ Content-Type: application/json
 የሚገኙ አቅራቢዎች OpenAI (GPT ምስል 2)፣ xAI (Grok ምስል)፣ Together AI (FLUX)፣ Fireworks AI፣ ኔቢየስ (FLUX)፣ ሃይፐርቦሊክ፣ NanoBanana፣**OpenRouter** ,**ZenMux** , SD WebUI (አካባቢያዊ)፣ ComfyUI (አካባቢያዊ)።
 
 `n` `n` ምስሎችን በ `data[]` ይመልሳል። ወደ ላይ ያለው API በአንድ ጥሪ አንድ ምስል የሚመልስ አቅራቢዎች (ጥቁር የደን ላብስ፣ መረጋጋት AI፣ ሊዮናርዶ፣ አይዲዮግራም፣ ሃይፐር፣ ሃይፐርቦሊክ፣ Magnific/Freepik፣ NVIDIA NIM፣ Cloudflare Workers AI) `n` በቀጥታ የሚተላለፉ ጥሪዎችን ያገኛሉ፣ ቢበዛ 4 በረራ። ቋሚ `seed` በጥሪ መረጃ ጠቋሚ (`seed`፣ `seed + 1`፣…) ተሽጧል፣ ስለዚህ ምስሎቹ ይለያያሉ ነገር ግን መባዛት የሚችሉ ሆነው ይቆያሉ። `n` በ 10 ተይዟል. ማንኛውም ጥሪ ካልተሳካ ጥያቄው በአጠቃላይ አይሳካም. የደጋፊ-ውጭ ቅርጸቶች ዝርዝር `SINGLE_IMAGE_FANOUT_FORMATS` በ `open-sse/handlers/imageGeneration/fanOut.ts` ነው።
+
+Codex GPT ምስል ሞዴሎች (`codex/gpt-image-*`) PNG ብቻ ይመለሳሉ፡ የላይኛው ተፋሰስ `jpeg` ወይም `webp` በተጠየቀ ጊዜም በ PNG ባይት `200` ። ከማንኛውም ሌላ `output_format` (`webp`, `jpeg`, ...) ጋር የቀረበ ጥያቄ በዝምታ ችላ ከመባል ይልቅ በ HTTP 400 ውድቅ ይደረጋል; ተወው ወይም `png` ላክ . `output_compression` አይተላለፍም።
 
 ZenMux ያለውን የኤፒአይ-ቁልፍ ግንኙነት እንደገና ይጠቀማል እና `zenmux/` ወይም `zm/` ቅድመ ቅጥያዎችን ይቀበላል
 
@@ -1588,10 +1581,10 @@ GET /api/telemetry/summary
 ## በጀት
 
 ```bash
-# ለሁሉም API ቁልፎች የበጀት ሁኔታን ያግኙ
+# Get budget status for all API keys
 GET /api/usage/budget
 
-# በጀት ያዘጋጁ ወይም ያዘምኑ
+# Set or update a budget
 POST /api/usage/budget
 Content-Type: application/json
 
@@ -1605,7 +1598,7 @@ Content-Type: application/json
 }
 ```
 
-> **የስኪማ ማስታወሻዎች** (`setBudgetSchema`): `apiKeyId` ግዴታ ነው፤ ከ`dailyLimitUsd`፣ `weeklyLimitUsd` ወይም `monthlyLimitUsd` መካከል ቢያንስ አንዱ ከዜሮ በላይ መሆን አለበት። አማራጭ መስኮች፦ `warningThreshold` (0–1)፣ `resetInterval` (`daily` | `weekly` | `monthly`)፣ `resetTime` (`HH:MM`)። የቆየው `{keyId, limit, period}` ቅርጽ `400 Bad Request` ይመልሳል።
+> **የመርሃግብር ማስታወሻዎች** (`setBudgetSchema`): `apiKeyId` ያስፈልጋል; ቢያንስ አንዱ `dailyLimitUsd`፣ `weeklyLimitUsd` ወይም `monthlyLimitUsd` ከዜሮ በላይ መሆን አለበት። አማራጭ መስኮች `warningThreshold` (0–1)፣ `resetInterval` (`daily` | `weekly` | `monthly`)፣ `resetTime` (`HH:MM`)። የቅርስ `{keyId, limit, period}` ቅርፅ `400 Bad Request` ይመልሳል።
 
 ## የቶከን ገደቦች
 

@@ -83,65 +83,68 @@ změny otisku pomocí explicitně autorizovaného živého účtu.
 
 ---
 
-## Balíček utajení Claude Code
+## Balíček Claude Code Stealth
 
-Když je zapnutý režim `cliCompatMode`, OmniRoute upravuje odchozí požadavky Claude tak, aby byly nerozeznatelné od provozu `claude-cli`. Spolupracují na tom tři moduly:
+Když je `cliCompatMode` zapnuto, OmniRoute přetváří odchozí požadavky Claude tak, aby byly k nerozeznání od provozu `claude-cli`. Spolupracují tři moduly:
 
 ### `claudeCodeFingerprint.ts`
 
-Vypočítává tříznakový otisk `cc_version` vložený do fakturační hlavičky:
+Vypočítá 3znakový otisk `cc_version` vložený do fakturační hlavičky:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
 - `FINGERPRINT_SALT = "59cf53e54c78"` (pevně zakódováno; odpovídá oficiálnímu klientovi)
-- Vstupy: znaky na indexech 4, 7 a 20 textu první uživatelské zprávy + řetězec verze
-- Výstup: tříznakový hexadecimální prefix
+- Vstupy: znaky na indexu 4, 7, 20 prvního textu zprávy uživatele + řetězec verze
+- Výstup: 3znaková hexadecimální předpona
 
-### `claudeCodeCCH.ts` (hash obsahu klienta)
+### `claudeCodeCCH.ts` (Hash klientského obsahu)
 
-Kontrola integrity na straně serveru, kterou oficiální CLI Claude Code počítá prostřednictvím Bun/Zig. OmniRoute ji znovu implementuje pomocí `xxhash-wasm`:
+Kontrola integrity na straně serveru oficiální kód Claude CLI počítá pomocí reimplementací Bun/Zig. OmniRoute pomocí `xxhash-wasm`:
 
-1. Serializovat tělo se zástupným symbolem `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Pětiznaková hexadecimální hodnota malými písmeny doplněná zleva nulami
-4. Nahradit `cch=00000;` vypočítaným tokenem
+1. Serializujte tělo pomocí zástupného symbolu `cch=00000;`
+2. Sestavte zobrazení hash se dvěma nahrazeními prostého textu v tomto pořadí (`hashView()`):
+   - každá shoda `/"model":"[^"]*"/g` se změní `"model":""` — shoda se zastaví na prvním `"`, takže hodnota s uvozovkou (`"model":"a\"b"`) se vyprázdní pouze do této uvozovky, jak to dělá klient
+   - každá shoda `/"max_tokens":\d+,|,?"max_tokens":\d+/g` je odstraněna — pouze číselné hodnoty, v jakékoli hloubce
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. 5-znakový hexadecimální znak s nulovým polstrováním
+5. Nahraďte `cch=00000;` vypočítaným tokenem
 
 Konstanty:
 
-- Seed: `0x6e52736ac806831e`
+- Seed: `0x4d659218e32a3268` (odpovídá zachycení zpětné smyčky kódu Claude 2.1.252 a 2.1.322)
 - Vzor: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Vkládá znak Unicode **spojovník s nulovou šířkou** (`U+200D`) za první znak „citlivých“ názvů klientů, aby je upstreamové filtry nemohly vyhledat pomocí grep. Výchozí seznam slov:
+Vloží Unicode** spojka s nulovou šířkou** (`U+200D`) za prvním znakem "citlivých" názvů klientů, takže je upstream filtry nemohou grep. Výchozí seznam slov:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Používá se na: bloky `system`, veškerý obsah `messages[].content` a `tools[].description` / `tools[].function.description`. Operátor může seznam přepsat pomocí `setSensitiveWords()`.
+Platí pro: bloky `system`, všechny `messages[].content` a `tools[].description` / `tools[].function.description`. Přepsatelné operátorem přes `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — poskytovatelé `anthropic-compatible-cc-*`
+### poskytovatelé `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`
 
-Pro relé Anthropic třetích stran, která přijímají pouze provoz „skutečného Claude Code“:
+Pro relé Anthropic třetích stran, která přijímají pouze provoz „skutečného kódu Claude “:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- Výchozí hodnota `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- Přepínač „Enable redact-thinking beta“ pro jednotlivá připojení přidá `redact-thinking-2026-02-12`, pokud konkrétní upstream kompatibilní s CC vyžaduje proudy uvažování s redigovaným obsahem
-- Přepínač „Enable summarized thinking display“ pro jednotlivá připojení ukládá `providerSpecificData.requestDefaults.summarizeThinking` a přidává `display: "summarized"` do požadavků na uvažování kompatibilních s CC, které dosud nemají nastavený režim zobrazení
+- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` ve výchozím nastavení
+- Přepínač „Enable redact-thinking beta“ pro jednotlivá připojení přidá `redact-thinking-2026-02-12` když CC kompatibilní upstream konkrétně vyžaduje redigované toky myšlení.
+- Přepínač „Povolit zobrazení souhrnného myšlení“ pro jednotlivé připojení ukládá `providerSpecificData.requestDefaults.summarizeThinking` a přidává `display: "summarized"` do CC kompatibilních požadavků myšlení, které ještě nenastavovaly režim zobrazení
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (rodina Opus/Sonnet 4.x)
 - Výchozí cesta: `/v1/messages?beta=true`
 
 Sesterské moduly ve stejném balíčku:
 
-- `claudeCodeConstraints.ts` — pravidla pro teplotu + řízení mezipaměti
-- `claudeCodeToolRemapper.ts` — přemapování názvů nástrojů
-- `claudeCodeExtraRemap.ts` — dodatečná normalizace datové části
+- `claudeCodeConstraints.ts` — teplota + pravidla řízení mezipaměti
+- `claudeCodeToolRemapper.ts` — přemapování názvu nástroje
+- `claudeCodeExtraRemap.ts` — normalizace extra užitečného zatížení
 
 ---
 

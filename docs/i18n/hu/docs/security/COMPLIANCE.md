@@ -133,35 +133,33 @@ melléktermékeket.
 Az alapértelmezések a `src/lib/logEnv.ts` fájlban vannak meghatározva
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## `noLog` naplózásletiltás (API-kulcsonként)
+## `noLog` Opt-Out ( API kulcsonként)
 
-Az API-kulcsok megjelölhetők úgy, hogy a rendszer ne naplózza az általuk
-indított továbbított hívások forgalmát. A jelző az `api_keys` táblában
-található (`no_log INTEGER DEFAULT 0`), és a gyors elérés érdekében egy
-memóriában tárolt halmazba is tükröződik.
+API billentyűk megjelölhetők, így a lefelé irányuló hívásforgalmuk nem kerül naplózásra. A zászló a `api_keys` táblán (`no_log INTEGER DEFAULT 0`) él, és egy memóriakészletben tükröződik a hot-path keresésekhez.
 
 ```bash
-# Naplózás nélküli kulcs létrehozása (kezelői hitelesítés szükséges)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Segédfüggvények (`src/lib/compliance/index.ts`):
+Segítők (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — a memóriában tárolt bejegyzés be- vagy
-  kikapcsolása
-- `isNoLog(apiKeyId)` — a kérés feldolgozási útvonalán kerül ellenőrzésre;
-  szükség esetén az `api_keys.no_log` értékének 30 másodpercig gyorsítótárazott
-  kiolvasására tér át
-- `NO_LOG_API_KEY_IDS` (környezeti változó, vesszővel elválasztva) — induláskor
-  előre betöltődik a memóriában tárolt halmazba; akkor hasznos, ha az oszlop
-  közvetlenül nem módosítható
+- `setNoLog(apiKeyId, true|false)` — átkapcsolja a memóriabejegyzést
+- `isNoLog(apiKeyId)` — ellenőrizve a kérési útvonalon; visszaesik egy 30 másodperces gyorsítótárazott olvasásra `api_keys.no_log` ből
+- `NO_LOG_API_KEY_IDS` (env, vesszővel elválasztva) — előre betöltve a rendszerindításkor a memóriakészletbe; hasznos, ha nem tudja közvetlenül váltani az oszlop között
 
-Az adminisztratív auditálási eseményeket (bejelentkezés, szolgáltatói
-módosítások, MCP-eszközhívások stb.) a `noLog` **nem** érinti — a letiltás
-kizárólag a kérésenkénti forgalom naplózására vonatkozik.
+Az adminisztratív audit események (bejelentkezés, szolgáltatóváltások, MCP eszközhívások stb.) azok** nem** `noLog` által érintett — csak kérésenkénti forgalomnaplózás ki van kapcsolva.
+
+### Kérésenkénti leiratkozás (`x-omniroute-no-log`)
+
+A kliens egyetlen következtetési kérést is választhat a hasznos terhelés megmaradásából anélkül, hogy dedikált kulcsot hozna létre. Küldje el `x-omniroute-no-log: true` a kérésre (`1` és `yes` is elfogadott, nem különbözik a kis- és nagybetűktől). Minden chat-családi útvonalra vonatkozik, amely a chatkezelőn keresztül fut: Csevegés befejezések, Válaszok, Üzenetek, Befejezések és a Gemini-kompatibilis útvonal. A hívásnapló sora továbbra is az időbélyeggel, a modellel, a szolgáltatóval, az állapottal, az időtartammal és a jogkivonatszámmal van írva, de `request_body`, `response_body`, a kérésösszegzések és a folyamat melléktermékei kimaradnak.
+
+A fejléc ORed a kulcs jelzővel: a no-log kulcs a fejléctől függetlenül nem naplózás marad, és a fejléc nem engedélyezheti újra a naplózást a no-log kulcshoz. A fejléc törlődik, mielőtt a kérést felfelé továbbítanák.
+
+Ez a fejléc igen** nem** tiltsa le a memória kibontását vagy a szemantikai gyorsítótárat. `x-omniroute-no-memory: true` és `x-omniroute-no-cache: true` elküldése mellé, ha a kérésnek nem szabad megmaradnia a tartalom ezekben az alrendszerekben sem.
 
 ## REST API
 

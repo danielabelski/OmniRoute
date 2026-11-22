@@ -67,31 +67,32 @@ Content-Type: application/json
 
 ### 自訂標頭
 
-| Header                   | Direction | Description                                                                                                                                                   |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Request   | 設為 `true` 以略過快取                                                                                                                                        |
-| `x-omniroute-no-memory`  | Request   | 設為 `true` 以略過此請求的記憶 + 技能注入（與 no-cache 相同；避免每次呼叫的權杖／成本額外負擔）                                                               |
-| `X-OmniRoute-Progress`   | Request   | 設為 `true` 以啟用進度事件                                                                                                                                    |
-| `X-Session-Id`           | Request   | 用於外部工作階段親和性的黏著工作階段金鑰                                                                                                                      |
-| `x_session_id`           | Request   | 也接受底線變體（直接 HTTP）                                                                                                                                   |
-| `X-OmniRoute-Session-Id` | Request   | 呼叫端提供的工作階段／對話標籤（也會饋送至記憶體）。提供時，會原樣持久化至 `call_logs.session_tag`，用於每個工作階段的成本歸屬（#8249）— 未提供時絕不自動產生 |
-| `Idempotency-Key`        | Request   | 去重金鑰（5 秒視窗）                                                                                                                                          |
-| `X-Request-Id`           | Request   | 替代去重金鑰                                                                                                                                                  |
-| `x-omniroute-connection` | Request   | 依其 ID 將單一模型請求固定至一個提供者連線（帳戶）— 請參閱[每個請求的帳戶固定](#account-pinning-per-request)                                                  |
-| `X-OmniRoute-Cache`      | Response  | `HIT` 或 `MISS`（非串流）                                                                                                                                     |
-| `X-OmniRoute-Idempotent` | Response  | 若已去重則為 `true`                                                                                                                                           |
-| `X-OmniRoute-Progress`   | Response  | 若已啟用進度追蹤則為 `enabled`                                                                                                                                |
-| `X-OmniRoute-Session-Id` | Response  | OmniRoute 使用的有效工作階段 ID                                                                                                                               |
-| `X-OmniRoute-Request-Id` | Response  | 請求關聯 ID（若已知）                                                                                                                                         |
-| `X-OmniRoute-Version`    | Response  | OmniRoute 建置版本（始終存在）                                                                                                                                |
-| `X-OmniRoute-Cost-Saved` | Response  | 快取在命中時避免的美元成本（僅限快取命中）                                                                                                                    |
-| `X-OmniRoute-Decision`   | Response  | 路由追蹤：`strategy=<name>; provider=<alias>; latency_ms=<n>`（`<name>` 是組合策略；對於非組合請求則為 `single`）— 完成回應中始終存在                         |
+| 標頭                     | 方向 | 描述                                                                                                                                                                                                                                                   |
+| ------------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `X-OmniRoute-No-Cache`   | 要求 | 設定為`true`以繞過快取                                                                                                                                                                                                                                 |
+| `x-omniroute-no-memory`  | 要求 | 設定為`true`以跳過此請求的記憶體+技能注入（鏡像無快取；避免每次呼叫token/cost開銷）                                                                                                                                                                    |
+| `x-omniroute-no-log`     | 要求 | 設定為`true`省略此推理請求的呼叫日誌中的request/response有效負載（所有聊天系列路由：聊天完成、回應、訊息、完成、 Gemini）。時間戳、模型、狀態、持續時間和令牌計數仍被記錄。與`x-omniroute-no-memory`和`x-omniroute-no-cache`結合使用以選擇退出完整內容 |
+| `X-OmniRoute-Progress`   | 要求 | 設定為`true`表示進度事件                                                                                                                                                                                                                               |
+| `X-Session-Id`           | 要求 | 用於外部會話關聯的黏性會話金鑰                                                                                                                                                                                                                         |
+| `x_session_id`           | 要求 | 也接受下劃線變體（直接HTTP）                                                                                                                                                                                                                           |
+| `X-OmniRoute-Session-Id` | 要求 | 呼叫者提供的session/conversation標籤（也提供記憶體）。當存在時，逐字保存到`call_logs.session_tag`以進行每個會話成本歸因 (#8249) —在不存在時從未合成                                                                                                    |
+| `Idempotency-Key`        | 要求 | 重複資料刪除金鑰（5 秒視窗）                                                                                                                                                                                                                           |
+| `X-Request-Id`           | 要求 | 替代重複資料刪除金鑰                                                                                                                                                                                                                                   |
+| `x-omniroute-connection` | 要求 | 透過 ID —將單模型請求固定到一個提供者連線（帳戶），請參閱[每個請求的帳戶固定](#account-pinning-per-request)                                                                                                                                            |
+| `X-OmniRoute-Cache`      | 回覆 | `HIT`或`MISS` （非串流）                                                                                                                                                                                                                               |
+| `X-OmniRoute-Idempotent` | 回覆 | `true`如果已進行重複資料刪除                                                                                                                                                                                                                           |
+| `X-OmniRoute-Progress`   | 回覆 | `enabled`如果進度追蹤開啟                                                                                                                                                                                                                              |
+| `X-OmniRoute-Session-Id` | 回覆 | OmniRoute使用的有效會話ID                                                                                                                                                                                                                              |
+| `X-OmniRoute-Request-Id` | 回覆 | 請求相關 ID（已知時）                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Version`    | 回覆 | OmniRoute建置版本（始終存在）                                                                                                                                                                                                                          |
+| `X-OmniRoute-Cost-Saved` | 回覆 | USD在HIT上避免的快取（僅快取命中）                                                                                                                                                                                                                     |
+| `X-OmniRoute-Decision`   | 回覆 | 路由追蹤： `strategy=<name>; provider=<alias>; latency_ms=<n>` （`<name>`是組合策略，或`single`表示非組合請求） —總是出現在完成回應中                                                                                                                  |
 
-> Nginx 注意事項：如果依賴底線標頭（例如 `x_session_id`），請啟用 `underscores_in_headers on;`。
+> Nginx 注意：如果您依賴底線標頭（例如`x_session_id`），請啟用`underscores_in_headers on;`。
 
-#### 每個請求的帳戶固定
+#### 根據請求固定帳戶
 
-當提供者有多個連線（帳戶或金鑰）時，OmniRoute 通常會透過其帳戶選擇策略來選取其中一個。請求也可以改用 `x-omniroute-connection` 標頭固定至特定連線：
+當提供者有多個連線（帳戶或金鑰）時， OmniRoute通常會透過其帳戶選擇策略選擇一個。請求可以使用`x-omniroute-connection`標頭固定一個特定連線：
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -101,16 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **在哪裡尋找 id。** 在儀表板中開啟提供者頁面
-  （**Dashboard → Providers → <provider>**），然後點擊連線列上的 `xxxxxxxx…` id 晶片 — 系統會複製完整的連線 id。
-- **哪些請求會遵循它。** `/v1/chat/completions`、`/v1/messages` 和
-  `/v1/responses` 上的單一模型請求（`provider/model`）。組合請求會忽略此標頭：請透過每個組合步驟自己的連線，為該步驟固定指定帳戶。
-- **固定指定是嚴格限制，而非偏好設定。** 系統只會使用固定的連線。請求內部發生失敗時，會記錄該帳戶的冷卻狀態，但**不會**切換至同一提供者的其他帳戶。
-- **冷卻和配額會解除固定指定。** 當固定的連線正在冷卻、配額已耗盡，或遭配額政策封鎖時，後續請求會改用提供者的其他連線，行為與未固定指定的流量完全相同。
-- **未知或已停用的 id 會導致失敗。** 不在提供者有效連線池中的 id（已刪除、已停用，或屬於其他提供者）會使請求沒有可用帳戶，因此請求會失敗，而不是默默地改路由至其他位置。
+- **Where to find the id.** Open the provider page in the dashboard (**Dashboard → Providers → <provider>**) and click the `xxxxxxxx…` id chip on a connection row — it copies the full connection id.
+- **這要求尊重它。** `/v1/chat/completions`、 `/v1/messages`和`/v1/responses`上的單一模型請求 (`provider/model`)。組合忽略標題：而是透過步驟自己的連線固定每個組合步驟的帳戶。
+- **引腳是嚴格的，不是偏好。**專門使用銷釘連接。請求內的失敗會記錄帳戶的冷卻時間，但不會**不是**輪調到同一提供者的同級帳戶。
+- **冷卻時間和配額釋放引腳。** While the pinned connection is cooling down, quota-exhausted or blocked by a quota policy, later requests fall back to the provider's other connections, exactly like unpinned traffic.
+- **未知或停用的 ID 失敗。** An id that is not in the provider's active pool (deleted, deactivated, or belonging to another provider) leaves no eligible account, so the request fails instead of silently routing elsewhere.
 
-Claude Code 會透過 `ANTHROPIC_CUSTOM_HEADERS` 傳送自訂標頭。請將它放在
-`~/.claude/settings.json` 的 `env` 區塊中，或放在專案層級的 `.claude/settings.json` 中，以便為每個專案固定指定不同的帳戶：
+Claude代碼透過`ANTHROPIC_CUSTOM_HEADERS`發送自訂標頭。將其放在`~/.claude/settings.json`的`env`區塊中，或放在專案級`.claude/settings.json`中以固定每個項目的不同帳戶：
 
 ```jsonc
 {
@@ -122,12 +120,11 @@ Claude Code 會透過 `ANTHROPIC_CUSTOM_HEADERS` 傳送自訂標頭。請將它�
 }
 ```
 
-來源：`src/sse/handlers/chat.ts`（讀取標頭）、`src/sse/services/auth.ts` 和
-`src/sse/services/sessionAffinityPin.ts`（固定指定的解除與從連線池中缺失的檢查）。
+來源： `src/sse/handlers/chat.ts` （標頭讀取）、 `src/sse/services/auth.ts`和`src/sse/services/sessionAffinityPin.ts` （引腳釋放和池中缺失檢查）。
 
-> **成本遙測標頭：** 非串流成功回應也會攜帶 `X-OmniRoute-*` 成本遙測集合 — `X-OmniRoute-Response-Cost`（USD，固定 10 位小數；免費／未定價時為 `0.0000000000`）、`X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`、`X-OmniRoute-Model`、`X-OmniRoute-Provider`、`X-OmniRoute-Latency-Ms`、`X-OmniRoute-Cache-Hit` 和 `X-OmniRoute-Fallback-Attempts`（僅在大於 0 時提供），以及 `X-OmniRoute-Request-Id` 和 `X-OmniRoute-Version`。這些標頭會由聊天完成、`/v1/responses`、`/v1/messages` **以及媒體端點**提供 — `/v1/embeddings`、`/v1/images/generations`、`/v1/audio/speech`、`/v1/audio/transcriptions`、`/v1/rerank`、`/v1/videos/generations`、`/v1/music/generations` 和 `/v1/moderations`（成本一律為 `0`）。媒體成本會在定價可用時依各種模態計算（每張影像、每秒、每個字元、每個搜尋單位），否則為 `0`（失敗開放）。
+> **成本遙測標頭：**非流式成功响应还携带`X-OmniRoute-*`成本遥测集— `X-OmniRoute-Response-Cost` （USD，固定 10 位小数； `0.0000000000`表示free/unpriced）、 `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`、 `X-OmniRoute-Model`、 `X-OmniRoute-Provider`、 `X-OmniRoute-Latency-Ms`、 `X-OmniRoute-Cache-Hit`和`X-OmniRoute-Fallback-Attempts` （仅当> 0 时），以及`X-OmniRoute-Request-Id`和`X-OmniRoute-Version`。這些是由聊天完成`/v1/responses`、 `/v1/messages`發出的，**和媒體端點**— `/v1/embeddings`、 `/v1/images/generations`、 `/v1/audio/speech`、 `/v1/audio/transcriptions`、 `/v1/rerank`、 `/v1/videos/generations`、 `/v1/music/generations`和`/v1/moderations` （總是花費`0`）。當定價可用時，媒體成本按模式（每圖像、每秒、每字元、每搜尋單元）計算，否則為`0` （失敗開放）。
 
-> **快取命中成本語意：** 在語意快取命中（`X-OmniRoute-Cache-Hit: true`）時，不會發出上游呼叫，因此 `X-OmniRoute-Response-Cost` 為 `0.0000000000`（提供此次命中的**增量**成本）。原始／原本可能產生的成本會另外記錄在 `X-OmniRoute-Cost-Saved` 中。計費消費者應加總 `X-OmniRoute-Response-Cost`（命中不產生成本）；快取分析則可以彙總 `X-OmniRoute-Cost-Saved`。
+> **快取命中成本語意：**在語意快取HIT (`X-OmniRoute-Cache-Hit: true`) 上，沒有進行上游呼叫，因此`X-OmniRoute-Response-Cost`是`0.0000000000` （**增量式**提供命中的成本）。 original/would-have-been成本在`X-OmniRoute-Cost-Saved`中單獨報告。計費消費者應匯總`X-OmniRoute-Response-Cost` （點擊次數無需任何費用）；快取分析可以聚合`X-OmniRoute-Cost-Saved`。
 
 ## 專屬受管理工作階段租約
 
@@ -353,40 +350,24 @@ Content-Type: application/json
 }
 ```
 
-可用的提供者包括 OpenAI（GPT Image 2）、xAI（Grok Image）、Together AI（FLUX）、Fireworks AI、Nebius（FLUX）、Hyperbolic、NanoBanana、**OpenRouter**、**ZenMux**、SD WebUI（本機）、ComfyUI（本機）。
+Available providers include OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI （本地）、 ComfyUI （本地）。
 
-`n` 會在 `data[]` 中傳回 `n` 張影像。上游 API 每次呼叫只傳回一張影像的提供者
-（Black Forest Labs、Stability AI、Leonardo、Ideogram、Haiper、Hyperbolic、Magnific/Freepik、
-NVIDIA NIM、Cloudflare Workers AI）會分別進行 `n` 次上游呼叫，同時最多執行 4 次。固定的
-`seed` 會依呼叫索引偏移（`seed`、`seed + 1`、…），因此影像會有所不同，但仍可重現。
-`n` 的上限為 10。如果任何一次呼叫失敗，整個請求就會失敗。扇出格式清單位於
-`open-sse/handlers/imageGeneration/fanOut.ts` 中的 `SINGLE_IMAGE_FANOUT_FORMATS`。
+`n`在`data[]`中傳回`n`影像。上游API每次呼叫返回一張圖像的提供者（Black Forest Labs、Stability AI、Leonardo、Ideogram、Haiper、Hyperbolic、 Magnific/Freepik、 NVIDIA NIM、 Cloudflare Workers AI）獲得`n`單獨的上游呼叫，最多 4 個正在運行。固定的`seed`透過呼叫索引（`seed`、 `seed + 1`等）進行偏移，因此影像有所不同，但保持可再現。 `n`上限為 10。如果任何呼叫失敗，則請求整體失敗。扇出格式清單是`open-sse/handlers/imageGeneration/fanOut.ts`中的`SINGLE_IMAGE_FANOUT_FORMATS` 。
 
-ZenMux 會重複使用現有的 API 金鑰連線，並接受 `zenmux/` 或 `zm/` 前綴：
+Codex GPT图像模型 (`codex/gpt-image-*`) 仅返回PNG ：即使请求`jpeg`或`webp` ，上游也会用PNG字节回答`200` 。使用任何其他`output_format` （`webp`、 `jpeg`等）的請求都會被HTTP 400 拒絕，而不是被默默忽略；省略它或發送`png`。 `output_compression`不轉發。
 
-- `zenmux/openai/gpt-image-2` 使用 ZenMux 的 OpenAI Images API。選項包括 `size`、
-  `quality`、`n`、`output_format`、`output_compression`、`background` 和 `response_format`。
-- 其他發布者（例如 `zm/meta/muse-image-1.0`）使用 ZenMux 的 Vertex AI `:predict`
-  端點。`n` 對應至 `sampleCount`，`aspect_ratio` 對應至 `aspectRatio`，而 `image_size`
-  （`1K`、`2K`、`4K`）對應至 `sampleImageSize`。像素 `size` 僅提供外觀比例，
-  不保證像素尺寸。支援的比例、解析度和數量會因模型而異。
-- `zm/inclusionai/ming-image-0.1-design` 會自行選擇尺寸。請省略 `size`、
-  `aspect_ratio` 和 `image_size`；明確指定這些值會傳回 HTTP 400。透過
-  `output_format` 可要求 PNG、JPEG 和 WebP。
+ZenMux reuses the existing API-key connection and accepts `zenmux/` or `zm/` prefixes:
 
-此整合支援文字轉影像生成，不支援參考影像編輯。Vertex 輸出會正規化為
-`data[].b64_json`；`response_format: "url"` 會傳回上游 HTTPS URL，或在只有影像位元組
-可用時傳回 base64 資料 URL。空的／經篩選的輸出會傳回錯誤，而不是空白的成功回應。
-模型存取權取決於 ZenMux 帳戶。請參閱 [ZenMux 的 Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) 和
-[OpenAI 影像 API](https://docs.zenmux.ai/api/openai/generate-an-image)。
+- `zenmux/openai/gpt-image-2`使用ZenMux的OpenAI影像API。选项包括`size`、 `quality`、 `n`、 `output_format`、 `output_compression`、 `background`和`response_format`。
+- 其他發布者（例如`zm/meta/muse-image-1.0`）使用ZenMux的 Vertex AI `:predict`端點。 `n`映射到`sampleCount`， `aspect_ratio`到`aspectRatio`， `image_size` (`1K`, `2K`, `4K`) 映射到`sampleImageSize`。像素`size`僅提供長寬比，不保證像素尺寸。支援的比率、解析度和計數因型號而異。
+- `zm/inclusionai/ming-image-0.1-design`選擇自己的維度。省略`size`、 `aspect_ratio`和`image_size`；显式值返回HTTP 400。可以使用`output_format`請求PNG、 JPEG和WebP 。
 
-Microsoft 365 Copilot 登入連線會透過 Copilot 內建的影像工具提供
-`copilot-m365-web/m365-copilot-image`：每張影像進行一次 Copilot 回合（`n` 為 1–4），
-`size` 僅用於引導方向，影像會以內嵌方式傳回（`b64_json`，或在
-`response_format: "url"` 時傳回資料 URL）。請參閱 [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation)。
+此整合支援文字到圖像的生成，而不是參考圖像編輯。頂點輸出標準化為`data[].b64_json`；當只有影像位元組可用時， `response_format: "url"`返回上游HTTPS URL或 base64 資料URL 。 Empty/filtered輸出回傳錯誤而不是空成功。模型存取取決於ZenMux帳戶。請參閱[ZenMux的頂點API](https://docs.zenmux.ai/api/vertexai/generate-images)和[OpenAI圖像API](https://docs.zenmux.ai/api/openai/generate-an-image) 。
+
+Microsoft 365 Copilot登入連線透過Copilot的內建影像工具為`copilot-m365-web/m365-copilot-image`提供服務：每個影像旋轉一圈Copilot (`n` 1–4)， `size`僅控制方向，且內嵌回傳影像（`b64_json`或`response_format: "url"`的資料URL ）。參見[Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation) 。
 
 ```bash
-# 列出所有影像模型
+# List all image models
 GET /v1/images/generations
 ```
 
@@ -1722,10 +1703,10 @@ GET /api/telemetry/summary
 ## 預算
 
 ```bash
-# 取得所有 API 金鑰的預算狀態
+# Get budget status for all API keys
 GET /api/usage/budget
 
-# 設定或更新預算
+# Set or update a budget
 POST /api/usage/budget
 Content-Type: application/json
 
@@ -1739,7 +1720,7 @@ Content-Type: application/json
 }
 ```
 
-> **結構描述備註** (`setBudgetSchema`)：`apiKeyId` 為必填；`dailyLimitUsd`、`weeklyLimitUsd` 或 `monthlyLimitUsd` 中至少有一個必須大於零。選填欄位：`warningThreshold`（0–1）、`resetInterval`（`daily` | `weekly` | `monthly`）、`resetTime`（`HH:MM`）。舊版 `{keyId, limit, period}` 格式會傳回 `400 Bad Request`。
+> **模式註釋**(`setBudgetSchema`): `apiKeyId`为必填项； `dailyLimitUsd`、 `weeklyLimitUsd`或`monthlyLimitUsd`中至少之一必须大于零。可选字段： `warningThreshold` (0–1)、 `resetInterval` (`daily` | `weekly` | `monthly`)、 `resetTime` (`HH:MM`)。舊版`{keyId, limit, period}`形狀回傳`400 Bad Request`。
 
 ## 權杖限制
 

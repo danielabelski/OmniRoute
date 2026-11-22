@@ -75,39 +75,42 @@ sebelum mengklaim paritas dengan browser upstream.
 
 ---
 
-## Paket Tersamar Claude Code
+## Paket Siluman Kode Claude
 
-Saat `cliCompatMode` aktif, OmniRoute membentuk ulang permintaan Claude keluar agar tidak dapat dibedakan dari lalu lintas `claude-cli`. Tiga modul bekerja sama:
+Saat `cliCompatMode` aktif, OmniRoute membentuk ulang permintaan Claude keluar sehingga tidak dapat dibedakan dari lalu lintas `claude-cli`. Tiga modul berkolaborasi:
 
 ### `claudeCodeFingerprint.ts`
 
-Menghitung sidik jari `cc_version` sepanjang 3 karakter yang disematkan dalam header penagihan:
+Menghitung sidik jari `cc_version` 3 karakter yang tertanam di header penagihan:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (ditulis langsung; cocok dengan klien resmi)
-- Input: karakter pada indeks 4, 7, dan 20 dari teks pesan pengguna pertama + string versi
-- Output: prefiks heksadesimal sepanjang 3 karakter
+- `FINGERPRINT_SALT = "59cf53e54c78"` (hardcode; cocok dengan klien resmi)
+- Input: karakter pada indeks 4, 7, 20 dari string versi + teks pesan pengguna pertama
+- Output: awalan hex 3 karakter
 
 ### `claudeCodeCCH.ts` (Hash Konten Klien)
 
-Pemeriksaan integritas sisi server yang dihitung oleh Claude Code CLI resmi melalui Bun/Zig. OmniRoute mengimplementasikannya ulang dengan `xxhash-wasm`:
+Integritas sisi server memeriksa Kode Claude resmi CLI dihitung melalui implementasi ulang Bun/Zig. OmniRoute dengan `xxhash-wasm`:
 
-1. Serialisasikan isi dengan placeholder `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Heksadesimal huruf kecil sepanjang 5 karakter yang diawali nol
-4. Ganti `cch=00000;` dengan token yang dihitung
+1. Buat serial isi dengan placeholder `cch=00000;`
+2. Bangun tampilan hash dengan dua pengganti teks biasa, dalam urutan ini (`hashView()`):
+   - setiap kecocokan `/"model":"[^"]*"/g` menjadi `"model":""` — kecocokan berhenti pada `"` pertama, sehingga nilai dengan kutipan yang lolos (`"model":"a\"b"`) dikosongkan hanya hingga kutipan tersebut, seperti yang dilakukan klien
+   - setiap kecocokan `/"max_tokens":\d+,|,?"max_tokens":\d+/g` dihapus hanya nilai numerik —, pada kedalaman berapa pun
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Hex huruf kecil 5 karakter dengan bantalan nol
+5. Ganti `cch=00000;` dengan token yang dihitung
 
 Konstanta:
 
-- Seed: `0x6e52736ac806831e`
+- Seed: `0x4d659218e32a3268` (cocok dengan tangkapan loopback dari Kode Claude 2.1.252 dan 2.1.322)
 - Pola: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Menyisipkan **zero-width joiner** Unicode (`U+200D`) setelah karakter pertama dari nama klien yang "sensitif" agar filter upstream tidak dapat menemukannya dengan grep. Daftar kata bawaan:
+Menyisipkan Unicode** joiner lebar nol** (`U+200D`) setelah karakter pertama nama klien "sensitif" sehingga filter upstream tidak dapat menangkapnya. Daftar kata bawaan:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
@@ -116,24 +119,24 @@ aider, continue.dev, copilot, avante, codecompanion
 
 Diterapkan pada: blok `system`, semua `messages[].content`, dan `tools[].description` / `tools[].function.description`. Dapat diganti oleh operator melalui `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — penyedia `anthropic-compatible-cc-*`
+### penyedia `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*`
 
-Untuk relay Anthropic pihak ketiga yang hanya menerima lalu lintas "Claude Code asli":
+Untuk relai Anthropic pihak ketiga yang hanya menerima lalu lintas "Kode Claude asli":
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` secara bawaan
-- Tombol per koneksi "Enable redact-thinking beta" menambahkan `redact-thinking-2026-02-12` saat upstream CC Compatible secara khusus memerlukan aliran proses berpikir yang disunting
-- Tombol per koneksi "Enable summarized thinking display" menyimpan `providerSpecificData.requestDefaults.summarizeThinking` dan menambahkan `display: "summarized"` ke permintaan proses berpikir CC Compatible yang belum menetapkan mode tampilan
+- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` secara default
+- Tombol "Aktifkan redact-thinking beta" per koneksi menambahkan `redact-thinking-2026-02-12` ketika upstream yang kompatibel dengan CC secara khusus memerlukan aliran pemikiran yang disunting
+- Tombol per koneksi "Aktifkan tampilan pemikiran yang diringkas" menyimpan `providerSpecificData.requestDefaults.summarizeThinking` dan menambahkan `display: "summarized"` ke CC Permintaan pemikiran yang kompatibel yang belum menyetel mode tampilan
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (keluarga Opus/Sonnet 4.x)
-- Jalur bawaan: `/v1/messages?beta=true`
+- Jalur default: `/v1/messages?beta=true`
 
-Modul terkait dalam paket yang sama:
+Modul saudara dalam bundel yang sama:
 
-- `claudeCodeConstraints.ts` — aturan temperature + cache-control
+- `claudeCodeConstraints.ts` — suhu + aturan kontrol cache
 - `claudeCodeToolRemapper.ts` — pemetaan ulang nama alat
-- `claudeCodeExtraRemap.ts` — normalisasi payload tambahan
+- `claudeCodeExtraRemap.ts` — normalisasi muatan ekstra
 
 ---
 

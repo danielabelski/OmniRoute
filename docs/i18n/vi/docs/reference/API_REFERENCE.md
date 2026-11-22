@@ -49,7 +49,7 @@ Mỗi bản triển khai cung cấp bản sao riêng của đặc tả tại `/o
 
 ---
 
-## Hoàn tất trò chuyện
+## Hoàn thành cuộc trò chuyện
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Tiêu đề tùy chỉnh
 
-| Header                   | Direction | Description                                                                                                                                                                                                              |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `X-OmniRoute-No-Cache`   | Yêu cầu   | Đặt thành `true` để bỏ qua bộ nhớ đệm                                                                                                                                                                                    |
-| `x-omniroute-no-memory`  | Yêu cầu   | Đặt thành `true` để bỏ qua việc chèn bộ nhớ + kỹ năng cho yêu cầu này (tương tự no-cache; tránh chi phí mã thông báo/chi phí cho mỗi lần gọi)                                                                            |
-| `X-OmniRoute-Progress`   | Yêu cầu   | Đặt thành `true` cho các sự kiện tiến trình                                                                                                                                                                              |
-| `X-Session-Id`           | Yêu cầu   | Khóa phiên cố định cho liên kết phiên bên ngoài                                                                                                                                                                          |
-| `x_session_id`           | Yêu cầu   | Biến thể sử dụng dấu gạch dưới cũng được chấp nhận (HTTP trực tiếp)                                                                                                                                                      |
-| `X-OmniRoute-Session-Id` | Yêu cầu   | Thẻ phiên/cuộc hội thoại do bên gọi cung cấp (cũng được đưa vào bộ nhớ). Khi có mặt, được lưu nguyên văn vào `call_logs.session_tag` để phân bổ chi phí theo phiên (#8249) — không bao giờ được tạo tự động khi vắng mặt |
-| `Idempotency-Key`        | Yêu cầu   | Khóa loại bỏ trùng lặp (cửa sổ 5 giây)                                                                                                                                                                                   |
-| `X-Request-Id`           | Yêu cầu   | Khóa loại bỏ trùng lặp thay thế                                                                                                                                                                                          |
-| `x-omniroute-connection` | Yêu cầu   | Ghim một yêu cầu sử dụng một mô hình duy nhất vào một kết nối nhà cung cấp (tài khoản) theo ID của kết nối — xem [Ghim tài khoản cho mỗi yêu cầu](#account-pinning-per-request)                                          |
-| `X-OmniRoute-Cache`      | Phản hồi  | `HIT` hoặc `MISS` (không truyền trực tuyến)                                                                                                                                                                              |
-| `X-OmniRoute-Idempotent` | Phản hồi  | `true` nếu đã loại bỏ trùng lặp                                                                                                                                                                                          |
-| `X-OmniRoute-Progress`   | Phản hồi  | `enabled` nếu tính năng theo dõi tiến trình đang bật                                                                                                                                                                     |
-| `X-OmniRoute-Session-Id` | Phản hồi  | ID phiên hiệu dụng được OmniRoute sử dụng                                                                                                                                                                                |
-| `X-OmniRoute-Request-Id` | Phản hồi  | ID tương quan của yêu cầu (khi xác định được)                                                                                                                                                                            |
-| `X-OmniRoute-Version`    | Phản hồi  | Phiên bản bản dựng OmniRoute (luôn có mặt)                                                                                                                                                                               |
-| `X-OmniRoute-Cost-Saved` | Phản hồi  | Số USD mà bộ nhớ đệm đã giúp tránh được trong một lần HIT (chỉ các lần truy cập bộ nhớ đệm)                                                                                                                              |
-| `X-OmniRoute-Decision`   | Phản hồi  | Dấu vết định tuyến: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` là chiến lược kết hợp hoặc `single` đối với yêu cầu không kết hợp) — luôn có trong các phản hồi hoàn tất                               |
+| tiêu đề                  | Phương hướng | Sự miêu tả                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `X-OmniRoute-No-Cache`   | Lời yêu cầu  | Đặt thành `true` để bỏ qua bộ đệm                                                                                                                                                                                                                                                                                                                                                                                  |
+| `x-omniroute-no-memory`  | Lời yêu cầu  | Đặt thành `true` để bỏ qua việc chèn kỹ năng + bộ nhớ cho yêu cầu này (nhân bản không có bộ đệm; tránh chi phí token/cost cho mỗi cuộc gọi)                                                                                                                                                                                                                                                                        |
+| `x-omniroute-no-log`     | Lời yêu cầu  | Đặt thành `true` để bỏ qua tải trọng request/response khỏi nhật ký cuộc gọi cho yêu cầu suy luận này (tất cả các tuyến trò chuyện trong gia đình: Hoàn thành trò chuyện, Phản hồi, Tin nhắn, Hoàn thành, Gemini). Dấu thời gian, kiểu máy, trạng thái, thời lượng và số lượng mã thông báo vẫn được ghi lại. Kết hợp với `x-omniroute-no-memory` và `x-omniroute-no-cache` để chọn không tham gia toàn bộ nội dung |
+| `X-OmniRoute-Progress`   | Lời yêu cầu  | Đặt thành `true` cho các sự kiện tiến triển                                                                                                                                                                                                                                                                                                                                                                        |
+| `X-Session-Id`           | Lời yêu cầu  | Khóa phiên cố định cho mối quan hệ phiên bên ngoài                                                                                                                                                                                                                                                                                                                                                                 |
+| `x_session_id`           | Lời yêu cầu  | Biến thể gạch dưới cũng được chấp nhận (trực tiếp HTTP)                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Session-Id` | Lời yêu cầu  | Thẻ session/conversation do người gọi cung cấp (cũng cung cấp bộ nhớ). Khi có mặt, nguyên văn vẫn tồn tại đến `call_logs.session_tag` để phân bổ chi phí mỗi phiên (#8249) — không bao giờ được tổng hợp khi vắng mặt                                                                                                                                                                                              |
+| `Idempotency-Key`        | Lời yêu cầu  | Khóa khấu trừ (cửa sổ 5s)                                                                                                                                                                                                                                                                                                                                                                                          |
+| `X-Request-Id`           | Lời yêu cầu  | Khóa khấu trừ thay thế                                                                                                                                                                                                                                                                                                                                                                                             |
+| `x-omniroute-connection` | Lời yêu cầu  | Ghim một yêu cầu một mô hình vào một kết nối (tài khoản) của nhà cung cấp theo id — của nó, xem [Ghim tài khoản theo yêu cầu](#account-pinning-per-request)                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Cache`      | Phản ứng     | `HIT` hoặc `MISS` (không phát trực tuyến)                                                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Idempotent` | Phản ứng     | `true` nếu bị trùng lặp                                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Progress`   | Phản ứng     | `enabled` nếu bật tính năng theo dõi tiến trình                                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Session-Id` | Phản ứng     | Phiên hiệu quả ID được sử dụng bởi OmniRoute                                                                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Request-Id` | Phản ứng     | Yêu cầu id tương quan (khi biết)                                                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Version`    | Phản ứng     | phiên bản xây dựng OmniRoute (luôn có mặt)                                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Cost-Saved` | Phản ứng     | USD bộ đệm đã tránh trên HIT (chỉ các lần truy cập bộ đệm)                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Decision`   | Phản ứng     | Dấu vết định tuyến: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` là chiến lược kết hợp hoặc `single` cho yêu cầu không kết hợp) — luôn xuất hiện trên các phản hồi hoàn thành                                                                                                                                                                                                                     |
 
-> Lưu ý về Nginx: nếu bạn dựa vào các header có dấu gạch dưới (ví dụ: `x_session_id`), hãy bật `underscores_in_headers on;`.
+> Lưu ý Nginx: nếu bạn dựa vào tiêu đề gạch dưới (ví dụ `x_session_id`), hãy bật `underscores_in_headers on;`.
 
-#### Ghim tài khoản cho mỗi yêu cầu
+#### Ghim tài khoản theo yêu cầu
 
-Khi một nhà cung cấp có nhiều kết nối (tài khoản hoặc khóa), OmniRoute thường chọn một kết nối
-thông qua chiến lược lựa chọn tài khoản. Thay vào đó, một yêu cầu có thể ghim vào một kết nối cụ thể
-bằng header `x-omniroute-connection`:
+Khi nhà cung cấp có nhiều kết nối (tài khoản hoặc khóa), OmniRoute thường chọn một kết nối thông qua chiến lược chọn tài khoản của mình. Thay vào đó, một yêu cầu có thể ghim một kết nối cụ thể bằng tiêu đề `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,24 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Nơi tìm id.** Mở trang nhà cung cấp trong dashboard
-  (**Dashboard → Providers → <provider>**) và nhấp vào chip id `xxxxxxxx…` trên một hàng kết nối
-  — thao tác này sẽ sao chép đầy đủ connection id.
-- **Những request nào áp dụng id này.** Các request đơn mô hình (`provider/model`) trên
-  `/v1/chat/completions`, `/v1/messages` và `/v1/responses`. Các combo sẽ bỏ qua header này: hãy
-  ghim một tài khoản cho từng bước của combo thông qua connection riêng của bước đó.
-- **Việc ghim là bắt buộc, không phải tùy chọn ưu tiên.** Connection được ghim sẽ được sử dụng độc quyền. Một
-  lỗi xảy ra trong request sẽ ghi nhận thời gian chờ của tài khoản nhưng **không** chuyển sang tài khoản
-  cùng provider khác.
-- **Thời gian chờ và hạn ngạch sẽ giải phóng việc ghim.** Trong khi connection được ghim đang
-  trong thời gian chờ, đã hết hạn ngạch hoặc bị chặn bởi chính sách hạn ngạch, các request tiếp theo sẽ chuyển sang
-  những connection khác của provider, giống hệt lưu lượng không được ghim.
-- **Id không xác định hoặc bị vô hiệu hóa sẽ gây lỗi.** Một id không nằm trong pool đang hoạt động của provider (đã bị xóa,
-  vô hiệu hóa hoặc thuộc về provider khác) sẽ không để lại tài khoản nào đủ điều kiện, vì vậy request sẽ
-  thất bại thay vì âm thầm định tuyến sang nơi khác.
+- **Tìm id ở đâu.** Mở trang nhà cung cấp trong bảng điều khiển (** Bảng điều khiển → Nhà cung cấp → <provider>** ) và nhấp vào chip `xxxxxxxx…` id trên hàng kết nối — nó sao chép id kết nối đầy đủ.
+- **Những yêu cầu tôn vinh nó.** Yêu cầu mô hình đơn (`provider/model`) trên `/v1/chat/completions`, `/v1/messages` và `/v1/responses`. Combo bỏ qua tiêu đề: thay vào đó, hãy ghim một tài khoản cho mỗi bước kết hợp thông qua kết nối của chính bước đó.
+- **Pin là nghiêm ngặt, không phải là một ưu tiên.** Kết nối được ghim được sử dụng riêng. Lỗi bên trong yêu cầu sẽ ghi lại thời gian hồi chiêu của tài khoản nhưng lại ghi lại** không** xoay sang tài khoản anh chị em của cùng một nhà cung cấp.
+- **Thời gian hồi chiêu và hạn ngạch giải phóng chốt.** Trong khi kết nối được ghim đang nguội đi, hết hạn ngạch hoặc bị chặn bởi chính sách hạn ngạch, các yêu cầu sau đó sẽ quay trở lại các kết nối khác của nhà cung cấp, giống hệt như lưu lượng truy cập đã được bỏ ghim.
+- **Id không xác định hoặc bị vô hiệu hóa không thành công.** Id không nằm trong nhóm hoạt động của nhà cung cấp (đã bị xóa, vô hiệu hóa hoặc thuộc về nhà cung cấp khác) sẽ không có tài khoản đủ điều kiện, do đó yêu cầu không thành công thay vì âm thầm định tuyến ở nơi khác.
 
-Claude Code gửi các header tùy chỉnh thông qua `ANTHROPIC_CUSTOM_HEADERS`. Đặt biến này trong khối `env`
-của `~/.claude/settings.json`, hoặc trong `.claude/settings.json` ở cấp dự án để ghim một tài khoản khác cho từng dự án:
+Mã Claude gửi tiêu đề tùy chỉnh thông qua `ANTHROPIC_CUSTOM_HEADERS`. Đặt nó vào khối `env` của `~/.claude/settings.json` hoặc trong `.claude/settings.json` cấp dự án để ghim một tài khoản khác cho mỗi dự án:
 
 ```jsonc
 {
@@ -132,12 +120,11 @@ của `~/.claude/settings.json`, hoặc trong `.claude/settings.json` ở cấp 
 }
 ```
 
-Nguồn: `src/sse/handlers/chat.ts` (đọc header), `src/sse/services/auth.ts` và
-`src/sse/services/sessionAffinityPin.ts` (giải phóng việc ghim và kiểm tra mục không có trong pool).
+Nguồn: `src/sse/handlers/chat.ts` (đọc tiêu đề), `src/sse/services/auth.ts` và `src/sse/services/sessionAffinityPin.ts` (giải phóng pin và kiểm tra thiếu từ nhóm).
 
-> **Header telemetry chi phí:** các response thành công không streaming cũng bao gồm bộ telemetry chi phí `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, cố định 10 chữ số thập phân; `0.0000000000` đối với miễn phí/không có giá), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` và `X-OmniRoute-Fallback-Attempts` (chỉ khi > 0), cùng với `X-OmniRoute-Request-Id` và `X-OmniRoute-Version`. Các header này được phát ra bởi chat completions, `/v1/responses`, `/v1/messages`, **và các endpoint media** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` và `/v1/moderations` (luôn có chi phí `0`). Chi phí media được tính theo từng loại (mỗi hình ảnh, mỗi giây, mỗi ký tự, mỗi đơn vị tìm kiếm) khi có thông tin giá; nếu không thì là `0` (fail-open).
+> **Tiêu đề đo lường chi phí từ xa:** Các phản hồi thành công không phát trực tuyến cũng mang bộ đo từ xa chi phí `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, cố định 10 số thập phân; `0.0000000000` cho free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` và `X-OmniRoute-Fallback-Attempts` (chỉ khi > 0), cộng với `X-OmniRoute-Request-Id` và `X-OmniRoute-Version`. Chúng được phát ra khi hoàn thành trò chuyện, `/v1/responses`, `/v1/messages`,** và các điểm cuối truyền thông** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` và `/v1/moderations` (luôn có giá `0`). Chi phí phương tiện được tính theo phương thức (mỗi hình ảnh, mỗi giây, mỗi ký tự, mỗi đơn vị tìm kiếm) khi có sẵn giá, nếu không thì `0` (mở không thành công).
 
-> **Ngữ nghĩa chi phí khi cache hit:** khi xảy ra semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`), không có lệnh gọi upstream nào được thực hiện, vì vậy `X-OmniRoute-Response-Cost` là `0.0000000000` (chi phí **tăng thêm** để cung cấp kết quả hit). Chi phí ban đầu/đáng lẽ phát sinh được báo cáo riêng trong `X-OmniRoute-Cost-Saved`. Các hệ thống tiêu thụ dữ liệu thanh toán nên tính tổng `X-OmniRoute-Response-Cost` (hit không tốn chi phí); các công cụ phân tích cache có thể tổng hợp `X-OmniRoute-Cost-Saved`.
+> **Ngữ nghĩa chi phí truy cập bộ đệm:** trên bộ đệm ngữ nghĩa HIT (`X-OmniRoute-Cache-Hit: true`) không có lệnh gọi ngược dòng nào được thực hiện, vì vậy `X-OmniRoute-Response-Cost` là `0.0000000000` (** tăng dần** chi phí thực hiện cú đánh). Chi phí original/would-have-been được báo cáo riêng trong `X-OmniRoute-Cost-Saved`. Người tiêu dùng thanh toán phải tính tổng `X-OmniRoute-Response-Cost` (lượt truy cập không mất phí); phân tích bộ đệm có thể tổng hợp `X-OmniRoute-Cost-Saved`.
 
 ## Lease phiên được quản lý độc quyền
 
@@ -366,7 +353,7 @@ GET /v1/embeddings
 
 ---
 
-## Tạo ảnh
+## Tạo hình ảnh
 
 ```bash
 POST /v1/images/generations
@@ -380,43 +367,24 @@ Content-Type: application/json
 }
 ```
 
-Các nhà cung cấp khả dụng bao gồm OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana, **OpenRouter**, **ZenMux**, SD WebUI (cục bộ), ComfyUI (cục bộ).
+Các nhà cung cấp có sẵn bao gồm OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (cục bộ), ComfyUI (cục bộ).
 
-`n` trả về `n` ảnh trong `data[]`. Các nhà cung cấp có API upstream trả về một ảnh mỗi lần gọi
-(Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik,
-NVIDIA NIM, Cloudflare Workers AI) sẽ thực hiện `n` lần gọi upstream riêng biệt, tối đa 4 lần
-đang chạy đồng thời. `seed` cố định được tăng theo chỉ số lần gọi (`seed`, `seed + 1`, …), vì vậy
-các ảnh sẽ khác nhau nhưng vẫn có thể tái lập. `n` được giới hạn ở mức 10. Toàn bộ yêu cầu sẽ
-thất bại nếu bất kỳ lần gọi nào thất bại. Danh sách các định dạng fan-out là
-`SINGLE_IMAGE_FANOUT_FORMATS` trong
-`open-sse/handlers/imageGeneration/fanOut.ts`.
+`n` trả về hình ảnh `n` trong `data[]`. Các nhà cung cấp có API ngược dòng trả về một hình ảnh cho mỗi cuộc gọi (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) nhận được các cuộc gọi ngược dòng riêng biệt `n`, tối đa là 4 cuộc gọi trong chuyến bay. Một `seed` cố định được bù bằng chỉ mục cuộc gọi (`seed`, `seed + 1`, …), do đó các hình ảnh khác nhau nhưng vẫn có thể tái tạo. `n` được giới hạn ở mức 10. Toàn bộ yêu cầu sẽ thất bại nếu bất kỳ cuộc gọi nào không thành công. Danh sách các định dạng phân xuất ra là `SINGLE_IMAGE_FANOUT_FORMATS` trong `open-sse/handlers/imageGeneration/fanOut.ts`.
 
-ZenMux sử dụng lại kết nối khóa API hiện có và chấp nhận tiền tố `zenmux/` hoặc `zm/`:
+Codex GPT Các mô hình hình ảnh (`codex/gpt-image-*`) chỉ trả về PNG : luồng ngược dòng trả lời `200` với PNG byte ngay cả khi `jpeg` hoặc `webp` được yêu cầu. Một yêu cầu với bất kỳ `output_format` nào khác (`webp`, `jpeg`, ...) đều bị từ chối với HTTP 400 thay vì bị âm thầm bỏ qua; bỏ qua nó hoặc gửi `png`. `output_compression` không được chuyển tiếp.
 
-- `zenmux/openai/gpt-image-2` sử dụng API Images của OpenAI trên ZenMux. Các tùy chọn bao gồm `size`,
-  `quality`, `n`, `output_format`, `output_compression`, `background` và `response_format`.
-- Các nhà phát hành khác, chẳng hạn như `zm/meta/muse-image-1.0`, sử dụng endpoint `:predict` của
-  Vertex AI trên ZenMux. `n` ánh xạ tới `sampleCount`, `aspect_ratio` ánh xạ tới `aspectRatio`, và
-  `image_size` (`1K`, `2K`, `4K`) ánh xạ tới `sampleImageSize`. `size` tính theo pixel chỉ cung cấp
-  tỷ lệ khung hình, không đảm bảo kích thước pixel. Các tỷ lệ, độ phân giải và số lượng được hỗ trợ
-  sẽ khác nhau tùy theo model.
-- `zm/inclusionai/ming-image-0.1-design` tự chọn kích thước. Bỏ qua `size`,
-  `aspect_ratio` và `image_size`; các giá trị rõ ràng sẽ trả về HTTP 400. Có thể yêu cầu PNG, JPEG và WebP
-  bằng `output_format`.
+ZenMux sử dụng lại kết nối khóa API hiện có và chấp nhận tiền tố `zenmux/` hoặc `zm/` :
 
-Tích hợp này hỗ trợ tạo ảnh từ văn bản, không hỗ trợ chỉnh sửa ảnh tham chiếu. Đầu ra của Vertex
-được chuẩn hóa thành `data[].b64_json`; `response_format: "url"` trả về URL HTTPS upstream hoặc
-URL dữ liệu base64 khi chỉ có byte ảnh. Đầu ra rỗng/bị lọc sẽ trả về lỗi thay vì thành công với
-nội dung rỗng. Quyền truy cập model phụ thuộc vào tài khoản ZenMux. Xem [API Vertex của ZenMux](https://docs.zenmux.ai/api/vertexai/generate-images) và
-[API Images của OpenAI](https://docs.zenmux.ai/api/openai/generate-an-image).
+- `zenmux/openai/gpt-image-2` sử dụng Hình ảnh OpenAI của ZenMuxAPI. Các tùy chọn bao gồm `size`, `quality`, `n`, `output_format`, `output_compression`, `background` và `response_format`.
+- Các nhà xuất bản khác, chẳng hạn như `zm/meta/muse-image-1.0`, sử dụng điểm cuối Vertex AI `:predict` của ZenMux. `n` ánh xạ tới `sampleCount`, `aspect_ratio` tới `aspectRatio` và `image_size` (`1K`, `2K`, `4K`) tới `sampleImageSize`. Pixel `size` chỉ cung cấp tỷ lệ khung hình, không đảm bảo kích thước pixel. Tỷ lệ, độ phân giải và số lượng được hỗ trợ sẽ khác nhau tùy theo kiểu máy.
+- `zm/inclusionai/ming-image-0.1-design` chọn kích thước riêng của nó. Bỏ qua `size`, `aspect_ratio` và `image_size`; các giá trị rõ ràng trả về HTTP 400. PNG, JPEG và WebP có thể được yêu cầu với `output_format`.
 
-Kết nối đăng nhập Microsoft 365 Copilot cung cấp `copilot-m365-web/m365-copilot-image`
-thông qua công cụ hình ảnh tích hợp của Copilot: một lượt Copilot cho mỗi ảnh (`n` từ 1–4), `size` chỉ
-định hướng, và ảnh được trả về trực tiếp (`b64_json`, hoặc URL dữ liệu cho
-`response_format: "url"`). Xem [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
+This integration supports text-to-image generation, not reference-image editing. Vertex output is normalized to `data[].b64_json`; `response_format: "url"` returns an upstream HTTPS URL or a base64 data URL when only image bytes are available. Empty/filtered outputs return an error rather than an empty success. Model access depends on the ZenMux account. See [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) and [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+
+Kết nối đăng nhập Microsoft 365 Copilot phục vụ `copilot-m365-web/m365-copilot-image` thông qua công cụ hình ảnh tích hợp của Copilot: một lượt Copilot cho mỗi hình ảnh (`n` 1–4), `size` chỉ điều khiển hướng và hình ảnh được trả về nội tuyến (`b64_json` hoặc URL dữ liệu cho `response_format: "url"`). Xem [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 
 ```bash
-# Liệt kê tất cả model hình ảnh
+# List all image models
 GET /v1/images/generations
 ```
 

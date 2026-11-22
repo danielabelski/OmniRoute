@@ -49,7 +49,7 @@ Jede Bereitstellung stellt eine eigene Kopie der Spezifikation unter `/openapi.y
 
 ---
 
-## Chat Completions
+## Chat-Abschlüsse
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Benutzerdefinierte Header
 
-| Header                   | Richtung | Beschreibung                                                                                                                                                                                                                                                               |
-| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Anfrage  | Auf `true` setzen, um den Cache zu umgehen                                                                                                                                                                                                                                 |
-| `x-omniroute-no-memory`  | Anfrage  | Auf `true` setzen, um die Injektion von Memory + Skills für diese Anfrage zu überspringen (spiegelt no-cache wider; vermeidet den Token-/Kosten-Overhead pro Aufruf)                                                                                                       |
-| `X-OmniRoute-Progress`   | Anfrage  | Auf `true` setzen, um Fortschrittsereignisse zu aktivieren                                                                                                                                                                                                                 |
-| `X-Session-Id`           | Anfrage  | Sticky-Session-Schlüssel für externe Sitzungsaffinität                                                                                                                                                                                                                     |
-| `x_session_id`           | Anfrage  | Unterstrich-Variante wird ebenfalls akzeptiert (direktes HTTP)                                                                                                                                                                                                             |
-| `X-OmniRoute-Session-Id` | Anfrage  | Vom Aufrufer bereitgestelltes Sitzungs-/Konversations-Tag (wird ebenfalls für Memory verwendet). Wenn vorhanden, wird es unverändert in `call_logs.session_tag` für die sitzungsbezogene Kostenzuordnung gespeichert (#8249) — bei Abwesenheit niemals synthetisch erzeugt |
-| `Idempotency-Key`        | Anfrage  | Deduplizierungsschlüssel (5-Sekunden-Fenster)                                                                                                                                                                                                                              |
-| `X-Request-Id`           | Anfrage  | Alternativer Deduplizierungsschlüssel                                                                                                                                                                                                                                      |
-| `x-omniroute-connection` | Anfrage  | Bindet eine Anfrage für ein einzelnes Modell anhand ihrer ID an eine Provider-Verbindung (Konto) — siehe [Kontobindung pro Anfrage](#account-pinning-per-request)                                                                                                          |
-| `X-OmniRoute-Cache`      | Antwort  | `HIT` oder `MISS` (kein Streaming)                                                                                                                                                                                                                                         |
-| `X-OmniRoute-Idempotent` | Antwort  | `true`, wenn dedupliziert                                                                                                                                                                                                                                                  |
-| `X-OmniRoute-Progress`   | Antwort  | `enabled`, wenn die Fortschrittsverfolgung aktiviert ist                                                                                                                                                                                                                   |
-| `X-OmniRoute-Session-Id` | Antwort  | Von OmniRoute verwendete effektive Sitzungs-ID                                                                                                                                                                                                                             |
-| `X-OmniRoute-Request-Id` | Antwort  | Korrelations-ID der Anfrage (falls bekannt)                                                                                                                                                                                                                                |
-| `X-OmniRoute-Version`    | Antwort  | OmniRoute-Build-Version (immer vorhanden)                                                                                                                                                                                                                                  |
-| `X-OmniRoute-Cost-Saved` | Antwort  | USD-Betrag, den der Cache bei einem HIT eingespart hat (nur bei Cache-Hits)                                                                                                                                                                                                |
-| `X-OmniRoute-Decision`   | Antwort  | Routing-Ablaufverfolgung: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ist die kombinierte Strategie oder `single` bei einer Anfrage ohne Kombination) — bei Abschlussantworten immer vorhanden                                                           |
+| Kopfzeile                | Richtung | Beschreibung                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Anfrage  | Auf `true` setzen, um den Cache zu umgehen                                                                                                                                                                                                                                                                                                                                                                            |
+| `x-omniroute-no-memory`  | Anfrage  | Auf `true` setzen, um die Speicher- + -Skills-Injektion für diese Anfrage zu überspringen (spiegelt No-Cache wider; vermeidet den token/cost Overhead pro Aufruf)                                                                                                                                                                                                                                                     |
+| `x-omniroute-no-log`     | Anfrage  | Auf `true` setzen, um request/response Nutzlasten aus Anrufprotokollen für diese Rückschlussanforderung wegzulassen (alle Routen der Chat-Familie: Chat-Abschlüsse, Antworten, Nachrichten, Abschlüsse, Gemini). Zeitstempel, Modell, Status, Dauer und Token-Anzahl werden weiterhin aufgezeichnet. Kombinieren Sie es mit `x-omniroute-no-memory` und `x-omniroute-no-cache` für eine vollständige Inhaltsabmeldung |
+| `X-OmniRoute-Progress`   | Anfrage  | Für Fortschrittsereignisse auf `true` setzen                                                                                                                                                                                                                                                                                                                                                                          |
+| `X-Session-Id`           | Anfrage  | Sticky-Sitzungsschlüssel für externe Sitzungsaffinität                                                                                                                                                                                                                                                                                                                                                                |
+| `x_session_id`           | Anfrage  | Unterstrichvariante wird ebenfalls akzeptiert (direktes HTTP)                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Session-Id` | Anfrage  | Vom Anrufer bereitgestelltes session/conversation Tag (füttert auch den Speicher). Wenn vorhanden, wird es wörtlich an `call_logs.session_tag` weitergegeben, um die Kostenzuordnung pro Sitzung zu ermöglichen (#8249). Wenn es nicht vorhanden ist, wird — nie synthetisiert                                                                                                                                        |
+| `Idempotency-Key`        | Anfrage  | Dedup-Schlüssel (5-Sekunden-Fenster)                                                                                                                                                                                                                                                                                                                                                                                  |
+| `X-Request-Id`           | Anfrage  | Alternativer Deduplizierungsschlüssel                                                                                                                                                                                                                                                                                                                                                                                 |
+| `x-omniroute-connection` | Anfrage  | Eine Single-Model-Anfrage anhand ihrer ID an eine Anbieterverbindung (Konto) anheften — siehe [Konto-Pinning pro Anfrage)](#account-pinning-per-request).                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Cache`      | Antwort  | `HIT` oder `MISS` (kein Streaming)                                                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Idempotent` | Antwort  | `true` wenn dedupliziert                                                                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Progress`   | Antwort  | `enabled` wenn die Fortschrittsverfolgung aktiviert ist                                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | Antwort  | Effektives Sitzungs- ID das von OmniRoute verwendet wird                                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Request-Id` | Antwort  | Korrelations-ID anfordern (sofern bekannt)                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Version`    | Antwort  | OmniRoute -Build-Version (immer vorhanden)                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Cost-Saved` | Antwort  | USD der Cache, der auf einem HIT vermieden wird (nur Cache-Treffer)                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Decision`   | Antwort  | Routing-Trace: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ist die Combo-Strategie oder `single` für eine Nicht-Combo-Anfrage) — ist bei Abschlussantworten immer vorhanden                                                                                                                                                                                                                         |
 
-> Nginx-Hinweis: Wenn Sie auf Header mit Unterstrichen (z. B. `x_session_id`) angewiesen sind, aktivieren Sie `underscores_in_headers on;`.
+> Nginx-Hinweis: Wenn Sie sich auf Unterstrich-Header verlassen (zum Beispiel `x_session_id`), aktivieren Sie `underscores_in_headers on;`.
 
-#### Kontobindung pro Anfrage
+#### Konto-Pinning pro Anfrage
 
-Wenn ein Provider über mehrere Verbindungen (Konten oder Schlüssel) verfügt, wählt OmniRoute normalerweise eine davon
-über seine Kontenauswahlstrategie aus. Eine Anfrage kann stattdessen eine bestimmte Verbindung mit dem
-Header `x-omniroute-connection` festlegen:
+Wenn ein Anbieter über mehrere Verbindungen (Konten oder Schlüssel) verfügt, wählt OmniRoute normalerweise eine durch seine Kontoauswahlstrategie aus. Eine Anfrage kann stattdessen eine bestimmte Verbindung mit dem `x-omniroute-connection` Header anpinnen:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,25 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Wo Sie die ID finden.** Öffnen Sie die Provider-Seite im Dashboard
-  (**Dashboard → Anbieter → <provider>**) und klicken Sie auf das `xxxxxxxx…`-ID-Chip in einer Verbindungszeile —
-  dadurch wird die vollständige Verbindungs-ID kopiert.
-- **Welche Anfragen sie berücksichtigen.** Anfragen für ein einzelnes Modell (`provider/model`) an
-  `/v1/chat/completions`, `/v1/messages` und `/v1/responses`. Kombinationen ignorieren den Header: Verknüpfen
-  Sie stattdessen für jeden Kombinationsschritt über dessen eigene Verbindung ein Konto.
-- **Die Zuordnung ist strikt und keine Präferenz.** Die verknüpfte Verbindung wird ausschließlich verwendet. Ein
-  Fehler innerhalb der Anfrage vermerkt die Abklingzeit des Kontos, führt jedoch **nicht** zu einem Wechsel auf
-  ein Schwesterkonto desselben Providers.
-- **Abklingzeit und Kontingent geben die Zuordnung frei.** Während die verknüpfte Verbindung abkühlt,
-  das Kontingent erschöpft oder durch eine Kontingentrichtlinie blockiert ist, greifen spätere Anfragen auf die
-  anderen Verbindungen des Providers zurück – genau wie nicht zugeordneter Datenverkehr.
-- **Unbekannte oder deaktivierte IDs schlagen fehl.** Eine ID, die sich nicht im aktiven Pool des Providers befindet
-  (gelöscht, deaktiviert oder einem anderen Provider zugehörig), lässt kein zulässiges Konto übrig, sodass die Anfrage
-  fehlschlägt, anstatt stillschweigend anderweitig weitergeleitet zu werden.
+- **Wo finde ich die ID?** Öffnen Sie die Anbieterseite im Dashboard (** Dashboard → Anbieter → <provider>** ) und klicken Sie auf den `xxxxxxxx…` -ID-Chip in einer Verbindungszeile — die vollständige Verbindungs-ID zu kopieren.
+- **Welche Anfragen würdigen es.** Einzelmodellanfragen (`provider/model`) für `/v1/chat/completions`, `/v1/messages` und `/v1/responses`. Combos ignorieren den Header: Fixieren Sie stattdessen ein Konto pro Combo-Schritt über die eigene Verbindung des Schritts.
+- **Der Pin ist streng, keine Präferenz.** Es wird ausschließlich die Stiftverbindung verwendet. Ein Fehler innerhalb der Anfrage zeichnet die Abklingzeit des Kontos auf, tut dies jedoch** nicht** Wechseln Sie zu einem Geschwisterkonto desselben Anbieters.
+- **Abklingzeit und Quote geben den Pin frei.** Während die angeheftete Verbindung abkühlt, ihr Kontingent erschöpft ist oder durch eine Kontingentrichtlinie blockiert wird, fallen spätere Anfragen auf die anderen Verbindungen des Anbieters zurück, genau wie nicht angehefteter Datenverkehr.
+- **Unbekannte oder deaktivierte IDs schlagen fehl.** Eine ID, die sich nicht im aktiven Pool des Anbieters befindet (gelöscht, deaktiviert oder zu einem anderen Anbieter gehörend) hinterlässt kein berechtigtes Konto, sodass die Anfrage fehlschlägt, anstatt stillschweigend an eine andere Stelle weitergeleitet zu werden.
 
-Claude Code sendet benutzerdefinierte Header über `ANTHROPIC_CUSTOM_HEADERS`. Fügen Sie die Einstellung in den
-`env`-Block von `~/.claude/settings.json` ein oder in eine projektbezogene `.claude/settings.json`, um pro Projekt
-ein anderes Konto zu verknüpfen:
+Claude Code sendet benutzerdefinierte Header über `ANTHROPIC_CUSTOM_HEADERS`. Fügen Sie es in den `env` Block von `~/.claude/settings.json` oder in ein `.claude/settings.json` auf Projektebene ein, um pro Projekt ein anderes Konto anzuheften:
 
 ```jsonc
 {
@@ -133,26 +120,11 @@ ein anderes Konto zu verknüpfen:
 }
 ```
 
-Quelle: `src/sse/handlers/chat.ts` (Header-Auslesen), `src/sse/services/auth.ts` und
-`src/sse/services/sessionAffinityPin.ts` (Aufheben der Zuordnung und Prüfung auf Fehlen im Pool).
+Quelle: `src/sse/handlers/chat.ts` (Lesen des Headers), `src/sse/services/auth.ts` und `src/sse/services/sessionAffinityPin.ts` (Pin-Freigabe und Prüfung auf fehlende Einträge im Pool).
 
-> **Header für Kosten-Telemetrie:** Antworten mit erfolgreicher Verarbeitung ohne Streaming enthalten ebenfalls den
-> `X-OmniRoute-*`-Satz für Kosten-Telemetrie — `X-OmniRoute-Response-Cost` (USD, fest 10 Dezimalstellen;
-> `0.0000000000` bei kostenlos oder ohne Preis), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`,
-> `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` und
-> `X-OmniRoute-Fallback-Attempts` (nur bei > 0), sowie `X-OmniRoute-Request-Id` und
-> `X-OmniRoute-Version`. Diese werden von Chat-Completions, `/v1/responses`, `/v1/messages` **und den
-> Medienendpunkten** ausgegeben — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`,
-> `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` und
-> `/v1/moderations` (immer Kosten `0`). Die Medienkosten werden pro Modalität berechnet (pro Bild, pro Sekunde,
-> pro Zeichen, pro Sucheinheit), sofern eine Preisangabe verfügbar ist, andernfalls `0` (Fail-open).
+> **Kostentelemetrie-Header:** Nicht-Streaming-Erfolgsantworten enthalten außerdem den `X-OmniRoute-*` -Kostentelemetriesatz — `X-OmniRoute-Response-Cost` (USD, feste 10 Dezimalstellen; `0.0000000000` für free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` und `X-OmniRoute-Fallback-Attempts` (nur wenn > 0) sowie `X-OmniRoute-Request-Id` und `X-OmniRoute-Version`. Diese werden durch Chat-Abschlüsse, `/v1/responses`, `/v1/messages`, ausgegeben.** und die Medienendpunkte** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` und `/v1/moderations` (kostet immer `0`). Die Medienkosten werden pro Modalität (pro Bild, pro Sekunde, pro Zeichen, pro Sucheinheit) berechnet, sofern Preise verfügbar sind, andernfalls `0` (fail-open).
 
-> **Semantik der Kosten bei Cache-Treffern:** Bei einem HIT des semantischen Caches (`X-OmniRoute-Cache-Hit: true`)
-> wird kein Upstream-Aufruf durchgeführt, daher beträgt `X-OmniRoute-Response-Cost` `0.0000000000` (die
-> **inkrementellen** Kosten für die Bereitstellung des Treffers). Die ursprünglichen bzw. hypothetischen Kosten
-> werden separat in `X-OmniRoute-Cost-Saved` angegeben. Abrechnungssysteme sollten
-> `X-OmniRoute-Response-Cost` summieren (Treffer verursachen keine Kosten); Cache-Analysen können
-> `X-OmniRoute-Cost-Saved` aggregieren.
+> **Cache-Hit-Kostensemantik:** Bei einem semantischen Cache HIT (`X-OmniRoute-Cache-Hit: true`) wird kein Upstream-Aufruf durchgeführt, daher ist `X-OmniRoute-Response-Cost` `0.0000000000` (der** inkrementell** Kosten für den Treffer). Die original/would-have-been Kosten werden separat in `X-OmniRoute-Cost-Saved` ausgewiesen. Die Abrechnung für Verbraucher sollte `X-OmniRoute-Response-Cost` betragen (Hits kosten nichts); Cache-Analysen können `X-OmniRoute-Cost-Saved` aggregieren.
 
 ## Exklusive verwaltete Sitzungs-Leases
 
@@ -382,13 +354,15 @@ Zu den verfügbaren Anbietern gehören OpenAI (GPT Image 2), xAI (Grok Image), T
 
 `n` gibt `n` Bilder in `data[]` zurück. Anbieter, deren Upstream- API ein Bild pro Aufruf zurückgibt (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI), erhalten `n` separate Upstream-Aufrufe, höchstens 4 im Flug. Ein fester `seed` wird durch den Aufrufindex (`seed`, `seed + 1`, …) versetzt, sodass sich die Bilder unterscheiden, aber reproduzierbar bleiben. `n` ist auf 10 begrenzt. Die Anfrage schlägt insgesamt fehl, wenn ein Aufruf fehlschlägt. Die Liste der Fan-Out-Formate ist `SINGLE_IMAGE_FANOUT_FORMATS` in `open-sse/handlers/imageGeneration/fanOut.ts`.
 
+Codex GPT Bildmodelle (`codex/gpt-image-*`) geben nur PNG zurück: Der Upstream antwortet `200` mit PNG -Bytes, selbst wenn `jpeg` oder `webp` angefordert wird. Eine Anfrage mit einem anderen `output_format` (`webp`, `jpeg`, ...) wird mit HTTP 400 abgelehnt, anstatt stillschweigend ignoriert zu werden; Lassen Sie es weg oder senden Sie `png`. `output_compression` wird nicht weitergeleitet.
+
 ZenMux verwendet die bestehende API-Schlüsselverbindung wieder und akzeptiert `zenmux/` oder `zm/` Präfixe:
 
 - `zenmux/openai/gpt-image-2` verwendet ZenMux-Bilder API von OpenAI. Zu den Optionen gehören `size`, `quality`, `n`, `output_format`, `output_compression`, `background` und `response_format`.
 - Andere Herausgeber wie `zm/meta/muse-image-1.0` verwenden den Vertex- AI `:predict` -Endpunkt von ZenMux. `n` wird auf `sampleCount` abgebildet, `aspect_ratio` auf `aspectRatio` und `image_size` (`1K`, `2K`, `4K`) auf `sampleImageSize`. Ein Pixel `size` liefert nur ein Seitenverhältnis, keine garantierten Pixelabmessungen. Die unterstützten Verhältnisse, Auflösungen und Zählungen variieren je nach Modell.
 - `zm/inclusionai/ming-image-0.1-design` wählt seine eigenen Dimensionen. Lassen Sie `size`, `aspect_ratio` und `image_size` weg; Explizite Werte geben HTTP 400 zurück. PNG, JPEG und WebP können mit `output_format` angefordert werden.
 
-Diese Integration unterstützt die Text-zu-Bild-Generierung, nicht die Bearbeitung von Referenzbildern. Die Scheitelpunktausgabe wird auf `data[].b64_json` normalisiert; `response_format: "url"` gibt einen Upstream HTTPS URL oder einen base64-Daten URL zurück, wenn nur Bildbytes verfügbar sind. Empty/filtered -Ausgaben geben einen Fehler statt eines leeren Erfolgs zurück. Der Modellzugriff hängt vom ZenMux Konto ab. Siehe [ZenMux Vertex- API](https://docs.zenmux.ai/api/vertexai/generate-images) und [OpenAI Bilder API](https://docs.zenmux.ai/api/openai/generate-an-image).
+Diese Integration unterstützt die Text-zu-Bild-Generierung, nicht die Bearbeitung von Referenzbildern. Die Scheitelpunktausgabe wird auf `data[].b64_json` normalisiert; `response_format: "url"` gibt einen Upstream HTTPS URL oder einen Base64-Daten URL zurück, wenn nur Bildbytes verfügbar sind. Empty/filtered -Ausgaben geben einen Fehler und keinen leeren Erfolg zurück. Der Modellzugriff hängt vom ZenMux Konto ab. Siehe [ZenMux Vertex- API](https://docs.zenmux.ai/api/vertexai/generate-images) und [OpenAI Bilder API](https://docs.zenmux.ai/api/openai/generate-an-image).
 
 Eine Microsoft 365 Copilot -Anmeldeverbindung bedient `copilot-m365-web/m365-copilot-image` über das integrierte Bildtool von Copilot: eine Copilot Umdrehung pro Bild (`n` 1–4), `size` steuert nur die Ausrichtung und Bilder werden inline zurückgegeben (`b64_json` oder ein Daten URL für `response_format: "url"`). Siehe [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 

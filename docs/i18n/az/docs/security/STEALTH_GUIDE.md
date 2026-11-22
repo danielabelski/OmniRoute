@@ -54,46 +54,49 @@ Profillər sabitlənmiş paket tərəfindən dəstəklənir, lakin real WAF qəb
 
 ---
 
-## Claude Code Gizlilik Paketi
+## Claude Kodu Gizli Paketi
 
-`cliCompatMode` aktiv olduqda, OmniRoute gedən Claude sorğularını `claude-cli` trafiki ilə fərqləndirilməsi mümkün olmayacaq şəkildə yenidən formalaşdırır. Üç modul birlikdə işləyir:
+`cliCompatMode` aktiv olduqda, OmniRoute gedən Claude sorğularını yenidən formalaşdırır ki, onlar `claude-cli` trafikindən fərqlənmir. Üç modul əməkdaşlıq edir:
 
 ### `claudeCodeFingerprint.ts`
 
-Faktura başlığına yerləşdirilən 3 simvolluq `cc_version` rəqəmsal izini hesablayır:
+Faktura başlığına daxil edilmiş 3 simvollu `cc_version` barmaq izini hesablayır:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (sərt şəkildə kodlaşdırılıb; rəsmi müştəri ilə uyğun gəlir)
-- Girişlər: ilk istifadəçi mesajının mətnində 4, 7 və 20 indekslərindəki simvollar + versiya sətri
-- Çıxış: 3 simvolluq onaltılıq prefiks
+- `FINGERPRINT_SALT = "59cf53e54c78"` (sabit kodlu; rəsmi müştəri ilə uyğun gəlir)
+- Daxiletmələr: ilk istifadəçi mesajı mətninin + versiyası sətirinin 4, 7, 20 indeksindəki simvollar
+- Çıxış: 3 simvollu hex prefiksi
 
-### `claudeCodeCCH.ts` (Müştəri Məzmun Heşi)
+### `claudeCodeCCH.ts` (Müştəri Məzmununun Hash)
 
-Rəsmi Claude Code CLI-nin Bun/Zig vasitəsilə hesabladığı server tərəfli bütövlük yoxlaması. OmniRoute bunu `xxhash-wasm` ilə yenidən həyata keçirir:
+Server tərəfinin bütövlüyünü `xxhash-wasm` ilə Bun/Zig. OmniRoute reimplements vasitəsilə rəsmi Claude Kodu CLI hesablamalarını yoxlayın:
 
-1. Gövdəni `cch=00000;` yer tutucusu ilə seriallaşdırın
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Sıfırlarla tamamlanmış 5 simvolluq kiçik hərfli onaltılıq dəyər
-4. `cch=00000;` hissəsini hesablanmış tokenlə əvəz edin
+1. Bədəni `cch=00000;` yertutanı ilə seriyalaşdırın
+2. Bu ardıcıllıqla (`hashView()`) iki düz mətn dəyişdirmə ilə hash görünüşünü qurun:
+   - hər `/"model":"[^"]*"/g` uyğunluğu `"model":""` — olur, uyğunluq ilk `"`-də dayanır, buna görə də qaçmış sitat (`"model":"a\"b"`) olan dəyər müştərinin etdiyi kimi yalnız həmin sitata qədər boşaldılır
+   - hər `/"max_tokens":\d+,|,?"max_tokens":\d+/g` uyğunluğu istənilən dərinlikdə — yalnız rəqəmli dəyərlər silinir
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Sıfır doldurulmuş 5 simvollu kiçik altı hərf
+5. `cch=00000;` hesablanmış işarə ilə əvəz edin
 
 Sabitlər:
 
-- İlkin dəyər: `0x6e52736ac806831e`
+- Seed: `0x4d659218e32a3268` ( Claude Kodu 2.1.252 və 2.1.322-nin geri çəkilişlərinə uyğun gəlir)
 - Nümunə: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Yuxarı axın filtrlərinin onları `grep` ilə tapa bilməməsi üçün "həssas" müştəri adlarının ilk simvolundan sonra Unicode **sıfır enli birləşdirici** (`U+200D`) əlavə edir. Standart söz siyahısı:
+Unicode daxil edir** sıfır enli doğrama** (`U+200D`) "həssas" müştəri adlarının birinci simvolundan sonra daxil edilir, ona görə də yuxarı filtrlər onları grep edə bilməz. Defolt söz siyahısı:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Bunlara tətbiq olunur: `system` blokları, bütün `messages[].content` məzmunları və `tools[].description` / `tools[].function.description`. Operator tərəfindən `setSensitiveWords()` vasitəsilə dəyişdirilə bilər.
+Tətbiq olunur: `system` blokları, bütün `messages[].content`, və `tools[].description` / `tools[].function.description`. `setSensitiveWords()` vasitəsilə operator tərəfindən ləğv edilə bilər.
 
 ### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` provayderləri
 
@@ -102,17 +105,17 @@ Yalnız "real Claude Code" trafikini qəbul edən üçüncü tərəf Anthropic r
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- Standart olaraq `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- Hər bağlantı üzrə "Redaktə edilmiş düşünmə beta-versiyasını aktivləşdir" keçidi, CC Compatible yuxarı axını xüsusi olaraq redaktə edilmiş düşünmə axınlarını tələb etdikdə `redact-thinking-2026-02-12` əlavə edir
-- Hər bağlantı üzrə "Xülasələşdirilmiş düşünmə ekranını aktivləşdir" keçidi `providerSpecificData.requestDefaults.summarizeThinking` dəyərini saxlayır və ekran rejimi əvvəlcədən təyin edilməmiş CC Compatible düşünmə sorğularına `display: "summarized"` əlavə edir
+- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` standart olaraq
+- CC Uyğun yuxarı axın xüsusi olaraq redaktə edilmiş düşüncə axınlarını tələb etdikdə, hər bağlantı üçün "Redaktə düşünmə betasını aktivləşdir" keçidi `redact-thinking-2026-02-12` əlavə edir.
+- Hər bir əlaqə üçün "Ümumiləşdirilmiş düşüncə ekranını aktivləşdir" keçidi `providerSpecificData.requestDefaults.summarizeThinking` saxlayır və CC ə `display: "summarized"` əlavə edir, onlar artıq displey rejimi təyin etməmiş uyğun düşünmə sorğuları
 - `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x ailəsi)
-- Standart yol: `/v1/messages?beta=true`
+- Defolt yol: `/v1/messages?beta=true`
 
-Eyni paketdəki əlaqəli modullar:
+Eyni paketdəki bacı modullar:
 
-- `claudeCodeConstraints.ts` — temperatur + keşə nəzarət qaydaları
-- `claudeCodeToolRemapper.ts` — alət adlarının yenidən xəritələnməsi
-- `claudeCodeExtraRemap.ts` — əlavə faydalı yükün normallaşdırılması
+- `claudeCodeConstraints.ts` — temperatur + cache-nəzarət qaydaları
+- `claudeCodeToolRemapper.ts` — alət adının dəyişdirilməsi
+- `claudeCodeExtraRemap.ts` — əlavə yükün normallaşdırılması
 
 ---
 

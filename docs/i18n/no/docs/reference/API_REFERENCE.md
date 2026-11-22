@@ -49,7 +49,7 @@ Hver distribusjon leverer sin egen kopi av spesifikasjonen på `/openapi.yaml`, 
 
 ---
 
-## Chat Completions
+## Chatfullføringer
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### Egendefinerte headere
+### Egendefinerte overskrifter
 
-| Header                   | Direction   | Description                                                                                                                                                                                                  |
-| ------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `X-OmniRoute-No-Cache`   | Forespørsel | Sett til `true` for å omgå hurtigbufferet                                                                                                                                                                    |
-| `x-omniroute-no-memory`  | Forespørsel | Sett til `true` for å hoppe over injisering av minne + ferdigheter for denne forespørselen (speiler no-cache; unngår token-/kostnadsbelastningen per kall)                                                   |
-| `X-OmniRoute-Progress`   | Forespørsel | Sett til `true` for fremdriftshendelser                                                                                                                                                                      |
-| `X-Session-Id`           | Forespørsel | Klebrig øktnøkkel for ekstern økttilknytning                                                                                                                                                                 |
-| `x_session_id`           | Forespørsel | Variant med understrek støttes også (direkte HTTP)                                                                                                                                                           |
-| `X-OmniRoute-Session-Id` | Forespørsel | Økt-/samtaleetikett levert av klienten (mates også inn i minnet). Når den finnes, lagres den ordrett i `call_logs.session_tag` for kostnadstildeling per økt (#8249) — genereres aldri når den mangler       |
-| `Idempotency-Key`        | Forespørsel | Dedupliseringsnøkkel (5 sekunders vindu)                                                                                                                                                                     |
-| `X-Request-Id`           | Forespørsel | Alternativ dedupliseringsnøkkel                                                                                                                                                                              |
-| `x-omniroute-connection` | Forespørsel | Fest en forespørsel til én modell til én leverandørtilkobling (konto) etter ID-en — se [Kontofesting per forespørsel](#account-pinning-per-request)                                                          |
-| `X-OmniRoute-Cache`      | Svar        | `HIT` eller `MISS` (ikke-strømmende)                                                                                                                                                                         |
-| `X-OmniRoute-Idempotent` | Svar        | `true` hvis deduplisert                                                                                                                                                                                      |
-| `X-OmniRoute-Progress`   | Svar        | `enabled` hvis fremdriftssporing er aktiv                                                                                                                                                                    |
-| `X-OmniRoute-Session-Id` | Svar        | Effektiv økt-ID brukt av OmniRoute                                                                                                                                                                           |
-| `X-OmniRoute-Request-Id` | Svar        | Korrelasjons-ID for forespørselen (når kjent)                                                                                                                                                                |
-| `X-OmniRoute-Version`    | Svar        | OmniRoute-byggversjon (alltid til stede)                                                                                                                                                                     |
-| `X-OmniRoute-Cost-Saved` | Svar        | USD som hurtigbufferet sparte ved en HIT (kun hurtigbuffer-treff)                                                                                                                                            |
-| `X-OmniRoute-Decision`   | Svar        | Ruting-spor: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` er kombinasjonsstrategien, eller `single` for en forespørsel som ikke er en kombinasjon) — alltid til stede i svar ved fullføring |
+| Overskrift               | Retning     | Beskrivelse                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Forespørsel | Sett til `true` for å omgå cache                                                                                                                                                                                                                                                                                                                                                 |
+| `x-omniroute-no-memory`  | Forespørsel | Sett til `true` for å hoppe over minne- + -ferdighetsinjeksjon for denne forespørselen (speiler no-cache; unngår per-anrop token/cost overhead)                                                                                                                                                                                                                                  |
+| `x-omniroute-no-log`     | Forespørsel | Sett til `true` for å utelate request/response -nyttelast fra anropslogger for denne slutningsforespørselen (alle chat-familieruter: Chat-fullføringer, svar, meldinger, fullføringer, Gemini). Tidsstempel, modell, status, varighet og tokenteller er fortsatt registrert. Kombiner med `x-omniroute-no-memory` og `x-omniroute-no-cache` for å velge bort fullstendig innhold |
+| `X-OmniRoute-Progress`   | Forespørsel | Sett til `true` for fremdriftshendelser                                                                                                                                                                                                                                                                                                                                          |
+| `X-Session-Id`           | Forespørsel | Klistret øktnøkkel for ekstern økttilhørighet                                                                                                                                                                                                                                                                                                                                    |
+| `x_session_id`           | Forespørsel | Understrekvariant aksepteres også (direkte HTTP)                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Session-Id` | Forespørsel | Anroper-levert session/conversation tag (mater også minne). Når tilstede, vedvarte ordrett til `call_logs.session_tag` for kostnadsattribusjon per økt (#8249) — ble aldri syntetisert når fraværende                                                                                                                                                                            |
+| `Idempotency-Key`        | Forespørsel | Dedup-nøkkel (5s-vindu)                                                                                                                                                                                                                                                                                                                                                          |
+| `X-Request-Id`           | Forespørsel | Alternativ dedup-nøkkel                                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-connection` | Forespørsel | Fest en enkeltmodellforespørsel til én leverandørtilkobling (konto) ved hjelp av dens id — se [Kontofesting per forespørsel](#account-pinning-per-request)                                                                                                                                                                                                                       |
+| `X-OmniRoute-Cache`      | Svar        | `HIT` eller `MISS` (ikke-streaming)                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Idempotent` | Svar        | `true` hvis deduplisert                                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Progress`   | Svar        | `enabled` hvis fremdriftssporing på                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Session-Id` | Svar        | Effektiv økt ID brukt av OmniRoute                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Request-Id` | Svar        | Forespørselskorrelasjons-ID (når kjent)                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Version`    | Svar        | OmniRoute byggeversjon (alltid til stede)                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Cost-Saved` | Svar        | USD cachen unngått på en HIT (kun cache-treff)                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Decision`   | Svar        | Rutingsporing: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` er kombinasjonsstrategien, eller `single` for en ikke-kombinasjonsforespørsel) — er alltid til stede ved fullføringssvar                                                                                                                                                                            |
 
-> Nginx-merknad: Hvis du er avhengig av overskrifter med understrek (for eksempel `x_session_id`), aktiver `underscores_in_headers on;`.
+> Nginx-merknad: Hvis du stoler på understrek-overskrifter (for eksempel `x_session_id`), aktiver `underscores_in_headers on;`.
 
 #### Kontofesting per forespørsel
 
-Når en leverandør har flere tilkoblinger (kontoer eller nøkler), velger OmniRoute normalt én
-gjennom strategien for kontovalg. En forespørsel kan i stedet feste én bestemt tilkobling
-med overskriften `x-omniroute-connection`:
+Når en leverandør har flere tilkoblinger (kontoer eller nøkler), velger OmniRoute normalt én gjennom sin kontovalgstrategi. En forespørsel kan i stedet feste én spesifikk forbindelse med `x-omniroute-connection` overskriften:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,25 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Hvor finner du ID-en.** Åpne leverandørsiden i kontrollpanelet
-  (**Dashboard → Providers → <provider>**) og klikk på `xxxxxxxx…`-ID-brikken på en tilkoblingsrad
-  — den kopierer hele tilkoblings-ID-en.
-- **Hvilke forespørsler bruker den.** Forespørsler til én modell (`provider/model`) på
-  `/v1/chat/completions`, `/v1/messages` og `/v1/responses`. Kombinasjoner ignorerer headeren:
-  fest en konto for hvert trinn i kombinasjonen via trinnets egen tilkobling.
-- **Festingen er streng, ikke en preferanse.** Den festede tilkoblingen brukes utelukkende. En
-  feil i forespørselen registrerer kontoens nedkjølingsperiode, men roterer **ikke** til en
-  søsterkonto hos samme leverandør.
-- **Nedkjøling og kvote frigjør festingen.** Mens den festede tilkoblingen er i nedkjøling,
-  kvote er brukt opp eller tilkoblingen er blokkert av en kvotepolicy, faller senere forespørsler
-  tilbake til leverandørens andre tilkoblinger, akkurat som ubundet trafikk.
-- **Ukjente eller deaktiverte ID-er fører til feil.** En ID som ikke finnes i leverandørens aktive
-  utvalg (slettet, deaktivert eller tilhører en annen leverandør) etterlater ingen kvalifisert
-  konto, så forespørselen mislykkes i stedet for å bli rutet et annet sted uten varsel.
+- **Hvor finner man id.** Åpne leverandørsiden i dashbordet (** Dashboard → leverandører → <provider>** ) og klikk på `xxxxxxxx…` id-brikken på en tilkoblingsrad — den kopierer hele tilkoblings-IDen.
+- **Som forespørsler ære det.** Enkeltmodellforespørsler (`provider/model`) på `/v1/chat/completions`, `/v1/messages` og `/v1/responses`. Kombinasjoner ignorerer overskriften: fest en konto per kombinasjonstrinn gjennom trinnets egen tilkobling i stedet.
+- **Pinnen er streng, ikke en preferanse.** Den pinnede tilkoblingen brukes utelukkende. En feil i forespørselen registrerer kontoens nedkjøling, men gjør det** ikke** rotere til en søskenkonto fra samme leverandør.
+- **Nedkjøling og kvote slipper pinnen.** Mens den festede tilkoblingen kjøles ned, kvoten er oppbrukt eller blokkert av en kvotepolicy, faller senere forespørsler tilbake til leverandørens andre tilkoblinger, akkurat som ufestet trafikk.
+- **Ukjente eller deaktiverte IDer mislykkes.** En id som ikke er i leverandørens aktive pool (slettet, deaktivert eller tilhører en annen leverandør) etterlater ingen kvalifisert konto, så forespørselen mislykkes i stedet for å dirigere stille andre steder.
 
-Claude Code sender egendefinerte headere gjennom `ANTHROPIC_CUSTOM_HEADERS`. Legg den i `env`-blokken
-i `~/.claude/settings.json`, eller i en `.claude/settings.json` på prosjektnivå for å feste en
-annen konto per prosjekt:
+Claude Code sender tilpassede overskrifter gjennom `ANTHROPIC_CUSTOM_HEADERS`. Sett den i `env` blokken til `~/.claude/settings.json`, eller i en `.claude/settings.json` på prosjektnivå for å feste en annen konto per prosjekt:
 
 ```jsonc
 {
@@ -133,12 +120,11 @@ annen konto per prosjekt:
 }
 ```
 
-Kilde: `src/sse/handlers/chat.ts` (lesing av headeren), `src/sse/services/auth.ts` og
-`src/sse/services/sessionAffinityPin.ts` (frigjøring av festingen og kontrollen av om den mangler i utvalget).
+Kilde: `src/sse/handlers/chat.ts` (header read), `src/sse/services/auth.ts` og `src/sse/services/sessionAffinityPin.ts` (pin release and the missing-from-pool check).
 
-> **Headere for kostnadstelemetri:** svar uten strømming som lykkes, inneholder også `X-OmniRoute-*`-settet for kostnadstelemetri — `X-OmniRoute-Response-Cost` (USD, alltid 10 desimaler; `0.0000000000` for gratis eller ikke-prissatte forespørsler), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` og `X-OmniRoute-Fallback-Attempts` (bare når > 0), samt `X-OmniRoute-Request-Id` og `X-OmniRoute-Version`. Disse sendes av chat completions, `/v1/responses`, `/v1/messages` **og medieendepunktene** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` og `/v1/moderations` (alltid med kostnaden `0`). Mediekostnaden beregnes per modalitet (per bilde, per sekund, per tegn, per søkeenhet) når prissetting er tilgjengelig, ellers `0` (fail-open).
+> **Kostnadstelemetrioverskrifter:** ikke-streamende suksessresponser har også `X-OmniRoute-*` -kostnadstelemetrisettet — `X-OmniRoute-Response-Cost` (USD, fast 10 desimaler; `0.0000000000` for free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` og `X-OmniRoute-Fallback-Attempts` (bare når > 0), `X-OmniRoute-Version` `X-OmniRoute-Request-Id`. Disse sendes ut av chatfullføringer, `/v1/responses`, `/v1/messages`,** og medias endepunkter** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` og `/v1/moderations` (koster alltid `0`). Mediekostnaden beregnes per modalitet (per bilde, per sekund, per tegn, per søkeenhet) når priser er tilgjengelig, ellers `0` (fail-open).
 
-> **Semantikk for kostnad ved cache-treff:** Ved et treff i den semantiske hurtigbufferen (`X-OmniRoute-Cache-Hit: true`) foretas ingen oppstrømskall, så `X-OmniRoute-Response-Cost` er `0.0000000000` (den **inkrementelle** kostnaden ved å levere treffet). Den opprinnelige kostnaden / kostnaden som ellers ville ha påløpt, rapporteres separat i `X-OmniRoute-Cost-Saved`. Faktureringskonsumenter bør summere `X-OmniRoute-Response-Cost` (treff koster ingenting); hurtigbufferanalyse kan aggregere `X-OmniRoute-Cost-Saved`.
+> **Cache-hit cost semantikk:** på en semantisk cache HIT (`X-OmniRoute-Cache-Hit: true`) blir det ikke gjort noe oppstrøms anrop, så `X-OmniRoute-Response-Cost` er `0.0000000000` (den** inkrementell** kostnadene ved å servere treffet). original/would-have-been kostnaden rapporteres separat i `X-OmniRoute-Cost-Saved`. Faktureringsforbrukere bør summere `X-OmniRoute-Response-Cost` (treff koster ingenting); cache-analyse kan samle `X-OmniRoute-Cost-Saved`.
 
 ## Eksklusive administrerte sesjonsleieavtaler
 
@@ -363,6 +349,8 @@ Content-Type: application/json
 Tilgjengelige leverandører inkluderer OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (lokal), ComfyUI (lokal).
 
 `n` returnerer `n` bilder i `data[]`. Leverandører hvis oppstrøms API returnerer ett bilde per samtale (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) får `n` separate oppstrømsanrop, maksimalt 4 under flyturen. En fast `seed` er forskjøvet av anropsindeks (`seed`, `seed + 1`, ...), så bildene er forskjellige, men forblir reproduserbare. `n` er begrenset til 10. Forespørselen mislykkes som helhet hvis et anrop mislykkes. Listen over fan-out-formater er `SINGLE_IMAGE_FANOUT_FORMATS` i `open-sse/handlers/imageGeneration/fanOut.ts`.
+
+Codex GPT Bildemodeller (`codex/gpt-image-*`) returnerer kun PNG : oppstrøms svarer `200` med PNG byte selv når `jpeg` eller `webp` er forespurt. En forespørsel med en hvilken som helst annen `output_format` (`webp`, `jpeg`, ...) blir avvist med HTTP 400 i stedet for å bli ignorert stille; utelat det eller send `png`. `output_compression` videresendes ikke.
 
 ZenMux gjenbruker den eksisterende API-nøkkelforbindelsen og godtar `zenmux/` eller `zm/` -prefikser:
 

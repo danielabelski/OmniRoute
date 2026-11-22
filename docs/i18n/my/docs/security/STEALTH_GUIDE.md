@@ -73,63 +73,66 @@ local contract test များနှင့် မသက်ဆိုင်ဘ�
 
 ## Claude Code Stealth Bundle
 
-`cliCompatMode` ကို ဖွင့်ထားသည့်အခါ OmniRoute သည် အပြင်သို့ပို့မည့် Claude တောင်းဆိုမှုများကို `claude-cli` traffic နှင့် ခွဲခြားမရအောင် ပြန်လည်ပုံဖော်ပေးသည်။ Module သုံးခုက ပူးပေါင်းလုပ်ဆောင်သည်-
+`cliCompatMode` ကိုဖွင့်ထားသောအခါ၊ OmniRoute အထွက် Claude တောင်းဆိုမှုများကို ပြန်လည်ပြင်ဆင်ပေးသောကြောင့် ၎င်းတို့သည် `claude-cli` အသွားအလာမှ ခွဲခြား၍မရပေ။ မော်ဂျူးသုံးခု ပူးပေါင်းဆောင်ရွက်သည်-
 
 ### `claudeCodeFingerprint.ts`
 
-Billing header ထဲတွင် ထည့်သွင်းထားသည့် စာလုံး 3 လုံးပါ `cc_version` fingerprint ကို တွက်ချက်သည်-
+ငွေတောင်းခံလွှာခေါင်းစီးတွင် ထည့်သွင်းထားသော 3-char `cc_version` လက်ဗွေကို တွက်ချက်သည်-
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (code ထဲတွင် အတိအကျသတ်မှတ်ထားပြီး တရားဝင် client နှင့် ကိုက်ညီသည်)
-- Input များ- ပထမဆုံး user message စာသား၏ index 4၊ 7၊ 20 ရှိ စာလုံးများ + version string
-- Output- စာလုံး 3 လုံးပါ hex prefix
+- `FINGERPRINT_SALT = "59cf53e54c78"` (ဟာ့ဒ်ကုတ်လုပ်ထားသော၊ တရားဝင်ဖောက်သည်နှင့် ကိုက်ညီသည်)
+- ထည့်သွင်းမှုများ- အညွှန်း 4၊ 7၊ 20 တွင် ပထမဆုံးအသုံးပြုသူ စာတိုစာသား + ဗားရှင်းစာကြောင်း
+- အထွက်- 3-char hex ရှေ့ဆက်
 
 ### `claudeCodeCCH.ts` (Client Content Hash)
 
-တရားဝင် Claude Code CLI က Bun/Zig မှတစ်ဆင့် တွက်ချက်သည့် server-side integrity check ဖြစ်သည်။ OmniRoute က ၎င်းကို `xxhash-wasm` ဖြင့် ပြန်လည်အကောင်အထည်ဖော်ထားသည်-
+ဆာဗာဘက်ခြမ်း သမာဓိရှိမှု Bun/Zig. OmniRoute ပြန်လည်ပြင်ဆင်မှုများမှတစ်ဆင့် တရားဝင် Claude ကုဒ် CLI တွက်ချက်မှုများကို `xxhash-wasm` ဖြင့် စစ်ဆေးပါ။
 
-1. Body ကို `cch=00000;` placeholder ဖြင့် serialize လုပ်ပါ
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. အရှေ့တွင် သုညဖြည့်ထားသည့် စာလုံး 5 လုံးပါ lowercase hex
-4. `cch=00000;` ကို တွက်ချက်ရရှိသည့် token ဖြင့် အစားထိုးပါ
+1. `cch=00000;` placeholder ဖြင့် ခန္ဓာကိုယ်ကို အမှတ်အသားပြုပါ။
+2. ဤအစီအစဥ်တွင် (`hashView()`):
+   - `/"model":"[^"]*"/g` ၏ ပွဲစဉ်တိုင်းသည် `"model":""` — ဖြစ်လာပြီး ပထမ `"` တွင် ကိုက်ညီမှု ရပ်သွားသည်၊ ထို့ကြောင့် ကိုးကားချက် (`"model":"a\"b"`) ပါသော တန်ဖိုးသည် ကလိုင်းယင့်ကဲ့သို့ ကိုးကားချက်အထိသာ လွတ်သွားသည်
+   - `/"max_tokens":\d+,|,?"max_tokens":\d+/g` ၏ကိုက်ညီမှုတိုင်းသည် မည်သည့်အနက်မဆို — ဂဏန်းတန်ဖိုးများကိုသာ ဖယ်ရှားသည်။
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Zero-padded 5-char စာလုံးအသေး hex
+5. `cch=00000;` တွက်ချက်ထားသောတိုကင်ဖြင့်အစားထိုးပါ။
 
 ကိန်းသေများ-
 
-- Seed: `0x6e52736ac806831e`
-- Pattern: `/\bcch=([0-9a-f]{5});/`
+- မျိုးစေ့- `0x4d659218e32a3268` ( Claude ကုဒ် 2.1.252 နှင့် 2.1.322 ၏ လှည့်ပတ်ဖမ်းယူမှုများကို ကိုက်ညီသည်)
+- ပုံစံ- `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Upstream filter များက grep ဖြင့် ရှာမတွေ့နိုင်စေရန် "အရေးကြီးသော" client အမည်များ၏ ပထမစာလုံးနောက်တွင် Unicode **zero-width joiner** (`U+200D`) တစ်ခု ထည့်သွင်းသည်။ မူလ word list-
+ယူနီကုဒ်ကို ထည့်သွင်းပါ။** သုညအကျယ် ချိတ်ကိရိယာ** (`U+200D`) "sensitive" client names ၏ ပထမစာလုံးနောက်တွင်၊ ထို့ကြောင့် upstream filter များသည် ၎င်းတို့ကို grep လုပ်၍မရပါ။ မူရင်းစကားလုံးစာရင်း-
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-အသုံးချသည့်နေရာများ- `system` block များ၊ `messages[].content` အားလုံးနှင့် `tools[].description` / `tools[].function.description`။ Operator က `setSensitiveWords()` မှတစ်ဆင့် လိုသလို အစားထိုးသတ်မှတ်နိုင်သည်။
+`system` လုပ်ကွက်များ၊ `messages[].content` နှင့် `tools[].description` / `tools[].function.description` အားလုံးတွင် အသုံးချသည်။ `setSensitiveWords()` မှတစ်ဆင့် အော်ပရေတာ- ကျော်ဖြတ်နိုင်သော။
 
-### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` provider များ
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` ပံ့ပိုးပေးသည်။
 
-"Claude Code အစစ်" traffic ကိုသာ လက်ခံသည့် third-party Anthropic relay များအတွက်-
+"အစစ်အမှန် Claude ကုဒ်" အသွားအလာကိုသာလက်ခံသည့် Third-party Anthropic relay များအတွက်-
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- မူလအတိုင်း `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
-- CC Compatible upstream တစ်ခုက redacted thinking stream များကို အထူးလိုအပ်သည့်အခါ connection တစ်ခုချင်းစီအလိုက် "Enable redact-thinking beta" toggle သည် `redact-thinking-2026-02-12` ကို ထည့်ပေးသည်
-- Connection တစ်ခုချင်းစီအလိုက် "Enable summarized thinking display" toggle သည် `providerSpecificData.requestDefaults.summarizeThinking` ကို သိမ်းဆည်းပြီး display mode မသတ်မှတ်ရသေးသော CC Compatible thinking တောင်းဆိုမှုများတွင် `display: "summarized"` ကို ထည့်ပေးသည်
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x မျိုးဆက်)
-- မူလ path- `/v1/messages?beta=true`
+- မူရင်းအားဖြင့်`anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"`
+- ချိတ်ဆက်မှုတစ်ခုချင်းအလိုက် "ပြန်လည်ပြင်ဆင်ထားသော တွေးခေါ်မှု ဘီတာဖွင့်ရန်" အဖွင့်အပိတ်သည် CC လိုက်ဖက်နိုင်သော အထက်ရေစီးကြောင်းတွင် အထူးပြင်ဆင်ထားသော တွေးခေါ်မှုများ လိုအပ်သည့်အခါ `redact-thinking-2026-02-12` ပေါင်းထည့်သည်
+- ချိတ်ဆက်မှုတစ်ခုစီတွင် "အကျဉ်းချုပ်တွေးခေါ်မှုပြသမှုကို ဖွင့်ပါ" သည် `providerSpecificData.requestDefaults.summarizeThinking` ကို သိမ်းဆည်းကာ CC ကို ပြသသည့်မုဒ်ကို မသတ်မှတ်ရသေးသော လိုက်ဖက်ညီသော တွေးခေါ်မှုတောင်းဆိုချက်များသို့ `display: "summarized"` ကို ပေါင်းထည့်သည်
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x မိသားစု)
+- မူရင်းလမ်းကြောင်း- `/v1/messages?beta=true`
 
-Bundle တစ်ခုတည်းထဲရှိ ဆက်စပ် module များ-
+တူညီသောအစုအဝေးရှိ ညီမ မော်ဂျူးများ-
 
-- `claudeCodeConstraints.ts` — temperature + cache-control စည်းမျဉ်းများ
-- `claudeCodeToolRemapper.ts` — tool အမည် ပြန်လည် mapping လုပ်ခြင်း
-- `claudeCodeExtraRemap.ts` — နောက်ထပ် payload normalization
+- `claudeCodeConstraints.ts` — အပူချိန် + cache-control စည်းမျဉ်းများ
+- `claudeCodeToolRemapper.ts` — တူးလ်အမည်ကို ပြန်လည်ပုံဖော်ခြင်း။
+- `claudeCodeExtraRemap.ts` — အပို payload normalization
 
 ---
 

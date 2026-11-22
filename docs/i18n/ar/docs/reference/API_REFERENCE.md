@@ -49,7 +49,7 @@
 
 ---
 
-## إكمالات المحادثة
+## استكمالات الدردشة
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### الرؤوس المخصّصة
+### رؤوس مخصصة
 
-| Header                   | Direction | Description                                                                                                                                                                       |
-| ------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | طلب       | اضبطه على `true` لتجاوز ذاكرة التخزين المؤقت                                                                                                                                      |
-| `x-omniroute-no-memory`  | طلب       | اضبطه على `true` لتخطي حقن الذاكرة + المهارات لهذا الطلب (يماثل no-cache؛ ويتجنب الحمل الزائد للرموز/التكلفة لكل استدعاء)                                                         |
-| `X-OmniRoute-Progress`   | طلب       | اضبطه على `true` لتفعيل أحداث التقدم                                                                                                                                              |
-| `X-Session-Id`           | طلب       | مفتاح جلسة ثابت لتحقيق ارتباط الجلسة الخارجية                                                                                                                                     |
-| `x_session_id`           | طلب       | يُقبل أيضًا الإصدار الذي يستخدم الشرطة السفلية (HTTP مباشر)                                                                                                                       |
-| `X-OmniRoute-Session-Id` | طلب       | وسم الجلسة/المحادثة الذي يقدمه المستدعي (ويُمرر أيضًا إلى الذاكرة). عند وجوده، يُحفظ حرفيًا في `call_logs.session_tag` لإسناد التكلفة لكل جلسة (#8249) — ولا يتم إنشاؤه عند غيابه |
-| `Idempotency-Key`        | طلب       | مفتاح إزالة التكرار (نافذة مدتها 5 ثوانٍ)                                                                                                                                         |
-| `X-Request-Id`           | طلب       | مفتاح بديل لإزالة التكرار                                                                                                                                                         |
-| `x-omniroute-connection` | طلب       | تثبيت طلب نموذج واحد على اتصال موفر واحد (حساب) بواسطة معرّفه — راجع [تثبيت الحساب لكل طلب](#account-pinning-per-request)                                                         |
-| `X-OmniRoute-Cache`      | استجابة   | `HIT` أو `MISS` (للطلبات غير المتدفقة)                                                                                                                                            |
-| `X-OmniRoute-Idempotent` | استجابة   | `true` إذا تمت إزالة التكرار                                                                                                                                                      |
-| `X-OmniRoute-Progress`   | استجابة   | `enabled` إذا كان تتبع التقدم مفعّلًا                                                                                                                                             |
-| `X-OmniRoute-Session-Id` | استجابة   | معرّف الجلسة الفعلي الذي يستخدمه OmniRoute                                                                                                                                        |
-| `X-OmniRoute-Request-Id` | استجابة   | معرّف ارتباط الطلب (عند معرفته)                                                                                                                                                   |
-| `X-OmniRoute-Version`    | استجابة   | إصدار بنية OmniRoute (موجود دائمًا)                                                                                                                                               |
-| `X-OmniRoute-Cost-Saved` | استجابة   | المبلغ بالدولار الأمريكي الذي تم توفيره بفضل ذاكرة التخزين المؤقت عند حدوث `HIT` (لإصابات ذاكرة التخزين المؤقت فقط)                                                               |
-| `X-OmniRoute-Decision`   | استجابة   | تتبع التوجيه: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` هي استراتيجية الدمج، أو `single` للطلب غير المدمج) — موجود دائمًا في استجابات الإكمال                 |
+| رأس                      | اتجاه | وصف                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | طلب   | اضبط على `true` لتجاوز ذاكرة التخزين المؤقت                                                                                                                                                                                                                                                                                                       |
+| `x-omniroute-no-memory`  | طلب   | اضبط على `true` لتخطي حقن مهارات + في الذاكرة لهذا الطلب (يعكس عدم وجود ذاكرة تخزين مؤقت، ويتجنب الحمل الزائد token/cost مكالمة)                                                                                                                                                                                                                  |
+| `x-omniroute-no-log`     | طلب   | اضبط على `true` لحذف حمولات request/response من سجلات المكالمات لطلب الاستدلال هذا (جميع مسارات عائلة الدردشة: إكمالات الدردشة، والردود، والرسائل، والإكمالات، Gemini). لا يزال يتم تسجيل الطابع الزمني والنموذج والحالة والمدة وعدد الرموز المميزة. ادمجها مع `x-omniroute-no-memory` و `x-omniroute-no-cache` لإلغاء الاشتراك الكامل في المحتوى |
+| `X-OmniRoute-Progress`   | طلب   | اضبط على `true` لأحداث التقدم                                                                                                                                                                                                                                                                                                                     |
+| `X-Session-Id`           | طلب   | مفتاح جلسة مثبت لتقارب الجلسة الخارجية                                                                                                                                                                                                                                                                                                            |
+| `x_session_id`           | طلب   | يتم أيضًا قبول متغير الشرطة السفلية ( HTTP المباشر)                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | طلب   | علامة session/conversation التي يوفرها المتصل (تغذي الذاكرة أيضًا). عند وجوده، لا يتم تجميع `call_logs.session_tag` حرفيًا لإسناد التكلفة لكل جلسة (#8249) — أبدًا عند الغياب                                                                                                                                                                     |
+| `Idempotency-Key`        | طلب   | مفتاح Dedup (نافذة 5s)                                                                                                                                                                                                                                                                                                                            |
+| `X-Request-Id`           | طلب   | مفتاح إلغاء الحذف البديل                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-connection` | طلب   | قم بتثبيت طلب نموذج واحد على اتصال موفر واحد (حساب) بواسطة المعرف الخاص به — راجع [تثبيت الحساب لكل طلب](#account-pinning-per-request)                                                                                                                                                                                                            |
+| `X-OmniRoute-Cache`      | إجابة | `HIT` أو `MISS` (غير متدفق)                                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Idempotent` | إجابة | `true` إذا تم إلغاء البيانات المكررة                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Progress`   | إجابة | `enabled` إذا كان تتبع التقدم قيد التشغيل                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Session-Id` | إجابة | الجلسة الفعالة ID المستخدمة بواسطة OmniRoute                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Request-Id` | إجابة | معرف ارتباط الطلب (عندما يكون معروفًا)                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Version`    | إجابة | إصدار بناء OmniRoute (موجود دائمًا)                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Cost-Saved` | إجابة | USD تم تجنب ذاكرة التخزين المؤقت على HIT (ضربات ذاكرة التخزين المؤقت فقط)                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Decision`   | إجابة | تتبع التوجيه: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` هي استراتيجية التحرير والسرد، أو `single` لطلب غير التحرير والسرد) — موجود دائمًا في استجابات الاكتمال                                                                                                                                                                |
 
-> ملاحظة Nginx: إذا كنت تعتمد على رؤوس تستخدم الشرطة السفلية (مثل `x_session_id`)، فعّل `underscores_in_headers on;`.
+> ملاحظة Nginx: إذا كنت تعتمد على الرؤوس السفلية (على سبيل المثال `x_session_id`)، فقم بتمكين `underscores_in_headers on;`.
 
 #### تثبيت الحساب لكل طلب
 
-عندما يكون لدى موفر عدة اتصالات (حسابات أو مفاتيح)، يختار OmniRoute عادةً أحدها
-من خلال استراتيجية اختيار الحساب. ويمكن للطلب بدلًا من ذلك تثبيت اتصال محدد
-باستخدام الرأس `x-omniroute-connection`:
+عندما يكون لدى مقدم الخدمة عدة اتصالات (حسابات أو مفاتيح)، تقوم OmniRoute عادةً باختيار واحدة من خلال استراتيجية اختيار الحساب الخاصة بها. يمكن للطلب بدلاً من ذلك تثبيت اتصال محدد باستخدام رأس `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,16 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **أين يمكن العثور على المعرّف.** افتح صفحة الموفر في لوحة التحكم
-  (**Dashboard → Providers → <provider>**) وانقر على شريحة المعرّف `xxxxxxxx…` في صف الاتصال — سيؤدي ذلك إلى نسخ معرّف الاتصال الكامل.
-- **الطلبات التي تحترمه.** الطلبات ذات النموذج الواحد (`provider/model`) على
-  `/v1/chat/completions` و`/v1/messages` و`/v1/responses`. تتجاهل التركيبات الرأس: ثبّت حسابًا لكل خطوة في التركيبة من خلال اتصال الخطوة نفسه.
-- **التثبيت صارم وليس تفضيلًا.** يُستخدم الاتصال المثبّت حصريًا. يسجّل حدوث فشل داخل الطلب فترة تبريد للحساب، لكنه **لا** ينتقل إلى حساب شقيق لدى الموفر نفسه.
-- **فترة التبريد والحصة تحرران التثبيت.** أثناء دخول الاتصال المثبّت في فترة تبريد، أو استنفاد حصته أو حظره بواسطة سياسة حصة، تعود الطلبات اللاحقة إلى الاتصالات الأخرى لدى الموفر، تمامًا كما يحدث مع حركة المرور غير المثبّتة.
-- **تفشل المعرّفات غير المعروفة أو المعطّلة.** إذا لم يكن المعرّف ضمن مجموعة الموفر النشطة (محذوفًا أو معطّلًا أو تابعًا لموفر آخر)، فلن يبقى أي حساب مؤهل، ولذلك يفشل الطلب بدلًا من توجيهه بصمت إلى مكان آخر.
+- **أين تجد معرف.** افتح صفحة الموفر في لوحة المعلومات (** لوحة المعلومات موفري → → <provider>** ) وانقر فوق شريحة معرف `xxxxxxxx…` في صف الاتصال — حيث تقوم بنسخ معرف الاتصال الكامل.
+- **الذي يطلب تكريمه.** طلبات النموذج الفردي (`provider/model`) على `/v1/chat/completions` و `/v1/messages` و `/v1/responses`. تتجاهل المجموعات الرأس: قم بتثبيت حساب في كل خطوة من خطوات التحرير والسرد من خلال اتصال الخطوة الخاصة بدلاً من ذلك.
+- **الدبوس صارم وليس تفضيلاً.** يتم استخدام الاتصال المثبت حصرا. يؤدي الفشل داخل الطلب إلى تسجيل فترة تباطؤ الحساب ولكنه يفعل ذلك** لا** قم بالتدوير إلى حساب شقيق لنفس المزود.
+- **حرر فترة التهدئة والحصص من الدبوس.** أثناء تبريد الاتصال المثبت أو استنفاد الحصة النسبية أو حظره بواسطة سياسة الحصص النسبية، تعود الطلبات اللاحقة إلى اتصالات الموفر الأخرى، تمامًا مثل حركة المرور غير المثبتة.
+- **فشل معرفات غير معروفة أو معطلة.** المعرف غير الموجود في المجموعة النشطة للموفر (محذوف، أو معطل، أو ينتمي إلى موفر آخر) لا يترك أي حساب مؤهل، لذلك يفشل الطلب بدلاً من التوجيه بصمت إلى مكان آخر.
 
-يرسل Claude Code الرؤوس المخصصة من خلال `ANTHROPIC_CUSTOM_HEADERS`. ضعه في كتلة `env`
-في `~/.claude/settings.json`، أو في `.claude/settings.json` على مستوى المشروع لتثبيت حساب مختلف لكل مشروع:
+يرسل رمز Claude رؤوسًا مخصصة من خلال `ANTHROPIC_CUSTOM_HEADERS`. ضعه في كتلة `env` الخاصة بـ `~/.claude/settings.json`، أو في `.claude/settings.json` على مستوى المشروع لتثبيت حساب مختلف لكل مشروع:
 
 ```jsonc
 {
@@ -124,12 +120,11 @@ curl http://localhost:20128/v1/chat/completions \
 }
 ```
 
-المصدر: `src/sse/handlers/chat.ts` (قراءة الرأس)، و
-`src/sse/services/auth.ts` و`src/sse/services/sessionAffinityPin.ts` (تحرير التثبيت والتحقق من الغياب عن المجموعة).
+المصدر: `src/sse/handlers/chat.ts` (قراءة الرأس)، `src/sse/services/auth.ts` و `src/sse/services/sessionAffinityPin.ts` (تحرير الدبوس والتحقق من المفقودين من المجمع).
 
-> **رؤوس بيانات تكلفة الاستخدام:** تحمل استجابات النجاح غير المتدفقة أيضًا مجموعة بيانات تكلفة الاستخدام `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (بالدولار الأمريكي، 10 منازل عشرية ثابتة؛ `0.0000000000` للمجاني/غير المسعّر)، و`X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`، و`X-OmniRoute-Model`، و`X-OmniRoute-Provider`، و`X-OmniRoute-Latency-Ms`، و`X-OmniRoute-Cache-Hit`، و`X-OmniRoute-Fallback-Attempts` (فقط عندما تكون القيمة أكبر من 0)، بالإضافة إلى `X-OmniRoute-Request-Id` و`X-OmniRoute-Version`. تُصدر هذه الرؤوس من خلال إكمالات الدردشة، و`/v1/responses`، و`/v1/messages`، **ونقاط نهاية الوسائط** — `/v1/embeddings`، و`/v1/images/generations`، و`/v1/audio/speech`، و`/v1/audio/transcriptions`، و`/v1/rerank`، و`/v1/videos/generations`، و`/v1/music/generations`، و`/v1/moderations` (بتكلفة `0` دائمًا). تُحتسب تكلفة الوسائط لكل نوع من أنواع الوسائط (لكل صورة، ولكل ثانية، ولكل حرف، ولكل وحدة بحث) عند توفر التسعير، وإلا فتكون `0` (مع استمرار التشغيل عند الفشل).
+> **رؤوس القياس عن بعد للتكلفة:** تحمل استجابات النجاح غير المتدفقة أيضًا مجموعة القياس عن بعد للتكلفة `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD، الكسور العشرية الثابتة؛ `0.0000000000` لـ free/unpriced) و `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out` و `X-OmniRoute-Model` و `X-OmniRoute-Provider` و `X-OmniRoute-Latency-Ms` و `X-OmniRoute-Cache-Hit` و `X-OmniRoute-Fallback-Attempts` (فقط عندما > 0)، بالإضافة إلى `X-OmniRoute-Request-Id` و `X-OmniRoute-Version`. تنبعث هذه من خلال إكمال الدردشة، `/v1/responses`، `/v1/messages`،** ونقاط نهاية وسائل الإعلام** — `/v1/embeddings` و `/v1/images/generations` و `/v1/audio/speech` و `/v1/audio/transcriptions` و `/v1/rerank` و `/v1/videos/generations` و `/v1/music/generations` و `/v1/moderations` (تكلفة `0` دائمًا). يتم حساب تكلفة الوسائط لكل طريقة (لكل صورة، لكل ثانية، لكل حرف، لكل وحدة بحث) عندما يكون التسعير متاحًا، وإلا `0` (فشل الفتح).
 
-> **دلالات تكلفة إصابة ذاكرة التخزين المؤقت:** عند حدوث إصابة في ذاكرة التخزين المؤقت الدلالية (`X-OmniRoute-Cache-Hit: true`)، لا يُجرى أي استدعاء للجهة السابقة، ولذلك تكون قيمة `X-OmniRoute-Response-Cost` هي `0.0000000000` (أي التكلفة **الإضافية** لتقديم الاستجابة المخزنة). وتُبلّغ التكلفة الأصلية/المفترضة بشكل منفصل في `X-OmniRoute-Cost-Saved`. يجب على مستهلكي الفوترة جمع `X-OmniRoute-Response-Cost` (فالإصابات لا تكلّف شيئًا)؛ بينما يمكن لتحليلات ذاكرة التخزين المؤقت تجميع `X-OmniRoute-Cost-Saved`.
+> **دلالات تكلفة ذاكرة التخزين المؤقت:** في ذاكرة التخزين المؤقت الدلالية HIT (`X-OmniRoute-Cache-Hit: true`) لم يتم إجراء استدعاء المنبع، لذلك `X-OmniRoute-Response-Cost` هو `0.0000000000` (** تزايدي** تكلفة خدمة الضربة). يتم الإبلاغ عن تكلفة original/would-have-been بشكل منفصل في `X-OmniRoute-Cost-Saved`. يجب على المستهلكين الذين يقومون بإعداد الفواتير أن يجمعوا `X-OmniRoute-Response-Cost` (الزيارات لا تكلف شيئًا)؛ يمكن لتحليلات ذاكرة التخزين المؤقت تجميع `X-OmniRoute-Cost-Saved`.
 
 ## عقود إيجار الجلسات المُدارة الحصرية
 
@@ -331,7 +326,7 @@ GET /v1/embeddings
 
 ---
 
-## إنشاء الصور
+## توليد الصور
 
 ```bash
 POST /v1/images/generations
@@ -345,29 +340,24 @@ Content-Type: application/json
 }
 ```
 
-تشمل موفّرات الخدمة المتاحة OpenAI (GPT Image 2) وxAI (Grok Image) وTogether AI (FLUX) وFireworks AI وNebius (FLUX) وHyperbolic وNanoBanana و**OpenRouter** و**ZenMux** وSD WebUI (محلي) وComfyUI (محلي).
+تشمل موفري الخدمات المتاحين OpenAI (GPT Image 2)، و xAI (Grok Image)، و Together AI (FLUX)، و Fireworks AI، و Nebius (FLUX)، و Hyperbolic، و NanoBanana،**OpenRouter** ,**ZenMux** ، SD WebUI (محلي)، ComfyUI (محلي).
 
-يعيد `n` عددًا قدره `n` من الصور في `data[]`. أما الموفّرون الذين تعيد واجهة برمجة التطبيقات الأساسية لديهم صورة واحدة لكل استدعاء
-(Black Forest Labs وStability AI وLeonardo وIdeogram وHaiper وHyperbolic وMagnific/Freepik
-وNVIDIA NIM وCloudflare Workers AI)، فيحصلون على `n` استدعاءات منفصلة للواجهة الأساسية، بحد أقصى 4 استدعاءات قيد التنفيذ. تتم إزاحة `seed` ثابتة وفق فهرس الاستدعاء (`seed` و`seed + 1` و…)، بحيث تختلف الصور مع بقائها قابلة لإعادة الإنتاج. الحد الأقصى لـ`n` هو 10. يفشل الطلب بالكامل إذا فشل أي استدعاء. قائمة التنسيقات التي تستخدم التوزيع المتعدد هي `SINGLE_IMAGE_FANOUT_FORMATS` في
-`open-sse/handlers/imageGeneration/fanOut.ts`.
+`n` تقوم بإرجاع صور `n` في `data[]`. مقدمو الخدمة الذين يُرجع API الخاص بهم صورة واحدة لكل مكالمة (Black Forest Labs، Stability AI، Leonardo، Ideogram، Haiper، Hyperbolic، Magnific/Freepik، NVIDIA NIM، Cloudflare Workers AI) يحصلون على مكالمات منفصلة `n` ، على الأكثر 4 أثناء الرحلة. يتم تعويض `seed` الثابت بواسطة فهرس الاستدعاء (`seed`, `seed + 1`, …)، لذلك تختلف الصور ولكنها تظل قابلة للتكرار. تم وضع حد أقصى `n` عند 10. يفشل الطلب ككل في حالة فشل أي استدعاء. قائمة التنسيقات المتفرعة هي `SINGLE_IMAGE_FANOUT_FORMATS` في `open-sse/handlers/imageGeneration/fanOut.ts`.
 
-يعيد ZenMux استخدام اتصال مفتاح API الحالي ويقبل البادئات `zenmux/` أو `zm/`:
+Codex GPT نماذج الصور (`codex/gpt-image-*`) تُرجع PNG فقط: يجيب المنبع على `200` ببايتات PNG حتى عند طلب `jpeg` أو `webp`. يتم رفض الطلب مع أي `output_format` آخر (`webp`, `jpeg`, ...) باستخدام HTTP 400 بدلاً من تجاهله بصمت؛ حذفه أو إرسال `png`. لم يتم إعادة توجيه `output_compression`.
 
-- يستخدم `zenmux/openai/gpt-image-2` واجهة OpenAI Images API الخاصة بـZenMux. تشمل الخيارات `size`،
-  و`quality` و`n` و`output_format` و`output_compression` و`background` و`response_format`.
-- تستخدم الناشرات الأخرى، مثل `zm/meta/muse-image-1.0`، نقطة نهاية Vertex AI `:predict` الخاصة بـZenMux. تُحوَّل `n` إلى `sampleCount`، و`aspect_ratio` إلى `aspectRatio`، و`image_size`
-  (`1K` و`2K` و`4K`) إلى `sampleImageSize`. يوفّر `size` بالبكسل نسبة أبعاد فقط، ولا يضمن أبعادًا بالبكسل. تختلف النسب والدقة والأعداد المدعومة حسب النموذج.
-- يختار `zm/inclusionai/ming-image-0.1-design` أبعاده الخاصة. احذف `size`،
-  و`aspect_ratio` و`image_size`؛ إذ تعيد القيم الصريحة HTTP 400. يمكن طلب PNG وJPEG وWebP باستخدام `output_format`.
+يعيد ZenMux استخدام اتصال مفتاح API الموجود ويقبل البادئات `zenmux/` أو `zm/` :
 
-يدعم هذا التكامل إنشاء الصور من النص، وليس تحرير الصور المرجعية. تتم تسوية مخرجات Vertex إلى `data[].b64_json`؛ ويعيد `response_format: "url"` عنوان URL للمصدر الأساسي باستخدام HTTPS أو عنوان URL لبيانات base64 عندما لا تتوفر إلا بايتات الصورة. تؤدي المخرجات الفارغة أو التي تمت تصفيتها إلى إرجاع خطأ بدلًا من نجاح فارغ. يعتمد الوصول إلى النماذج على حساب ZenMux. راجع [واجهة Vertex API الخاصة بـZenMux](https://docs.zenmux.ai/api/vertexai/generate-images) و[واجهة OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+- يستخدم `zenmux/openai/gpt-image-2` صور ZenMux الخاصة بـ OpenAI API. تتضمن الخيارات `size`، `quality`، `n`، `output_format`، `output_compression`، و `background`، و `response_format`.
+- يستخدم الناشرون الآخرون، مثل `zm/meta/muse-image-1.0`، نقطة النهاية الخاصة بـ ZenMux Vertex AI `:predict`. خرائط `n` إلى `sampleCount`، `aspect_ratio` إلى `aspectRatio`، و `image_size` (`1K`، `2K`، `4K`) إلى `sampleImageSize`. يوفر البكسل `size` نسبة العرض إلى الارتفاع فقط، وليس أبعاد البكسل المضمونة. تختلف النسب والدقة والأعداد المدعومة حسب الطراز.
+- `zm/inclusionai/ming-image-0.1-design` تختار أبعادها الخاصة. حذف `size` و `aspect_ratio` و `image_size`؛ ترجع القيم الصريحة HTTP 400. يمكن طلب PNG و JPEG و WebP باستخدام `output_format`.
 
-يتيح اتصال تسجيل الدخول إلى Microsoft 365 Copilot استخدام `copilot-m365-web/m365-copilot-image` عبر أداة الصور المضمنة في Copilot: دور Copilot واحد لكل صورة (`n` من 1 إلى 4)، مع استخدام `size` لتوجيه الاتجاه فقط، وإرجاع الصور مضمنة (`b64_json`، أو عنوان URL للبيانات عند استخدام
-`response_format: "url"`). راجع [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
+This integration supports text-to-image generation, not reference-image editing. Vertex output is normalized to `data[].b64_json`; `response_format: "url"` returns an upstream HTTPS URL or a base64 data URL when only image bytes are available. Empty/filtered outputs return an error rather than an empty success. Model access depends on the ZenMux account. See [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) and [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+
+يخدم اتصال تسجيل الدخول Microsoft 365 Copilot `copilot-m365-web/m365-copilot-image` من خلال أداة الصور المضمنة في Copilot: دورة Copilot واحدة لكل صورة (`n` 1–4)، وتوجيه `size` فقط للاتجاه، ويتم إرجاع الصور في السطر (`b64_json`، أو بيانات URL لـ `response_format: "url"`). انظر [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 
 ```bash
-# سرد جميع نماذج الصور
+# List all image models
 GET /v1/images/generations
 ```
 

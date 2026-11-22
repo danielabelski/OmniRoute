@@ -49,7 +49,7 @@ Har bir joylashtirish `/openapi.yaml` manzilida o‘z spetsifikatsiya nusxasini 
 
 ---
 
-## Chat yakunlash
+## Chat yakunlari
 
 ```bash
 POST /v1/chat/completions
@@ -67,31 +67,32 @@ Content-Type: application/json
 
 ### Maxsus sarlavhalar
 
-| Header                   | Direction | Description                                                                                                                                                                                                                                                         |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | So‘rov    | Keshni chetlab o‘tish uchun `true` qiymatiga o‘rnating                                                                                                                                                                                                              |
-| `x-omniroute-no-memory`  | So‘rov    | Ushbu so‘rov uchun xotira + ko‘nikmalarni kiritishni o‘tkazib yuborish uchun `true` qiymatiga o‘rnating (no-cache bilan bir xil ishlaydi; har bir chaqiruv uchun token/xarajat qo‘shimcha sarfini oldini oladi)                                                     |
-| `X-OmniRoute-Progress`   | So‘rov    | Jarayon hodisalari uchun `true` qiymatiga o‘rnating                                                                                                                                                                                                                 |
-| `X-Session-Id`           | So‘rov    | Tashqi sessiya bog‘liqligi uchun yopishqoq sessiya kaliti                                                                                                                                                                                                           |
-| `x_session_id`           | So‘rov    | Pastki chiziqli varianti ham qabul qilinadi (to‘g‘ridan-to‘g‘ri HTTP)                                                                                                                                                                                               |
-| `X-OmniRoute-Session-Id` | So‘rov    | Chaqiruvchi taqdim etgan sessiya/suhbat tegi (xotiraga ham uzatiladi). Mavjud bo‘lganda, sessiya bo‘yicha xarajatlarni bog‘lash uchun `call_logs.session_tag` maydoniga aynan o‘z holicha saqlanadi (#8249) — mavjud bo‘lmaganda hech qachon avtomatik yaratilmaydi |
-| `Idempotency-Key`        | So‘rov    | Takroriylikni bartaraf etish kaliti (5 soniyalik oyna)                                                                                                                                                                                                              |
-| `X-Request-Id`           | So‘rov    | Muqobil takroriylikni bartaraf etish kaliti                                                                                                                                                                                                                         |
-| `x-omniroute-connection` | So‘rov    | Bitta modelga yuboriladigan so‘rovni ID raqami bo‘yicha bitta provayder ulanishiga (akkauntga) biriktirish — [Har bir so‘rov uchun akkauntni biriktirish](#account-pinning-per-request) bo‘limiga qarang                                                            |
-| `X-OmniRoute-Cache`      | Javob     | `HIT` yoki `MISS` (oqimlashtirilmagan)                                                                                                                                                                                                                              |
-| `X-OmniRoute-Idempotent` | Javob     | Takroriylik bartaraf etilgan bo‘lsa `true`                                                                                                                                                                                                                          |
-| `X-OmniRoute-Progress`   | Javob     | Jarayon kuzatuvi yoqilgan bo‘lsa `enabled`                                                                                                                                                                                                                          |
-| `X-OmniRoute-Session-Id` | Javob     | OmniRoute tomonidan ishlatilgan amaldagi sessiya IDsi                                                                                                                                                                                                               |
-| `X-OmniRoute-Request-Id` | Javob     | So‘rovni bog‘lash IDsi (ma’lum bo‘lganda)                                                                                                                                                                                                                           |
-| `X-OmniRoute-Version`    | Javob     | OmniRoute yig‘ilmasi versiyasi (har doim mavjud)                                                                                                                                                                                                                    |
-| `X-OmniRoute-Cost-Saved` | Javob     | `HIT` holatida kesh tejagan AQSh dollari (faqat keshga mos kelish holatlarida)                                                                                                                                                                                      |
-| `X-OmniRoute-Decision`   | Javob     | Yo‘naltirish izi: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` kombinatsiyalangan strategiya yoki kombinatsiyalanmagan so‘rov uchun `single`) — yakuniy javoblar uchun har doim mavjud                                                             |
+| Sarlavha                 | Yo'nalish | Tavsif                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | So'rov    | Keshni chetlab o'tish uchun `true` ga sozlang                                                                                                                                                                                                                                                                                                                                                                                   |
+| `x-omniroute-no-memory`  | So'rov    | Ushbu soʻrov uchun xotira + koʻnikmalarini kiritishni oʻtkazib yuborish uchun `true` parametrini oʻrnating (keshsiz oynani aks ettiradi; har bir qoʻngʻiroq uchun token/cost qoʻshimcha xarajatlaridan saqlaydi)                                                                                                                                                                                                                |
+| `x-omniroute-no-log`     | So'rov    | Ushbu xulosa soʻrovi uchun qoʻngʻiroqlar jurnallaridan request/response yuklamalarini oʻtkazib yuborish uchun `true` parametrini oʻrnating (barcha chat-oilaviy yoʻnalishlar: Chat yakunlari, javoblar, xabarlar, tugallanishlar, Gemini). Vaqt tamg'asi, model, holat, davomiylik va tokenlar hali ham qayd etiladi. To'liq kontentdan voz kechish uchun `x-omniroute-no-memory` va `x-omniroute-no-cache` bilan birlashtiring |
+| `X-OmniRoute-Progress`   | So'rov    | Voqealar rivoji uchun `true` ga sozlang                                                                                                                                                                                                                                                                                                                                                                                         |
+| `X-Session-Id`           | So'rov    | Tashqi seansga yaqinlik uchun yopishqoq seans kaliti                                                                                                                                                                                                                                                                                                                                                                            |
+| `x_session_id`           | So'rov    | Pastki chiziq varianti ham qabul qilinadi (to'g'ridan-to'g'ri HTTP)                                                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Session-Id` | So'rov    | Qo'ng'iroq qiluvchi tomonidan taqdim etilgan session/conversation yorlig'i (shuningdek, xotirani oziqlantiradi). Mavjud bo'lganda, har bir sessiya narxini belgilash (#8249) uchun so'zma-so'z `call_logs.session_tag` ga so'zma-so'z davom etuvchi — mavjud bo'lmaganda hech qachon sintez qilinmaydi                                                                                                                          |
+| `Idempotency-Key`        | So'rov    | Nosozlik kaliti (5s oynasi)                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `X-Request-Id`           | So'rov    | Muqobil deup kaliti                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `x-omniroute-connection` | So'rov    | Bitta modelli soʻrovni bitta provayder ulanishiga (hisobiga) uning identifikatori — boʻyicha mahkamlang. [Har bir soʻrov uchun hisobni mahkamlash.](#account-pinning-per-request)                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Cache`      | Javob     | `HIT` yoki `MISS` (oqimsiz)                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Idempotent` | Javob     | `true` agar dublikatsiya qilingan bo'lsa                                                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Progress`   | Javob     | `enabled` agar jarayonni kuzatish yoqilgan bo'lsa                                                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | Javob     | OmniRoute tomonidan ishlatiladigan samarali ID sessiyasi                                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Request-Id` | Javob     | Korrelyatsiya identifikatorini so'rash (ma'lum bo'lsa)                                                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Version`    | Javob     | OmniRoute qurish versiyasi (har doim mavjud)                                                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Cost-Saved` | Javob     | USD HIT -da keshdan saqlandi (faqat kesh xitlar)                                                                                                                                                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Decision`   | Javob     | Marshrut izi: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` - kombinatsiyalangan strategiya yoki kombinatsiyalangan bo'lmagan so'rov uchun `single` ) — har doim yakuniy javoblarda mavjud                                                                                                                                                                                                                      |
 
-> Nginx eslatmasi: agar pastki chiziqli sarlavhalarga (masalan, `x_session_id`) tayansangiz, `underscores_in_headers on;` direktivasini yoqing.
+> Nginx eslatmasi: agar siz pastki chiziq sarlavhalariga tayansangiz (masalan `x_session_id`), `underscores_in_headers on;` yoqing.
 
-#### Har bir so‘rov uchun akkauntni biriktirish
+#### Har bir soʻrov uchun hisobni mahkamlash
 
-Provayderda bir nechta ulanishlar (akkauntlar yoki kalitlar) mavjud bo‘lsa, OmniRoute odatda akkaunt tanlash strategiyasi orqali ulardan birini tanlaydi. So‘rov o‘rniga `x-omniroute-connection` sarlavhasi yordamida ma’lum bir ulanishga biriktirilishi mumkin:
+Agar provayderda bir nechta ulanishlar (hisoblar yoki kalitlar) bo'lsa, OmniRoute odatda hisob tanlash strategiyasi orqali birini tanlaydi. Buning o'rniga so'rov `x-omniroute-connection` sarlavhasi bilan bitta maxsus ulanishni o'rnatishi mumkin:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -101,27 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Id ni qayerdan topish mumkin.** Dashboarddagi provayder sahifasini oching
-  (**Dashboard → Providers → <provider>**) va ulanish qatoridagi `xxxxxxxx…` id chipini bosing —
-  bu to‘liq ulanish id sini nusxalaydi.
-- **U qaysi so‘rovlarda ishlaydi.** `/v1/chat/completions`, `/v1/messages` va
-  `/v1/responses` dagi bitta modelga yuboriladigan so‘rovlarda (`provider/model`). Kombinatsiyalar
-  sarlavhani e’tiborsiz qoldiradi: har bir kombinatsiya bosqichi uchun hisobni bosqichning
-  o‘z ulanishi orqali biriktiring.
-- **Biriktirish qat’iy, afzallik emas.** Biriktirilgan ulanishdan faqat o‘zi foydalaniladi.
-  So‘rov ichidagi xatolik hisobning kutish holatini qayd etadi, ammo shu provayderga tegishli
-  boshqa hisobga o‘tmaydi.
-- **Kutish holati va kvota biriktirishni bekor qiladi.** Biriktirilgan ulanish kutish holatida
-  bo‘lganida, kvota tugaganida yoki kvota siyosati tomonidan bloklanganida, keyingi so‘rovlar
-  xuddi biriktirilmagan trafik kabi provayderning boshqa ulanishlariga o‘tadi.
-- **Noma’lum yoki o‘chirilgan id lar xatolik bilan yakunlanadi.** Provayderning faol havzasida
-  mavjud bo‘lmagan id (o‘chirilgan, faolsizlantirilgan yoki boshqa provayderga tegishli id)
-  mos hisob qoldirmaydi, shuning uchun so‘rov boshqa joyga jimgina yo‘naltirilish o‘rniga
-  xatolik bilan yakunlanadi.
+- **Identifikatorni qayerdan topish mumkin.** Boshqaruv panelida provayder sahifasini oching (** Boshqaruv paneli → Provayderlari → <provider>** ) va ulanish qatoridagi `xxxxxxxx…` id chipini bosing — u to'liq ulanish identifikatorini ko'chiradi.
+- **Qaysi talablar buni hurmat qiladi.** `/v1/chat/completions`, `/v1/messages` va `/v1/responses` bo'yicha yagona modelli so'rovlar (`provider/model`). Kombolar sarlavhani e'tiborsiz qoldiradi: o'rniga qadamning o'z ulanishi orqali har bir kombinatsiyalangan qadam uchun hisob qaydnomasini qo'ying.
+- **PIN qat'iy, afzallik emas.** Qattiqlashtirilgan ulanish faqat ishlatiladi. So'rov ichidagi xatolik hisobning sovishini qayd qiladi, lekin buni amalga oshiradi** emas** bir xil provayderning birodar hisobiga aylantiring.
+- **Sovutish va kvota pinni bo'shatadi.** Qattiqlangan ulanish sovib ketayotgan, kvota tugagan yoki kvota siyosati bilan bloklangan bo'lsa, keyingi so'rovlar provayderning boshqa ulanishlariga qaytariladi, xuddi mahkamlanmagan trafik kabi.
+- **Noma'lum yoki o'chirilgan identifikatorlar muvaffaqiyatsiz tugadi.** Provayderning faol hovuzida bo'lmagan identifikator (o'chirilgan, o'chirilgan yoki boshqa provayderga tegishli) tegishli hisobni qoldirmaydi, shuning uchun so'rov boshqa joyga jimgina yo'naltirish o'rniga bajarilmaydi.
 
-Claude Code maxsus sarlavhalarni `ANTHROPIC_CUSTOM_HEADERS` orqali yuboradi. Uni
-`~/.claude/settings.json` faylining `env` blokiga yoki har bir loyiha uchun boshqa hisobni
-biriktirish maqsadida loyiha darajasidagi `.claude/settings.json` fayliga qo‘shing:
+Claude Code `ANTHROPIC_CUSTOM_HEADERS` orqali maxsus sarlavhalarni yuboradi. Uni `~/.claude/settings.json` ning `env` blokiga yoki har bir loyiha uchun boshqa hisob qaydnomasini belgilash uchun loyiha darajasidagi `.claude/settings.json` ga joylashtiring:
 
 ```jsonc
 {
@@ -133,32 +120,11 @@ biriktirish maqsadida loyiha darajasidagi `.claude/settings.json` fayliga qo‘s
 }
 ```
 
-Manba: `src/sse/handlers/chat.ts` (sarlavhani o‘qish), `src/sse/services/auth.ts` va
-`src/sse/services/sessionAffinityPin.ts` (biriktirishni bekor qilish va havzada mavjud
-bo‘lmagan ulanishni tekshirish).
+Manba: `src/sse/handlers/chat.ts` (sarlavhani o'qish), `src/sse/services/auth.ts` va `src/sse/services/sessionAffinityPin.ts` (pinni chiqarish va hovuzdan etishmayotgan tekshiruv).
 
-> **Xarajat telemetriyasi sarlavhalari:** oqimdan foydalanilmaydigan muvaffaqiyatli javoblarda
-> `X-OmniRoute-*` xarajat telemetriyasi to‘plami ham yuboriladi —
-> `X-OmniRoute-Response-Cost` (AQSh dollari, o‘nlikdan keyin aniq 10 ta raqam;
-> bepul yoki narxi belgilanmagan holatda `0.0000000000`), `X-OmniRoute-Tokens-In` /
-> `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`,
-> `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` va `X-OmniRoute-Fallback-Attempts`
-> (faqat `> 0` bo‘lganda), shuningdek `X-OmniRoute-Request-Id` va `X-OmniRoute-Version`.
-> Ular chat completions, `/v1/responses`, `/v1/messages` **va media endpointlari** —
-> `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`,
-> `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`,
-> `/v1/music/generations` va `/v1/moderations` (har doim `0` xarajat bilan) tomonidan
-> yuboriladi. Media xarajati narxlash mavjud bo‘lganda har bir modallik bo‘yicha
-> (har bir rasm, har bir soniya, har bir belgi, har bir qidiruv birligi uchun) hisoblanadi,
-> aks holda `0` qiymati qaytariladi (xatolik sababli ishlashni to‘xtatmaydi).
+> **Cost telemetry headers:** non-streaming success responses also carry the `X-OmniRoute-*` cost-telemetry set — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimals; `0.0000000000` for free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, and `X-OmniRoute-Fallback-Attempts` (only when > 0), plus `X-OmniRoute-Request-Id` and `X-OmniRoute-Version`. These are emitted by chat completions, `/v1/responses`, `/v1/messages`, **and the media endpoints** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, and `/v1/moderations` (always cost `0`). Media cost is computed per modality (per-image, per-second, per-character, per search-unit) when pricing is available, otherwise `0` (fail-open).
 
-> **Keshdan olingan natija xarajati semantikasi:** semantik keshda HIT
-> (`X-OmniRoute-Cache-Hit: true`) yuz berganda upstream chaqiruv amalga oshirilmaydi,
-> shuning uchun `X-OmniRoute-Response-Cost` `0.0000000000` ga teng bo‘ladi
-> (natijani keshdan taqdim etishning **qo‘shimcha** xarajati). Asl yoki yuz berishi mumkin
-> bo‘lgan xarajat `X-OmniRoute-Cost-Saved` da alohida ko‘rsatiladi. Hisob-kitobni amalga
-> oshiruvchi iste’molchilar `X-OmniRoute-Response-Cost` ni jamlashi kerak (HIT lar
-> hech narsa turmaydi); kesh tahlili esa `X-OmniRoute-Cost-Saved` ni jamlashi mumkin.
+> **Kesh-hit xarajat semantikasi:** semantik keshda HIT (`X-OmniRoute-Cache-Hit: true`) yuqori oqim chaqiruvi amalga oshirilmaydi, shuning uchun `X-OmniRoute-Response-Cost` `0.0000000000` (** ortib boruvchi** hitga xizmat qilish narxi). original/would-have-been xarajati `X-OmniRoute-Cost-Saved` da alohida xabar qilinadi. Billing iste'molchilari `X-OmniRoute-Response-Cost` summasini olishlari kerak (xitlar hech qanday xarajat qilmaydi); kesh tahlili `X-OmniRoute-Cost-Saved` jamlashi mumkin.
 
 ## Eksklyuziv boshqariladigan sessiya ijara-lari
 
@@ -355,13 +321,15 @@ Mavjud provayderlar orasida OpenAI (GPT Image 2), xAI (Grok Image), Together AI 
 
 `n` `data[]` dagi `n` tasvirlarini qaytaradi. Yuqori oqim API har bir qo‘ng‘iroq uchun bitta tasvirni qaytaradigan provayderlar (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) parvozda `n` alohida yuqori oqim qo‘ng‘iroqlarini oladilar. Ruxsat etilgan `seed` qo'ng'iroq indeksi (`seed`, `seed + 1`, …) bilan ofset qilinadi, shuning uchun tasvirlar farqlanadi, lekin takrorlanishi mumkin. `n` 10 bilan chegaralangan. Har qanday qo'ng'iroq bajarilmasa, so'rov umuman bajarilmaydi. Fan-out formatlari ro'yxati `open-sse/handlers/imageGeneration/fanOut.ts` ichida `SINGLE_IMAGE_FANOUT_FORMATS`.
 
+Codex GPT Rasm modellari (`codex/gpt-image-*`) faqat PNG qaytaradi: yuqori oqim `jpeg` yoki `webp` so‘ralganda ham PNG baytlari bilan `200` javob beradi. Boshqa har qanday `output_format` (`webp`, `jpeg`, ...) bilan soʻrov jimgina eʼtiborga olinmaslik oʻrniga HTTP 400 bilan rad etiladi; uni tashlab qo'ying yoki `png` yuboring. `output_compression` yuborilmaydi.
+
 ZenMux mavjud API-kalit ulanishidan qayta foydalanadi va `zenmux/` yoki `zm/` prefikslarini qabul qiladi:
 
 - `zenmux/openai/gpt-image-2` ZenMux ning OpenAI Tasvirlaridan API foydalanadi. Variantlar orasida `size`, `quality`, `n`, `output_format`, `output_compression`, `background` va `response_format` mavjud.
 - `zm/meta/muse-image-1.0` kabi boshqa noshirlar ZenMux ning Vertex AI `:predict` oxirgi nuqtasidan foydalanadilar. `n` xaritalarini `sampleCount`, `aspect_ratio` dan `aspectRatio` ga va `image_size` (`1K`, `2K`, `4K`) dan `sampleImageSize`. Piksel `size` kafolatlangan piksel o'lchamlarini emas, faqat tomonlar nisbatini ta'minlaydi. Qo'llab-quvvatlanadigan nisbatlar, ruxsatlar va hisoblashlar modelga qarab farq qiladi.
 - `zm/inclusionai/ming-image-0.1-design` o'zining o'lchamlarini tanlaydi. `size`, `aspect_ratio` va `image_size` tashlab qo'ying ; aniq qiymatlar HTTP 400 ni qaytaradi. PNG, JPEG va WebP `output_format` bilan so'ralishi mumkin.
 
-Ushbu integratsiya mos yozuvlar tasvirini tahrirlashni emas, balki matndan tasvirga yaratishni qo'llab-quvvatlaydi. Vertex chiqishi `data[].b64_json` ga normallashtiriladi; `response_format: "url"` faqat tasvir baytlari mavjud bo'lganda yuqori oqim HTTPS URL yoki base64 ma'lumotlar URL qaytaradi. Empty/filtered natijalari bo'sh muvaffaqiyat emas, balki xatoni qaytaradi. Modelga kirish ZenMux hisobiga bog'liq. [ZenMux ning Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) va [OpenAI Tasvirlariga qarang API](https://docs.zenmux.ai/api/openai/generate-an-image).
+Ushbu integratsiya mos yozuvlar tasvirini tahrirlashni emas, balki matndan tasvirga yaratishni qo'llab-quvvatlaydi. Vertex chiqishi `data[].b64_json` ga normallashtiriladi; `response_format: "url"` faqat tasvir baytlari mavjud bo'lganda yuqori oqim HTTPS URL yoki base64 ma'lumot URL qaytaradi. Empty/filtered natijalari bo'sh muvaffaqiyat emas, balki xatoni qaytaradi. Modelga kirish ZenMux hisobiga bog'liq. [ZenMux ning Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) va [OpenAI Tasvirlariga qarang API](https://docs.zenmux.ai/api/openai/generate-an-image).
 
 Microsoft 365 Copilot kirish ulanishi Copilot ning oʻrnatilgan tasvir vositasi orqali `copilot-m365-web/m365-copilot-image` xizmat qiladi: har bir rasm uchun bir Copilot burilish (`n` 1–4), `size` faqat yoʻnalishni boshqaradi va inline sifatida qaytarilgan tasvirlar (`b64_json` yoki `response_format: "url"` uchun maʼlumotlar URL ). Qarang: [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 

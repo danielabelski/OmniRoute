@@ -77,7 +77,7 @@ GLM 5.3 基本模型和`glm-5.3-{low,high,max}`具有显式`supportsVision:false
 
 #### 描述缓存（`modalityBridge/bridgeCache.ts`）
 
-用于描述输出的内存中LRU + TTL缓存，在进程范围内共享。具有长度前缀帧的密钥= `sha256(imageRef + composedPrompt + configuredBridgeModel)` （无字段边界冲突）。模型组件是**配置的**桥接模型，而不是实际回答— `callVisionModel`模型可能会在内部回退，并且每次尝试键入都会使缓存碎片化。失败的描述永远不会被缓存。设置：
+用于描述输出的内存中LRU + TTL缓存，在进程范围内共享。具有长度前缀帧的密钥= `sha256(imageRef + composedPrompt + configuredBridgeModel)` （无字段边界冲突）。模型组件是**配置好的**桥接模型，而不是实际回答— `callVisionModel`模型可能会在内部回退，并且每次尝试键入都会使缓存碎片化。失败的描述永远不会被缓存。设置：
 
 | 钥匙                            | 默认   | 范围    |
 | ------------------------------- | ------ | ------- |
@@ -103,7 +103,7 @@ GLM 5.3 基本模型和`glm-5.3-{low,high,max}`具有显式`supportsVision:false
 
 专用仪表板页面是`/dashboard/settings/modality-bridge`。其 URL 可寻址`Vision`、 `Audio`和`Video`选项卡在切换`tab`值时保留查询参数。 Vision 选项卡公开启用、模式、模型选择（包括自动默认值）、任务感知提示、高级timeout/image/description-length/cache限制、运行时计数器和受保护的示例请求。 “音频”选项卡也是实时的：它公开支持、具有自动功能的仅 STT 模型选择器、 timeout/max-clip限制、音频计数器和`input_audio`样本测试。 “视频”选项卡具有功能性：它报告FFmpeg/ffprobe运行时状态—四种显式UI状态之一（探测正在运行或无法完成时的`unknown` 、客户端跳过探测的非环回仪表板主机上的`restricted` 、探测到并确认丢失后的`unavailable` ，或带有FFmpeg/ffprobe版本的`available` ） —保留enable/model/frame/video/timeout限制，将模型选择器过滤为支持视觉的模型，并公开视频计数器。
 
-之前AI设置下的Vision Bridge卡是新页面的兼容性链接；它不再拥有该表格的第二份副本。媒体提供者还将图像到文本和语音到文本工作流程链接到相应的模态桥选项卡，而无需删除现有的语音到文本游乐场。
+之前AI设置下的Vision Bridge卡是新页面的兼容链接；它不再拥有该表格的第二份副本。媒体提供者还将图像到文本和语音到文本工作流程链接到相应的模态桥选项卡，而无需删除现有的语音到文本游乐场。
 
 **Self-loop admission bypass:** when the describe call routes through OmniRoute's own `/v1` self-loop (non-standard provider model), the sub-request sends `x-omniroute-admission-bypass: internal` and is authenticated with the resolved self-loop credential — the local `sk_omniroute` sentinel in local mode, or the operator-configured `OMNIROUTE_API_KEY` / `ROUTER_API_KEY` env key (#1350) so `REQUIRE_API_KEY=true` deployments can still run the describe call. The bypass is only honored for those exact credentials, so external clients cannot use the header to skip admission.
 
@@ -156,7 +156,7 @@ GLM 5.3 基本模型和`glm-5.3-{low,high,max}`具有显式`supportsVision:false
 
 `scripts/perf/video-bridge-fu07-eval.ts`生成确定性的真实FFmpeg固定装置，用于重复数据删除后的字幕调用节省、密集运动预算分配、 blur/exposure/SI-TI证据、长尾快速剪切和逐渐淡出误报。它记录预分析墙时间，以及`/usr/bin/time`可用的子CPU和峰值RSS。它的质量检查只是结构性的预言。真正的字幕模型质量仍然是`HOLD`因为该工具没有授权端点或冻结判断。除非`--caption-cost-per-call-usd`提供明确的每次调用正估计，否则货币节省也仍然是`HOLD` ；该脚本永远不会伪造任何结果。
 
-每个帧限制为 4 MiB，所有原始帧总共限制为 23 MiB，序列化代理响应限制为 32 MiB。 `finally`中的私有临时目录被删除。 OmniRoute不捆绑FFmpeg并且不接受自定义可执行路径。在添加字幕之前，桥接器会应用保守的视觉重复数据删除过程：每个JPEG都减少为 16 × 16 灰度缓冲区，并且仅与保留的最后一帧进行比较。对于超过一帧的请求字幕预算，提取会提供最多两倍于预算的有界候选池，并且永远不会超过 16 帧。所请求的上限仅在重复数据删除后应用，当预算至少为 2 时，在最终稀疏期间保留第一个和最终选定的候选者。版本化`grayscale-16x16-mean-cells-v2`策略使用平均亮度增量和归一化增量至少为 0.05 的缩略图单元的比率中的较大者。重复阈值是常数 0.04，选择它是为了可预测性，而不是作为运行时设置公开。这种二次高对比度信号保留了仅平均值比较可以隐藏的小运动和可见文本变化。比较器或解码器错误打开并保持覆盖。输出元数据将提取的候选帧、成功使用的帧和丢弃的视觉重复项分开。
+每个帧限制为 4 MiB，所有原始帧总共限制为 23 MiB，序列化代理响应限制为 32 MiB。 `finally`中的私有临时目录被删除。 OmniRoute不捆绑FFmpeg并且不接受自定义可执行路径。在添加字幕之前，桥接器会应用保守的视觉重复数据删除过程：每个JPEG都减少为 16 × 16 灰度缓冲区，并且仅与保留的最后一帧进行比较。对于超过一帧的请求字幕预算，提取会提供最多两倍于预算的有界候选池，并且永远不会超过 16 帧。所请求的上限仅在重复数据删除后应用，并且当预算至少为 2 时，在最终稀疏期间保留第一个和最终选定的候选者。版本化`grayscale-16x16-mean-cells-v2`策略使用平均亮度增量和归一化增量至少为 0.05 的缩略图单元的比率中的较大者。重复阈值是常数 0.04，选择它是为了可预测性，而不是作为运行时设置公开。这种辅助高对比度信号保留了仅平均值比较可以隐藏的小运动和可见文本变化。比较器或解码器错误打开并保持覆盖。输出元数据将提取的候选帧、成功使用的帧和丢弃的视觉重复项分开。
 
 明确标记的视频部分可能会请求带时间戳的联系表。该桥最多构建一个4列、16帧的JPEG网格。每个 512 像素单元将其源时间戳刻录到高对比度底部带中，而相同的时间戳保留在文本元数据中以供下游关联和审核。完整的JPEG上限仍然为 32 MiB。如果`sharp`无法解码或组合网格，则桥接器会回退到各个JPEG帧；客户端中止仍然通过工作表操作传播。
 
@@ -166,13 +166,13 @@ GLM 5.3 基本模型和`glm-5.3-{low,high,max}`具有显式`supportsVision:false
 
 FU-07要求至少 98% 的质量保留和不超过 1.2 倍基线的 p95 延迟，加上等效平均字幕调用的 0.05 绝对案例平衡平均召回率改进，或至少减少 10% 的平均去重后字幕调用。 FU-09要求至少 0.85 的质量、95% 的保留率、20% 的中值延迟减少和 10% 的令牌减少。关键事实丢失、注入合规性或缺失使用会阻碍晋升。一次执行不能促进任何事情： `--previous-report`确认同一个policy/model的两个不同的、不重叠的、连续合格的执行revision/candidate/corpus.抽样实验无法确认接触表实验。
 
-收集器应该在内存中对响应进行评分，并保存`responseDigest` plus 指标和观察绑定，而不是响应文本。消费者还阅读遗留的原始观察结果，但绝不会将该文本复制到其报告中。每个观测值恰好接受`responseDigest`或`rawResponseText`之一。版本控制的允许列表保持为空，并具有不可变的`hold`默认值。合格的条目需要其证据参考、策略、模型修订、精确候选SHA、清单摘要和两个不同的运行IDs；冲突的上下文被拒绝。这些元数据是审计合同，不能证明引用的文件包含真实的测量结果。在添加任何条目之前查看实际收据。管理统计端点和视频仪表板揭示了保守的准备情况。单独配置的模型别名不会建立其修订版本或运行候选SHA，因此当前仪表板报告`HOLD`而不是重用另一个执行上下文中的资格。明确的实验选择与推广是分开的；没有默认值会自动更改。
+收集器应该在内存中对响应进行评分，并保存`responseDigest` plus 指标和观察绑定，而不是响应文本。消费者还阅读遗留的原始观察结果，但绝不会将该文本复制到其报告中。每个观测值恰好接受`responseDigest`或`rawResponseText`之一。版本控制的允许列表保持为空，并具有不可变的`hold`默认值。合格的条目需要其证据参考、策略、模型修订、精确候选SHA、清单摘要和两个不同的运行IDs；冲突的上下文被拒绝。这些元数据是审计合同，不能证明引用的文件包含真实的测量结果。在添加任何条目之前查看实际收据。管理统计端点和视频仪表板暴露了保守的准备情况。单独配置的模型别名不会建立其修订版本或运行候选SHA，因此当前仪表板报告`HOLD`而不是重用来自另一个执行上下文的资格。明确的实验选择与推广仍然是分开的；没有默认值会自动更改。
 
 当调用者已经拥有对齐文本时，可以将可选的`transcript.cues`数组附加到支持的视频部分。每个提示必须携带`text`、探测持续时间内的有限`start`/`end`间隔以及白名单`source` （`client`、 `embedded`或`audio-bridge`）； `confidence`默认为`1`并且必须保持在`0`和`1`之间。完全相同的重复提示被折叠。 OmniRoute永远不会从此元数据开始转录：经过验证的线索会被复制到具有来源、置信度和间隔的描述结果中，并与帧标题一起呈现为不受信任的观察结果。无效、超出范围或无出处的文本将被拒绝，而不是混合到字幕流中。两个请求正文转录通道都将提供的来源标准化为`client`，包括自断言的`embedded`或`audio-bridge`标签。只有服务器拥有的适配器才能通过仅代码`trustedSource`参数分配这些可信标签；请求JSON字段无法到达该参数。转录文本仍然是不受信任的媒体衍生内容，无论其来源如何，并且绝不能确定授权。
 
 高级调用者可以为同一视频提供`audioTranscript`轨道；它被视为客户端提供的文本，而不是服务器转录的证明。融合缝在一个截止日期和中止信号下运行视觉和音频观察，在公共时间线上对它们进行排序，折叠精确的重复项，并在只有一侧成功时报告部分结果。无效的`audioTranscript`会降级为部分结果—保留视觉描述，并且音频分支记录经过净化的故障代码—而不是使整个视频失败。每个分支的可用性、部分标志和清理后的故障代码都保留在所描述的结果、护栏元数据 (`audioFusionRuns`/`audioFusionPartials`/ `audioFusionFailureCodes`)、结果缓存元数据和桥融合计数器中。默认视频桥路径不会调用语音转文本或下载第二个媒体副本；如果没有明确的轨道，它仍然只是视频。
 
-**转录保留（#12150 P1）。**每当视频桥（本身选择加入）呈现转录提示—时，这会自动应用，没有单独的保留标志。当请求呈现任何转录提示（调用者声明的`transcript`或融合的`audioTranscript`）时，护栏将其标记为`videoBridgeObserved`并生成视频描述—的编辑阴影，其中每个提示的自由文本正文都被替换为`[redacted-video-transcript]`，通过在组装字符串之前替换结构化提示字段来构建（从不解析扁平文本，因此没有提示内容—对抗性或普通的，包括包含以下内容的正文`]`如`[inaudible]`/`[music]` —可以生存）。持久的呼叫日志请求正文将每个视频派生的文本部分交换为经过内容相等匹配的经过编辑的阴影； `fullText`锚点是从完成的预调用 Guardrail 有效负载中重新读取的，因此在后面的链 Guardrail（ PII和凭证掩码器、优先级10/95）重写描述文本并在system-prompt/handoff/memory注入重塑消息数组之后，匹配仍然成功。向上游发送到模型的主体保持不变。观察到的请求也不会填充持久内存（请求和响应派生的提取都会被跳过），因此模型自己的回复无法将转录文本回显到内存中。
+**转录保留（#12150 P1）。**每当视频桥（本身选择加入）呈现转录提示—时，这会自动应用，没有单独的保留标志。当请求呈现任何转录提示（调用者声明的`transcript`或融合的`audioTranscript`）时，护栏将其标记为`videoBridgeObserved`并生成视频描述—的编辑阴影，其中每个提示的自由文本正文都被替换为`[redacted-video-transcript]`，通过在组装字符串之前替换结构化提示字段来构建（从不解析扁平文本，因此没有提示内容—对抗性或普通的，包括包含以下内容的正文`]`如`[inaudible]`/`[music]` —可以生存）。持久的呼叫日志请求正文将每个视频派生的文本部分交换为经过内容相等匹配的经过编辑的阴影； `fullText`锚点是从完成的预调用 Guardrail 有效负载中重新读取的，因此在后面的链 Guardrail（ PII和凭证掩码器、优先级10/95）重写描述文本并在system-prompt/handoff/memory注入重塑消息数组之后，匹配仍然会成功。向上游发送到模型的主体保持不变。观察到的请求也不会填充持久内存（请求和响应派生的提取都会被跳过），因此模型自己的回复无法将转录文本回显到内存中。
 
 **原始视频字段 (#12430)。**当启用桥接且本机视频支持未知或不存在时，定义的`transcript`/`audioTranscript`字段也会激活`videoBridgeObserved`，即使在描述失败或`maxVideos`限制之后也是如此。 `null`和空字符串计数；缺失字段和非视频元数据则不会。保留的副本会编辑这些字段或省略请求，并且caches/Memory会被绕过。
 
@@ -190,7 +190,7 @@ FU-07要求至少 98% 的质量保留和不超过 1.2 倍基线的 p95 延迟，
 
 制作制作人仅在成功的视觉分析后重用已派生的代理帧，无需第二个视频download/extraction.它需要操作员`modalityBridgeVideoDrilldownEnabled=true`、严格的每部分`drilldown: true`和经过身份验证的 API 密钥记录ID。客户声明的principal/session值永远不会建立所有权。如果没有这三个条件，它就不会散列、调整大小或保留其他帧。保留失败保留了可用的视觉反应。同意的请求会绕过整个视频结果缓存，因此缓存的结果永远不会重播句柄。
 
-成功的JSON和SSE响应在有界`x-omniroute-video-drilldown`标头中最多公开四个不透明句柄。授权浏览器源可以读取该标头，而无需扩大CORS源策略。新句柄使用`v1.<32-byte random base64url token>`，注册表仅保留其SHA-256哈希值。 reader/header解析器还接受旧的 64 进制标记。经过身份验证的公共消费者是`GET /api/v1/video-bridge/drilldown?handle=...`，由`modalityBridgeVideoDrilldownRemoteEnabled=true`独立控制。即使启用了旧版`OMNIROUTE_VIDEO_BRIDGE_DRILLDOWN_REMOTE_ENABLED` env 回退，显式持久 false 也会撤销访问权限。生产保留具有类似的传统`OMNIROUTE_VIDEO_BRIDGE_DRILLDOWN_ENABLED`后备。两个后备选项均默认关闭。
+成功的JSON和SSE响应在有界`x-omniroute-video-drilldown`标头中最多公开四个不透明句柄。授权浏览器源可以读取该标头，而无需扩大CORS源策略。新句柄使用`v1.<32-byte random base64url token>`，注册表仅保留其SHA-256哈希值。 reader/header解析器还接受旧的 64 十六进制标记。经过身份验证的公共消费者是`GET /api/v1/video-bridge/drilldown?handle=...`，由`modalityBridgeVideoDrilldownRemoteEnabled=true`独立控制。即使启用了旧版`OMNIROUTE_VIDEO_BRIDGE_DRILLDOWN_REMOTE_ENABLED` env 回退，显式持久 false 也会撤销访问权限。生产保留具有类似的传统`OMNIROUTE_VIDEO_BRIDGE_DRILLDOWN_ENABLED`后备。两个后备选项均默认关闭。
 
 消费者从经过身份验证的密钥中获取所有权并应用密钥策略： GET和DELETE都属于`video`端点类别，包括`/v1`和`/api/v1`别名。具有非空端点白名单的键必须包含`video`；不受限制的密钥保持兼容。对于未知、过期和另一个密钥的句柄，消费者返回相同的 404。它接受`variant=preview|standard|detail` （最大JPEG维度320/640/1280，从不升级）、 `limit=1..8` （或旧版`frames`别名，从不两者兼而有之）、从零开始的`page`和可选的`start`/`end`焦点秒。重复的查询键和反向焦点窗口将被拒绝。每个返回的变体都有其实际内容和实际分辨率元数据的哈希值，链接到保留的源。变体是在读取时派生的，而不是存储为额外保留的副本。 JSON响应（包括Base64/envelope）的上限为 32 MiB；过大的页面会返回 413，并且客户端必须请求更少的帧。在每次调整大小时读取检查取消并在返回之前重新检查句柄有效性。所有者的`DELETE`是幂等的；删除或TTL到期会释放保留的源和使用记帐。
 
@@ -297,6 +297,7 @@ FU-07要求至少 98% 的质量保留和不超过 1.2 倍基线的 p95 延迟，
 - **仅选择加入**，与PII编辑相同的约定（硬规则#20-adjacent）：禁用，除非`settings.credentialRedactionEnabled === true`**或者**`CREDENTIAL_REDACTION_ENABLED=true`.关闭它后，护栏是一个无操作—它永远不会阻塞，也不会重写。
 - `redactCredentials()`遍历完整的payload/response树（`walkValue()`，原型污染安全，通过`WeakSet`循环安全）并用`[REDACTED:<type>]`占位符替换匹配项，仅克隆实际更改的分支。
 - `CREDENTIAL_PATTERNS`涵盖LLM提供者密钥（OpenAI、 OpenAI-proj、 Anthropic、 Google、 Hugging Face、 Replicate）、 VCS/SaaS币（GitHub、 Slack、 Linear、 Notion、 npm、 Postman、 Discord）、支付密钥（Stripe、 Square）、云密钥（AWS访问密钥、 Twilio、 SendGrid、 Mailgun）、私钥 / JWTs、凭证承载连接字符串（`mongodb://user:pass@...`等），以及通用`Authorization`/`x-api-key`/`api-key`/`apikey`标头值模式。标头形状的键（`authorization`、 `x-api-key`、 `api-key`、 `apikey`）在结构上进行编辑（仅值，保留`Bearer `/`Basic `等方案前缀），而不是通过通用文本正则表达式。
+- 即使标签后面的值没有提供者前缀，也会被屏蔽： `DB_PASSWORD=…`、 `AWS_SECRET_ACCESS_KEY=…`、 `client_secret: …`、 `?api_key=…` （标签： `password`、 `passwd`、 `secret`、 `secret_key`、 `secret_access_key`、 `api_key`、 `access_token`、 `refresh_token`、 `auth_token`，带有任何前缀，例如`DB_`）。标签和分隔符保留，值变为`[REDACTED:secret]`。该值需要 12 个或更多字符，因此`password: required`等散文仍具有可读性；以`$`或`%` （变量引用）开头的值将被保留。
 - 护栏永不遮挡；它仅重写（`modifiedPayload` / `modifiedResponse`）和注释（`meta.credentialsRedacted`， `meta.count`）。
 
 回归守卫： `tests/unit/credential-masker-guardrail.test.ts`。

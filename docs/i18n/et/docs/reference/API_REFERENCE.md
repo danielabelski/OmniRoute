@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Kohandatud päised
 
-| Header                   | Suund  | Kirjeldus                                                                                                                                                                                                                          |
-| ------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Päring | Määra väärtuseks `true`, et vahemälu vahele jätta                                                                                                                                                                                  |
-| `x-omniroute-no-memory`  | Päring | Määra väärtuseks `true`, et jätta selle päringu puhul mälu + oskuste sisestamine vahele (peegeldab vahemälu vahelejätmist; väldib iga kutsega kaasnevat loa-/kuluüldkulu)                                                          |
-| `X-OmniRoute-Progress`   | Päring | Määra väärtuseks `true`, et saada edenemissündmusi                                                                                                                                                                                 |
-| `X-Session-Id`           | Päring | Püsiva seansi võti välise seansi seostamise jaoks                                                                                                                                                                                  |
-| `x_session_id`           | Päring | Allkriipsuga variant on samuti toetatud (otse HTTP puhul)                                                                                                                                                                          |
-| `X-OmniRoute-Session-Id` | Päring | Kutsuja määratud seansi-/vestluse silt (toidab ka mälu). Olemasolu korral salvestatakse see muutmata kujul väljale `call_logs.session_tag` seansipõhiseks kulude omistamiseks (#8249) — puudumise korral ei sünteesita seda kunagi |
-| `Idempotency-Key`        | Päring | Duplikaatide eemaldamise võti (5 sekundi pikkune aken)                                                                                                                                                                             |
-| `X-Request-Id`           | Päring | Alternatiivne duplikaatide eemaldamise võti                                                                                                                                                                                        |
-| `x-omniroute-connection` | Päring | Seo ühe mudeli päring ühe pakkuja ühendusega (kontoga) selle ID alusel — vt [Päringuühenduse fikseerimine](#account-pinning-per-request)                                                                                           |
-| `X-OmniRoute-Cache`      | Vastus | `HIT` või `MISS` (voogedastuseta)                                                                                                                                                                                                  |
-| `X-OmniRoute-Idempotent` | Vastus | `true`, kui duplikaat eemaldati                                                                                                                                                                                                    |
-| `X-OmniRoute-Progress`   | Vastus | `enabled`, kui edenemise jälgimine on sisse lülitatud                                                                                                                                                                              |
-| `X-OmniRoute-Session-Id` | Vastus | OmniRoute'i kasutatud tegelik seansi ID                                                                                                                                                                                            |
-| `X-OmniRoute-Request-Id` | Vastus | Päringute korrelatsiooni ID (kui teada)                                                                                                                                                                                            |
-| `X-OmniRoute-Version`    | Vastus | OmniRoute'i järgu versioon (alati olemas)                                                                                                                                                                                          |
-| `X-OmniRoute-Cost-Saved` | Vastus | USD, mille vahemälu `HIT` korral säästis (ainult vahemälu tabamuste puhul)                                                                                                                                                         |
-| `X-OmniRoute-Decision`   | Vastus | Marsruutimise jälg: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` on kombineeritud strateegia või `single` mitte-kombineeritud päringu korral) — lõpetamisvastustes alati olemas                                   |
+| Päis                     | Suund   | Kirjeldus                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Taotlus | Vahemälust möödahiilimiseks määrake `true`                                                                                                                                                                                                                                                                                                                                        |
+| `x-omniroute-no-memory`  | Taotlus | Määrake väärtusele `true`, et jätta selle päringu puhul vahele mälu + oskuste sisestamine (peegeldab ilma vahemäluta; väldib kõne kohta token/cost lisakulusid)                                                                                                                                                                                                                   |
+| `x-omniroute-no-log`     | Taotlus | Määrake väärtusele `true`, et jätta selle järelduspäringu kõnelogidest välja request/response kasulikud koormused (kõik vestluspere marsruudid: vestluse lõpetamised, vastused, sõnumid, lõpetamised, Gemini). Ajatempel, mudel, olek, kestus ja märkide arv salvestatakse endiselt. Kombineerige `x-omniroute-no-memory` ja `x-omniroute-no-cache`, et sisust täielikult loobuda |
+| `X-OmniRoute-Progress`   | Taotlus | Edenemissündmuste jaoks määrake `true`                                                                                                                                                                                                                                                                                                                                            |
+| `X-Session-Id`           | Taotlus | Kleepuv seansi võti välise seansi afiinsuse jaoks                                                                                                                                                                                                                                                                                                                                 |
+| `x_session_id`           | Taotlus | Aktsepteeritud on ka allakriipsu variant (otsene HTTP)                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Session-Id` | Taotlus | Helistaja tarnitav session/conversation silt (toidab ka mälu). Kui see on olemas, säilis sõna-sõnalt `call_logs.session_tag` seansi kulude omistamiseks (#8249) — ei sünteesitud puudumisel kunagi                                                                                                                                                                                |
+| `Idempotency-Key`        | Taotlus | Dedup võti (5 sekundi aken)                                                                                                                                                                                                                                                                                                                                                       |
+| `X-Request-Id`           | Taotlus | Alternatiivne dedup-võti                                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-connection` | Taotlus | Kinnitage ühe mudeli taotlus ühele pakkuja ühendusele (kontole) selle ID-ga — vt [Konto kinnitamine päringu kohta](#account-pinning-per-request)                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Cache`      | Vastus  | `HIT` või `MISS` (mittevoogesitus)                                                                                                                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Idempotent` | Vastus  | `true`, kui dubleeritakse                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Progress`   | Vastus  | `enabled` kui edenemise jälgimine on sisse lülitatud                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Session-Id` | Vastus  | Tõhus seanss ID mida kasutab OmniRoute                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Request-Id` | Vastus  | Taotle korrelatsiooni ID-d (kui on teada)                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Version`    | Vastus  | OmniRoute build versioon (alati olemas)                                                                                                                                                                                                                                                                                                                                           |
+| `X-OmniRoute-Cost-Saved` | Vastus  | USD välditud vahemälu HIT (ainult vahemälu tabamused)                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Decision`   | Vastus  | Marsruutimise jälg: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` on kombineeritud strateegia või `single` mittekombineeritud päringu puhul) — on lõpetamisvastustes alati olemas                                                                                                                                                                                 |
 
-> Nginxi märkus: kui kasutad allkriipsuga päiseid (näiteks `x_session_id`), luba `underscores_in_headers on;`.
+> Nginxi märkus: kui tuginete alakriipsu päistele (nt `x_session_id`), lubage `underscores_in_headers on;`.
 
-#### Ühenduse fikseerimine päringu kohta
+#### Konto kinnitamine taotluse alusel
 
-Kui pakkujal on mitu ühendust (kontot või võtit), valib OmniRoute tavaliselt ühe
-oma konto valimise strateegia kaudu. Päring võib selle asemel fikseerida ühe konkreetse ühenduse
-päise `x-omniroute-connection` abil:
+Kui teenusepakkujal on mitu ühendust (kontot või võtmeid), valib OmniRoute tavaliselt ühe oma konto valimise strateegia kaudu. Taotlus võib selle asemel kinnitada ühe konkreetse ühenduse `x-omniroute-connection` päisega:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,24 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Kust ID-d leida.** Avage juhtpaneelil teenusepakkuja leht
-  (**Dashboard → Providers → <provider>**) ja klõpsake ühenduse real `xxxxxxxx…` ID-kiibil — see kopeerib kogu ühenduse ID.
-- **Millised päringud seda arvestavad.** Ühe mudeliga päringud (`provider/model`) aadressidel
-  `/v1/chat/completions`, `/v1/messages` ja `/v1/responses`. Kombod päist eiravad: määrake
-  konto iga kombo sammu jaoks eraldi sammu enda ühenduse kaudu.
-- **Kinnitus on range, mitte eelistus.** Kinnitatud ühendust kasutatakse eranditult. Päringu sees
-  tekkinud tõrge registreerib konto jahtumisaja, kuid **ei** suuna päringut sama teenusepakkuja
-  teisele kontole.
-- **Jahtumisaeg ja kvoot vabastavad kinnituse.** Kui kinnitatud ühendus jahtub,
-  kvoot on ammendatud või kvoodipoliitika on selle blokeerinud, kasutavad hilisemad päringud
-  teenusepakkuja teisi ühendusi, täpselt nagu kinnitamata liiklus.
-- **Tundmatud või keelatud ID-d põhjustavad tõrke.** ID, mida teenusepakkuja aktiivses kogumis ei ole (kustutatud,
-  deaktiveeritud või kuulub teisele teenusepakkujale), ei jäta ühtegi sobivat kontot, mistõttu päring
-  nurjub, selle asemel et vaikselt mujale suunata.
+- **Kust leida ID.** Ava armatuurlaual pakkuja leht (** Armatuurlaud → Pakkujad → <provider>** ) ja klõpsake ühenduse `xxxxxxxx…` id kiibil — see kopeerib ühenduse täieliku ID.
+- **Millised taotlused austavad seda.** Ühe mudeli päringud (`provider/model`) `/v1/chat/completions`, `/v1/messages` ja `/v1/responses` kohta. Kombod ignoreerivad päist: selle asemel kinnitage konto iga kombineeritud sammu kohta toimingu enda ühenduse kaudu.
+- **Nööpnõel on range, mitte eelistus.** Kinnitatud ühendust kasutatakse ainult. Päringu sees esinev tõrge salvestab konto jahtumise, kuid seda teeb** mitte** vahetada sama teenusepakkuja õde-venda kontole.
+- **Jahutamine ja kvoot vabastavad nööpnõela.** Kui kinnitatud ühendus jahtub, kvoot on ammendunud või kvoodipoliitika tõttu blokeeritud, langevad hilisemad päringud teenusepakkuja teistele ühendustele täpselt nagu kinnitamata liiklus.
+- **Tundmatud või keelatud ID-d ebaõnnestuvad.** ID, mis ei ole teenusepakkuja aktiivses kogumis (kustutatud, deaktiveeritud või kuulub teisele pakkujale), ei jäta sobivat kontot, mistõttu taotlus nurjub, selle asemel et vaikselt mujale suunata.
 
-Claude Code saadab kohandatud päiseid `ANTHROPIC_CUSTOM_HEADERS` kaudu. Lisage see faili
-`~/.claude/settings.json` plokki `env` või projekti tasemel faili `.claude/settings.json`, et
-kinnitada iga projekti jaoks erinev konto:
+Claude kood saadab kohandatud päised `ANTHROPIC_CUSTOM_HEADERS` kaudu. Lisage see `env` plokki `~/.claude/settings.json` või projektitasemel `.claude/settings.json`, et kinnitada projekti kohta erinev konto:
 
 ```jsonc
 {
@@ -132,12 +120,11 @@ kinnitada iga projekti jaoks erinev konto:
 }
 ```
 
-Allikas: `src/sse/handlers/chat.ts` (päise lugemine), `src/sse/services/auth.ts` ja
-`src/sse/services/sessionAffinityPin.ts` (kinnituse vabastamine ja kogumist puudumise kontroll).
+Allikas: `src/sse/handlers/chat.ts` (päise lugemine), `src/sse/services/auth.ts` ja `src/sse/services/sessionAffinityPin.ts` (nööpnõela vabastamine ja puuduva basseini kontroll).
 
-> **Kulutelemeetria päised:** voota eduka vastuse korral sisaldavad vastused ka `X-OmniRoute-*` kulutelemeetria komplekti — `X-OmniRoute-Response-Cost` (USD, fikseeritud 10 kümnendkohaga; tasuta või hinnastamata päringu korral `0.0000000000`), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` ja `X-OmniRoute-Fallback-Attempts` (ainult juhul, kui väärtus on suurem kui 0), lisaks `X-OmniRoute-Request-Id` ja `X-OmniRoute-Version`. Need lisatakse vestluse lõpetamise päringutele, `/v1/responses`, `/v1/messages` **ning meediaotspunktidele** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` ja `/v1/moderations` (kulu on alati `0`). Meedia kulu arvutatakse saadaoleva hinnastuse korral iga modaalsuse järgi (pildi, sekundi, märgi või otsinguühiku kohta), vastasel juhul on väärtus `0` (tõrkeid lubav käitumine).
+> **Kulude telemeetria päised:** mittevoogesituse õnnestumise vastused sisaldavad ka `X-OmniRoute-*` kulu-telemeetria komplekti — `X-OmniRoute-Response-Cost` (USD, fikseeritud 10 kümnendkohta; `0.0000000000` free/unpriced jaoks ), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` ja `X-OmniRoute-Fallback-Attempts` ), pluss > `X-OmniRoute-Request-Id` `X-OmniRoute-Version` Neid edastavad vestluse lõpetamised, `/v1/responses`, `/v1/messages`,** ja meedia lõpp-punktid** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` ja `/v1/moderations` (maksab alati `0`). Meediumikulu arvutatakse modaalsuse (pildi, sekundi, tähemärgi, otsinguühiku kohta), kui hinnakujundus on saadaval, muul juhul `0` (tõrkeopen).
 
-> **Vahemäluhiti kulu semantika:** semantilise vahemälu tabamuse (`X-OmniRoute-Cache-Hit: true`) korral ülesvoolu päringut ei tehta, seega on `X-OmniRoute-Response-Cost` väärtus `0.0000000000` (tabamuse edastamise **inkrementaalne** kulu). Algne või oleks olnud kulu esitatakse eraldi päises `X-OmniRoute-Cost-Saved`. Arvelduse tarbijad peaksid summeerima `X-OmniRoute-Response-Cost` väärtused (tabamused ei maksa midagi); vahemälu analüütika võib koondada `X-OmniRoute-Cost-Saved` väärtused.
+> **Vahemälu tabamuse maksumuse semantika:** semantilises vahemälus HIT (`X-OmniRoute-Cache-Hit: true`) ülesvoolu üleskutset ei tehta, seega on `X-OmniRoute-Response-Cost` `0.0000000000` (** astmeline** tabamuse kättetoimetamise kulu). original/would-have-been maksumus on esitatud eraldi `X-OmniRoute-Cost-Saved`. Arveldavad tarbijad peaksid summa `X-OmniRoute-Response-Cost` (hitid ei maksa midagi); vahemälu analüütika suudab koondada `X-OmniRoute-Cost-Saved`.
 
 ## Hallatava seansi eksklusiivsed liisingud
 
@@ -373,6 +360,8 @@ Content-Type: application/json
 Saadaolevate pakkujate hulka kuuluvad OpenAI (GPT pilt 2), xAI (Grok pilt), Together AI (FLUX), Fireworks AI, Nebius (FLUX), hüperboolne, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (kohalik), ComfyUI (kohalik).
 
 `n` tagastab `n` pildid `data[]`. Pakkujad, kelle ülesvoolu API tagastab ühe pildi kõne kohta (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI), saavad `n` eraldi ülesvoolu kõnet, maksimaalselt 4 lennu ajal. Fikseeritud `seed` kompenseeritakse kõneindeksiga (`seed`, `seed + 1`, …), nii et pildid erinevad, kuid jäävad reprodutseeritavaks. `n` ülempiir on 10. Taotlus ebaõnnestub tervikuna, kui mõni kõne ebaõnnestub. Väljapuhutavate vormingute loend on `SINGLE_IMAGE_FANOUT_FORMATS` ja `open-sse/handlers/imageGeneration/fanOut.ts`.
+
+Codex GPT Pildimudelid (`codex/gpt-image-*`) tagastavad ainult PNG : ülesvoolu vastab `200` PNG baitidega isegi siis, kui küsitakse `jpeg` või `webp`. Mis tahes muu `output_format` (`webp`, `jpeg`, ...) taotlus lükatakse HTTP 400-ga tagasi, selle asemel et seda vaikselt ignoreerida; jätke see välja või saatke `png`. `output_compression` ei edastata.
 
 ZenMux kasutab uuesti olemasolevat API-võtme ühendust ja aktsepteerib `zenmux/` või `zm/` eesliiteid:
 

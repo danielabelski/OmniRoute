@@ -49,7 +49,7 @@ OpenAI-യുമായി പൊരുത്തപ്പെടുന്ന പ�
 
 ---
 
-## ചാറ്റ് പൂർത്തീകരണങ്ങൾ
+## ചാറ്റ് പൂർത്തിയാക്കലുകൾ
 
 ```bash
 POST /v1/chat/completions
@@ -65,33 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### ഇഷ്ടാനുസൃത ഹെഡറുകൾ
+### ഇഷ്ടാനുസൃത തലക്കെട്ടുകൾ
 
-| Header                   | Direction | Description                                                                                                                                                                                                                                    |
-| ------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | അഭ്യർത്ഥന | കാഷ് ഒഴിവാക്കാൻ `true` ആയി സജ്ജമാക്കുക                                                                                                                                                                                                         |
-| `x-omniroute-no-memory`  | അഭ്യർത്ഥന | ഈ അഭ്യർത്ഥനയ്ക്കുള്ള മെമ്മറി + skills injection ഒഴിവാക്കാൻ `true` ആയി സജ്ജമാക്കുക (no-cache-നെ പ്രതിഫലിപ്പിക്കുന്നു; ഓരോ കോൾക്കുമുള്ള token/cost overhead ഒഴിവാക്കുന്നു)                                                                       |
-| `X-OmniRoute-Progress`   | അഭ്യർത്ഥന | പുരോഗതി ഇവന്റുകൾക്കായി `true` ആയി സജ്ജമാക്കുക                                                                                                                                                                                                  |
-| `X-Session-Id`           | അഭ്യർത്ഥന | ബാഹ്യ സെഷൻ affinity-യ്ക്കുള്ള sticky session key                                                                                                                                                                                               |
-| `x_session_id`           | അഭ്യർത്ഥന | Underscore variant-ും സ്വീകരിക്കുന്നു (നേരിട്ടുള്ള HTTP)                                                                                                                                                                                       |
-| `X-OmniRoute-Session-Id` | അഭ്യർത്ഥന | Caller നൽകുന്ന session/conversation tag (memory-ലേക്കും നൽകുന്നു). ഇത് ഉള്ളപ്പോൾ, ഓരോ സെഷനിലെയും ചെലവ് attribution-നായി (#8249) `call_logs.session_tag`-ലേക്ക് verbatim ആയി persist ചെയ്യുന്നു — ഇല്ലാത്തപ്പോൾ ഒരിക്കലും synthesized ചെയ്യില്ല |
-| `Idempotency-Key`        | അഭ്യർത്ഥന | Dedup key (5s window)                                                                                                                                                                                                                          |
-| `X-Request-Id`           | അഭ്യർത്ഥന | Alternative dedup key                                                                                                                                                                                                                          |
-| `x-omniroute-connection` | അഭ്യർത്ഥന | ഒരു single-model അഭ്യർത്ഥനയെ അതിന്റെ id ഉപയോഗിച്ച് ഒരു provider connection (account)-ലേക്ക് pin ചെയ്യുന്നു — [ഓരോ അഭ്യർത്ഥനയ്ക്കുമുള്ള Account pinning](#account-pinning-per-request) കാണുക                                                    |
-| `X-OmniRoute-Cache`      | പ്രതികരണം | `HIT` അല്ലെങ്കിൽ `MISS` (non-streaming)                                                                                                                                                                                                        |
-| `X-OmniRoute-Idempotent` | പ്രതികരണം | Deduplicate ചെയ്തിട്ടുണ്ടെങ്കിൽ `true`                                                                                                                                                                                                         |
-| `X-OmniRoute-Progress`   | പ്രതികരണം | പുരോഗതി tracking ഓണാണെങ്കിൽ `enabled`                                                                                                                                                                                                          |
-| `X-OmniRoute-Session-Id` | പ്രതികരണം | OmniRoute ഉപയോഗിച്ച effective session ID                                                                                                                                                                                                       |
-| `X-OmniRoute-Request-Id` | പ്രതികരണം | Request correlation id (അറിയാവുന്നപ്പോൾ)                                                                                                                                                                                                       |
-| `X-OmniRoute-Version`    | പ്രതികരണം | OmniRoute build version (എപ്പോഴും ഉണ്ടായിരിക്കും)                                                                                                                                                                                              |
-| `X-OmniRoute-Cost-Saved` | പ്രതികരണം | HIT-ൽ കാഷ് ഒഴിവാക്കിയ USD (cache hits-ൽ മാത്രം)                                                                                                                                                                                                |
-| `X-OmniRoute-Decision`   | പ്രതികരണം | Routing trace: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` combo strategy ആണ്, അല്ലെങ്കിൽ combo അല്ലാത്ത അഭ്യർത്ഥനയ്ക്കായി `single`) — completion responses-ൽ എപ്പോഴും ഉണ്ടായിരിക്കും                                        |
+| തലക്കെട്ട്               | ദിശ            | വിവരണം                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | അഭ്യർത്ഥിക്കുക | കാഷെ മറികടക്കാൻ `true` ആയി സജ്ജമാക്കുക                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `x-omniroute-no-memory`  | അഭ്യർത്ഥിക്കുക | ഈ അഭ്യർത്ഥനയ്ക്കായി മെമ്മറി + സ്കിൽസ് ഇൻജക്ഷൻ ഒഴിവാക്കാൻ `true` ആയി സജ്ജീകരിക്കുക (മിറർ നോ-കാഷെ; ഓരോ കോളിനും token/cost ഓവർഹെഡ് ഒഴിവാക്കുന്നു)                                                                                                                                                                                                                                                                                                           |
+| `x-omniroute-no-log`     | അഭ്യർത്ഥിക്കുക | ഈ അനുമാന അഭ്യർത്ഥനയ്ക്കായി കോൾ ലോഗുകളിൽ നിന്ന് request/response പേലോഡുകൾ ഒഴിവാക്കുന്നതിന് `true` ആയി സജ്ജീകരിക്കുക (എല്ലാ ചാറ്റ്-ഫാമിലി റൂട്ടുകളും: ചാറ്റ് പൂർത്തിയാക്കലുകൾ, പ്രതികരണങ്ങൾ, സന്ദേശങ്ങൾ, പൂർത്തിയാക്കലുകൾ, Gemini). ടൈംസ്റ്റാമ്പ്, മോഡൽ, സ്റ്റാറ്റസ്, ദൈർഘ്യം, ടോക്കൺ എണ്ണം എന്നിവ ഇപ്പോഴും രേഖപ്പെടുത്തിയിട്ടുണ്ട്. ഒരു പൂർണ്ണമായ ഉള്ളടക്കം ഒഴിവാക്കുന്നതിന് `x-omniroute-no-memory`, `x-omniroute-no-cache` എന്നിവയുമായി സംയോജിപ്പിക്കുക |
+| `X-OmniRoute-Progress`   | അഭ്യർത്ഥിക്കുക | പുരോഗതി ഇവൻ്റുകൾക്കായി `true` ആയി സജ്ജീകരിക്കുക                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `X-Session-Id`           | അഭ്യർത്ഥിക്കുക | ബാഹ്യ സെഷൻ ബന്ധത്തിനുള്ള സ്റ്റിക്കി സെഷൻ കീ                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `x_session_id`           | അഭ്യർത്ഥിക്കുക | അടിവരയിട്ട വേരിയൻ്റും അംഗീകരിച്ചു (ഡയറക്ട് HTTP)                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Session-Id` | അഭ്യർത്ഥിക്കുക | Caller-supplied session/conversation tag (also feeds memory). When present, persisted verbatim to `call_logs.session_tag` for per-session cost attribution (#8249) — never synthesized when absent                                                                                                                                                                                                                                                       |
+| `Idempotency-Key`        | അഭ്യർത്ഥിക്കുക | ഡീഡപ്പ് കീ (5 സെ വിൻഡോ)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `X-Request-Id`           | അഭ്യർത്ഥിക്കുക | ഇതര ഡീഡപ്പ് കീ                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `x-omniroute-connection` | അഭ്യർത്ഥിക്കുക | ഒരൊറ്റ മോഡൽ അഭ്യർത്ഥന ഒരു ദാതാവിൻ്റെ കണക്ഷനിലേക്ക് (അക്കൗണ്ട്) അതിൻ്റെ ഐഡി — ഉപയോഗിച്ച് പിൻ ചെയ്യുക [, ഓരോ അഭ്യർത്ഥനയിലും അക്കൗണ്ട് പിൻ ചെയ്യൽ](#account-pinning-per-request) കാണുക                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Cache`      | പ്രതികരണം      | `HIT` അല്ലെങ്കിൽ `MISS` (സ്ട്രീമിംഗ് അല്ലാത്തത്)                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Idempotent` | പ്രതികരണം      | ഡീപ്ലിക്കേറ്റ് ചെയ്താൽ `true`                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Progress`   | പ്രതികരണം      | പുരോഗതി ട്രാക്കിംഗ് ഓണാണെങ്കിൽ `enabled`                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Session-Id` | പ്രതികരണം      | OmniRoute ഉപയോഗിക്കുന്ന ഫലപ്രദമായ സെഷൻ ID                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `X-OmniRoute-Request-Id` | പ്രതികരണം      | പരസ്പര ബന്ധ ഐഡി അഭ്യർത്ഥിക്കുക (അറിയുമ്പോൾ)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Version`    | പ്രതികരണം      | OmniRoute ബിൽഡ് പതിപ്പ് (എപ്പോഴും ഉണ്ട്)                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Cost-Saved` | പ്രതികരണം      | USD ഒരു HIT ൽ ഒഴിവാക്കിയ കാഷെ (കാഷെ ഹിറ്റുകൾ മാത്രം)                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Decision`   | പ്രതികരണം      | റൂട്ടിംഗ് ട്രെയ്സ്: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` എന്നത് കോംബോ സ്ട്രാറ്റജിയാണ്, അല്ലെങ്കിൽ ഒരു നോൺ-കോംബോ അഭ്യർത്ഥനയ്ക്കുള്ള `single` ) — എപ്പോഴും പൂർത്തീകരണ പ്രതികരണങ്ങളിൽ ഉണ്ടായിരിക്കും                                                                                                                                                                                                                               |
 
-> Nginx കുറിപ്പ്: underscore headers (ഉദാഹരണത്തിന് `x_session_id`) ആശ്രയിക്കുന്നുവെങ്കിൽ, `underscores_in_headers on;` പ്രവർത്തനക്ഷമമാക്കുക.
+> Nginx കുറിപ്പ്: നിങ്ങൾ അടിവരയിടുന്ന തലക്കെട്ടുകളെ ആശ്രയിക്കുന്നുവെങ്കിൽ (ഉദാഹരണത്തിന് `x_session_id`), `underscores_in_headers on;` പ്രവർത്തനക്ഷമമാക്കുക.
 
-#### ഓരോ അഭ്യർത്ഥനയ്ക്കുമുള്ള Account pinning
+#### ഓരോ അഭ്യർത്ഥനയിലും അക്കൗണ്ട് പിൻ ചെയ്യുന്നു
 
-ഒരു provider-ന് നിരവധി connections (accounts അല്ലെങ്കിൽ keys) ഉള്ളപ്പോൾ, OmniRoute സാധാരണയായി അതിന്റെ account-selection strategy ഉപയോഗിച്ച് ഒന്ന് തിരഞ്ഞെടുക്കുന്നു. പകരം, `x-omniroute-connection` header ഉപയോഗിച്ച് ഒരു നിർദ്ദിഷ്ട connection-ലേക്ക് ഒരു അഭ്യർത്ഥന pin ചെയ്യാം:
+ഒരു ദാതാവിന് നിരവധി കണക്ഷനുകൾ (അക്കൗണ്ടുകൾ അല്ലെങ്കിൽ കീകൾ) ഉള്ളപ്പോൾ, OmniRoute സാധാരണയായി അതിൻ്റെ അക്കൗണ്ട്-സെലക്ഷൻ സ്ട്രാറ്റജിയിലൂടെ ഒന്ന് തിരഞ്ഞെടുക്കുന്നു. ഒരു അഭ്യർത്ഥനയ്ക്ക് പകരം `x-omniroute-connection` തലക്കെട്ടുമായി ഒരു നിർദ്ദിഷ്ട കണക്ഷൻ പിൻ ചെയ്യാൻ കഴിയും:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -101,25 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **id എവിടെ കണ്ടെത്താം.** ഡാഷ്ബോർഡിൽ provider പേജ് തുറക്കുക
-  (**Dashboard → Providers → <provider>**) കൂടാതെ ഒരു connection
-  വരിയിലെ `xxxxxxxx…` id chip ക്ലിക്ക് ചെയ്യുക — ഇത് പൂർണ്ണ connection id പകർത്തും.
-- **ഏത് requests ആണ് ഇത് മാനിക്കുന്നത്.** `/v1/chat/completions`, `/v1/messages`, `/v1/responses`
-  എന്നിവയിലെ single-model requests (`provider/model`). Combos ഈ header അവഗണിക്കും: ഓരോ combo
-  step-നും ആ step-ന്റെ സ്വന്തം connection വഴി ഒരു account pin ചെയ്യുക.
-- **ഈ pin ഒരു preference അല്ല, കർശനമായ നിയന്ത്രണമാണ്.** Pinned connection മാത്രമേ ഉപയോഗിക്കൂ. ഒരു
-  request-ിനുള്ളിലെ പരാജയം account-ന്റെ cooldown രേഖപ്പെടുത്തും, പക്ഷേ അതേ provider-ലെ
-  sibling account-ിലേക്ക് മാറില്ല.
-- **Cooldown-ഉം quota-യും pin ഒഴിവാക്കും.** Pinned connection cooldown-ലായിരിക്കുമ്പോൾ,
-  quota തീർന്നിരിക്കുമ്പോൾ, അല്ലെങ്കിൽ quota policy കാരണം blocked ആയിരിക്കുമ്പോൾ, പിന്നീട് വരുന്ന
-  requests provider-ന്റെ മറ്റ് connections-ലേക്ക് fallback ചെയ്യും — pin ചെയ്യാത്ത traffic പോലെ തന്നെ.
-- **അജ്ഞാതമോ disabled ആയതോ ആയ ids പരാജയപ്പെടും.** Provider-ന്റെ active pool-ൽ ഇല്ലാത്ത ഒരു id
-  (deleted, deactivated, അല്ലെങ്കിൽ മറ്റൊരു provider-ന്റേതായ id) eligible account ഒന്നും
-  അവശേഷിപ്പിക്കില്ല; അതിനാൽ request പരാജയപ്പെടും, നിശ്ശബ്ദമായി മറ്റൊരിടത്തേക്ക് route ചെയ്യില്ല.
+- **ഐഡി എവിടെ കണ്ടെത്തും.** ഡാഷ്ബോർഡിൽ ദാതാവിൻ്റെ പേജ് തുറക്കുക (** ഡാഷ്ബോർഡ് → ദാതാക്കൾ → <provider>** ) കൂടാതെ ഒരു കണക്ഷൻ വരിയിലെ `xxxxxxxx…` ഐഡി ചിപ്പിൽ ക്ലിക്ക് ചെയ്യുക — അത് മുഴുവൻ കണക്ഷൻ ഐഡിയും പകർത്തുന്നു.
+- **ഏത് അഭ്യർത്ഥനകൾ അതിനെ മാനിക്കുന്നു.** `/v1/chat/completions`, `/v1/messages`, `/v1/responses` എന്നിവയിലെ ഏക-മാതൃക അഭ്യർത്ഥനകൾ (`provider/model`). കോമ്പോകൾ തലക്കെട്ട് അവഗണിക്കുന്നു: പകരം ഓരോ കോംബോ ഘട്ടത്തിലും ഒരു അക്കൗണ്ട് പിൻ ചെയ്യുക.
+- **പിൻ കർശനമാണ്, മുൻഗണനയല്ല.** പിൻ ചെയ്ത കണക്ഷൻ പ്രത്യേകമായി ഉപയോഗിക്കുന്നു. അഭ്യർത്ഥനയ്ക്കുള്ളിലെ ഒരു പരാജയം അക്കൗണ്ടിൻ്റെ കൂൾഡൗൺ രേഖപ്പെടുത്തുന്നു, പക്ഷേ അത് ചെയ്യുന്നു** അല്ല** അതേ ദാതാവിൻ്റെ ഒരു സഹോദര അക്കൗണ്ടിലേക്ക് തിരിക്കുക.
+- **കൂൾഡൗണും ക്വാട്ടയും പിൻ റിലീസ് ചെയ്യുന്നു.** പിൻ ചെയ്ത കണക്ഷൻ തണുക്കുകയോ ക്വാട്ട തീരുകയോ അല്ലെങ്കിൽ ഒരു ക്വാട്ട നയം തടയുകയോ ചെയ്യുമ്പോൾ, പിന്നീടുള്ള അഭ്യർത്ഥനകൾ അൺപിൻ ചെയ്യാത്ത ട്രാഫിക് പോലെ തന്നെ ദാതാവിൻ്റെ മറ്റ് കണക്ഷനുകളിലേക്ക് തിരികെയെത്തും.
+- **അജ്ഞാത അല്ലെങ്കിൽ പ്രവർത്തനരഹിതമാക്കിയ ഐഡികൾ പരാജയപ്പെടുന്നു.** ദാതാവിൻ്റെ സജീവ പൂളിൽ ഇല്ലാത്ത ഒരു ഐഡി (ഇല്ലാതാക്കപ്പെട്ടതോ, നിർജ്ജീവമാക്കിയതോ അല്ലെങ്കിൽ മറ്റൊരു ദാതാവിൻ്റെ ഉടമസ്ഥതയിലുള്ളതോ ആയ) ഒരു യോഗ്യമായ അക്കൗണ്ട് ഉപേക്ഷിക്കുന്നില്ല, അതിനാൽ നിശ്ശബ്ദമായി മറ്റെവിടെയെങ്കിലും റൂട്ട് ചെയ്യുന്നതിനുപകരം അഭ്യർത്ഥന പരാജയപ്പെടുന്നു.
 
-Claude Code custom headers `ANTHROPIC_CUSTOM_HEADERS` വഴി അയയ്ക്കുന്നു. ഇത്
-`~/.claude/settings.json`-ന്റെ `env` block-ൽ ഇടുക, അല്ലെങ്കിൽ ഓരോ project-നും വ്യത്യസ്ത account
-pin ചെയ്യുന്നതിനായി project-level `.claude/settings.json`-ൽ ഇടുക:
+Claude കോഡ് `ANTHROPIC_CUSTOM_HEADERS` വഴി ഇഷ്ടാനുസൃത തലക്കെട്ടുകൾ അയയ്ക്കുന്നു. `~/.claude/settings.json` ൻ്റെ `env` ബ്ലോക്കിലോ ഒരു പ്രോജക്റ്റ്-ലെവൽ `.claude/settings.json` ൽ ഓരോ പ്രോജക്റ്റിലും മറ്റൊരു അക്കൗണ്ട് പിൻ ചെയ്യാൻ ഇത് ഇടുക:
 
 ```jsonc
 {
@@ -131,12 +120,11 @@ pin ചെയ്യുന്നതിനായി project-level `.claude/setting
 }
 ```
 
-ഉറവിടം: `src/sse/handlers/chat.ts` (header read), `src/sse/services/auth.ts`, കൂടാതെ
-`src/sse/services/sessionAffinityPin.ts` (pin release-ഉം pool-ൽ നിന്ന് missing ആയതിന്റെ check-ഉം).
+ഉറവിടം: `src/sse/handlers/chat.ts` (ഹെഡർ റീഡ്), `src/sse/services/auth.ts`, `src/sse/services/sessionAffinityPin.ts` (പിൻ റിലീസും മിസ്സിംഗ് ഫ്രം പൂൾ ചെക്കും).
 
-> **Cost telemetry headers:** non-streaming success responses-ലും `X-OmniRoute-*` cost-telemetry set ഉൾപ്പെടുന്നു — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimals; സൗജന്യമായി ലഭിക്കുന്നതോ വില നിശ്ചയിച്ചിട്ടില്ലാത്തതോ ആണെങ്കിൽ `0.0000000000`), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, കൂടാതെ `X-OmniRoute-Fallback-Attempts` (0-ൽ കൂടുതലായിരിക്കുമ്പോൾ മാത്രം), അതോടൊപ്പം `X-OmniRoute-Request-Id`, `X-OmniRoute-Version`. ഇവ chat completions, `/v1/responses`, `/v1/messages`, **കൂടാതെ media endpoints** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, `/v1/moderations` — എന്നിവയിൽ നിന്നുമാണ് പുറപ്പെടുവിക്കുന്നത് (`0` cost എപ്പോഴും). Pricing ലഭ്യമാണെങ്കിൽ media cost ഓരോ modality-ക്കും (per-image, per-second, per-character, per search-unit) കണക്കാക്കും; അല്ലാത്തപക്ഷം `0` ആയിരിക്കും (fail-open).
+> **ചെലവ് ടെലിമെട്രി തലക്കെട്ടുകൾ:** നോൺ-സ്ട്രീമിംഗ് വിജയ പ്രതികരണങ്ങൾ `X-OmniRoute-*` കോസ്റ്റ്-ടെലിമെട്രി സെറ്റ് — `X-OmniRoute-Response-Cost` (USD, നിശ്ചിത 10 ദശാംശങ്ങൾ; `0.0000000000` ന് free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, കൂടാതെ `X-OmniRoute-Fallback-Attempts` > `X-OmniRoute-Version` `X-OmniRoute-Request-Id` ചാറ്റ് പൂർത്തീകരണങ്ങൾ, `/v1/responses`, `/v1/messages`, എന്നിവയിലൂടെ ഇവ പുറത്തുവിടുന്നു** മാധ്യമങ്ങളുടെ അവസാന പോയിൻ്റുകളും** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, `/v1/moderations` (എല്ലായ്പ്പോഴും വില `0`). വിലനിർണ്ണയം ലഭ്യമാകുമ്പോൾ മീഡിയാ ചെലവ് ഒരു മോഡാലിറ്റിക്ക് (ഓരോ ഇമേജിനും, ഓരോ സെക്കൻഡിനും, ഓരോ പ്രതീകത്തിനും, ഓരോ തിരയൽ യൂണിറ്റിനും) കണക്കാക്കുന്നു, അല്ലാത്തപക്ഷം `0` (ഫെയ്ൽ-ഓപ്പൺ).
 
-> **Cache-hit cost semantics:** ഒരു semantic-cache HIT-ൽ (`X-OmniRoute-Cache-Hit: true`) upstream call ഉണ്ടാകില്ല; അതിനാൽ `X-OmniRoute-Response-Cost` `0.0000000000` ആയിരിക്കും (hit നൽകുന്നതിനുള്ള **incremental** cost). യഥാർത്ഥമായി ഉണ്ടായതോ ഉണ്ടാകുമായിരുന്നതോ ആയ cost `X-OmniRoute-Cost-Saved`-ൽ പ്രത്യേകം റിപ്പോർട്ട് ചെയ്യും. Billing consumers `X-OmniRoute-Response-Cost` കൂട്ടിച്ചേർക്കണം (hits-ന് cost ഒന്നുമില്ല); cache analytics-ന് `X-OmniRoute-Cost-Saved` aggregate ചെയ്യാം.
+> **കാഷെ-ഹിറ്റ് കോസ്റ്റ് സെമാൻ്റിക്സ്:** ഒരു സെമാൻ്റിക്-കാഷെ HIT (`X-OmniRoute-Cache-Hit: true`)-ൽ അപ്സ്ട്രീം കോൾ ചെയ്യപ്പെടുന്നില്ല, അതിനാൽ `X-OmniRoute-Response-Cost` എന്നത് `0.0000000000` (ദി** വർദ്ധിച്ചുവരുന്ന** ഹിറ്റ് വിളമ്പുന്നതിനുള്ള ചെലവ്). original/would-have-been വില `X-OmniRoute-Cost-Saved` ൽ പ്രത്യേകം റിപ്പോർട്ടുചെയ്തിരിക്കുന്നു. ബില്ലിംഗ് ഉപഭോക്താക്കൾ `X-OmniRoute-Response-Cost` തുക നൽകണം (ഹിറ്റുകൾക്ക് വിലയില്ല); കാഷെ അനലിറ്റിക്സിന് `X-OmniRoute-Cost-Saved` സമാഹരിക്കാൻ കഴിയും.
 
 ## എക്സ്ക്ലൂസീവ് മാനേജ്ഡ് സെഷൻ ലീസുകൾ
 
@@ -370,6 +358,8 @@ Content-Type: application/json
 ലഭ്യമായ ദാതാക്കളിൽ OpenAI (GPT ഇമേജ് 2), xAI (Grok ഇമേജ്), Together AI (FLUX), Fireworks AI, Nebius (FLUX), ഹൈപ്പർബോളിക്, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (ലോക്കൽ), ComfyUI (ലോക്കൽ).
 
 `n` `data[]` ൽ `n` ഇമേജുകൾ നൽകുന്നു. ഓരോ കോളിനും ഒരു ചിത്രം നൽകുന്ന അപ്സ്ട്രീം API ദാതാക്കൾക്ക് (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) `n` പ്രത്യേക അപ്സ്ട്രീം കോളുകൾ ലഭിക്കും, പരമാവധി 4 ഫ്ലൈറ്റിൽ. ഒരു നിശ്ചിത `seed` കോൾ സൂചിക (`seed`, `seed + 1`, …) വഴി ഓഫ്സെറ്റ് ചെയ്യുന്നു, അതിനാൽ ചിത്രങ്ങൾ വ്യത്യസ്തമാണെങ്കിലും പുനർനിർമ്മിക്കാവുന്നതായിരിക്കും. `n` എന്നതിൻ്റെ പരിധി 10 ആണ്. ഏതെങ്കിലും കോൾ പരാജയപ്പെടുകയാണെങ്കിൽ അഭ്യർത്ഥന മൊത്തത്തിൽ പരാജയപ്പെടും. ഫാൻ ഔട്ട് ഫോർമാറ്റുകളുടെ ലിസ്റ്റ് `open-sse/handlers/imageGeneration/fanOut.ts` ൽ `SINGLE_IMAGE_FANOUT_FORMATS` ആണ്.
+
+Codex GPT ഇമേജ് മോഡലുകൾ (`codex/gpt-image-*`) PNG മാത്രം നൽകുന്നു: `jpeg` അല്ലെങ്കിൽ `webp` ആവശ്യപ്പെടുമ്പോൾ പോലും PNG ബൈറ്റുകൾ ഉപയോഗിച്ച് അപ്സ്ട്രീം `200` ഉത്തരം നൽകുന്നു. മറ്റേതെങ്കിലും `output_format` (`webp`, `jpeg`, ...) ഉള്ള ഒരു അഭ്യർത്ഥന നിശബ്ദമായി അവഗണിക്കുന്നതിന് പകരം HTTP 400 ഉപയോഗിച്ച് നിരസിക്കുന്നു; അത് ഒഴിവാക്കുക അല്ലെങ്കിൽ `png` അയയ്ക്കുക. `output_compression` ഫോർവേഡ് ചെയ്തിട്ടില്ല.
 
 ZenMux നിലവിലുള്ള API-കീ കണക്ഷൻ വീണ്ടും ഉപയോഗിക്കുകയും `zenmux/` അല്ലെങ്കിൽ `zm/` പ്രിഫിക്സുകൾ സ്വീകരിക്കുകയും ചെയ്യുന്നു:
 

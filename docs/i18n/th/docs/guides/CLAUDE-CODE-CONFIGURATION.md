@@ -252,28 +252,20 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="glm/glm-4.7-flash"
 
 ## การแก้ไขปัญหา
 
-**Claude Code ไม่ใช้เกตเวย์** — ตรวจสอบว่า `ANTHROPIC_BASE_URL` **ไม่มี
-`/v1`** และรีสตาร์ต `claude` (ระบบจะอ่าน env เพียงครั้งเดียวเมื่อเริ่มทำงาน) `omniroute launch`
-จะจัดการเรื่องนี้ให้คุณ
+**รหัส Claude ละเว้นเกตเวย์** — ยืนยันว่า `ANTHROPIC_BASE_URL` มี** ไม่ `/v1`** และรีสตาร์ท `claude` (อ่าน env หนึ่งครั้งเมื่อเริ่มต้น) `omniroute launch` จัดการสิ่งนี้ให้คุณ
 
-**ตัวเลือก `/model` ว่างเปล่า / ไม่มีโมเดลของเกตเวย์** — ต้องใช้ Claude Code
-v2.1.219+ และ `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` เฉพาะ ID โมเดล `claude*` /
-`anthropic*` เท่านั้นที่จะแสดงในตัวเลือก หากต้องการบังคับใช้โมเดลอื่น ให้ใช้
-`ANTHROPIC_MODEL=<id>` (นี่คือสิ่งที่โปรไฟล์ทำ)
+**ตัวเลือก `/model` ว่างเปล่า / ไม่มีโมเดลเกตเวย์** — ต้องการ Claude Code v2.1.219 และ + `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` เฉพาะโมเดล `claude*` / `anthropic*` IDs เท่านั้นที่ปรากฏในตัวเลือก บังคับรุ่นอื่นด้วย `ANTHROPIC_MODEL=<id>` (นี่คือสิ่งที่โปรไฟล์ทำ)
 
-**`400 Ambiguous model 'claude-…'`** — Claude Code จะส่ง ID โมเดลแบบ **ไม่มีคำนำหน้า**
-เสมอ (เช่น `claude-opus-4-8`) ดังนั้นเมื่อเชื่อมต่อทั้งผู้ให้บริการ Claude Code (`cc/…`) และ
-Claude (`claude/…`) แล้ว ID ที่ไม่มีคำนำหน้าจะตรงกับสองเส้นทาง และ
-OmniRoute จะไม่คาดเดาให้ แก้ไขได้สองวิธี: ระบุ ID ที่มีคำนำหน้าด้วย
-`ANTHROPIC_MODEL=cc/claude-opus-4-8` หรือเปิดใช้ **เลือก Claude Code ก่อน
-สำหรับโมเดล Claude ที่ไม่มีคำนำหน้า** — ใช้สวิตช์ในหน้าผู้ให้บริการ Claude หรือ
-`OMNIROUTE_PREFER_CLAUDE_CODE_FOR_UNPREFIXED_CLAUDE_MODELS=true` (ปิดไว้โดยค่าเริ่มต้น;
-ดู [สภาพแวดล้อม](../reference/ENVIRONMENT.md)) — ซึ่งจะกำหนดเส้นทาง ID `claude-*`
-ที่ไม่มีคำนำหน้าไปยัง Claude Code แทน คำนำหน้าผู้ให้บริการที่ระบุไว้อย่างชัดเจนจะมีลำดับความสำคัญสูงสุดเสมอ
+**`400 Ambiguous model 'claude-…'`** — Claude Code จะส่งเสมอ** ไม่ได้นำหน้า** model IDs (เช่น `claude-opus-4-8`) ดังนั้นเมื่อทั้งผู้ให้บริการ Claude Code (`cc/…`) และ Claude (`claude/…`) เชื่อมต่อกัน Bare ID จะตรงกับสองเส้นทางและ OmniRoute ปฏิเสธที่จะเดา แก้ไขด้วยวิธีใดวิธีหนึ่ง: ปักหมุด id ที่นำหน้าด้วย `ANTHROPIC_MODEL=cc/claude-opus-4-8` หรือเปิดใช้งาน** ต้องการรหัส Claude สำหรับโมเดล Claude ที่ไม่มีคำนำหน้า** — สลับบนหน้าผู้ให้บริการ Claude หรือ `OMNIROUTE_PREFER_CLAUDE_CODE_FOR_UNPREFIXED_CLAUDE_MODELS=true` (ปิดค่าเริ่มต้น ดูที่ [Environment](../reference/ENVIRONMENT.md) ) — ซึ่งกำหนดเส้นทางเปลือย `claude-*` IDs ไปยัง Claude Code แทน คำนำหน้าผู้ให้บริการที่ชัดเจนจะชนะเสมอ
 
-**ข้อผิดพลาดด้านการยืนยันตัวตน** — โปรไฟล์ไม่มีโทเค็น ให้ใช้ `omniroute launch --profile`
-(เพื่อแทรกโทเค็น) หรือ export `ANTHROPIC_AUTH_TOKEN`
+**"โหมดอัตโนมัติ … เซสชันนี้ไม่มีสิทธิ์" (เรียกเก็บเงินตามคำขอตัวแยกประเภท)** — ในโหมดอัตโนมัติ Claude Code ขอให้เซิร์ฟเวอร์ตรวจสอบการดำเนินการภายในคำขอโมเดลของตัวเอง ( [Anthropic docs](https://code.claude.com/docs/en/auto-mode-classifier-billing) ) นั่นต้องการค่า `anthropic-beta` `dangerous-tool-use-2026-09-03` และฟิลด์เนื้อหา `safeguards` เพื่อเข้าถึง Anthropic เป็นคู่ และ `safeguard_results` บวกกับ IDs ที่ใช้เครื่องมืออัปสตรีมเพื่อให้กลับมาไม่เปลี่ยนแปลง OmniRoute ทำสิ่งนี้เมื่อคำขอถูกส่งไปยังผู้ให้บริการ `claude` ดั้งเดิมหรือไปยังโหนด `anthropic-compatible-*` ไม่ว่าจะสตรีมหรือไม่ (ตัวป้องกันการถดถอย: `tests/integration/claude-auto-mode-classifier-e2e.test.ts`) เป้าหมายอื่นๆ ไม่สามารถส่งคืนการตรวจสอบได้ ดังนั้น Claude Code จึงถอยกลับไปยังคำขอตัวแยกประเภทของตนเองและแสดงการแจ้งเตือน:
 
-**โปรไฟล์ไม่แยกจากกัน** — แต่ละโปรไฟล์ใช้ `CLAUDE_CONFIG_DIR` ที่แตกต่างกัน;
-ตรวจสอบว่า `echo $CLAUDE_CONFIG_DIR` ภายในเซสชันชี้ไปที่
-`~/.claude/profiles/<name>`
+- แบบจำลองของผู้ให้บริการที่ไม่ใช่มานุษยวิทยาหรือคอมโบที่ลงจอดบนผู้ให้บริการรายเดียว
+- โหนดรีเลย์ที่เข้ากันได้กับ Claude-Code (`anthropic-compatible-cc-*`) ซึ่งสร้างเนื้อหาคำขอขึ้นใหม่และไม่มีการส่ง `safeguards`;
+- OmniRoute เก่าที่มาก่อนรุ่นเบต้าที่อนุญาต หรือเวอร์ชันรหัส Claude ด้านล่างรายการหน้า Anthropic สำหรับเซสชันเกตเวย์
+
+เรียกใช้ `/status` ในรหัส Claude : the** เซิร์ฟเวอร์โหมดอัตโนมัติ** แถวอ่าน `Enabled` ในขณะที่การตรวจสอบของเซิร์ฟเวอร์ทำงานอยู่ ไม่ว่าคำขอเหล่านั้นจะถูกเรียกเก็บเงินหรือไม่นั้นจะถูกตัดสินโดย Anthropic ไม่ใช่โดย OmniRoute
+
+**ข้อผิดพลาดการตรวจสอบสิทธิ์** — โปรไฟล์ไม่มีโทเค็น ใช้ `omniroute launch --profile` (ฉีดเข้าไป) หรือส่งออก `ANTHROPIC_AUTH_TOKEN`
+
+**โปรไฟล์ไม่แยกออกจากกัน** — แต่ละโปรไฟล์มีความแตกต่างกัน `CLAUDE_CONFIG_DIR`; ตรวจสอบ `echo $CLAUDE_CONFIG_DIR` ภายในจุดเซสชันที่ `~/.claude/profiles/<name>`

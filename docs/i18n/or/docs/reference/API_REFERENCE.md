@@ -49,7 +49,7 @@ OpenAI-ସୁସଙ୍ଗତ ପ୍ରୋଟୋକଲ୍ ଏବଂ ପ୍ରଦ�
 
 ---
 
-## ଚାଟ୍ ସମ୍ପୂର୍ଣ୍ଣତା
+## ଚାଟ୍ ସମାପ୍ତି।
 
 ```bash
 POST /v1/chat/completions
@@ -65,33 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### କଷ୍ଟମ୍ ହେଡର୍ଗୁଡ଼ିକ
+### କଷ୍ଟମ୍ ହେଡର୍ସ।
 
-| Header                   | ଦିଗ         | ବର୍ଣ୍ଣନା                                                                                                                                                                                                                     |
-| ------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | ଅନୁରୋଧ      | କ୍ୟାଶ୍ ବାଇପାସ୍ କରିବା ପାଇଁ `true` ସେଟ୍ କରନ୍ତୁ                                                                                                                                                                                 |
-| `x-omniroute-no-memory`  | ଅନୁରୋଧ      | ଏହି ଅନୁରୋଧ ପାଇଁ ମେମୋରି + ସ୍କିଲ୍ସ୍ ଇଞ୍ଜେକ୍ସନ୍ ଛାଡ଼ିବା ପାଇଁ `true` ସେଟ୍ କରନ୍ତୁ (ନୋ-କ୍ୟାଶ୍ର ପ୍ରତିରୂପ; ପ୍ରତି-କଲ୍ ଟୋକେନ୍/ଖର୍ଚ୍ଚ ଓଭରହେଡ୍ ଏଡ଼ାଇଥାଏ)                                                                                 |
-| `X-OmniRoute-Progress`   | ଅନୁରୋଧ      | ପ୍ରଗତି ଇଭେଣ୍ଟ୍ ପାଇଁ `true` ସେଟ୍ କରନ୍ତୁ                                                                                                                                                                                       |
-| `X-Session-Id`           | ଅନୁରୋଧ      | ବାହ୍ୟ ସେସନ୍ ଆଫିନିଟି ପାଇଁ ଷ୍ଟିକି ସେସନ୍ କୀ                                                                                                                                                                                     |
-| `x_session_id`           | ଅନୁରୋଧ      | ଅଣ୍ଡରସ୍କୋର୍ ଭାରିଆଣ୍ଟ୍ ମଧ୍ୟ ଗ୍ରହଣ କରାଯାଏ (ସିଧାସଳଖ HTTP)                                                                                                                                                                       |
-| `X-OmniRoute-Session-Id` | ଅନୁରୋଧ      | କଲର୍ ପ୍ରଦତ୍ତ ସେସନ୍/କନଭର୍ସେସନ୍ ଟ୍ୟାଗ୍ (ମେମୋରିକୁ ମଧ୍ୟ ଯୋଗାଯାଏ)। ଉପସ୍ଥିତ ଥିଲେ, ପ୍ରତି-ସେସନ୍ ଖର୍ଚ୍ଚ ଆଟ୍ରିବ୍ୟୁସନ୍ ପାଇଁ `call_logs.session_tag` ରେ ଅବିକୃତ ଭାବେ ସ୍ଥାୟୀ କରାଯାଏ (#8249) — ଅନୁପସ୍ଥିତ ଥିଲେ କେବେ ମଧ୍ୟ ସୃଷ୍ଟି କରାଯାଏ ନାହିଁ |
-| `Idempotency-Key`        | ଅନୁରୋଧ      | ଡିଡପ୍ କୀ (5s ସମୟ-ସୀମା)                                                                                                                                                                                                       |
-| `X-Request-Id`           | ଅନୁରୋଧ      | ବିକଳ୍ପ ଡିଡପ୍ କୀ                                                                                                                                                                                                              |
-| `x-omniroute-connection` | ଅନୁରୋଧ      | ଏକକ-ମଡେଲ୍ ଅନୁରୋଧକୁ ଏହାର ID ଦ୍ୱାରା ଗୋଟିଏ ପ୍ରୋଭାଇଡର୍ କନେକ୍ସନ୍ (ଆକାଉଣ୍ଟ୍) ସହିତ ପିନ୍ କରନ୍ତୁ — [ପ୍ରତି ଅନୁରୋଧରେ ଆକାଉଣ୍ଟ୍ ପିନିଂ](#account-pinning-per-request) ଦେଖନ୍ତୁ                                                              |
-| `X-OmniRoute-Cache`      | ପ୍ରତିକ୍ରିୟା | ନନ୍-ଷ୍ଟ୍ରିମିଂ ପାଇଁ `HIT` କିମ୍ବା `MISS`                                                                                                                                                                                       |
-| `X-OmniRoute-Idempotent` | ପ୍ରତିକ୍ରିୟା | ଡିଡପ୍ଲିକେଟ୍ ହୋଇଥିଲେ `true`                                                                                                                                                                                                   |
-| `X-OmniRoute-Progress`   | ପ୍ରତିକ୍ରିୟା | ପ୍ରଗତି ଟ୍ରାକିଂ ଚାଲୁ ଥିଲେ `enabled`                                                                                                                                                                                           |
-| `X-OmniRoute-Session-Id` | ପ୍ରତିକ୍ରିୟା | OmniRoute ଦ୍ୱାରା ବ୍ୟବହୃତ ପ୍ରଭାବଶାଳୀ ସେସନ୍ ID                                                                                                                                                                                 |
-| `X-OmniRoute-Request-Id` | ପ୍ରତିକ୍ରିୟା | ଅନୁରୋଧ ସମ୍ପର୍କିତ ID (ଜଣାଥିଲେ)                                                                                                                                                                                                |
-| `X-OmniRoute-Version`    | ପ୍ରତିକ୍ରିୟା | OmniRoute ବିଲ୍ଡ୍ ଭର୍ସନ୍ (ସବୁବେଳେ ଉପସ୍ଥିତ)                                                                                                                                                                                    |
-| `X-OmniRoute-Cost-Saved` | ପ୍ରତିକ୍ରିୟା | HIT ସମୟରେ କ୍ୟାଶ୍ ଏଡ଼ାଇଥିବା USD (କେବଳ କ୍ୟାଶ୍ HIT)                                                                                                                                                                             |
-| `X-OmniRoute-Decision`   | ପ୍ରତିକ୍ରିୟା | ରାଉଟିଂ ଟ୍ରେସ୍: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ହେଉଛି କମ୍ବୋ ଷ୍ଟ୍ରାଟେଜି, କିମ୍ବା ନନ୍-କମ୍ବୋ ଅନୁରୋଧ ପାଇଁ `single`) — ସମାପ୍ତି ପ୍ରତିକ୍ରିୟାରେ ସବୁବେଳେ ଉପସ୍ଥିତ                                          |
+| ଶୀର୍ଷଲେଖ                 | ଦିଗ         | ବର୍ଣ୍ଣନା                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | ଅନୁରୋଧ      | କ୍ୟାଚ୍ ବାଇପାସ୍ କରିବାକୁ `true` କୁ ସେଟ୍ କରନ୍ତୁ।                                                                                                                                                                                                                                                                                                                   |
+| `x-omniroute-no-memory`  | ଅନୁରୋଧ      | ଏହି ଅନୁରୋଧ ପାଇଁ ମେମୋରୀ + କ skills ଶଳ ଇଞ୍ଜେକ୍ସନ୍ ଛାଡିବାକୁ `true` କୁ ସେଟ୍ କରନ୍ତୁ (ଦର୍ପଣ ନୋ-କ୍ୟାଚ୍; ପ୍ରତି କଲ୍ token/cost ଓଭରହେଡ୍ କୁ ଏଡାଇଥାଏ)।                                                                                                                                                                                                                      |
+| `x-omniroute-no-log`     | ଅନୁରୋଧ      | ଏହି ଇନଫେରେନ୍ସ ଅନୁରୋଧ ପାଇଁ କଲ୍ ଲଗ୍ ରୁ request/response ପେଲୋଡ୍ କୁ ଛାଡି `true` କୁ ସେଟ୍ କରନ୍ତୁ (ସମସ୍ତ ଚାଟ୍-ପରିବାର ମାର୍ଗ: ଚାଟ୍ ସମାପ୍ତି, ପ୍ରତିକ୍ରିୟା, ବାର୍ତ୍ତା, ସମାପ୍ତି, Gemini)। ଟାଇମଷ୍ଟ୍ୟାମ୍ପ, ମଡେଲ, ସ୍ଥିତି, ଅବଧି ଏବଂ ଟୋକେନ୍ ଗଣନା ଏପର୍ଯ୍ୟନ୍ତ ରେକର୍ଡ କରାଯାଇଛି। ଏକ ପୂର୍ଣ୍ଣ ବିଷୟବସ୍ତୁ ଅପ୍ଟ-ଆଉଟ୍ ପାଇଁ `x-omniroute-no-memory` ଏବଂ `x-omniroute-no-cache` ସହିତ ମିଶାନ୍ତୁ। |
+| `X-OmniRoute-Progress`   | ଅନୁରୋଧ      | ପ୍ରଗତି ଇଭେଣ୍ଟ ପାଇଁ `true` କୁ ସେଟ୍ କରନ୍ତୁ।                                                                                                                                                                                                                                                                                                                       |
+| `X-Session-Id`           | ଅନୁରୋଧ      | ବାହ୍ୟ ଅଧିବେଶନ ସମ୍ବନ୍ଧ ପାଇଁ କଠିନ ଅଧିବେଶନ ଚାବି।                                                                                                                                                                                                                                                                                                                   |
+| `x_session_id`           | ଅନୁରୋଧ      | ଅଣ୍ଡରସ୍କୋର ପ୍ରକାର ମଧ୍ୟ ଗ୍ରହଣ କରାଯାଇଛି (ପ୍ରତ୍ୟକ୍ଷ HTTP)                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Session-Id` | ଅନୁରୋଧ      | Caller-supplied session/conversation tag (also feeds memory). When present, persisted verbatim to `call_logs.session_tag` for per-session cost attribution (#8249) — never synthesized when absent                                                                                                                                                              |
+| `Idempotency-Key`        | ଅନୁରୋଧ      | ଡେଡଅପ୍ କୀ (5s ୱିଣ୍ଡୋ)                                                                                                                                                                                                                                                                                                                                           |
+| `X-Request-Id`           | ଅନୁରୋଧ      | ବ ded କଳ୍ପିକ dedup କି                                                                                                                                                                                                                                                                                                                                           |
+| `x-omniroute-connection` | ଅନୁରୋଧ      | ଏହାର id — ଦ୍ୱାରା ଗୋଟିଏ ପ୍ରଦାନକାରୀ ସଂଯୋଗ (ଆକାଉଣ୍ଟ) କୁ ଏକକ-ମଡେଲ୍ ଅନୁରୋଧକୁ ପିନ୍ କରନ୍ତୁ [।](#account-pinning-per-request)                                                                                                                                                                                                                                           |
+| `X-OmniRoute-Cache`      | ପ୍ରତିକ୍ରିୟା | `HIT` କିମ୍ବା `MISS` (ଅଣ-ଷ୍ଟ୍ରିମିଂ)                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Idempotent` | ପ୍ରତିକ୍ରିୟା | `true` ଯଦି ନକଲ।                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Progress`   | ପ୍ରତିକ୍ରିୟା | `enabled` ଯଦି ଅଗ୍ରଗତି ଟ୍ରାକିଂ ଉପରେ।                                                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Session-Id` | ପ୍ରତିକ୍ରିୟା | OmniRoute ଦ୍ୱାରା ବ୍ୟବହୃତ ପ୍ରଭାବଶାଳୀ ଅଧିବେଶନ ID                                                                                                                                                                                                                                                                                                                  |
+| `X-OmniRoute-Request-Id` | ପ୍ରତିକ୍ରିୟା | ସଂଶୋଧନ id ଅନୁରୋଧ (ଯେତେବେଳେ ଜଣା)                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Version`    | ପ୍ରତିକ୍ରିୟା | OmniRoute ନିର୍ମାଣ ସଂସ୍କରଣ (ସର୍ବଦା ଉପସ୍ଥିତ)                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Cost-Saved` | ପ୍ରତିକ୍ରିୟା | USD କ୍ୟାଚ୍ ଏକ HIT ରେ ଏଡ଼ାଇଦିଆଗଲା (କେବଳ କ୍ୟାଚ୍ ହିଟ୍ ହୁଏ)                                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Decision`   | ପ୍ରତିକ୍ରିୟା | ରାଉଟିଙ୍ଗ୍ ଟ୍ରେସ୍: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ହେଉଛି କମ୍ବୋ ରଣନୀତି, କିମ୍ବା ଅଣ-କମ୍ବୋ ଅନୁରୋଧ ପାଇଁ `single` ) — ସର୍ବଦା ସମାପ୍ତ ପ୍ରତିକ୍ରିୟାରେ ଉପସ୍ଥିତ।                                                                                                                                                                               |
 
-> Nginx ଟିପ୍ପଣୀ: ଯଦି ଆପଣ ଅଣ୍ଡରସ୍କୋର୍ ହେଡର୍ଗୁଡ଼ିକ ଉପରେ ନିର୍ଭର କରନ୍ତି (ଉଦାହରଣ ସ୍ୱରୂପ `x_session_id`), ତେବେ `underscores_in_headers on;` ସକ୍ରିୟ କରନ୍ତୁ।
+> Nginx ଟିପ୍ପଣୀ: ଯଦି ଆପଣ ଅଣ୍ଡରସ୍କୋର୍ ହେଡର୍ ଉପରେ ନିର୍ଭର କରନ୍ତି (ଉଦାହରଣ ସ୍ୱରୂପ `x_session_id`), `underscores_in_headers on;` ସକ୍ଷମ କରନ୍ତୁ।
 
-#### ପ୍ରତି ଅନୁରୋଧରେ ଆକାଉଣ୍ଟ୍ ପିନିଂ
+#### ଅନୁରୋଧ ଅନୁଯାୟୀ ଆକାଉଣ୍ଟ୍ ପିନ୍ କରିବା।
 
-ଯେତେବେଳେ ଗୋଟିଏ ପ୍ରୋଭାଇଡର୍ର ଅନେକ କନେକ୍ସନ୍ (ଆକାଉଣ୍ଟ୍ କିମ୍ବା କୀ) ଥାଏ, OmniRoute ସାଧାରଣତଃ ଏହାର ଆକାଉଣ୍ଟ୍-ଚୟନ ଷ୍ଟ୍ରାଟେଜି ମାଧ୍ୟମରେ ଗୋଟିଏ ଚୟନ କରେ। ଏହା ପରିବର୍ତ୍ତେ, ଗୋଟିଏ ଅନୁରୋଧ `x-omniroute-connection` ହେଡର୍ ସହିତ ନିର୍ଦ୍ଦିଷ୍ଟ ଗୋଟିଏ କନେକ୍ସନ୍କୁ ପିନ୍ କରିପାରେ:
+ଯେତେବେଳେ ଏକ ପ୍ରଦାନକାରୀଙ୍କର ଅନେକ ସଂଯୋଗ (ଆକାଉଣ୍ଟ୍ କିମ୍ବା କି) ଥାଏ, OmniRoute ସାଧାରଣତ its ଏହାର ଆକାଉଣ୍ଟ୍ ଚୟନ କ strategy ଶଳ ମାଧ୍ୟମରେ ଗୋଟିଏ ବାଛେ। ଏକ ଅନୁରୋଧ ଏହା ପରିବର୍ତ୍ତେ `x-omniroute-connection` ହେଡର୍ ସହିତ ଗୋଟିଏ ନିର୍ଦ୍ଦିଷ୍ଟ ସଂଯୋଗକୁ ପିନ୍ କରିପାରିବ:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -101,15 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **id କେଉଁଠାରେ ମିଳିବ।** ଡ୍ୟାଶବୋର୍ଡରେ provider ପୃଷ୍ଠା ଖୋଲନ୍ତୁ
-  (**Dashboard → Providers → <provider>**) ଏବଂ ଏକ connection
-  row-ରେ ଥିବା `xxxxxxxx…` id chip-ରେ କ୍ଲିକ୍ କରନ୍ତୁ — ଏହା ସମ୍ପୂର୍ଣ୍ଣ connection id କପି କରିଦିଏ।
-- **କେଉଁ requests ଏହାକୁ ମାନନ୍ତି।** `/v1/chat/completions`, `/v1/messages` ଏବଂ `/v1/responses` ଉପରେ single-model requests (`provider/model`)। Combos ଏହି header-କୁ ଅଣଦେଖା କରେ: ପ୍ରତ୍ୟେକ combo step ପାଇଁ ସେହି step-ର ନିଜସ୍ୱ connection ମାଧ୍ୟମରେ ଏକ account pin କରନ୍ତୁ।
-- **ଏହି pin ଏକ କଠୋର ନିର୍ଦ୍ଦେଶ, ପସନ୍ଦ ନୁହେଁ।** Pinned connection-ଟିକୁ ଏକମାତ୍ର ଭାବେ ବ୍ୟବହାର କରାଯାଏ। Request ଭିତରେ କୌଣସି failure ହେଲେ account-ର cooldown ରେକର୍ଡ ହୁଏ, କିନ୍ତୁ ସେହି provider-ର sibling account-କୁ rotate ହୁଏ ନାହିଁ।
-- **Cooldown ଏବଂ quota pin-କୁ ମୁକ୍ତ କରନ୍ତି।** Pinned connection cooldown ରେ ଥିବାବେଳେ, quota ଶେଷ ହୋଇଯାଇଥିବା କିମ୍ବା quota policy ଦ୍ୱାରା blocked ହୋଇଥିବା ସମୟରେ, ପରବର୍ତ୍ତୀ requests provider-ର ଅନ୍ୟ connections-କୁ fallback କରେ, ଠିକ୍ unpinned traffic ଭଳି।
-- **ଅଜଣା କିମ୍ବା disabled ids ବିଫଳ ହୁଏ।** Provider-ର active pool-ରେ ନଥିବା ଏକ id (deleted, deactivated, କିମ୍ବା ଅନ୍ୟ provider-ର ହୋଇଥିବା) କୌଣସି eligible account ଛାଡ଼େ ନାହିଁ, ତେଣୁ request ନିରବରେ ଅନ୍ୟତ୍ର route ହେବା ପରିବର୍ତ୍ତେ ବିଫଳ ହୁଏ।
+- **Id କୁ କେଉଁଠାରେ ପାଇବେ।** ଡ୍ୟାସବୋର୍ଡରେ ପ୍ରଦାନକାରୀ ପୃଷ୍ଠା ଖୋଲନ୍ତୁ (** ଡ୍ୟାସବୋର୍ଡ → ପ୍ରଦାନକାରୀ → <provider>** ) ଏବଂ ଏକ ସଂଯୋଗ ଧାଡିରେ `xxxxxxxx…` id ଚିପ୍ କ୍ଲିକ୍ କରନ୍ତୁ — ଏହା ସମ୍ପୂର୍ଣ୍ଣ ସଂଯୋଗ id କୁ କପି କରେ।
+- **ଯାହା ଅନୁରୋଧ ଏହାକୁ ସମ୍ମାନ କରେ।** `/v1/chat/completions`, `/v1/messages` ଏବଂ `/v1/responses` ଉପରେ ଏକକ-ମଡେଲ୍ ଅନୁରୋଧ (`provider/model`)। କମ୍ବୋସ୍ ହେଡର୍ କୁ ଅଣଦେଖା କରେ: ଏହା ବଦଳରେ ଷ୍ଟେପ୍ ର ନିଜସ୍ୱ ସଂଯୋଗ ମାଧ୍ୟମରେ କମ୍ବୋ ଷ୍ଟେପ୍ ପାଇଁ ଏକ ଆକାଉଣ୍ଟ୍ ପିନ୍ କରନ୍ତୁ।
+- **ପିନ୍ କଠୋର, ପସନ୍ଦ ନୁହେଁ।** ପିନ୍ ହୋଇଥିବା ସଂଯୋଗକୁ ସ୍ୱତନ୍ତ୍ର ଭାବରେ ବ୍ୟବହାର କରାଯାଏ। ଅନୁରୋଧ ଭିତରେ ଏକ ବିଫଳତା ଖାତାର କୁଲଡାଉନ୍ ରେକର୍ଡ କରେ କିନ୍ତୁ କରେ।** ନୁହେଁ** ସମାନ ପ୍ରଦାନକାରୀଙ୍କ ଭାଇଭଉଣୀ ଆକାଉଣ୍ଟକୁ ଘୂର୍ଣ୍ଣନ କରନ୍ତୁ।
+- **କୁଲଡାଉନ୍ ଏବଂ କୋଟା ପିନ୍ ମୁକ୍ତ କରେ।** ଯେତେବେଳେ ପିନ୍ ହୋଇଥିବା ସଂଯୋଗ ଥଣ୍ଡା ହେଉଛି, କୋଟା-କ୍ଳାନ୍ତ କିମ୍ବା କୋଟା ନୀତି ଦ୍ blocked ାରା ଅବରୋଧିତ ହୋଇଛି, ପରବର୍ତ୍ତୀ ସମୟରେ ଅନୁରୋଧଗୁଡିକ ପ୍ରଦାନକାରୀଙ୍କ ଅନ୍ୟ ସଂଯୋଗକୁ ଫେରିଯାଏ, ଠିକ୍ ଅଣ-ଟ୍ରାଫିକ୍ ପରି।
+- **ଅଜ୍ଞାତ କିମ୍ବା ଅକ୍ଷମ ID ଗୁଡିକ ବିଫଳ ହୁଏ।** ଏକ id ଯାହାକି ପ୍ରଦାନକାରୀଙ୍କ ସକ୍ରିୟ ପୁଲରେ ନାହିଁ (ଡିଲିଟ୍, ନିଷ୍କ୍ରିୟ, କିମ୍ବା ଅନ୍ୟ ପ୍ରଦାନକାରୀଙ୍କର) କ no ଣସି ଯୋଗ୍ୟ ଖାତା ଛାଡି ନଥାଏ, ତେଣୁ ଚୁପଚାପ୍ ଅନ୍ୟତ୍ର ରାଉଟ୍ କରିବା ପରିବର୍ତ୍ତେ ଅନୁରୋଧ ବିଫଳ ହୁଏ।
 
-Claude Code `ANTHROPIC_CUSTOM_HEADERS` ମାଧ୍ୟମରେ custom headers ପଠାଏ। ଏହାକୁ `~/.claude/settings.json`-ର `env` block-ରେ ରଖନ୍ତୁ, କିମ୍ବା ପ୍ରତ୍ୟେକ project ପାଇଁ ଭିନ୍ନ account pin କରିବାକୁ project-level `.claude/settings.json`-ରେ ରଖନ୍ତୁ:
+Claude କୋଡ୍ `ANTHROPIC_CUSTOM_HEADERS` ମାଧ୍ୟମରେ କଷ୍ଟମ୍ ହେଡର୍ ପଠାଏ। ଏହାକୁ `~/.claude/settings.json` ର `env` ବ୍ଲକରେ ରଖନ୍ତୁ, କିମ୍ବା ଏକ ପ୍ରୋଜେକ୍ଟ ସ୍ତରୀୟ `.claude/settings.json` ରେ ପ୍ରତି ପ୍ରୋଜେକ୍ଟରେ ଏକ ଭିନ୍ନ ଆକାଉଣ୍ଟ୍ ପିନ୍ କରନ୍ତୁ:
 
 ```jsonc
 {
@@ -121,12 +120,11 @@ Claude Code `ANTHROPIC_CUSTOM_HEADERS` ମାଧ୍ୟମରେ custom headers �
 }
 ```
 
-ସ୍ରୋତ: `src/sse/handlers/chat.ts` (header read), `src/sse/services/auth.ts` ଏବଂ
-`src/sse/services/sessionAffinityPin.ts` (pin release ଏବଂ pool-ରୁ ଅନୁପସ୍ଥିତ ଥିବା ଯାଞ୍ଚ)।
+ଉତ୍ସ: `src/sse/handlers/chat.ts` (ହେଡର୍ ପ read ଼ିବା), `src/sse/services/auth.ts` ଏବଂ `src/sse/services/sessionAffinityPin.ts` (ପିନ୍ ରିଲିଜ୍ ଏବଂ ନିଖୋଜ-ପୁଲ୍ ଯାଞ୍ଚ)।
 
-> **Cost telemetry headers:** non-streaming success responses ମଧ୍ୟ `X-OmniRoute-*` cost-telemetry set ବହନ କରେ — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimals; ମାଗଣା/ମୂଲ୍ୟ ନିର୍ଦ୍ଧାରିତ ନଥିଲେ `0.0000000000`), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, ଏବଂ `X-OmniRoute-Fallback-Attempts` (କେବଳ > 0 ହେଲେ), ସହିତ `X-OmniRoute-Request-Id` ଏବଂ `X-OmniRoute-Version`। ଏଗୁଡ଼ିକ chat completions, `/v1/responses`, `/v1/messages`, **ଏବଂ media endpoints** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, ଏବଂ `/v1/moderations` — ଦ୍ୱାରା ଜାରି ହୁଏ (`/v1/moderations`-ରେ ସଦା cost `0`)। Pricing ଉପଲବ୍ଧ ଥିଲେ media cost ପ୍ରତ୍ୟେକ modality ଅନୁସାରେ (ପ୍ରତି-image, ପ୍ରତି-second, ପ୍ରତି-character, ପ୍ରତି search-unit) ଗଣନା କରାଯାଏ, ନହେଲେ `0` (fail-open)।
+> **ମୂଲ୍ୟ ଟେଲିମେଟ୍ରି ହେଡର୍:** ଅଣ-ଷ୍ଟ୍ରିମିଂ ସଫଳତା ପ୍ରତିକ୍ରିୟାଗୁଡ଼ିକ ମଧ୍ୟ `X-OmniRoute-*` ମୂଲ୍ୟ-ଟେଲିମେଟ୍ରି ସେଟ୍ — `X-OmniRoute-Response-Cost` (USD, ସ୍ଥିର 10 ଦଶମିକ; `0.0000000000` ପାଇଁ free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, ଏବଂ `X-OmniRoute-Fallback-Attempts` (କେବଳ > 0), ଏବଂ `X-OmniRoute-Request-Id` ଏବଂ `X-OmniRoute-Version` ମଧ୍ୟ ବହନ କରିଥାଏ। ଚାଟ୍ ସମାପ୍ତି, `/v1/responses`, `/v1/messages`, ଏଗୁଡିକ ନିର୍ଗତ ହୁଏ।** ଏବଂ ମିଡିଆ ଶେଷ ପଏଣ୍ଟ।** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, ଏବଂ `/v1/moderations` (ସର୍ବଦା `0` ମୂଲ୍ୟ)। ମୂଲ୍ୟ ଉପଲବ୍ଧ ହେଲେ ମିଡିଆ ମୂଲ୍ୟ ପ୍ରତି ମୋଡାଲୀ (ପ୍ରତି ପ୍ରତିଛବି, ପ୍ରତି ସେକେଣ୍ଡ, ପ୍ରତି ଚରିତ୍ର, ସର୍ଚ୍ଚ-ୟୁନିଟ୍) ଗଣନା କରାଯାଏ, ଅନ୍ୟଥା `0` (ବିଫଳ-ଖୋଲା)।
 
-> **Cache-hit cost semantics:** semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`) ହେଲେ upstream call କରାଯାଏ ନାହିଁ, ତେଣୁ `X-OmniRoute-Response-Cost` `0.0000000000` ହୁଏ (hit ପ୍ରଦାନ କରିବାର **incremental** cost)। ମୂଳ/ହୋଇଥାନ୍ତା cost ଅଲଗା ଭାବେ `X-OmniRoute-Cost-Saved`-ରେ ରିପୋର୍ଟ ହୁଏ। Billing consumers-ମାନେ `X-OmniRoute-Response-Cost` ଯୋଗ କରିବା ଉଚିତ (hits ପାଇଁ କୌଣସି cost ନାହିଁ); cache analytics `X-OmniRoute-Cost-Saved` aggregate କରିପାରେ।
+> **କ୍ୟାଚ୍-ହିଟ୍ ମୂଲ୍ୟ ଅର୍ଥ:** ଏକ ଅର୍ଥଗତ-କ୍ୟାଚ୍ HIT (`X-OmniRoute-Cache-Hit: true`) ରେ କ up ଣସି ଅପଷ୍ଟ୍ରିମ୍ କଲ୍ କରାଯାଏ ନାହିଁ, ତେଣୁ `X-OmniRoute-Response-Cost` ହେଉଛି `0.0000000000` (the** ବର୍ଦ୍ଧିତ** ହିଟ୍ ସେବା କରିବାର ମୂଲ୍ୟ) original/would-have-been ମୂଲ୍ୟ `X-OmniRoute-Cost-Saved` ରେ ପୃଥକ ଭାବରେ ରିପୋର୍ଟ କରାଯାଇଛି। ବିଲିଂ ଗ୍ରାହକମାନେ `X-OmniRoute-Response-Cost` ରାଶି ଦେବା ଉଚିତ୍ (ହିଟ୍ ମୂଲ୍ୟ କିଛି ନୁହେଁ); କ୍ୟାଚ୍ ଆନାଲିଟିକ୍ସ `X-OmniRoute-Cost-Saved` ଏକତ୍ର କରିପାରିବ।
 
 ## ଏକାଧିକାରୀ ପରିଚାଳିତ ସେସନ୍ ଲିଜ୍
 
@@ -362,6 +360,8 @@ Content-Type: application/json
 ଉପଲବ୍ଧ ପ୍ରଦାନକାରୀମାନେ OpenAI (GPT ପ୍ରତିଛବି 2), xAI (Grok ପ୍ରତିଛବି), Together AI (FLUX), Fireworks AI, ନେବିୟସ୍ (FLUX), ହାଇପରବୋଲିକ୍, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (ସ୍ଥାନୀୟ), ComfyUI (ସ୍ଥାନୀୟ)।
 
 `n` `data[]` ରେ `n` ପ୍ରତିଛବିଗୁଡ଼ିକୁ ଫେରସ୍ତ କରେ। ପ୍ରଦାନକାରୀ ଯାହାର ଅପଷ୍ଟ୍ରିମ୍ API କଲ୍ ପ୍ରତି ଗୋଟିଏ ପ୍ରତିଛବି ଫେରାଇଥାଏ (ବ୍ଲାକ୍ ଫରେଷ୍ଟ ଲ୍ୟାବ, ସ୍ଥିରତା AI, ଲିଓନାର୍ଡୋ, ଆଇଡୋଗ୍ରାମ୍, ହାଇପର, ହାଇପରବୋଲିକ୍, Magnific/Freepik, NVIDIA NIM, Cloudflare ୱାର୍କର୍ସ AI) ଫ୍ଲାଇଟ୍ ସମୟରେ ସର୍ବାଧିକ 4 ଟି `n` ପୃଥକ ଅପଷ୍ଟ୍ରିମ୍ କଲ୍ ପାଇଥାଏ। ଏକ ସ୍ଥିର `seed` କଲ୍ ଇଣ୍ଡେକ୍ସ (`seed`, `seed + 1`,…) ଦ୍ୱାରା ଅଫସେଟ୍ ହୋଇଥାଏ, ତେଣୁ ପ୍ରତିଛବିଗୁଡ଼ିକ ଭିନ୍ନ କିନ୍ତୁ ପୁନ oduc ପ୍ରବୃତ୍ତିରେ ରୁହ। `n` 10 ରେ କ୍ୟାପ୍ ହୋଇଛି। ଯଦି କ call ଣସି କଲ୍ ବିଫଳ ହୁଏ ତେବେ ଅନୁରୋଧଟି ସମ୍ପୂର୍ଣ୍ଣ ଭାବରେ ବିଫଳ ହୁଏ। ଫ୍ୟାନ୍ ଆଉଟ୍ ଫର୍ମାଟଗୁଡିକର ତାଲିକା ହେଉଛି `open-sse/handlers/imageGeneration/fanOut.ts` ରେ `SINGLE_IMAGE_FANOUT_FORMATS`।
+
+Codex GPT ପ୍ରତିଛବି ମଡେଲଗୁଡିକ (`codex/gpt-image-*`) କେବଳ PNG ଫେରସ୍ତ କରେ: ଅପଷ୍ଟ୍ରିମ `200` PNG ବାଇଟ୍ ସହିତ `jpeg` କିମ୍ବା `webp` ଅନୁରୋଧ ହେଲେ ମଧ୍ୟ ଉତ୍ତର ଦେଇଥାଏ। ଅନ୍ୟ କ z ଣସି `output_format` (`webp`, `jpeg`, ...) ସହିତ ଏକ ଅନୁରୋଧ ଚୁପଚାପ୍ ଅଣଦେଖା ହେବା ପରିବର୍ତ୍ତେ HTTP 400 ସହିତ ପ୍ରତ୍ୟାଖ୍ୟାନ ହୋଇଛି; ଏହାକୁ ଛାଡିଦିଅ କିମ୍ବା `png` ପଠାନ୍ତୁ। `output_compression` ଅଗ୍ରଗାମୀ ନୁହେଁ।
 
 ZenMux ବିଦ୍ୟମାନ API- କି ସଂଯୋଗକୁ ପୁନ uses ବ୍ୟବହାର କରେ ଏବଂ `zenmux/` କିମ୍ବା `zm/` ଉପସର୍ଗଗୁଡ଼ିକୁ ଗ୍ରହଣ କରେ:
 

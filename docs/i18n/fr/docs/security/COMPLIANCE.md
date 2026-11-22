@@ -129,31 +129,33 @@ l'ancienne table `request_detail_logs` et les artefacts locaux des requêtes sou
 Les valeurs par défaut sont définies dans `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Désactivation `noLog` (par clé API)
+## Désinscription de `noLog` (par clé API )
 
-Les clés API peuvent être marquées afin que le trafic de leurs appels en aval ne soit pas journalisé. Le
-marqueur est stocké dans la table `api_keys` (`no_log INTEGER DEFAULT 0`) et est répliqué
-dans un ensemble en mémoire pour permettre des recherches rapides sur les chemins critiques.
+Les clés API peuvent être signalées afin que leur trafic d'appels en aval ne soit pas enregistré. L'indicateur réside sur la table `api_keys` (`no_log INTEGER DEFAULT 0`) et est reflété dans un ensemble en mémoire pour les recherches hot-path.
 
 ```bash
-# Créer une clé sans journalisation (authentification de gestion requise)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Fonctions utilitaires (`src/lib/compliance/index.ts`) :
+Aides (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — active ou désactive l'entrée en mémoire
-- `isNoLog(apiKeyId)` — vérifiée sur le chemin de la requête ; utilise en dernier recours une lecture de
-  `api_keys.no_log` mise en cache pendant 30 s
-- `NO_LOG_API_KEY_IDS` (variable d'environnement, valeurs séparées par des virgules) — préchargée dans l'ensemble en mémoire
-  au démarrage ; utile lorsque vous ne pouvez pas modifier directement la colonne
+- `setNoLog(apiKeyId, true|false)` — bascule l'entrée en mémoire
+- `isNoLog(apiKeyId)` — vérifié sur le chemin de la requête ; revient à une lecture en cache de 30 s depuis `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, séparé par des virgules) — préchargé dans l'ensemble en mémoire au démarrage ; utile lorsque vous ne pouvez pas basculer directement la colonne
 
-Les événements d'audit administratifs (connexion, modifications des fournisseurs, appels d'outils MCP, etc.)
-ne sont **pas** affectés par `noLog` — seule la journalisation du trafic par requête est
-désactivée.
+Les événements d'audit administratif (connexion, changements de fournisseur, appels à l'outil MCP, etc.) sont** pas** affecté par `noLog` — seule la journalisation du trafic par demande est désactivée.
+
+### Désinscription par demande (`x-omniroute-no-log`)
+
+Un client peut désactiver la persistance d’une seule demande d’inférence sans créer de clé dédiée. Envoyez `x-omniroute-no-log: true` sur la demande (`1` et `yes` sont également acceptés, insensibles à la casse). Il s'applique à chaque itinéraire de famille de discussion qui passe par le gestionnaire de discussion : achèvements de chat, réponses, messages, achèvements et chemin compatible Gemini. La ligne du journal des appels est toujours écrite avec son horodatage, son modèle, son fournisseur, son statut, sa durée et le nombre de jetons, mais `request_body`, `response_body`, les résumés de requêtes et les artefacts de pipeline sont omis.
+
+L'en-tête est ORed avec l'indicateur de clé : une clé sans journal reste sans journal quel que soit l'en-tête, et l'en-tête ne peut pas réactiver la journalisation pour une clé sans journal. L'en-tête est supprimé avant que la demande ne soit transmise en amont.
+
+Cet en-tête fait** pas** désactivez l’extraction de mémoire ou le cache sémantique. Envoyez `x-omniroute-no-memory: true` et `x-omniroute-no-cache: true` à côté lorsque la requête ne doit pas non plus conserver le contenu dans ces sous-systèmes.
 
 ## API REST
 

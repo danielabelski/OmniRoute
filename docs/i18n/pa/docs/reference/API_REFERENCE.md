@@ -49,7 +49,7 @@ OpenAI-ਅਨੁਕੂਲ ਪ੍ਰੋਟੋਕੋਲ ਅਤੇ ਪ੍ਰਦਾ�
 
 ---
 
-## ਚੈਟ ਕੰਪਲੀਸ਼ਨ
+## ਚੈਟ ਸੰਪੂਰਨਤਾਵਾਂ
 
 ```bash
 POST /v1/chat/completions
@@ -65,33 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### ਕਸਟਮ ਹੈਡਰ
+### ਕਸਟਮ ਸਿਰਲੇਖ
 
-| Header                   | ਦਿਸ਼ਾ | ਵੇਰਵਾ                                                                                                                                                                                                                              |
-| ------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | ਬੇਨਤੀ | ਕੈਸ਼ ਨੂੰ ਬਾਈਪਾਸ ਕਰਨ ਲਈ `true` ਸੈੱਟ ਕਰੋ                                                                                                                                                                                             |
-| `x-omniroute-no-memory`  | ਬੇਨਤੀ | ਇਸ ਬੇਨਤੀ ਲਈ ਮੈਮੋਰੀ + ਸਕਿਲਜ਼ ਇੰਜੈਕਸ਼ਨ ਛੱਡਣ ਲਈ `true` ਸੈੱਟ ਕਰੋ (no-cache ਵਰਗਾ; ਹਰ ਕਾਲ ਦੇ ਟੋਕਨ/ਲਾਗਤ ਓਵਰਹੈੱਡ ਤੋਂ ਬਚਦਾ ਹੈ)                                                                                                              |
-| `X-OmniRoute-Progress`   | ਬੇਨਤੀ | ਪ੍ਰਗਤੀ ਇਵੈਂਟਾਂ ਲਈ `true` ਸੈੱਟ ਕਰੋ                                                                                                                                                                                                  |
-| `X-Session-Id`           | ਬੇਨਤੀ | ਬਾਹਰੀ ਸੈਸ਼ਨ ਅਫ਼ਿਨਿਟੀ ਲਈ ਸਟਿੱਕੀ ਸੈਸ਼ਨ ਕੁੰਜੀ                                                                                                                                                                                         |
-| `x_session_id`           | ਬੇਨਤੀ | ਅੰਡਰਸਕੋਰ ਵਾਲਾ ਰੂਪ ਵੀ ਸਵੀਕਾਰਿਆ ਜਾਂਦਾ ਹੈ (ਸਿੱਧਾ HTTP)                                                                                                                                                                                |
-| `X-OmniRoute-Session-Id` | ਬੇਨਤੀ | ਕਾਲਰ ਵੱਲੋਂ ਦਿੱਤਾ ਸੈਸ਼ਨ/ਗੱਲਬਾਤ ਟੈਗ (ਮੈਮੋਰੀ ਵਿੱਚ ਵੀ ਜਾਂਦਾ ਹੈ)। ਮੌਜੂਦ ਹੋਣ 'ਤੇ, ਪ੍ਰਤੀ-ਸੈਸ਼ਨ ਲਾਗਤ ਐਟ੍ਰਿਬਿਊਸ਼ਨ ਲਈ `call_logs.session_tag` ਵਿੱਚ ਜਿਵੇਂ ਦਾ ਤਿਵੇਂ ਸਥਾਈ ਕੀਤਾ ਜਾਂਦਾ ਹੈ (#8249) — ਗੈਰ-ਮੌਜੂਦ ਹੋਣ 'ਤੇ ਕਦੇ ਵੀ ਖੁਦ ਨਹੀਂ ਬਣਾਇਆ ਜਾਂਦਾ |
-| `Idempotency-Key`        | ਬੇਨਤੀ | ਡੀਡੱਪ ਕੁੰਜੀ (5s ਵਿੰਡੋ)                                                                                                                                                                                                             |
-| `X-Request-Id`           | ਬੇਨਤੀ | ਵਿਕਲਪਿਕ ਡੀਡੱਪ ਕੁੰਜੀ                                                                                                                                                                                                                |
-| `x-omniroute-connection` | ਬੇਨਤੀ | ਇੱਕਲ-ਮਾਡਲ ਬੇਨਤੀ ਨੂੰ ਇੱਕ ਪ੍ਰੋਵਾਈਡਰ ਕਨੈਕਸ਼ਨ (ਖਾਤੇ) ਨਾਲ ਉਸ ਦੀ id ਰਾਹੀਂ ਪਿੰਨ ਕਰੋ — [ਪ੍ਰਤੀ ਬੇਨਤੀ ਖਾਤਾ ਪਿੰਨਿੰਗ](#account-pinning-per-request) ਵੇਖੋ                                                                                       |
-| `X-OmniRoute-Cache`      | ਜਵਾਬ  | `HIT` ਜਾਂ `MISS` (ਨਾਨ-ਸਟ੍ਰੀਮਿੰਗ)                                                                                                                                                                                                   |
-| `X-OmniRoute-Idempotent` | ਜਵਾਬ  | ਡੀਡੱਪਲੀਕੇਟ ਕੀਤੇ ਜਾਣ 'ਤੇ `true`                                                                                                                                                                                                     |
-| `X-OmniRoute-Progress`   | ਜਵਾਬ  | ਪ੍ਰਗਤੀ ਟ੍ਰੈਕਿੰਗ ਚਾਲੂ ਹੋਣ 'ਤੇ `enabled`                                                                                                                                                                                             |
-| `X-OmniRoute-Session-Id` | ਜਵਾਬ  | OmniRoute ਵੱਲੋਂ ਵਰਤੀ ਗਈ ਪ੍ਰਭਾਵੀ ਸੈਸ਼ਨ ID                                                                                                                                                                                           |
-| `X-OmniRoute-Request-Id` | ਜਵਾਬ  | ਬੇਨਤੀ ਕੋਰਿਲੇਸ਼ਨ id (ਜਦੋਂ ਪਤਾ ਹੋਵੇ)                                                                                                                                                                                                 |
-| `X-OmniRoute-Version`    | ਜਵਾਬ  | OmniRoute ਬਿਲਡ ਵਰਜਨ (ਹਮੇਸ਼ਾ ਮੌਜੂਦ)                                                                                                                                                                                                 |
-| `X-OmniRoute-Cost-Saved` | ਜਵਾਬ  | HIT 'ਤੇ ਕੈਸ਼ ਵੱਲੋਂ ਬਚਾਏ ਗਏ USD (ਸਿਰਫ਼ ਕੈਸ਼ ਹਿੱਟ)                                                                                                                                                                                   |
-| `X-OmniRoute-Decision`   | ਜਵਾਬ  | ਰੂਟਿੰਗ ਟ੍ਰੇਸ: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ਕੰਬੋ ਰਣਨੀਤੀ ਹੈ, ਜਾਂ ਗੈਰ-ਕੰਬੋ ਬੇਨਤੀ ਲਈ `single`) — ਪੂਰਨਤਾ ਵਾਲੇ ਜਵਾਬਾਂ 'ਤੇ ਹਮੇਸ਼ਾ ਮੌਜੂਦ                                                                  |
+| ਸਿਰਲੇਖ                   | ਦਿਸ਼ਾ | ਵਰਣਨ                                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | ਬੇਨਤੀ | ਕੈਸ਼ ਨੂੰ ਬਾਈਪਾਸ ਕਰਨ ਲਈ `true` ਤੇ ਸੈੱਟ ਕਰੋ                                                                                                                                                                                                                                                                                    |
+| `x-omniroute-no-memory`  | ਬੇਨਤੀ | ਇਸ ਬੇਨਤੀ ਲਈ ਮੈਮੋਰੀ + ਹੁਨਰ ਇੰਜੈਕਸ਼ਨ ਨੂੰ ਛੱਡਣ ਲਈ `true` 'ਤੇ ਸੈੱਟ ਕਰੋ (ਮਿਰਰ ਨੋ-ਕੈਸ਼; ਪ੍ਰਤੀ-ਕਾਲ token/cost ਓਵਰਹੈੱਡ ਤੋਂ ਬਚਦਾ ਹੈ)                                                                                                                                                                                                  |
+| `x-omniroute-no-log`     | ਬੇਨਤੀ | ਇਸ ਅਨੁਮਾਨ ਬੇਨਤੀ ਲਈ ਕਾਲ ਲੌਗਸ ਤੋਂ request/response ਪੇਲੋਡਾਂ ਨੂੰ ਛੱਡਣ ਲਈ `true` 'ਤੇ ਸੈੱਟ ਕਰੋ (ਸਾਰੇ ਚੈਟ-ਫੈਮਿਲੀ ਰੂਟ: ਚੈਟ ਸੰਪੂਰਨਤਾ, ਜਵਾਬ, ਸੰਦੇਸ਼, ਸੰਪੂਰਨਤਾ, Gemini)। ਟਾਈਮਸਟੈਂਪ, ਮਾਡਲ, ਸਥਿਤੀ, ਮਿਆਦ ਅਤੇ ਟੋਕਨ ਗਿਣਤੀ ਅਜੇ ਵੀ ਰਿਕਾਰਡ ਕੀਤੀ ਜਾਂਦੀ ਹੈ। ਪੂਰੀ ਸਮੱਗਰੀ ਦੀ ਚੋਣ ਕਰਨ ਲਈ `x-omniroute-no-memory` ਅਤੇ `x-omniroute-no-cache` ਨਾਲ ਜੋੜੋ |
+| `X-OmniRoute-Progress`   | ਬੇਨਤੀ | ਤਰੱਕੀ ਦੀਆਂ ਘਟਨਾਵਾਂ ਲਈ `true` ਤੇ ਸੈੱਟ ਕਰੋ                                                                                                                                                                                                                                                                                     |
+| `X-Session-Id`           | ਬੇਨਤੀ | ਬਾਹਰੀ ਸੈਸ਼ਨ ਸਬੰਧਾਂ ਲਈ ਸਟਿੱਕੀ ਸੈਸ਼ਨ ਕੁੰਜੀ                                                                                                                                                                                                                                                                                     |
+| `x_session_id`           | ਬੇਨਤੀ | ਅੰਡਰਸਕੋਰ ਵੇਰੀਐਂਟ ਵੀ ਸਵੀਕਾਰ ਕੀਤਾ ਗਿਆ (ਸਿੱਧਾ HTTP)                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Session-Id` | ਬੇਨਤੀ | ਕਾਲਰ ਦੁਆਰਾ ਸਪਲਾਈ ਕੀਤਾ session/conversation ਟੈਗ (ਮੈਮੋਰੀ ਨੂੰ ਵੀ ਫੀਡ ਕਰਦਾ ਹੈ)। ਮੌਜੂਦ ਹੋਣ 'ਤੇ, ਪ੍ਰਤੀ-ਸੈਸ਼ਨ ਲਾਗਤ ਵਿਸ਼ੇਸ਼ਤਾ (#8249) — ਲਈ `call_logs.session_tag` ਨੂੰ ਨਿਰੰਤਰ ਸ਼ਬਦਾਵਲੀ ਕਦੇ ਵੀ ਗੈਰਹਾਜ਼ਰ ਹੋਣ 'ਤੇ ਸੰਸ਼ਲੇਸ਼ਿਤ ਨਹੀਂ ਕੀਤਾ ਜਾਂਦਾ ਹੈ                                                                                         |
+| `Idempotency-Key`        | ਬੇਨਤੀ | Dedup ਕੁੰਜੀ (5s ਵਿੰਡੋ)                                                                                                                                                                                                                                                                                                       |
+| `X-Request-Id`           | ਬੇਨਤੀ | ਵਿਕਲਪਿਕ ਡਿਡਅੱਪ ਕੁੰਜੀ                                                                                                                                                                                                                                                                                                         |
+| `x-omniroute-connection` | ਬੇਨਤੀ | ਇੱਕ ਸਿੰਗਲ-ਮਾਡਲ ਬੇਨਤੀ ਨੂੰ ਇੱਕ ਪ੍ਰਦਾਤਾ ਕਨੈਕਸ਼ਨ (ਖਾਤਾ) ਨੂੰ ਇਸਦੇ ਆਈਡੀ — ਦੁਆਰਾ ਪਿੰਨ ਕਰੋ [ਪ੍ਰਤੀ ਬੇਨਤੀ ਖਾਤਾ ਪਿੰਨਿੰਗ](#account-pinning-per-request) ਵੇਖੋ                                                                                                                                                                             |
+| `X-OmniRoute-Cache`      | ਜਵਾਬ  | `HIT` ਜਾਂ `MISS` (ਗੈਰ-ਸਟ੍ਰੀਮਿੰਗ)                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Idempotent` | ਜਵਾਬ  | `true` ਜੇਕਰ ਡੁਪਲੀਕੇਟ ਕੀਤਾ ਗਿਆ ਹੈ                                                                                                                                                                                                                                                                                             |
+| `X-OmniRoute-Progress`   | ਜਵਾਬ  | `enabled` ਜੇਕਰ ਤਰੱਕੀ ਟਰੈਕਿੰਗ ਚਾਲੂ ਹੈ                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Session-Id` | ਜਵਾਬ  | OmniRoute ਦੁਆਰਾ ਵਰਤਿਆ ਗਿਆ ਪ੍ਰਭਾਵੀ ਸੈਸ਼ਨ ID                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Request-Id` | ਜਵਾਬ  | ਅਨੁਰੋਧ ਸਬੰਧ ਆਈਡੀ (ਜਦੋਂ ਜਾਣਿਆ ਜਾਂਦਾ ਹੈ)                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Version`    | ਜਵਾਬ  | OmniRoute ਬਿਲਡ ਸੰਸਕਰਣ (ਹਮੇਸ਼ਾ ਮੌਜੂਦ)                                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Cost-Saved` | ਜਵਾਬ  | USD ਕੈਸ਼ ਨੂੰ ਇੱਕ HIT 'ਤੇ ਬਚਾਇਆ ਗਿਆ (ਸਿਰਫ਼ ਕੈਸ਼ ਹਿੱਟ)                                                                                                                                                                                                                                                                         |
+| `X-OmniRoute-Decision`   | ਜਵਾਬ  | ਰਾਊਟਿੰਗ ਟਰੇਸ: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` ਕੰਬੋ ਰਣਨੀਤੀ ਹੈ, ਜਾਂ ਗੈਰ-ਕੰਬੋ ਬੇਨਤੀ ਲਈ `single` ) — ਹਮੇਸ਼ਾ ਮੁਕੰਮਲ ਹੋਣ ਵਾਲੇ ਜਵਾਬਾਂ 'ਤੇ ਮੌਜੂਦ ਹੁੰਦਾ ਹੈ                                                                                                                                              |
 
-> Nginx ਨੋਟ: ਜੇ ਤੁਸੀਂ ਅੰਡਰਸਕੋਰ ਵਾਲੇ ਹੈਡਰਾਂ 'ਤੇ ਨਿਰਭਰ ਕਰਦੇ ਹੋ (ਉਦਾਹਰਨ ਲਈ `x_session_id`), ਤਾਂ `underscores_in_headers on;` ਚਾਲੂ ਕਰੋ।
+> Nginx ਨੋਟ: ਜੇਕਰ ਤੁਸੀਂ ਅੰਡਰਸਕੋਰ ਸਿਰਲੇਖਾਂ 'ਤੇ ਭਰੋਸਾ ਕਰਦੇ ਹੋ (ਉਦਾਹਰਨ ਲਈ `x_session_id`), `underscores_in_headers on;` ਸਮਰੱਥ ਕਰੋ।
 
-#### ਪ੍ਰਤੀ ਬੇਨਤੀ ਖਾਤਾ ਪਿੰਨਿੰਗ
+#### ਪ੍ਰਤੀ ਬੇਨਤੀ ਖਾਤਾ ਪਿੰਨ ਕਰਨਾ
 
-ਜਦੋਂ ਕਿਸੇ ਪ੍ਰੋਵਾਈਡਰ ਕੋਲ ਕਈ ਕਨੈਕਸ਼ਨ (ਖਾਤੇ ਜਾਂ ਕੁੰਜੀਆਂ) ਹੁੰਦੇ ਹਨ, ਤਾਂ OmniRoute ਆਮ ਤੌਰ 'ਤੇ ਆਪਣੀ ਖਾਤਾ-ਚੋਣ ਰਣਨੀਤੀ ਰਾਹੀਂ ਇੱਕ ਚੁਣਦਾ ਹੈ। ਇਸ ਦੀ ਬਜਾਏ, ਬੇਨਤੀ `x-omniroute-connection` ਹੈਡਰ ਨਾਲ ਇੱਕ ਖਾਸ ਕਨੈਕਸ਼ਨ ਨੂੰ ਪਿੰਨ ਕਰ ਸਕਦੀ ਹੈ:
+ਜਦੋਂ ਇੱਕ ਪ੍ਰਦਾਤਾ ਦੇ ਕਈ ਕੁਨੈਕਸ਼ਨ (ਖਾਤੇ ਜਾਂ ਕੁੰਜੀਆਂ) ਹੁੰਦੇ ਹਨ, ਤਾਂ OmniRoute ਆਮ ਤੌਰ 'ਤੇ ਆਪਣੀ ਖਾਤਾ-ਚੋਣ ਰਣਨੀਤੀ ਰਾਹੀਂ ਇੱਕ ਨੂੰ ਚੁਣਦਾ ਹੈ। ਇੱਕ ਬੇਨਤੀ `x-omniroute-connection` ਸਿਰਲੇਖ ਨਾਲ ਇੱਕ ਖਾਸ ਕਨੈਕਸ਼ਨ ਨੂੰ ਪਿੰਨ ਕਰ ਸਕਦੀ ਹੈ:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -101,26 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **id ਕਿੱਥੇ ਲੱਭਣਾ ਹੈ।** ਡੈਸ਼ਬੋਰਡ ਵਿੱਚ provider ਪੰਨਾ ਖੋਲ੍ਹੋ
-  (**Dashboard → Providers → <provider>**) ਅਤੇ connection
-  row ਉੱਤੇ `xxxxxxxx…` id chip 'ਤੇ ਕਲਿੱਕ ਕਰੋ — ਇਸ ਨਾਲ ਪੂਰਾ connection id ਕਾਪੀ ਹੋ ਜਾਂਦਾ ਹੈ।
-- **ਕਿਹੜੀਆਂ requests ਇਸਨੂੰ ਮੰਨਦੀਆਂ ਹਨ।** `/v1/chat/completions`, `/v1/messages` ਅਤੇ
-  `/v1/responses` ਉੱਤੇ single-model requests (`provider/model`)। Combos ਇਸ header ਨੂੰ
-  ਅਣਡਿੱਠਾ ਕਰਦੇ ਹਨ: ਇਸ ਦੀ ਬਜਾਏ combo ਦੇ ਹਰ step ਲਈ ਉਸਦੇ ਆਪਣੇ connection ਰਾਹੀਂ account
-  pin ਕਰੋ।
-- **ਇਹ pin ਸਖ਼ਤ ਹੈ, ਸਿਰਫ਼ ਤਰਜੀਹ ਨਹੀਂ।** Pinned connection ਨੂੰ ਹੀ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ। Request
-  ਦੇ ਅੰਦਰ ਹੋਈ failure account ਦਾ cooldown ਦਰਜ ਕਰਦੀ ਹੈ, ਪਰ ਉਸੇ provider ਦੇ sibling account
-  ਵੱਲ rotate ਨਹੀਂ ਕਰਦੀ।
-- **Cooldown ਅਤੇ quota pin ਜਾਰੀ ਕਰਦੇ ਹਨ।** ਜਦੋਂ pinned connection cooldown ਵਿੱਚ ਹੋਵੇ,
-  quota ਖ਼ਤਮ ਹੋ ਚੁੱਕੀ ਹੋਵੇ ਜਾਂ quota policy ਵੱਲੋਂ block ਕੀਤਾ ਗਿਆ ਹੋਵੇ, ਤਾਂ ਬਾਅਦ ਦੀਆਂ requests
-  provider ਦੇ ਹੋਰ connections ਵੱਲ fallback ਕਰਦੀਆਂ ਹਨ, ਬਿਲਕੁਲ unpinned traffic ਵਾਂਗ।
-- **ਅਣਜਾਣ ਜਾਂ disabled ids fail ਹੁੰਦੇ ਹਨ।** ਉਹ id ਜੋ provider ਦੇ active pool ਵਿੱਚ ਨਹੀਂ ਹੈ
-  (deleted, deactivated, ਜਾਂ ਕਿਸੇ ਹੋਰ provider ਨਾਲ ਸੰਬੰਧਿਤ) ਕੋਈ eligible account ਨਹੀਂ ਛੱਡਦਾ,
-  ਇਸ ਲਈ request ਚੁੱਪਚਾਪ ਹੋਰ ਥਾਂ route ਹੋਣ ਦੀ ਬਜਾਏ fail ਹੋ ਜਾਂਦੀ ਹੈ।
+- **ਆਈਡੀ ਕਿੱਥੇ ਲੱਭਣੀ ਹੈ।** ਡੈਸ਼ਬੋਰਡ ਵਿੱਚ ਪ੍ਰਦਾਤਾ ਪੰਨਾ ਖੋਲ੍ਹੋ (** ਡੈਸ਼ਬੋਰਡ → ਪ੍ਰਦਾਤਾ → <provider>** ) ਅਤੇ ਕਨੈਕਸ਼ਨ ਕਤਾਰ 'ਤੇ `xxxxxxxx…` id ਚਿੱਪ 'ਤੇ ਕਲਿੱਕ ਕਰੋ — ਇਹ ਪੂਰੀ ਕਨੈਕਸ਼ਨ ਆਈਡੀ ਦੀ ਨਕਲ ਕਰਦਾ ਹੈ।
+- **ਜੋ ਇਸ ਦਾ ਸਨਮਾਨ ਕਰਨ ਦੀ ਬੇਨਤੀ ਕਰਦਾ ਹੈ।** `/v1/chat/completions`, `/v1/messages` ਅਤੇ `/v1/responses` ਤੇ ਸਿੰਗਲ-ਮਾਡਲ ਬੇਨਤੀਆਂ (`provider/model`)। ਕੰਬੋਜ਼ ਸਿਰਲੇਖ ਨੂੰ ਅਣਡਿੱਠ ਕਰਦੇ ਹਨ: ਇਸਦੀ ਬਜਾਏ ਸਟੈਪ ਦੇ ਆਪਣੇ ਕੁਨੈਕਸ਼ਨ ਦੁਆਰਾ ਪ੍ਰਤੀ ਕੰਬੋ ਸਟੈਪ ਇੱਕ ਖਾਤੇ ਨੂੰ ਪਿੰਨ ਕਰੋ।
+- **ਪਿੰਨ ਸਖਤ ਹੈ, ਤਰਜੀਹ ਨਹੀਂ।** ਪਿੰਨ ਕੀਤਾ ਕੁਨੈਕਸ਼ਨ ਵਿਸ਼ੇਸ਼ ਤੌਰ 'ਤੇ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ। ਬੇਨਤੀ ਦੇ ਅੰਦਰ ਇੱਕ ਅਸਫਲਤਾ ਖਾਤੇ ਦੇ ਕੂਲਡਾਊਨ ਨੂੰ ਰਿਕਾਰਡ ਕਰਦੀ ਹੈ ਪਰ ਕਰਦੀ ਹੈ** ਨਹੀਂ** ਉਸੇ ਪ੍ਰਦਾਤਾ ਦੇ ਭੈਣ-ਭਰਾ ਖਾਤੇ ਵਿੱਚ ਘੁੰਮਾਓ।
+- **ਕੂਲਡਾਉਨ ਅਤੇ ਕੋਟਾ ਪਿੰਨ ਨੂੰ ਜਾਰੀ ਕਰਦਾ ਹੈ।** ਜਦੋਂ ਪਿੰਨ ਕੀਤਾ ਕਨੈਕਸ਼ਨ ਠੰਢਾ ਹੋ ਰਿਹਾ ਹੁੰਦਾ ਹੈ, ਕੋਟਾ-ਖਤਮ ਹੋ ਜਾਂਦਾ ਹੈ ਜਾਂ ਕੋਟਾ ਨੀਤੀ ਦੁਆਰਾ ਬਲੌਕ ਕੀਤਾ ਜਾਂਦਾ ਹੈ, ਬਾਅਦ ਵਿੱਚ ਬੇਨਤੀਆਂ ਪ੍ਰਦਾਤਾ ਦੇ ਦੂਜੇ ਕਨੈਕਸ਼ਨਾਂ 'ਤੇ ਵਾਪਸ ਆ ਜਾਂਦੀਆਂ ਹਨ, ਬਿਲਕੁਲ ਅਨਪਿੰਨ ਕੀਤੇ ਟ੍ਰੈਫਿਕ ਵਾਂਗ।
+- **ਅਣਜਾਣ ਜਾਂ ਅਯੋਗ ਆਈਡੀ ਫੇਲ ਹੋ ਜਾਂਦੀ ਹੈ।** ਇੱਕ ਆਈਡੀ ਜੋ ਪ੍ਰਦਾਤਾ ਦੇ ਕਿਰਿਆਸ਼ੀਲ ਪੂਲ ਵਿੱਚ ਨਹੀਂ ਹੈ (ਮਿਟਾਇਆ ਗਿਆ, ਅਯੋਗ ਕੀਤਾ ਗਿਆ, ਜਾਂ ਕਿਸੇ ਹੋਰ ਪ੍ਰਦਾਤਾ ਨਾਲ ਸਬੰਧਤ) ਕੋਈ ਯੋਗ ਖਾਤਾ ਨਹੀਂ ਛੱਡਦਾ, ਇਸਲਈ ਬੇਨਤੀ ਚੁੱਪਚਾਪ ਕਿਤੇ ਹੋਰ ਰੂਟ ਕਰਨ ਦੀ ਬਜਾਏ ਅਸਫਲ ਹੋ ਜਾਂਦੀ ਹੈ।
 
-Claude Code custom headers ਨੂੰ `ANTHROPIC_CUSTOM_HEADERS` ਰਾਹੀਂ ਭੇਜਦਾ ਹੈ। ਇਸਨੂੰ
-`~/.claude/settings.json` ਦੇ `env` block ਵਿੱਚ ਰੱਖੋ, ਜਾਂ ਹਰੇਕ project ਲਈ ਵੱਖਰਾ account pin
-ਕਰਨ ਵਾਸਤੇ project-level `.claude/settings.json` ਵਿੱਚ ਰੱਖੋ:
+Claude ਕੋਡ `ANTHROPIC_CUSTOM_HEADERS` ਰਾਹੀਂ ਕਸਟਮ ਸਿਰਲੇਖ ਭੇਜਦਾ ਹੈ। ਇਸਨੂੰ `~/.claude/settings.json` ਦੇ `env` ਬਲਾਕ ਵਿੱਚ ਰੱਖੋ, ਜਾਂ ਇੱਕ ਪ੍ਰੋਜੈਕਟ-ਪੱਧਰ ਦੇ `.claude/settings.json` ਵਿੱਚ ਪ੍ਰਤੀ ਪ੍ਰੋਜੈਕਟ ਇੱਕ ਵੱਖਰੇ ਖਾਤੇ ਨੂੰ ਪਿੰਨ ਕਰਨ ਲਈ:
 
 ```jsonc
 {
@@ -132,12 +120,11 @@ Claude Code custom headers ਨੂੰ `ANTHROPIC_CUSTOM_HEADERS` ਰਾਹੀਂ 
 }
 ```
 
-ਸਰੋਤ: `src/sse/handlers/chat.ts` (header read), `src/sse/services/auth.ts` ਅਤੇ
-`src/sse/services/sessionAffinityPin.ts` (pin release ਅਤੇ pool ਵਿੱਚੋਂ ਗੁੰਮ ਹੋਣ ਦੀ ਜਾਂਚ)।
+ਸਰੋਤ: `src/sse/handlers/chat.ts` (ਸਿਰਲੇਖ ਪੜ੍ਹਨਾ), `src/sse/services/auth.ts` ਅਤੇ `src/sse/services/sessionAffinityPin.ts` (ਪਿੰਨ ਰਿਲੀਜ਼ ਅਤੇ ਗੁੰਮ-ਤੋਂ-ਪੂਲ ਜਾਂਚ)।
 
-> **Cost telemetry headers:** non-streaming success responses ਵਿੱਚ `X-OmniRoute-*` cost-telemetry set ਵੀ ਹੁੰਦਾ ਹੈ — `X-OmniRoute-Response-Cost` (USD, fixed 10 decimals; ਮੁਫ਼ਤ/ਬਿਨਾਂ ਕੀਮਤ ਵਾਲੇ ਲਈ `0.0000000000`), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, ਅਤੇ `X-OmniRoute-Fallback-Attempts` (ਸਿਰਫ਼ ਜਦੋਂ > 0 ਹੋਵੇ), ਨਾਲ ਹੀ `X-OmniRoute-Request-Id` ਅਤੇ `X-OmniRoute-Version`। ਇਹ chat completions, `/v1/responses`, `/v1/messages`, **ਅਤੇ media endpoints** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, ਅਤੇ `/v1/moderations` (ਹਮੇਸ਼ਾ cost `0`) — ਵੱਲੋਂ ਜਾਰੀ ਕੀਤੇ ਜਾਂਦੇ ਹਨ। Media cost ਦੀ ਗਣਨਾ ਹਰ modality (ਹਰੇਕ image, ਹਰੇਕ second, ਹਰੇਕ character, ਹਰੇਕ search-unit) ਅਨੁਸਾਰ ਕੀਤੀ ਜਾਂਦੀ ਹੈ ਜਦੋਂ pricing ਉਪਲਬਧ ਹੋਵੇ; ਨਹੀਂ ਤਾਂ ਇਹ `0` ਹੁੰਦੀ ਹੈ (fail-open)।
+> **ਲਾਗਤ ਟੈਲੀਮੈਟਰੀ ਸਿਰਲੇਖ:** ਗੈਰ-ਸਟ੍ਰੀਮਿੰਗ ਸਫਲਤਾ ਜਵਾਬਾਂ ਵਿੱਚ `X-OmniRoute-*` ਲਾਗਤ-ਟੈਲੀਮੈਟਰੀ ਸੈੱਟ — `X-OmniRoute-Response-Cost` (USD, ਫਿਕਸਡ 10 ਦਸ਼ਮਲਵ; `0.0000000000` ਲਈ free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, ਅਤੇ `X-OmniRoute-Fallback-Attempts` ( > Plus) ਅਤੇ `X-OmniRoute-Version` `X-OmniRoute-Request-Id` ਇਹ ਚੈਟ ਸੰਪੂਰਨਤਾਵਾਂ, `/v1/responses`, `/v1/messages`, ਦੁਆਰਾ ਛੱਡੇ ਜਾਂਦੇ ਹਨ** ਅਤੇ ਮੀਡੀਆ ਦੇ ਅੰਤ ਬਿੰਦੂ** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations`, ਅਤੇ `/v1/moderations` (ਹਮੇਸ਼ਾ ਕੀਮਤ `0`)। ਜਦੋਂ ਕੀਮਤ ਉਪਲਬਧ ਹੁੰਦੀ ਹੈ ਤਾਂ ਮੀਡੀਆ ਦੀ ਲਾਗਤ ਪ੍ਰਤੀ ਮਾਡਲ (ਪ੍ਰਤੀ-ਚਿੱਤਰ, ਪ੍ਰਤੀ-ਸਕਿੰਟ, ਪ੍ਰਤੀ-ਅੱਖਰ, ਪ੍ਰਤੀ ਖੋਜ-ਯੂਨਿਟ) ਦੀ ਗਣਨਾ ਕੀਤੀ ਜਾਂਦੀ ਹੈ, ਨਹੀਂ ਤਾਂ `0` (ਫੇਲ-ਓਪਨ)।
 
-> **Cache-hit cost semantics:** semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`) ਹੋਣ 'ਤੇ ਕੋਈ upstream call ਨਹੀਂ ਕੀਤੀ ਜਾਂਦੀ, ਇਸ ਲਈ `X-OmniRoute-Response-Cost` `0.0000000000` ਹੁੰਦਾ ਹੈ (hit serve ਕਰਨ ਦੀ **incremental** cost)। Original/ਹੋਣ ਵਾਲੀ cost ਨੂੰ `X-OmniRoute-Cost-Saved` ਵਿੱਚ ਵੱਖਰੇ ਤੌਰ 'ਤੇ report ਕੀਤਾ ਜਾਂਦਾ ਹੈ। Billing consumers ਨੂੰ `X-OmniRoute-Response-Cost` ਦਾ ਜੋੜ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ (hits ਦੀ ਕੋਈ cost ਨਹੀਂ ਹੁੰਦੀ); cache analytics `X-OmniRoute-Cost-Saved` ਨੂੰ aggregate ਕਰ ਸਕਦੇ ਹਨ।
+> **ਕੈਸ਼-ਹਿੱਟ ਲਾਗਤ ਅਰਥ ਵਿਗਿਆਨ:** ਇੱਕ ਅਰਥ-ਕੈਸ਼ HIT (`X-OmniRoute-Cache-Hit: true`) ਉੱਤੇ ਕੋਈ ਅੱਪਸਟ੍ਰੀਮ ਕਾਲ ਨਹੀਂ ਕੀਤੀ ਜਾਂਦੀ, ਇਸਲਈ `X-OmniRoute-Response-Cost` `0.0000000000` ਹੈ (** ਵਾਧਾ** ਹਿੱਟ ਦੀ ਸੇਵਾ ਕਰਨ ਦੀ ਲਾਗਤ). original/would-have-been ਦੀ ਲਾਗਤ `X-OmniRoute-Cost-Saved` ਵਿੱਚ ਵੱਖਰੇ ਤੌਰ 'ਤੇ ਰਿਪੋਰਟ ਕੀਤੀ ਗਈ ਹੈ। ਬਿਲਿੰਗ ਖਪਤਕਾਰਾਂ ਨੂੰ `X-OmniRoute-Response-Cost` (ਹਿੱਟਾਂ ਦੀ ਕੋਈ ਕੀਮਤ ਨਹੀਂ) ਜੋੜਨਾ ਚਾਹੀਦਾ ਹੈ; ਕੈਸ਼ ਵਿਸ਼ਲੇਸ਼ਣ `X-OmniRoute-Cost-Saved` ਇਕੱਠਾ ਕਰ ਸਕਦਾ ਹੈ।
 
 ## ਵਿਸ਼ੇਸ਼ ਪ੍ਰਬੰਧਿਤ ਸੈਸ਼ਨ ਲੀਜ਼
 
@@ -377,10 +364,12 @@ Content-Type: application/json
 
 `n` `data[]` ਵਿੱਚ `n` ਚਿੱਤਰ ਵਾਪਸ ਕਰਦਾ ਹੈ। ਪ੍ਰਦਾਤਾ ਜਿਨ੍ਹਾਂ ਦੇ ਅੱਪਸਟ੍ਰੀਮ API ਪ੍ਰਤੀ ਕਾਲ ਇੱਕ ਚਿੱਤਰ ਵਾਪਸ ਕਰਦੇ ਹਨ (ਬਲੈਕ ਫੋਰੈਸਟ ਲੈਬਜ਼, ਸਥਿਰਤਾ AI, ਲਿਓਨਾਰਡੋ, ਆਈਡਿਓਗ੍ਰਾਮ, ਹੈਪਰ, ਹਾਈਪਰਬੋਲਿਕ, Magnific/Freepik, NVIDIA NIM, Cloudflare ਵਰਕਰਜ਼ AI) ਉਡਾਣ ਵਿੱਚ ਵੱਧ ਤੋਂ ਵੱਧ 4 `n` ਵੱਖਰੀ ਅੱਪਸਟ੍ਰੀਮ ਕਾਲਾਂ ਪ੍ਰਾਪਤ ਕਰਦੇ ਹਨ। ਇੱਕ ਸਥਿਰ `seed` ਕਾਲ ਸੂਚਕਾਂਕ (`seed`, `seed + 1`, …) ਦੁਆਰਾ ਆਫਸੈੱਟ ਕੀਤਾ ਜਾਂਦਾ ਹੈ, ਇਸਲਈ ਚਿੱਤਰ ਵੱਖਰੇ ਹੁੰਦੇ ਹਨ ਪਰ ਦੁਬਾਰਾ ਪੈਦਾ ਕਰਨ ਯੋਗ ਰਹਿੰਦੇ ਹਨ। `n` ਨੂੰ 10 'ਤੇ ਕੈਪ ਕੀਤਾ ਗਿਆ ਹੈ। ਜੇਕਰ ਕੋਈ ਕਾਲ ਫੇਲ ਹੋ ਜਾਂਦੀ ਹੈ ਤਾਂ ਬੇਨਤੀ ਪੂਰੀ ਤਰ੍ਹਾਂ ਅਸਫਲ ਹੋ ਜਾਂਦੀ ਹੈ। ਫੈਨ-ਆਊਟ ਫਾਰਮੈਟਾਂ ਦੀ ਸੂਚੀ `open-sse/handlers/imageGeneration/fanOut.ts` ਵਿੱਚ `SINGLE_IMAGE_FANOUT_FORMATS` ਹੈ।
 
+Codex GPT ਚਿੱਤਰ ਮਾਡਲ (`codex/gpt-image-*`) ਸਿਰਫ਼ PNG ਵਾਪਸ ਕਰਦੇ ਹਨ: ਅੱਪਸਟ੍ਰੀਮ `200` PNG ਬਾਈਟਾਂ ਨਾਲ ਜਵਾਬ ਦਿੰਦਾ ਹੈ ਭਾਵੇਂ `jpeg` ਜਾਂ `webp` ਬੇਨਤੀ ਕੀਤੀ ਜਾਂਦੀ ਹੈ। ਕਿਸੇ ਹੋਰ `output_format` (`webp`, `jpeg`, ...) ਦੀ ਬੇਨਤੀ ਨੂੰ ਚੁੱਪਚਾਪ ਅਣਡਿੱਠ ਕਰਨ ਦੀ ਬਜਾਏ HTTP 400 ਨਾਲ ਰੱਦ ਕਰ ਦਿੱਤਾ ਜਾਂਦਾ ਹੈ; ਇਸਨੂੰ ਛੱਡ ਦਿਓ ਜਾਂ `png` ਭੇਜੋ। `output_compression` ਅੱਗੇ ਨਹੀਂ ਭੇਜਿਆ ਗਿਆ ਹੈ।
+
 ZenMux ਮੌਜੂਦਾ API-ਕੁੰਜੀ ਕੁਨੈਕਸ਼ਨ ਦੀ ਮੁੜ ਵਰਤੋਂ ਕਰਦਾ ਹੈ ਅਤੇ `zenmux/` ਜਾਂ `zm/` ਅਗੇਤਰ ਸਵੀਕਾਰ ਕਰਦਾ ਹੈ:
 
 - `zenmux/openai/gpt-image-2` ZenMux ਦੇ OpenAI ਚਿੱਤਰ API ਵਰਤੋਂ ਕਰਦਾ ਹੈ। ਵਿਕਲਪਾਂ ਵਿੱਚ `size`, `quality`, `n`, `output_format`, `output_compression`, `background`, ਅਤੇ `response_format` ਸ਼ਾਮਲ ਹਨ।
-- ਹੋਰ ਪ੍ਰਕਾਸ਼ਕ, ਜਿਵੇਂ ਕਿ `zm/meta/muse-image-1.0`, ZenMux ਦੇ ਵਰਟੇਕਸ AI `:predict` ਐਂਡਪੁਆਇੰਟ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹਨ। `n` ਨਕਸ਼ੇ `sampleCount` ਨੂੰ , `aspect_ratio` ਤੋਂ `aspectRatio`, ਅਤੇ `image_size` (`1K`, `2K`, `4K`) ਤੋਂ `sampleImageSize` ਤੱਕ। ਇੱਕ ਪਿਕਸਲ `size` ਸਿਰਫ਼ ਇੱਕ ਪਹਿਲੂ ਅਨੁਪਾਤ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ, ਪਿਕਸਲ ਮਾਪਾਂ ਦੀ ਗਰੰਟੀ ਨਹੀਂ। ਸਮਰਥਿਤ ਅਨੁਪਾਤ, ਰੈਜ਼ੋਲਿਊਸ਼ਨ ਅਤੇ ਗਿਣਤੀ ਮਾਡਲ ਅਨੁਸਾਰ ਵੱਖ-ਵੱਖ ਹੁੰਦੀ ਹੈ।
+- ਹੋਰ ਪ੍ਰਕਾਸ਼ਕ, ਜਿਵੇਂ ਕਿ `zm/meta/muse-image-1.0`, ZenMux ਦੇ ਵਰਟੇਕਸ AI `:predict` ਐਂਡਪੁਆਇੰਟ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹਨ। `n` ਨਕਸ਼ੇ `sampleCount` ਨੂੰ , `aspect_ratio` ਤੋਂ `aspectRatio`, ਅਤੇ `image_size` (`1K`, `2K`, `4K`) ਤੋਂ `sampleImageSize` ਤੱਕ। ਇੱਕ ਪਿਕਸਲ `size` ਸਿਰਫ਼ ਇੱਕ ਆਕਾਰ ਅਨੁਪਾਤ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ, ਪਿਕਸਲ ਮਾਪਾਂ ਦੀ ਗਰੰਟੀ ਨਹੀਂ। ਸਮਰਥਿਤ ਅਨੁਪਾਤ, ਰੈਜ਼ੋਲਿਊਸ਼ਨ ਅਤੇ ਗਿਣਤੀ ਮਾਡਲ ਅਨੁਸਾਰ ਵੱਖ-ਵੱਖ ਹੁੰਦੀ ਹੈ।
 - `zm/inclusionai/ming-image-0.1-design` ਆਪਣੇ ਖੁਦ ਦੇ ਮਾਪ ਚੁਣਦਾ ਹੈ। `size`, `aspect_ratio`, ਅਤੇ `image_size` ਛੱਡ ਦਿਓ ; ਸਪੱਸ਼ਟ ਮੁੱਲ HTTP 400 ਵਾਪਸ ਕਰਦੇ ਹਨ। PNG, JPEG, ਅਤੇ WebP `output_format` ਨਾਲ ਬੇਨਤੀ ਕੀਤੀ ਜਾ ਸਕਦੀ ਹੈ।
 
 ਇਹ ਏਕੀਕਰਣ ਟੈਕਸਟ-ਤੋਂ-ਚਿੱਤਰ ਬਣਾਉਣ ਦਾ ਸਮਰਥਨ ਕਰਦਾ ਹੈ, ਹਵਾਲਾ-ਚਿੱਤਰ ਸੰਪਾਦਨ ਨਹੀਂ। ਵਰਟੇਕਸ ਆਉਟਪੁੱਟ ਨੂੰ `data[].b64_json` ਵਿੱਚ ਸਧਾਰਣ ਕੀਤਾ ਜਾਂਦਾ ਹੈ; `response_format: "url"` ਇੱਕ ਅੱਪਸਟਰੀਮ HTTPS URL ਜਾਂ ਬੇਸ64 ਡਾਟਾ URL ਵਾਪਸ ਕਰਦਾ ਹੈ ਜਦੋਂ ਸਿਰਫ਼ ਚਿੱਤਰ ਬਾਈਟ ਉਪਲਬਧ ਹੁੰਦੇ ਹਨ। Empty/filtered ਆਉਟਪੁੱਟ ਖਾਲੀ ਸਫਲਤਾ ਦੀ ਬਜਾਏ ਇੱਕ ਗਲਤੀ ਵਾਪਸ ਕਰਦੇ ਹਨ। ਮਾਡਲ ਦੀ ਪਹੁੰਚ ZenMux ਖਾਤੇ 'ਤੇ ਨਿਰਭਰ ਕਰਦੀ ਹੈ। [ZenMux ਦੇ Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) ਅਤੇ [OpenAI ਚਿੱਤਰ API](https://docs.zenmux.ai/api/openai/generate-an-image) ਦੇਖੋ।

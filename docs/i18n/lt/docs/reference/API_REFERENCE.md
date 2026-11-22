@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Pasirinktinės antraštės
 
-| Antraštė                 | Kryptis   | Aprašas                                                                                                                                                                                                                         |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Užklausa  | Nustatykite `true`, kad būtų apeita talpykla                                                                                                                                                                                    |
-| `x-omniroute-no-memory`  | Užklausa  | Nustatykite `true`, kad šiai užklausai būtų praleistas atminties ir įgūdžių įterpimas (atspindi no-cache veikimą; išvengiama kiekvieno iškvietimo žetonų ir sąnaudų papildomos naštos)                                          |
-| `X-OmniRoute-Progress`   | Užklausa  | Nustatykite `true`, kad būtų įjungti eigos įvykiai                                                                                                                                                                              |
-| `X-Session-Id`           | Užklausa  | Pastovus seanso raktas išorinei seanso sąsajai                                                                                                                                                                                  |
-| `x_session_id`           | Užklausa  | Taip pat priimamas variantas su pabraukimu (tiesioginiam HTTP)                                                                                                                                                                  |
-| `X-OmniRoute-Session-Id` | Užklausa  | Iškvietėjo pateikta seanso / pokalbio žyma (taip pat perduodama į atmintį). Jei yra, išsaugoma pažodžiui lauke `call_logs.session_tag`, kad būtų galima priskirti sąnaudas pagal seansą (#8249) — jei nėra, niekada nesukuriama |
-| `Idempotency-Key`        | Užklausa  | Dublikatų šalinimo raktas (5 s langas)                                                                                                                                                                                          |
-| `X-Request-Id`           | Užklausa  | Alternatyvus dublikatų šalinimo raktas                                                                                                                                                                                          |
-| `x-omniroute-connection` | Užklausa  | Prisega vieno modelio užklausą prie vieno teikėjo ryšio (paskyros) pagal jo ID — žr. [Paskyros prisegimas pagal užklausą](#account-pinning-per-request)                                                                         |
-| `X-OmniRoute-Cache`      | Atsakymas | `HIT` arba `MISS` (ne srautinio perdavimo atveju)                                                                                                                                                                               |
-| `X-OmniRoute-Idempotent` | Atsakymas | `true`, jei dublikatas pašalintas                                                                                                                                                                                               |
-| `X-OmniRoute-Progress`   | Atsakymas | `enabled`, jei įjungtas eigos stebėjimas                                                                                                                                                                                        |
-| `X-OmniRoute-Session-Id` | Atsakymas | „OmniRoute“ naudojamas faktinis seanso ID                                                                                                                                                                                       |
-| `X-OmniRoute-Request-Id` | Atsakymas | Užklausos susiejimo ID (kai žinomas)                                                                                                                                                                                            |
-| `X-OmniRoute-Version`    | Atsakymas | „OmniRoute“ komponavimo versija (visada pateikiama)                                                                                                                                                                             |
-| `X-OmniRoute-Cost-Saved` | Atsakymas | USD suma, kurios išvengta naudojant talpyklą įvykus `HIT` (tik talpyklos įvykiams)                                                                                                                                              |
-| `X-OmniRoute-Decision`   | Atsakymas | Maršrutizavimo sekimas: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` yra kombinuota strategija arba `single`, jei užklausa nėra kombinuota) — visada pateikiama užbaigimo atsakymuose                          |
+| Antraštė                 | Kryptis   | Aprašymas                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Prašymas  | Norėdami apeiti talpyklą, nustatykite į `true`                                                                                                                                                                                                                                                                                                                                          |
+| `x-omniroute-no-memory`  | Prašymas  | Nustatykite į `true` kad praleistumėte atminties + įgūdžių įvedimą šiai užklausai (atspindi be talpyklos; išvengiama token/cost per skambutį papildomų išlaidų)                                                                                                                                                                                                                         |
+| `x-omniroute-no-log`     | Prašymas  | Nustatykite į `true` kad šios išvados užklausos skambučių žurnaluose nebūtų request/response naudingų apkrovų (visi pokalbių šeimos maršrutai: pokalbių užbaigimai, atsakymai, pranešimai, užbaigimai, Gemini). Laiko žyma, modelis, būsena, trukmė ir žetonų skaičius vis dar įrašomi. Sujunkite su `x-omniroute-no-memory` ir `x-omniroute-no-cache`, kad atsisakytumėte viso turinio |
+| `X-OmniRoute-Progress`   | Prašymas  | Pažangos įvykiams nustatykite į `true`                                                                                                                                                                                                                                                                                                                                                  |
+| `X-Session-Id`           | Prašymas  | Lipnus seanso raktas, skirtas išoriniam seanso ryšiui                                                                                                                                                                                                                                                                                                                                   |
+| `x_session_id`           | Prašymas  | Taip pat priimtas pabraukimo variantas (tiesioginis HTTP)                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | Prašymas  | Skambintojo teikiama session/conversation žyma (taip pat maitina atmintį). Kai yra, išliko pažodžiui į `call_logs.session_tag` kad būtų priskirtas mokestis vienam seansui (#8249) — niekada nesintezuojamas, kai nėra                                                                                                                                                                  |
+| `Idempotency-Key`        | Prašymas  | Dedup raktas (5s langas)                                                                                                                                                                                                                                                                                                                                                                |
+| `X-Request-Id`           | Prašymas  | Alternatyvus dedup raktas                                                                                                                                                                                                                                                                                                                                                               |
+| `x-omniroute-connection` | Prašymas  | Prisekite vieno modelio užklausą prie vieno teikėjo ryšio (paskyros) pagal jo ID — žr. [Paskyros prisegimas pagal užklausą](#account-pinning-per-request)                                                                                                                                                                                                                               |
+| `X-OmniRoute-Cache`      | Atsakymas | `HIT` arba `MISS` (ne srautinis)                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Idempotent` | Atsakymas | `true` jei dedublikatas                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Progress`   | Atsakymas | `enabled` jei pažangos stebėjimas įjungtas                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Session-Id` | Atsakymas | Efektyvus seansas ID naudojamas OmniRoute                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Request-Id` | Atsakymas | Prašyti koreliacijos ID (kai žinomas)                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Version`    | Atsakymas | OmniRoute build versija (visada yra)                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Cost-Saved` | Atsakymas | USD išvengta talpyklos HIT (tik talpyklos įvykiai)                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Decision`   | Atsakymas | Maršruto sekimas: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` yra kombinuota strategija arba `single` ne kombinuotai užklausai) — visada pateikiamas užbaigus atsakymus                                                                                                                                                                                               |
 
-> „Nginx“ pastaba: jei naudojate antraštes su pabraukimais (pavyzdžiui, `x_session_id`), įjunkite `underscores_in_headers on;`.
+> Nginx pastaba: jei pasikliaujate pabraukimo antraštėmis (pvz. `x_session_id`), įjunkite `underscores_in_headers on;`.
 
 #### Paskyros prisegimas pagal užklausą
 
-Kai teikėjas turi kelis ryšius (paskyras arba raktus), „OmniRoute“ paprastai pasirenka vieną
-naudodamas savo paskyros pasirinkimo strategiją. Vietoj to užklausa gali būti prisegta prie vieno konkretaus ryšio
-naudojant antraštę `x-omniroute-connection`:
+Kai paslaugų teikėjas turi kelis ryšius (paskyras ar raktus), OmniRoute paprastai pasirenka vieną, naudodamasis paskyros pasirinkimo strategija. Užklausa gali prisegti vieną konkretų ryšį su `x-omniroute-connection` antrašte:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,24 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Kur rasti ID.** Atidarykite teikėjo puslapį valdymo skydelyje
-  (**Dashboard → Providers → <provider>**) ir spustelėkite `xxxxxxxx…` ID žymą ryšio
-  eilutėje — taip nukopijuojamas visas ryšio ID.
-- **Kurios užklausos jo paiso.** Vieno modelio užklausos (`provider/model`) į
-  `/v1/chat/completions`, `/v1/messages` ir `/v1/responses`. Kombinuotos užklausos antraštės nepaiso:
-  kiekvienam kombinacijos žingsniui paskirkite paskyrą per jo paties ryšį.
-- **Prisegimas yra griežtas, o ne pageidavimas.** Prisegtas ryšys naudojamas išskirtinai. Užklausos
-  metu įvykusi klaida užregistruoja paskyros atvėsimo laikotarpį, bet **neperjungia** į gretimą to paties teikėjo paskyrą.
-- **Atvėsimo laikotarpis ir kvota atšaukia prisegimą.** Kol prisegtas ryšys yra atvėsimo laikotarpyje,
-  išeikvota kvota arba užblokuotas kvotos strategijos, vėlesnės užklausos grįžta prie kitų teikėjo ryšių,
-  lygiai taip pat kaip srautas be prisegimo.
-- **Nežinomi arba išjungti ID sukelia klaidą.** ID, kurio nėra aktyviame teikėjo telkinyje (ištrintas,
-  deaktyvuotas arba priklausantis kitam teikėjui), nepalieka tinkamos paskyros, todėl užklausa nepavyksta,
-  užuot tyliai nukreipta kitur.
+- **Kur rasti ID.** Prietaisų skydelyje atidarykite teikėjo puslapį (** Prietaisų skydelis → Teikėjai → <provider>** ) ir spustelėkite `xxxxxxxx…` id lustą ryšio eilutėje — jis nukopijuos visą ryšio ID.
+- **Kurie prašymai jį gerbia.** Vieno modelio užklausos (`provider/model`) `/v1/chat/completions`, `/v1/messages` ir `/v1/responses`. Kombinacijos nepaiso antraštės: vietoj to prisekite paskyrą kiekvienam kombinuotam veiksmui per paties veiksmo ryšį.
+- **Smeigtukas griežtas, o ne pirmenybė.** Prisegta jungtis naudojama išskirtinai. Gedimas užklausoje įrašo paskyros atvėsimą, bet tai daroma** ne** pasukti į to paties teikėjo brolio paskyrą.
+- **Atvėsinimas ir kvota atlaisvinkite smeigtuką.** Kol prisegtas ryšys vėsta, išnaudotas arba blokuojamas dėl kvotos politikos, vėlesnės užklausos grįžta į kitus teikėjo ryšius, lygiai taip pat, kaip ir neprisegtas srautas.
+- **Nežinomi arba išjungti ID nepavyksta.** ID, kurio nėra aktyviame teikėjo telkinyje (ištrintas, išjungtas arba priklauso kitam teikėjui), nepalieka tinkamos paskyros, todėl užklausa nepavyksta, o ne tyliai nukreipiama kitur.
 
-Claude Code siunčia pasirinktines antraštes per `ANTHROPIC_CUSTOM_HEADERS`. Įrašykite ją į `env` bloką
-`~/.claude/settings.json` faile arba projekto lygio `.claude/settings.json` faile, kad kiekvienam projektui
-galėtumėte prisegti skirtingą paskyrą:
+Claude kodas siunčia pasirinktines antraštes per `ANTHROPIC_CUSTOM_HEADERS`. Įdėkite jį į `env` bloką `~/.claude/settings.json` arba į projekto lygio `.claude/settings.json`, kad kiekvienam projektui prisegtumėte kitą paskyrą:
 
 ```jsonc
 {
@@ -132,12 +120,11 @@ galėtumėte prisegti skirtingą paskyrą:
 }
 ```
 
-Šaltinis: `src/sse/handlers/chat.ts` (antraštės nuskaitymas), `src/sse/services/auth.ts` ir
-`src/sse/services/sessionAffinityPin.ts` (prisegimo atšaukimas ir patikra, ar nėra telkinyje).
+Šaltinis: `src/sse/handlers/chat.ts` (skaitoma antraštė), `src/sse/services/auth.ts` ir `src/sse/services/sessionAffinityPin.ts` (smeigtuko atlaisvinimas ir trūkumo iš baseino patikrinimas).
 
-> **Sąnaudų telemetrijos antraštės:** sėkminguose atsakymuose be srautinio perdavimo taip pat pateikiamas `X-OmniRoute-*` sąnaudų telemetrijos rinkinys — `X-OmniRoute-Response-Cost` (USD, tiksliai 10 skaitmenų po kablelio; `0.0000000000`, jei nemokama arba kaina nenustatyta), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` ir `X-OmniRoute-Fallback-Attempts` (tik kai reikšmė > 0), taip pat `X-OmniRoute-Request-Id` ir `X-OmniRoute-Version`. Jie pateikiami pokalbių užbaigimo, `/v1/responses`, `/v1/messages` **ir medijos galinių punktų** atsakymuose — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` ir `/v1/moderations` (visada su `0` sąnaudomis). Medijos sąnaudos apskaičiuojamos pagal modalumą (vienai nuotraukai, sekundei, simboliui, paieškos vienetui), kai kainodara pasiekiama; kitu atveju reikšmė yra `0` (fail-open).
+> **Kainų telemetrijos antraštės:** ne srautinio perdavimo sėkminguose atsakymuose taip pat yra `X-OmniRoute-*` mokesčių ir telemetrijos rinkinys — `X-OmniRoute-Response-Cost` (USD, fiksuota 10 dešimtųjų; `0.0000000000` free/unpriced), `X-OmniRoute-Tokens-In` > `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, `X-OmniRoute-Version` `X-OmniRoute-Request-Id` `X-OmniRoute-Fallback-Attempts` Juos skleidžia pokalbių užbaigimai, `/v1/responses`, `/v1/messages`,** ir žiniasklaidos galutiniai taškai** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` ir `/v1/moderations` (visada kainuoja `0`). Medijos kaina skaičiuojama pagal modalumą (už vaizdą, sekundę, simbolį, paieškos vienetą), kai galima nustatyti kainodarą, kitu atveju `0` (neatsitikimas).
 
-> **Talpyklos pataikymo sąnaudų semantika:** semantinės talpyklos pataikymo atveju (`X-OmniRoute-Cache-Hit: true`) iškvietimas į aukštesnį lygį neatliekamas, todėl `X-OmniRoute-Response-Cost` yra `0.0000000000` (**prieauginės** pataikymo aptarnavimo sąnaudos). Pradinės / būtų buvusios sąnaudos atskirai pateikiamos `X-OmniRoute-Cost-Saved`. Atsiskaitymo vartotojai turėtų sumuoti `X-OmniRoute-Response-Cost` (pataikymai nieko nekainuoja); talpyklos analizė gali agreguoti `X-OmniRoute-Cost-Saved`.
+> **Talpyklos įvykių kainos semantika:** semantinėje talpykloje HIT (`X-OmniRoute-Cache-Hit: true`) nėra iškviečiamas prieš srovę, todėl `X-OmniRoute-Response-Cost` yra `0.0000000000` (** laipsniškas** smūgio pateikimo kaina). original/would-have-been kaina nurodoma atskirai `X-OmniRoute-Cost-Saved`. Atsiskaitantys vartotojai turėtų sumuoti `X-OmniRoute-Response-Cost` (hitai nieko nekainuoja); talpyklos analizė gali sukaupti `X-OmniRoute-Cost-Saved`.
 
 ## Išskirtinės valdomos sesijos nuomos
 
@@ -368,6 +355,8 @@ Content-Type: application/json
 Galimi tiekėjai: OpenAI (GPT 2 vaizdas ), xAI (Grok vaizdas ), Together AI (FLUX), Fireworks AI, Nebius (FLUX), hiperbolinis , NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (vietinis), ComfyUI (vietinis).
 
 `n` grąžina `n` vaizdus `data[]`. Teikėjai, kurių API prieš srovę grąžina vieną vaizdą vienam skambučiui (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI), gauna `n` atskirus skambučius prieš srovę, daugiausia 4 skrydžio metu. Fiksuotas `seed` yra kompensuojamas skambučio indeksu (`seed`, `seed + 1`, …), todėl vaizdai skiriasi, bet išlieka atkuriami. `n` yra 10. Jei nepavyksta skambučio, visa užklausa nepavyksta. Fan-out formatų sąrašas yra `SINGLE_IMAGE_FANOUT_FORMATS` `open-sse/handlers/imageGeneration/fanOut.ts`.
+
+Codex GPT Vaizdo modeliai (`codex/gpt-image-*`) pateikia tik PNG : prieš srovę atsako `200` su PNG baitais, net kai prašoma `jpeg` arba `webp`. Prašymas su bet kuriuo kitu `output_format` (`webp`, `jpeg`, ...) atmetamas naudojant HTTP 400, užuot tyliai ignoruojamas; praleisti arba išsiųsti `png`. `output_compression` nepersiunčiamas.
 
 ZenMux pakartotinai naudoja esamą API rakto ryšį ir priima `zenmux/` arba `zm/` priešdėlius:
 

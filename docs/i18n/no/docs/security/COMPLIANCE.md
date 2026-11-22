@@ -126,31 +126,33 @@ eldre `request_detail_logs` og lokale forespørselsartefakter under
 Standardverdiene er definert i `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Reservasjon mot `noLog` (per API-nøkkel)
+## `noLog` Opt-out (per API nøkkel)
 
-API-nøkler kan merkes slik at etterfølgende anropstrafikk for dem ikke logges. Flagget
-ligger i tabellen `api_keys` (`no_log INTEGER DEFAULT 0`) og speiles
-i et sett i minnet for raske oppslag.
+API -nøkler kan flagges slik at deres nedstrøms samtaletrafikk ikke logges. Flagget bor på `api_keys` bordet (`no_log INTEGER DEFAULT 0`) og speiles i et minnesett for hot-path-oppslag.
 
 ```bash
-# Opprett en nøkkel uten logging (administrasjonsautentisering kreves)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Hjelpefunksjoner (`src/lib/compliance/index.ts`):
+Hjelpere (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — aktiver eller deaktiver oppføringen i minnet
-- `isNoLog(apiKeyId)` — kontrolleres i forespørselsflyten; faller tilbake til en 30 sekunders
-  hurtigbufret lesing fra `api_keys.no_log`
-- `NO_LOG_API_KEY_IDS` (miljøvariabel, kommaseparert) — forhåndslastes i settet i minnet
-  ved oppstart; nyttig når du ikke kan endre kolonnen direkte
+- `setNoLog(apiKeyId, true|false)` — veksle mellom oppføringen i minnet
+- `isNoLog(apiKeyId)` — sjekket på forespørselsbanen; faller tilbake til en 30 s bufret lesing fra `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, kommaseparert) — forhåndslastet inn i minnesettet ved oppstart; nyttig når du ikke kan bytte kolonne direkte
 
-Administrative revisjonshendelser (innlogging, leverandørendringer, MCP-verktøykall osv.)
-påvirkes **ikke** av `noLog` — reservasjonen gjelder bare logging av trafikk
-per forespørsel.
+Administrative revisjonshendelser (pålogging, leverandørendringer, MCP verktøyoppkall, etc.) er** ikke** påvirket av `noLog` — kun per forespørsel trafikklogging er valgt bort.
+
+### Fravalg per forespørsel (`x-omniroute-no-log`)
+
+En klient kan velge en enkelt slutningsforespørsel ut av nyttelast-persistens uten å opprette en dedikert nøkkel. Send `x-omniroute-no-log: true` på forespørselen (`1` og `yes` godtas også, skiller mellom store og små bokstaver). Det gjelder for hver chat-familie-rute som går gjennom chat-behandleren: Chat-fullføringer, svar, meldinger, fullføringer og den Gemini-kompatible banen. Call-log-raden er fortsatt skrevet med tidsstempel, modell, leverandør, status, varighet og token-antall, men `request_body`, `response_body`, forespørselssammendrag og pipeline-artefakter er utelatt.
+
+Overskriften er ORed med nøkkelflagget: en no-log key forblir no-log uavhengig av header, og headeren kan ikke reaktivere logging for en no-log key. Overskriften fjernes før forespørselen videresendes oppstrøms.
+
+Denne overskriften gjør det** ikke** deaktiver minneutvinning eller den semantiske hurtigbufferen. Send `x-omniroute-no-memory: true` og `x-omniroute-no-cache: true` ved siden av den når forespørselen heller ikke må vedvare innhold i disse undersystemene.
 
 ## REST-API
 

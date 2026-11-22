@@ -74,65 +74,68 @@ kabla ya kudai usawa na kivinjari cha huduma ya juu.
 
 ---
 
-## Kifurushi cha Usiri cha Claude Code
+## Claude Code Stealth Bundle
 
-Wakati `cliCompatMode` imewashwa, OmniRoute hubadilisha muundo wa maombi yanayotoka ya Claude ili yasiweze kutofautishwa na trafiki ya `claude-cli`. Moduli tatu hushirikiana:
+`cliCompatMode` ikiwa imewashwa, OmniRoute huunda upya maombi ya Claude yanayotoka ili yasiweze kutofautishwa na trafiki `claude-cli`. Moduli tatu zinashirikiana:
 
 ### `claudeCodeFingerprint.ts`
 
-Hukokotoa alama ya utambulisho ya herufi 3 ya `cc_version` iliyopachikwa kwenye kichwa cha malipo:
+Hukokotoa alama ya vidole 3-char `cc_version` iliyopachikwa katika kichwa cha bili:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (imewekwa moja kwa moja; inalingana na kiteja rasmi)
-- Ingizo: herufi zilizo katika nafasi ya 4, 7, 20 za maandishi ya ujumbe wa kwanza wa mtumiaji + mfuatano wa toleo
-- Tokeo: kiambishi-awali cha heksadesimali cha herufi 3
+- `FINGERPRINT_SALT = "59cf53e54c78"` (iliyowekwa ngumu; inalingana na mteja rasmi)
+- Ingizo: herufi katika faharasa ya 4, 7, 20 ya ujumbe wa kwanza wa maandishi ya mfuatano wa toleo la +
+- Pato: kiambishi awali cha heksi 3-char
 
-### `claudeCodeCCH.ts` (Hashi ya Maudhui ya Kiteja)
+### `claudeCodeCCH.ts` (Hashi ya Maudhui ya Mteja)
 
-Ukaguzi wa uadilifu upande wa seva ambao Claude Code CLI rasmi hukokotoa kupitia Bun/Zig. OmniRoute huutekeleza upya kwa kutumia `xxhash-wasm`:
+Uadilifu wa upande wa seva angalia Msimbo rasmi Claude CLI unaokokotoa kupitia Bun/Zig. OmniRoute marekebisho na `xxhash-wasm`:
 
-1. Geuza body kuwa mfuatano kwa kutumia kishikilia nafasi cha `cch=00000;`
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. Heksadesimali ya herufi 5 kwa herufi ndogo, iliyojazwa sufuri
-4. Badilisha `cch=00000;` kwa tokeni iliyokokotolewa
+1. Sawazisha mwili kwa kishika nafasi `cch=00000;`
+2. Jenga mwonekano wa heshi na vibadilishaji viwili vya maandishi wazi, kwa mpangilio huu (`hashView()`):
+   - kila mechi ya `/"model":"[^"]*"/g` inakuwa `"model":""` — mechi inasimama kwa `"` ya kwanza, kwa hivyo thamani iliyo na nukuu iliyotoroka (`"model":"a\"b"`) inatolewa tu hadi nukuu hiyo, kama mteja anavyofanya.
+   - kila mechi ya `/"max_tokens":\d+,|,?"max_tokens":\d+/g` huondolewa nambari za — pekee, kwa kina chochote
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. heksi yenye herufi 5 iliyo na sufuri
+5. Badilisha `cch=00000;` na tokeni iliyokokotwa
 
-Konstanti:
+Mara kwa mara:
 
-- Seed: `0x6e52736ac806831e`
+- Mbegu: `0x4d659218e32a3268` (inalingana na picha za nyuma za Claude Code 2.1.252 na 2.1.322)
 - Muundo: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Huingiza **kiunganishi kisicho na upana** cha Unicode (`U+200D`) baada ya herufi ya kwanza ya majina "nyeti" ya viteja ili vichujio vya upstream visiweze kuyatafuta kwa grep. Orodha chaguomsingi ya maneno:
+Inaingiza Unicode** kiunganishi cha upana wa sifuri** (`U+200D`) baada ya herufi ya kwanza ya majina ya mteja "nyeti" ili vichujio vya juu visiweze kuvishika. Orodha ya maneno chaguomsingi:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Hutumika kwa: vizuizi vya `system`, `messages[].content` zote, na `tools[].description` / `tools[].function.description`. Opereta anaweza kubatilisha kupitia `setSensitiveWords()`.
+Inatumika kwa: `system` blocks, zote `messages[].content`, na `tools[].description` / `tools[].function.description`. Opereta-inaweza kuzidiwa kupitia `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — watoa huduma wa `anthropic-compatible-cc-*`
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` watoa huduma
 
-Kwa relay za Anthropic za wahusika wengine zinazokubali tu trafiki ya "Claude Code halisi":
+Kwa upeanaji wa Anthropic wa wahusika wengine ambao unakubali tu trafiki ya "Msimbo halisi Claude ":
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
-- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` kwa chaguomsingi
-- Kigeuzi cha kila muunganisho cha "Enable redact-thinking beta" huongeza `redact-thinking-2026-02-12` wakati upstream ya CC Compatible inahitaji mahususi mitiririko ya fikra iliyofichwa
-- Kigeuzi cha kila muunganisho cha "Enable summarized thinking display" huhifadhi `providerSpecificData.requestDefaults.summarizeThinking` na kuongeza `display: "summarized"` kwenye maombi ya fikra ya CC Compatible ambayo hayakuwa tayari yameweka hali ya uonyeshaji
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (familia ya Opus/Sonnet 4.x)
-- Njia chaguomsingi: `/v1/messages?beta=true`
+- `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` kwa chaguo-msingi
+- Kigeuzi cha kila muunganisho cha "Wezesha beta ya kufikiria upya" huongeza `redact-thinking-2026-02-12` wakati CC Inayooana juu ya mkondo inahitaji mitiririko ya kufikiri iliyorekebishwa.
+- Kiunganishi kwa kila "Washa onyesho la muhtasari wa fikra" hugeuza duka `providerSpecificData.requestDefaults.summarizeThinking` na kuongeza `display: "summarized"` kwa CC Maombi ya kufikiria yanayooana ambayo hayajaweka hali ya kuonyesha.
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x familia)
+- Njia chaguo-msingi: `/v1/messages?beta=true`
 
-Moduli husika katika kifurushi hicho hicho:
+Moduli dada katika kifurushi sawa:
 
-- `claudeCodeConstraints.ts` — kanuni za temperature + cache-control
-- `claudeCodeToolRemapper.ts` — ubadilishaji wa majina ya zana
-- `claudeCodeExtraRemap.ts` — usanifishaji wa ziada wa payload
+- `claudeCodeConstraints.ts` — joto + kanuni za kudhibiti cache
+- `claudeCodeToolRemapper.ts` — kuunda tena jina la zana
+- `claudeCodeExtraRemap.ts` — urekebishaji wa upakiaji wa ziada
 
 ---
 

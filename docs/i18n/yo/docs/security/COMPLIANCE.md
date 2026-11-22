@@ -129,32 +129,33 @@ dídìmọ́ kíkọ fún ìgbà pípẹ́.
 Àwọn iye àìyípadà ni a ṣàlàyé nínú `src/lib/logEnv.ts`
 (`DEFAULT_APP_LOG_RETENTION_DAYS = 7`, `DEFAULT_CALL_LOG_RETENTION_DAYS = 7`).
 
-## Yíyan Kúrò nínú `noLog` (fún kọ́kọ́rọ́ API kọ̀ọ̀kan)
+## Jade-jade `noLog` (fun bọtini API )
 
-A lè fi àmì sí àwọn kọ́kọ́rọ́ API kí a má ba kọ ìrìnwọlé ìpè wọn sílẹ̀. Àmì náà
-wà lórí tábìlì `api_keys` (`no_log INTEGER DEFAULT 0`), a sì tún ṣe àfihàn rẹ̀
-sínú àkójọpọ̀ inú ìrántí fún àwọn àwárí ojú-ọ̀nà tó yára.
+awọn bọtini API le ṣe afihan nitoribẹẹ ijabọ ipe isalẹ wọn ko wọle. Flag naa n gbe lori tabili `api_keys` (`no_log INTEGER DEFAULT 0`) ati pe o ṣe afihan sinu eto iranti fun awọn iwo oju-ọna gbona.
 
 ```bash
-# Ṣẹ̀dá kọ́kọ́rọ́ tí kò ní àkọsílẹ̀ (a nílò ìfàṣẹ̀sí ìṣàkóso)
+# Create a no-log key (management auth required)
 curl -X POST http://localhost:20128/api/keys \
   -H "Cookie: auth_token=..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Privacy key", "noLog": true}'
 ```
 
-Àwọn olùrànlọ́wọ́ (`src/lib/compliance/index.ts`):
+Awọn oluranlọwọ (`src/lib/compliance/index.ts`):
 
-- `setNoLog(apiKeyId, true|false)` — yí àkọọ́lẹ̀ inú ìrántí padà
-- `isNoLog(apiKeyId)` — a máa ń yẹ̀ ẹ́ wò lójú-ọ̀nà ìbéèrè; tí kò bá rí bẹ́ẹ̀, yóò lo kíkà
-  tí a ti fi pamọ́ fún 30 s láti `api_keys.no_log`
-- `NO_LOG_API_KEY_IDS` (àyíká, tí a fi àmì-kọ́má yà sọ́tọ̀) — a máa ń kó wọn sínú
-  àkójọpọ̀ inú ìrántí nígbà ìbẹ̀rẹ̀; ó wúlò nígbà tí o kò bá lè yí àwọ̀n náà padà
-  ní tààrà
+- `setNoLog(apiKeyId, true|false)` — yiyipada titẹsi inu-iranti
+- `isNoLog(apiKeyId)` — ṣayẹwo lori ọna ibeere; ṣubu pada si 30 s cache kika lati `api_keys.no_log`
+- `NO_LOG_API_KEY_IDS` (env, koma-yapaya) — ti kojọ tẹlẹ sinu eto-iranti lori bata; wulo nigba ti o ko ba le yi awọn iwe taara
 
-Àwọn ìṣẹ̀lẹ̀ àyẹ̀wò ìṣàkóso (ìwọlé, àwọn ìyípadà olùpèsè, àwọn ìpè irinṣẹ́ MCP, abbl.)
-**kò** ní ipa láti ọ̀dọ̀ `noLog` — kìkì kíkọ ìrìnwọlé ìbéèrè kọ̀ọ̀kan sílẹ̀ ni a yàn
-láti má ṣe.
+Awọn iṣẹlẹ iṣayẹwo iṣakoso (iwọle, awọn ayipada olupese, awọn ipe irinṣẹ MCP, ati bẹbẹ lọ) jẹ** kii ṣe** fowo nipasẹ `noLog` — nikan-ibeere ijabọ wiwakọ ti yọ kuro.
+
+### Jade jade fun-ibere (`x-omniroute-no-log`)
+
+Onibara le jade ibeere ifọkasi ẹyọkan kuro ninu itẹramọṣẹ fifuye isanwo laisi ṣiṣẹda bọtini iyasọtọ kan. Firanṣẹ `x-omniroute-no-log: true` lori ibeere (`1` ati `yes` tun jẹ itẹwọgba, ọran-aibikita). O kan si gbogbo ipa ọna-ẹbi iwiregbe ti o nṣiṣẹ nipasẹ oluṣakoso iwiregbe: Iwiregbe Ipari, Awọn idahun, Awọn ifiranṣẹ, Awọn ipari ati ọna ibaramu Gemini. Laini ipe-ipe ti wa ni kikọ pẹlu aami igba rẹ, awoṣe, olupese, ipo, iye akoko ati iye tokini, ṣugbọn `request_body`, `response_body`, awọn akojọpọ ibeere ati awọn ohun elo opo gigun ti yọkuro.
+
+Akọsori naa jẹ ORed pẹlu asia bọtini: bọtini no-log kan duro ko si log laibikita akọsori, ati pe akọsori ko le tun mu gedu ṣiṣẹ fun bọtini no-log. Akọsori ti yọ kuro ṣaaju ki o to dari ibeere naa ni oke.
+
+Akọsori yii ṣe** kii ṣe** mu isediwon Memory tabi kaṣe atunmọ. Firanṣẹ `x-omniroute-no-memory: true` ati `x-omniroute-no-cache: true` lẹgbẹẹ rẹ nigbati ibeere naa ko gbọdọ tẹsiwaju akoonu ninu awọn eto abẹlẹ yẹn boya.
 
 ## REST API
 

@@ -248,30 +248,22 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="glm/glm-4.7-flash"
 
 ---
 
-## સમસ્યાનિવારણ
+## મુશ્કેલીનિવારણ
 
-**Claude Code ગેટવેને અવગણે છે** — ખાતરી કરો કે `ANTHROPIC_BASE_URL` માં **`/v1`
-નથી** અને `claude` ને ફરી શરૂ કરો (env સ્ટાર્ટઅપ વખતે માત્ર એક વાર વાંચવામાં આવે છે). `omniroute launch`
-તમારા માટે આ સંભાળે છે.
+**Claude કોડ ગેટવેની અવગણના કરે છે** — પુષ્ટિ `ANTHROPIC_BASE_URL` પાસે છે** કોઈ `/v1` નથી** અને `claude` પુનઃપ્રારંભ કરો (env સ્ટાર્ટઅપ વખતે એકવાર વાંચવામાં આવે છે). `omniroute launch` તમારા માટે આને સંભાળે છે.
 
-**`/model` પિકર ખાલી છે / ગેટવે મોડેલ્સ ગાયબ છે** — Claude Code
-v2.1.219+ અને `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` જરૂરી છે. પિકરમાં માત્ર `claude*` /
-`anthropic*` મોડેલ IDs દેખાય છે; અન્ય કોઈપણ મોડેલને
-`ANTHROPIC_MODEL=<id>` વડે ફરજિયાત સેટ કરો (પ્રોફાઇલ્સ આ જ કરે છે).
+**`/model` પીકર ખાલી છે / ગેટવે મોડલ્સ ખૂટે છે** — Claude કોડ v2.1.219 + અને `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` ની જરૂર છે. પીકરમાં માત્ર `claude*` / `anthropic*` મોડલ IDs દેખાય છે; `ANTHROPIC_MODEL=<id>` સાથે અન્ય કોઈપણ મોડેલને દબાણ કરો (પ્રોફાઈલ્સ આ કરે છે).
 
-**`400 Ambiguous model 'claude-…'`** — Claude Code હંમેશાં **ઉપસર્ગ વિનાના**
-મોડેલ IDs મોકલે છે (દા.ત. `claude-opus-4-8`), તેથી જ્યારે Claude Code (`cc/…`) અને
-Claude (`claude/…`) બંને પ્રદાતાઓ જોડાયેલા હોય, ત્યારે ઉપસર્ગ વિનાનું id બે રૂટ્સ સાથે મેળ ખાય છે અને
-OmniRoute અનુમાન કરવાનો ઇનકાર કરે છે. તેને બેમાંથી કોઈપણ રીતે સુધારો: `ANTHROPIC_MODEL=cc/claude-opus-4-8`
-વડે ઉપસર્ગ ધરાવતું id પિન કરો, અથવા **ઉપસર્ગ વિનાના Claude મોડેલ્સ માટે Claude Code ને
-પ્રાધાન્ય આપો** સક્ષમ કરો — Claude પ્રદાતા પેજ પરનું ટૉગલ, અથવા
-`OMNIROUTE_PREFER_CLAUDE_CODE_FOR_UNPREFIXED_CLAUDE_MODELS=true` (ડિફૉલ્ટરૂપે બંધ;
-[પર્યાવરણ](../reference/ENVIRONMENT.md) જુઓ) — જે ઉપસર્ગ વિનાના `claude-*`
-IDs ને તેના બદલે Claude Code તરફ રૂટ કરે છે. સ્પષ્ટ પ્રદાતા ઉપસર્ગોને હંમેશાં પ્રાધાન્ય મળે છે.
+**`400 Ambiguous model 'claude-…'`** — Claude કોડ હંમેશા મોકલે છે** અનપ્રીફિક્સ** મોડલ IDs (દા.ત. `claude-opus-4-8`), તેથી જ્યારે Claude કોડ (`cc/…`) અને Claude (`claude/…`) પ્રદાતાઓ બંને જોડાયેલા હોય ત્યારે બેર આઈડી બે રૂટ સાથે મેળ ખાય છે અને OmniRoute અનુમાન કરવાનો ઇનકાર કરે છે. તેને કોઈપણ રીતે ઠીક કરો: `ANTHROPIC_MODEL=cc/claude-opus-4-8` સાથે ઉપસર્ગ id પિન કરો અથવા સક્ષમ કરો** અનપ્રીફિક્સ્ડ Claude મોડલ્સ માટે Claude કોડ પસંદ કરો** Claude પ્રદાતા પૃષ્ઠ પર ટૉગલ —, અથવા `OMNIROUTE_PREFER_CLAUDE_CODE_FOR_UNPREFIXED_CLAUDE_MODELS=true` (ડિફૉલ્ટ બંધ; [પર્યાવરણ](../reference/ENVIRONMENT.md) જુઓ ) — જે બેર `claude-*` IDs ને Claude કોડમાં રૂટ કરે છે. સ્પષ્ટ પ્રદાતા ઉપસર્ગ હંમેશા જીતે છે.
 
-**પ્રમાણીકરણ ભૂલો** — પ્રોફાઇલમાં કોઈ ટોકન હોતું નથી. `omniroute launch --profile`
-નો ઉપયોગ કરો (તે ટોકન ઇન્જેક્ટ કરે છે) અથવા `ANTHROPIC_AUTH_TOKEN` એક્સપોર્ટ કરો.
+**"ઓટો મોડ … આ સત્ર પાત્ર નથી" (વર્ગીફાયર વિનંતીઓનું બિલ આપવામાં આવ્યું છે)** — ઑટો મોડમાં Claude કોડ સર્વરને તેની પોતાની મૉડલ વિનંતીઓ ( [Anthropic ડૉક્સ](https://code.claude.com/docs/en/auto-mode-classifier-billing) ) ની અંદરની ક્રિયાઓની સમીક્ષા કરવા કહે છે. તેને જોડી તરીકે Anthropic સુધી પહોંચવા માટે `anthropic-beta` મૂલ્ય `dangerous-tool-use-2026-09-03` અને `safeguards` બોડી ફીલ્ડની જરૂર છે, અને `safeguard_results` વત્તા અપસ્ટ્રીમ ટૂલનો ઉપયોગ કરો - યથાવત પાછા આવવા માટે IDs ઉપયોગ કરો. OmniRoute આ કરે છે જ્યારે વિનંતી મૂળ `claude` પ્રદાતાને અથવા `anthropic-compatible-*` નોડને રૂટ કરવામાં આવે છે, સ્ટ્રીમ થયેલ છે કે નહીં (રીગ્રેશન ગાર્ડ: `tests/integration/claude-auto-mode-classifier-e2e.test.ts`). અન્ય લક્ષ્યો સમીક્ષા પરત કરી શકતા નથી, તેથી Claude કોડ તેની પોતાની વર્ગીકૃત વિનંતીઓ પર પાછો આવે છે અને સૂચના બતાવે છે:
 
-**પ્રોફાઇલ્સ અલગ રહેતી નથી** — દરેક પ્રોફાઇલ એક અલગ `CLAUDE_CONFIG_DIR` છે;
-ખાતરી કરો કે સેશનની અંદર `echo $CLAUDE_CONFIG_DIR`, `~/.claude/profiles/<name>`
-તરફ નિર્દેશ કરે છે.
+- નૉન-એન્થ્રોપિક પ્રદાતા પરનું મોડેલ, અથવા કૉમ્બો જે એક પર ઉતરે છે;
+- ક્લાઉડ-કોડ-સુસંગત રિલે નોડ (`anthropic-compatible-cc-*`), જે વિનંતીના મુખ્ય ભાગને ફરીથી બનાવે છે અને `safeguards` વહન કરતું નથી;
+- જૂની OmniRoute કે જે માન્ય સૂચિબદ્ધ બીટાની પૂર્વાનુમાન કરે છે, અથવા ગેટવે સત્રો માટે Anthropic પેજની સૂચિની નીચેનું Claude કોડ સંસ્કરણ.
+
+Claude કોડમાં `/status` ચલાવો: ધ** ઓટો મોડ સર્વર** જ્યારે સર્વરની સમીક્ષા સક્રિય હોય ત્યારે પંક્તિ `Enabled` વાંચે છે. શું તે વિનંતીઓનું બિલ Anthropic દ્વારા નક્કી કરવામાં આવે છે, OmniRoute દ્વારા નહીં.
+
+**પ્રમાણીકરણ ભૂલો** — પ્રોફાઇલમાં કોઈ ટોકન નથી. `omniroute launch --profile` ઉપયોગ કરો (તેને ઇન્જેક્ટ કરો) અથવા `ANTHROPIC_AUTH_TOKEN` નિકાસ કરો.
+
+**પ્રોફાઇલ્સ અલગ થતી નથી** — દરેક પ્રોફાઇલ એક અલગ `CLAUDE_CONFIG_DIR` છે; `~/.claude/profiles/<name>` પર સત્ર પોઈન્ટની અંદર `echo $CLAUDE_CONFIG_DIR` ચકાસો.

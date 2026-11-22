@@ -55,63 +55,66 @@ Sinusuportahan ng naka-pin na package ang mga profile, ngunit maaaring magbago a
 
 ## Claude Code Stealth Bundle
 
-Kapag naka-on ang `cliCompatMode`, binabago ng OmniRoute ang mga papalabas na Claude request upang hindi matukoy ang pagkakaiba ng mga ito sa trapiko ng `claude-cli`. Tatlong module ang nagtutulungan:
+Kapag naka-on `cliCompatMode`, muling hinuhubog OmniRoute ang mga papalabas na kahilingan Claude upang hindi makilala ang mga ito sa trapiko `claude-cli`. Nagtutulungan ang tatlong module:
 
 ### `claudeCodeFingerprint.ts`
 
-Kinukuwenta ang 3-character na `cc_version` fingerprint na naka-embed sa billing header:
+Kinakalkula ang 3-char `cc_version` fingerprint na naka-embed sa header ng pagsingil:
 
 ```
 SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
 ```
 
-- `FINGERPRINT_SALT = "59cf53e54c78"` (hardcoded; tumutugma sa opisyal na client)
-- Mga input: mga character sa index 4, 7, 20 ng text ng unang mensahe ng user + version string
-- Output: 3-character na hex prefix
+- `FINGERPRINT_SALT = "59cf53e54c78"` (hardcoded; tumutugma sa opisyal na kliyente)
+- Mga input: mga character sa index 4, 7, 20 ng unang user message text + version string
+- Output: 3-char hex prefix
 
-### `claudeCodeCCH.ts` (Client Content Hash)
+### `claudeCodeCCH.ts` (Hash ng Nilalaman ng Kliyente)
 
-Isang server-side integrity check na kinukuwenta ng opisyal na Claude Code CLI sa pamamagitan ng Bun/Zig. Muling ipinapatupad ito ng OmniRoute gamit ang `xxhash-wasm`:
+Suriin ang integridad sa gilid ng server ang opisyal Claude Code CLI computes sa pamamagitan ng Bun/Zig. OmniRoute reimplements na may `xxhash-wasm`:
 
-1. I-serialize ang body gamit ang `cch=00000;` placeholder
-2. `xxhash64(bytes, seed) & 0xFFFFF`
-3. 5-character na lowercase hex na nilagyan ng mga zero sa unahan
-4. Palitan ang `cch=00000;` ng nakuwentang token
+1. I-serialize ang katawan gamit ang `cch=00000;` placeholder
+2. Buuin ang hash view na may dalawang pamalit na plain-text, sa ganitong pagkakasunud-sunod (`hashView()`):
+   - bawat tugma ng `/"model":"[^"]*"/g` ay nagiging `"model":""` — ang tugma ay humihinto sa unang `"`, kaya ang isang value na may nakatakas na quote (`"model":"a\"b"`) ay nawalan lamang ng laman hanggang sa quote na iyon, gaya ng ginagawa ng kliyente
+   - bawat tugma ng `/"max_tokens":\d+,|,?"max_tokens":\d+/g` ay inalis — na mga numerong halaga lamang, sa anumang lalim
+3. `xxhash64(view_bytes, seed) & 0xFFFFF`
+4. Zero-padded na 5-char na lowercase na hex
+5. Palitan `cch=00000;` ng computed token
 
-Mga constant:
+Mga Constant:
 
-- Seed: `0x6e52736ac806831e`
+- Seed: `0x4d659218e32a3268` (tumutugma sa mga loopback capture ng Claude Code 2.1.252 at 2.1.322)
 - Pattern: `/\bcch=([0-9a-f]{5});/`
 
 ### `claudeCodeObfuscation.ts`
 
-Naglalagay ng Unicode **zero-width joiner** (`U+200D`) pagkatapos ng unang character ng mga "sensitibong" pangalan ng client upang hindi ma-grep ng mga upstream filter ang mga ito. Default na listahan ng mga salita:
+Naglalagay ng Unicode** zero-width joiner** (`U+200D`) pagkatapos ng unang karakter ng "sensitibong" mga pangalan ng kliyente kaya hindi sila matanggap ng mga upstream na filter. Default na listahan ng salita:
 
 ```
 opencode, open-code, cline, roo-cline, roo_cline, cursor, windsurf,
 aider, continue.dev, copilot, avante, codecompanion
 ```
 
-Inilalapat sa: mga `system` block, lahat ng `messages[].content`, at `tools[].description` / `tools[].function.description`. Maaaring i-override ng operator sa pamamagitan ng `setSensitiveWords()`.
+Inilapat sa: `system` block, lahat ng `messages[].content`, at `tools[].description` / `tools[].function.description`. Operator-overridable sa pamamagitan ng `setSensitiveWords()`.
 
-### `claudeCodeCompatible.ts` — mga `anthropic-compatible-cc-*` provider
+### `claudeCodeCompatible.ts` — `anthropic-compatible-cc-*` provider
 
-Para sa mga third-party na Anthropic relay na tumatanggap lamang ng trapikong mula sa "tunay na Claude Code":
+Para sa mga third-party Anthropic relay na tumatanggap lamang ng "real Claude Code" na trapiko:
 
 - `CLAUDE_CODE_COMPATIBLE_USER_AGENT = "claude-cli/2.1.280 (external, sdk-cli)"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_PACKAGE_VERSION = "0.112.1"`
 - `CLAUDE_CODE_COMPATIBLE_STAINLESS_RUNTIME_VERSION = "v26.3.0"`
 - `anthropic-beta = "claude-code-20250219,interleaved-thinking-2025-05-14,effort-2025-11-24"` bilang default
-- Idinaragdag ng toggle na "Enable redact-thinking beta" sa bawat koneksyon ang `redact-thinking-2026-02-12` kapag partikular na nangangailangan ang isang CC Compatible upstream ng mga ni-redact na thinking stream
-- Iniimbak ng toggle na "Enable summarized thinking display" sa bawat koneksyon ang `providerSpecificData.requestDefaults.summarizeThinking` at idinaragdag ang `display: "summarized"` sa mga CC Compatible thinking request na wala pang nakatakdang display mode
-- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (pamilya ng Opus/Sonnet 4.x)
-- Default na path: `/v1/messages?beta=true`
+- Ang per-connection na "Enable redact-thinking beta" toggle ay nagdaragdag ng `redact-thinking-2026-02-12` kapag ang isang CC Compatible upstream ay partikular na nangangailangan ng mga redacted thinking stream.
+- Ang bawat koneksyon na "I-enable ang summarized thinking display" toggle stores `providerSpecificData.requestDefaults.summarizeThinking` and add `display: "summarized"` to CC Compatible thinking requests na hindi pa nagtakda ng display mode
+- `CONTEXT_1M_BETA_HEADER = "context-1m-2025-08-07"` (Opus/Sonnet 4.x pamilya)
+- Default na landas: `/v1/messages?beta=true`
 
-Mga kaugnay na module sa parehong bundle:
+Sister modules sa parehong bundle:
 
-- `claudeCodeConstraints.ts` — mga panuntunan sa temperature + cache-control
-- `claudeCodeToolRemapper.ts` — muling pagmamapa ng mga pangalan ng tool
-- `claudeCodeExtraRemap.ts` — karagdagang normalisasyon ng payload
+- `claudeCodeConstraints.ts` — temperatura + mga panuntunan sa kontrol ng cache
+- `claudeCodeToolRemapper.ts` — tool-name remapping
+- `claudeCodeExtraRemap.ts` — extra payload normalization
 
 ---
 

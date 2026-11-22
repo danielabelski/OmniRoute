@@ -49,7 +49,7 @@
 
 ---
 
-## การทำให้การสนทนาเสร็จสมบูรณ์
+## เสร็จสิ้นการแชท
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### ส่วนหัวที่กำหนดเอง
 
-| Header                   | Direction | Description                                                                                                                                                                                               |
-| ------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Request   | ตั้งค่าเป็น `true` เพื่อข้ามแคช                                                                                                                                                                           |
-| `x-omniroute-no-memory`  | Request   | ตั้งค่าเป็น `true` เพื่อข้ามการแทรก memory + skills สำหรับคำขอนี้ (ทำงานเหมือน no-cache และหลีกเลี่ยงค่าใช้จ่ายด้านโทเค็น/ต้นทุนต่อการเรียก)                                                              |
-| `X-OmniRoute-Progress`   | Request   | ตั้งค่าเป็น `true` สำหรับเหตุการณ์ความคืบหน้า                                                                                                                                                             |
-| `X-Session-Id`           | Request   | คีย์เซสชันแบบคงที่สำหรับการยึดเซสชันภายนอก                                                                                                                                                                |
-| `x_session_id`           | Request   | ยอมรับรูปแบบที่ใช้ขีดล่างด้วย (HTTP โดยตรง)                                                                                                                                                               |
-| `X-OmniRoute-Session-Id` | Request   | แท็กเซสชัน/การสนทนาที่ผู้เรียกกำหนดเอง (ใช้กับ memory ด้วย) เมื่อมีการระบุ ค่านี้จะถูกบันทึกตามเดิมใน `call_logs.session_tag` เพื่อจัดสรรค่าใช้จ่ายรายเซสชัน (#8249) — จะไม่สร้างขึ้นเองเมื่อไม่มีการระบุ |
-| `Idempotency-Key`        | Request   | คีย์สำหรับขจัดรายการซ้ำ (ช่วงเวลา 5 วินาที)                                                                                                                                                               |
-| `X-Request-Id`           | Request   | คีย์สำหรับขจัดรายการซ้ำทางเลือก                                                                                                                                                                           |
-| `x-omniroute-connection` | Request   | ยึดคำขอแบบโมเดลเดียวกับการเชื่อมต่อของผู้ให้บริการหนึ่งรายการ (บัญชี) ตาม id — ดู [การยึดบัญชีต่อคำขอ](#account-pinning-per-request)                                                                      |
-| `X-OmniRoute-Cache`      | Response  | `HIT` หรือ `MISS` (ไม่ใช่การสตรีม)                                                                                                                                                                        |
-| `X-OmniRoute-Idempotent` | Response  | `true` หากมีการขจัดรายการซ้ำ                                                                                                                                                                              |
-| `X-OmniRoute-Progress`   | Response  | `enabled` หากเปิดใช้การติดตามความคืบหน้า                                                                                                                                                                  |
-| `X-OmniRoute-Session-Id` | Response  | ID เซสชันที่มีผลซึ่ง OmniRoute ใช้งาน                                                                                                                                                                     |
-| `X-OmniRoute-Request-Id` | Response  | ID สำหรับเชื่อมโยงคำขอ (เมื่อทราบ)                                                                                                                                                                        |
-| `X-OmniRoute-Version`    | Response  | เวอร์ชันบิลด์ของ OmniRoute (มีอยู่เสมอ)                                                                                                                                                                   |
-| `X-OmniRoute-Cost-Saved` | Response  | จำนวนเงิน USD ที่แคชช่วยหลีกเลี่ยงได้เมื่อเป็น HIT (เฉพาะ cache hit)                                                                                                                                      |
-| `X-OmniRoute-Decision`   | Response  | ร่องรอยการกำหนดเส้นทาง: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` คือกลยุทธ์แบบผสม หรือ `single` สำหรับคำขอที่ไม่ใช่แบบผสม) — มีอยู่เสมอในการตอบกลับเมื่อเสร็จสมบูรณ์                 |
+| ส่วนหัว                  | ทิศทาง     | คำอธิบาย                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `X-OmniRoute-No-Cache`   | ขอ         | ตั้งค่าเป็น `true` เพื่อข้ามแคช                                                                                                                                                                                                                                                                                                                  |
+| `x-omniroute-no-memory`  | ขอ         | ตั้งค่าเป็น `true` เพื่อข้ามการเพิ่มทักษะหน่วยความจำ + สำหรับคำขอนี้ (มิเรอร์ไม่มีแคช หลีกเลี่ยงค่าใช้จ่ายต่อการโทร token/cost )                                                                                                                                                                                                                 |
+| `x-omniroute-no-log`     | ขอ         | ตั้งค่าเป็น `true` เพื่อละเว้นเพย์โหลด request/response จากบันทึกการโทรสำหรับคำขออนุมานนี้ (เส้นทางแชท-ตระกูลทั้งหมด: การแชทเสร็จสิ้น, การตอบกลับ, ข้อความ, การเสร็จสิ้น, Gemini) การประทับเวลา โมเดล สถานะ ระยะเวลา และจำนวนโทเค็นจะยังคงบันทึกไว้ ใช้ร่วมกับ `x-omniroute-no-memory` และ `x-omniroute-no-cache` เพื่อเลือกไม่รับเนื้อหาทั้งหมด |
+| `X-OmniRoute-Progress`   | ขอ         | ตั้งค่าเป็น `true` สำหรับกิจกรรมความคืบหน้า                                                                                                                                                                                                                                                                                                      |
+| `X-Session-Id`           | ขอ         | คีย์เซสชันที่ติดหนึบสำหรับความสัมพันธ์ของเซสชันภายนอก                                                                                                                                                                                                                                                                                            |
+| `x_session_id`           | ขอ         | ยอมรับรูปแบบขีดล่างด้วย (โดยตรง HTTP)                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Session-Id` | ขอ         | แท็ก session/conversation ของผู้โทร (รวมถึงฟีดหน่วยความจำด้วย) เมื่อมีอยู่ ให้คงคำต่อคำเป็น `call_logs.session_tag` สำหรับการระบุแหล่งที่มาต้นทุนต่อเซสชัน (#8249) — ไม่เคยสังเคราะห์เมื่อขาดหายไป                                                                                                                                               |
+| `Idempotency-Key`        | ขอ         | ปุ่ม Dedup (หน้าต่าง 5 วินาที)                                                                                                                                                                                                                                                                                                                   |
+| `X-Request-Id`           | ขอ         | คีย์สำรองสำรอง                                                                                                                                                                                                                                                                                                                                   |
+| `x-omniroute-connection` | ขอ         | ปักหมุดคำขอรุ่นเดียวกับการเชื่อมต่อผู้ให้บริการรายเดียว (บัญชี) โดยใช้รหัส — ดู [การปักหมุดบัญชีต่อคำขอ](#account-pinning-per-request)                                                                                                                                                                                                           |
+| `X-OmniRoute-Cache`      | การตอบสนอง | `HIT` หรือ `MISS` (ไม่ใช่สตรีมมิ่ง)                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Idempotent` | การตอบสนอง | `true` หากขจัดข้อมูลซ้ำซ้อน                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Progress`   | การตอบสนอง | `enabled` หากเปิดการติดตามความคืบหน้า                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Session-Id` | การตอบสนอง | เซสชันที่มีประสิทธิภาพ ID ใช้โดย OmniRoute                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Request-Id` | การตอบสนอง | ขอรหัสความสัมพันธ์ (เมื่อทราบ)                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Version`    | การตอบสนอง | เวอร์ชันบิลด์OmniRoute (แสดงอยู่เสมอ)                                                                                                                                                                                                                                                                                                            |
+| `X-OmniRoute-Cost-Saved` | การตอบสนอง | USD แคชหลีกเลี่ยงบน HIT (เฉพาะแคชเท่านั้น)                                                                                                                                                                                                                                                                                                       |
+| `X-OmniRoute-Decision`   | การตอบสนอง | การติดตามเส้นทาง: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` คือกลยุทธ์คอมโบ หรือ `single` สำหรับคำขอที่ไม่ใช่คอมโบ) — จะแสดงเสมอเมื่อตอบกลับเสร็จสิ้น                                                                                                                                                                        |
 
-> หมายเหตุเกี่ยวกับ Nginx: หากคุณใช้เฮดเดอร์ที่มีขีดล่าง (เช่น `x_session_id`) ให้เปิดใช้ `underscores_in_headers on;`
+> หมายเหตุ Nginx: หากคุณใช้ส่วนหัวขีดล่าง (เช่น `x_session_id`) ให้เปิดใช้งาน `underscores_in_headers on;`
 
-#### การยึดบัญชีต่อคำขอ
+#### การปักหมุดบัญชีตามคำขอ
 
-เมื่อผู้ให้บริการมีการเชื่อมต่อหลายรายการ (บัญชีหรือคีย์) โดยปกติ OmniRoute จะเลือกหนึ่งรายการ
-ผ่านกลยุทธ์การเลือกบัญชี คำขอสามารถยึดการเชื่อมต่อเฉพาะรายการหนึ่งแทนได้
-โดยใช้เฮดเดอร์ `x-omniroute-connection`:
+เมื่อผู้ให้บริการมีการเชื่อมต่อหลายรายการ (บัญชีหรือคีย์) โดยปกติ OmniRoute จะเลือกหนึ่งรายการผ่านกลยุทธ์การเลือกบัญชี คำขอสามารถปักหมุดการเชื่อมต่อเฉพาะกับส่วนหัว `x-omniroute-connection` แทน:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,17 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **ตำแหน่งที่ค้นหา id ได้** เปิดหน้าผู้ให้บริการในแดชบอร์ด
-  (**Dashboard → Providers → <provider>**) แล้วคลิกชิป id `xxxxxxxx…` บนแถวการเชื่อมต่อ
-  — ระบบจะคัดลอก connection id แบบเต็ม
-- **คำขอใดที่รองรับค่าอ้างอิงนี้** คำขอโมเดลเดี่ยว (`provider/model`) บน
-  `/v1/chat/completions`, `/v1/messages` และ `/v1/responses` ชุดคอมโบจะไม่สนใจเฮดเดอร์นี้ ให้ตรึงบัญชีต่อขั้นตอนของคอมโบผ่านการเชื่อมต่อของขั้นตอนนั้นเอง
-- **การตรึงนี้เป็นข้อบังคับ ไม่ใช่เพียงการตั้งค่า предпочтительнее** ระบบจะใช้การเชื่อมต่อที่ตรึงไว้เท่านั้น หากเกิดความล้มเหลวภายในคำขอ ระบบจะบันทึกช่วงพักใช้งานของบัญชี แต่จะ **ไม่** เปลี่ยนไปใช้บัญชีพี่น้องของผู้ให้บริการรายเดียวกัน
-- **ช่วงพักใช้งานและโควตาจะยกเลิกการตรึง** ขณะที่การเชื่อมต่อที่ตรึงไว้กำลังอยู่ในช่วงพักใช้งาน โควตาถูกใช้หมด หรือถูกบล็อกโดยนโยบายโควตา คำขอถัดไปจะย้อนกลับไปใช้การเชื่อมต่ออื่นของผู้ให้บริการ เช่นเดียวกับทราฟฟิกที่ไม่ได้ตรึง
-- **id ที่ไม่รู้จักหรือถูกปิดใช้งานจะทำให้คำขอล้มเหลว** id ที่ไม่อยู่ในพูลที่ใช้งานอยู่ของผู้ให้บริการ (ถูกลบ ปิดใช้งาน หรือเป็นของผู้ให้บริการรายอื่น) จะไม่เหลือบัญชีที่ใช้ได้ ดังนั้นคำขอจะล้มเหลวแทนที่จะเปลี่ยนเส้นทางไปที่อื่นโดยไม่แจ้งให้ทราบ
+- **จะหาไอดีได้ที่ไหน** เปิดหน้าผู้ให้บริการในแดชบอร์ด (** แดชบอร์ดผู้ให้บริการ → → <provider>** ) และคลิกชิป `xxxxxxxx…` id บนแถวการเชื่อมต่อ — จะคัดลอกรหัสการเชื่อมต่อแบบเต็ม
+- **ซึ่งร้องขอให้เกียรติมัน** คำร้องขอโมเดลเดียว (`provider/model`) บน `/v1/chat/completions`, `/v1/messages` และ `/v1/responses` คอมโบไม่สนใจส่วนหัว: ปักหมุดบัญชีตามขั้นตอนคอมโบผ่านการเชื่อมต่อของขั้นตอนแทน
+- **หมุดนั้นเข้มงวดไม่ใช่การตั้งค่า** การเชื่อมต่อที่ปักหมุดจะใช้เฉพาะเท่านั้น ความล้มเหลวในคำขอจะบันทึกคูลดาวน์ของบัญชีแต่กลับบันทึก** ไม่** หมุนเวียนไปยังบัญชีพี่น้องของผู้ให้บริการรายเดียวกัน
+- **คูลดาวน์และโควต้าจะปล่อยพิน** ในขณะที่การเชื่อมต่อที่ปักหมุดกำลังเย็นลง โควต้าหมด หรือถูกบล็อกโดยนโยบายโควต้า คำขอในภายหลังจะถอยกลับไปยังการเชื่อมต่ออื่นๆ ของผู้ให้บริการ เช่นเดียวกับการรับส่งข้อมูลที่ไม่ได้ปักหมุด
+- **รหัสที่ไม่รู้จักหรือถูกปิดใช้งานล้มเหลว** ID ที่ไม่ได้อยู่ในกลุ่มผู้ให้บริการที่ใช้งานอยู่ (ถูกลบ ปิดการใช้งาน หรือเป็นของผู้ให้บริการรายอื่น) ทำให้ไม่มีบัญชีที่มีสิทธิ์ ดังนั้นคำขอจึงล้มเหลวแทนที่จะเปลี่ยนเส้นทางไปยังที่อื่นโดยไม่แจ้งให้ทราบ
 
-Claude Code ส่งเฮดเดอร์แบบกำหนดเองผ่าน `ANTHROPIC_CUSTOM_HEADERS` ให้ใส่ไว้ในบล็อก `env`
-ของ `~/.claude/settings.json` หรือใน `.claude/settings.json` ระดับโปรเจกต์ เพื่อจะตรึงบัญชีที่แตกต่างกันสำหรับแต่ละโปรเจกต์:
+รหัส Claude ส่งส่วนหัวที่กำหนดเองผ่าน `ANTHROPIC_CUSTOM_HEADERS` ใส่ไว้ในบล็อก `env` ของ `~/.claude/settings.json` หรือใน `.claude/settings.json` ระดับโครงการเพื่อปักหมุดบัญชีอื่นต่อโครงการ:
 
 ```jsonc
 {
@@ -125,12 +120,11 @@ Claude Code ส่งเฮดเดอร์แบบกำหนดเอง�
 }
 ```
 
-แหล่งที่มา: `src/sse/handlers/chat.ts` (การอ่านเฮดเดอร์), `src/sse/services/auth.ts` และ
-`src/sse/services/sessionAffinityPin.ts` (การยกเลิกการตรึงและการตรวจสอบว่าไม่มีอยู่ในพูล)
+แหล่งที่มา: `src/sse/handlers/chat.ts` (อ่านส่วนหัว), `src/sse/services/auth.ts` และ `src/sse/services/sessionAffinityPin.ts` (การปลดพินและการตรวจสอบที่ขาดหายไปจากพูล)
 
-> **เฮดเดอร์ข้อมูลต้นทุน:** การตอบกลับที่สำเร็จแบบไม่สตรีมยังมีชุดข้อมูลต้นทุน `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, ทศนิยมคงที่ 10 ตำแหน่ง; `0.0000000000` สำหรับรายการที่ไม่มีค่าใช้จ่ายหรือไม่มีการกำหนดราคา), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` และ `X-OmniRoute-Fallback-Attempts` (เฉพาะเมื่อมีค่ามากกว่า 0) รวมถึง `X-OmniRoute-Request-Id` และ `X-OmniRoute-Version` ข้อมูลเหล่านี้ถูกส่งออกโดย chat completions, `/v1/responses`, `/v1/messages` **และมีเดียเอนด์พอยต์** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` และ `/v1/moderations` (มีต้นทุนเป็น `0` เสมอ) ต้นทุนของมีเดียจะคำนวณแยกตามประเภทข้อมูล (ต่อภาพ, ต่อวินาที, ต่อตัวอักษร, ต่อหน่วยการค้นหา) เมื่อมีข้อมูลราคา มิฉะนั้นจะเป็น `0` (ทำงานต่อได้เมื่อคำนวณต้นทุนไม่ได้)
+> **ส่วนหัวการวัดและส่งข้อมูลทางไกลของต้นทุน:** การตอบสนองความสำเร็จที่ไม่ใช่การสตรีมยังมีชุด `X-OmniRoute-*` cost-telemetry — `X-OmniRoute-Response-Cost` (USD, ทศนิยมคงที่ 10 ตำแหน่ง; `0.0000000000` สำหรับ free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` และ `X-OmniRoute-Fallback-Attempts` (เฉพาะเมื่อ > 0) บวก `X-OmniRoute-Request-Id` และ `X-OmniRoute-Version` สิ่งเหล่านี้ปล่อยออกมาจากการแชทเสร็จสิ้น `/v1/responses`, `/v1/messages`,** และจุดสิ้นสุดของสื่อ** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` และ `/v1/moderations` (ราคาเสมอ `0`) ต้นทุนสื่อจะคำนวณตามรูปแบบ (ต่อภาพ ต่อวินาที ต่ออักขระ ต่อหน่วยการค้นหา) เมื่อมีการกำหนดราคา มิฉะนั้น `0` (เปิดไม่สำเร็จ)
 
-> **ความหมายของต้นทุนเมื่อแคชถูกใช้งาน:** เมื่อเกิด semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`) จะไม่มีการเรียก upstream ดังนั้น `X-OmniRoute-Response-Cost` จึงเป็น `0.0000000000` (ต้นทุน **ส่วนเพิ่ม**ของการให้บริการผลลัพธ์จากแคช) ต้นทุนเดิม/ต้นทุนที่ควรเกิดขึ้นจะรายงานแยกต่างหากใน `X-OmniRoute-Cost-Saved` ผู้บริโภคข้อมูลการเรียกเก็บเงินควรรวมค่า `X-OmniRoute-Response-Cost` (ผลลัพธ์จากแคชไม่มีต้นทุน); ระบบวิเคราะห์แคชสามารถรวมค่า `X-OmniRoute-Cost-Saved` ได้
+> **ความหมายของต้นทุนการพบแคช:** บน semantic-cache HIT (`X-OmniRoute-Cache-Hit: true`) ไม่มีการเรียกอัปสตรีม ดังนั้น `X-OmniRoute-Response-Cost` จึงเป็น `0.0000000000` (** เพิ่มขึ้น** ค่าใช้จ่ายในการให้บริการตี) ค่าใช้จ่าย original/would-have-been มีการรายงานแยกต่างหากใน `X-OmniRoute-Cost-Saved` ผู้ใช้บริการที่เรียกเก็บเงินควรรวม `X-OmniRoute-Response-Cost` (การเข้าชมไม่มีค่าใช้จ่ายใดๆ) การวิเคราะห์แคชสามารถรวม `X-OmniRoute-Cost-Saved` ได้
 
 ## ลีสเซสเซสชันแบบจัดการพิเศษเฉพาะ
 
@@ -321,42 +315,24 @@ Content-Type: application/json
 }
 ```
 
-ผู้ให้บริการที่รองรับ ได้แก่ OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana, **OpenRouter**, **ZenMux**, SD WebUI (ภายในเครื่อง) และ ComfyUI (ภายในเครื่อง)
+ผู้ให้บริการที่มีอยู่ ได้แก่ OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (ท้องถิ่น), ComfyUI (ท้องถิ่น)
 
-`n` จะส่งคืนภาพจำนวน `n` ภาพใน `data[]` ผู้ให้บริการที่ API ต้นทางส่งคืนภาพหนึ่งภาพต่อการเรียกใช้หนึ่งครั้ง
-(Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik,
-NVIDIA NIM, Cloudflare Workers AI) จะมีการเรียกใช้ API ต้นทางแยกกัน `n` ครั้ง โดยมีการเรียกใช้งานพร้อมกันสูงสุด 4 ครั้ง ค่า
-`seed` แบบคงที่จะถูกเลื่อนตามดัชนีของการเรียกใช้ (`seed`, `seed + 1`, …) ดังนั้นภาพจะแตกต่างกันแต่ยังสามารถสร้างซ้ำได้
-`n` จำกัดไว้ที่ 10 คำขอทั้งหมดจะล้มเหลวหากการเรียกใช้ครั้งใดครั้งหนึ่งล้มเหลว รายการรูปแบบที่ใช้ fan-out อยู่ใน
-`SINGLE_IMAGE_FANOUT_FORMATS` ใน
-`open-sse/handlers/imageGeneration/fanOut.ts`
+`n` ส่งคืนอิมเมจ `n` ใน `data[]` ผู้ให้บริการที่อัปสตรีม API ส่งคืนหนึ่งภาพต่อการโทร (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) จะได้รับ `n` แยกการโทรอัปสตรีม สูงสุด 4 รายการในเที่ยวบิน `seed` คงที่จะถูกชดเชยด้วยดัชนีการโทร (`seed`, `seed + 1`, …) ดังนั้นรูปภาพจึงแตกต่างกัน แต่ยังคงสามารถทำซ้ำได้ `n` ถูกจำกัดไว้ที่ 10 คำขอจะล้มเหลวโดยรวมหากมีการโทรล้มเหลว รายการรูปแบบการกระจายคือ `SINGLE_IMAGE_FANOUT_FORMATS` ใน `open-sse/handlers/imageGeneration/fanOut.ts`
 
-ZenMux จะนำการเชื่อมต่อ API-key ที่มีอยู่กลับมาใช้ใหม่ และรองรับคำนำหน้า `zenmux/` หรือ `zm/`:
+Codex GPT Image models (`codex/gpt-image-*`) ส่งคืน PNG เท่านั้น: อัพสตรีมจะตอบ `200` ด้วย PNG ไบต์ แม้ว่าจะมีการร้องขอ `jpeg` หรือ `webp` ก็ตาม คำขอที่มี `output_format` อื่น ๆ (`webp`, `jpeg`, ...) ถูกปฏิเสธด้วย HTTP 400 แทนที่จะถูกเพิกเฉยอย่างเงียบ ๆ ละเว้นหรือส่ง `png` `output_compression` จะไม่ถูกส่งต่อ
 
-- `zenmux/openai/gpt-image-2` ใช้ OpenAI Images API ของ ZenMux ตัวเลือกต่าง ๆ ได้แก่ `size`,
-  `quality`, `n`, `output_format`, `output_compression`, `background` และ `response_format`
-- ผู้เผยแพร่รายอื่น เช่น `zm/meta/muse-image-1.0` ใช้ปลายทาง Vertex AI `:predict` ของ ZenMux โดย `n` จะจับคู่กับ
-  `sampleCount`, `aspect_ratio` จับคู่กับ `aspectRatio` และ `image_size`
-  (`1K`, `2K`, `4K`) จับคู่กับ `sampleImageSize` ค่า `size` ในหน่วยพิกเซลจะระบุเพียงอัตราส่วนภาพ
-  ไม่ได้รับประกันขนาดพิกเซลจริง อัตราส่วนภาพ ความละเอียด และจำนวนที่รองรับจะแตกต่างกันไปตามโมเดล
-- `zm/inclusionai/ming-image-0.1-design` จะเลือกขนาดของภาพเอง ให้ละเว้น `size`,
-  `aspect_ratio` และ `image_size` หากระบุค่าอย่างชัดเจนจะส่งคืน HTTP 400 สามารถขอภาพในรูปแบบ PNG, JPEG และ WebP
-  ได้ด้วย `output_format`
+ZenMux ใช้การเชื่อมต่อคีย์ API ที่มีอยู่ซ้ำและยอมรับคำนำหน้า `zenmux/` หรือ `zm/` :
 
-การผสานการทำงานนี้รองรับการสร้างภาพจากข้อความ ไม่รองรับการแก้ไขภาพอ้างอิง ผลลัพธ์จาก Vertex
-จะถูกปรับให้อยู่ในรูปแบบ `data[].b64_json`; `response_format: "url"` จะส่งคืน URL HTTPS จากต้นทาง
-หรือ data URL ที่เข้ารหัสด้วย base64 เมื่อมีเฉพาะไบต์ของภาพเท่านั้น ผลลัพธ์ที่ว่างเปล่าหรือถูกกรอง
-จะส่งคืนข้อผิดพลาดแทนที่จะส่งคืนผลสำเร็จที่ไม่มีข้อมูล การเข้าถึงโมเดลขึ้นอยู่กับบัญชี ZenMux
-ดู [Vertex API ของ ZenMux](https://docs.zenmux.ai/api/vertexai/generate-images) และ
-[OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image)
+- `zenmux/openai/gpt-image-2` ใช้ ZenMux Images APIOpenAI ตัวเลือกได้แก่ `size`, `quality`, `n`, `output_format`, `output_compression`, `background` และ `response_format`
+- ผู้เผยแพร่รายอื่นๆ เช่น `zm/meta/muse-image-1.0` ใช้จุดสิ้นสุด Vertex AI `:predict` ของ ZenMux `n` แมปกับ `sampleCount`, `aspect_ratio` ถึง `aspectRatio` และ `image_size` (`1K`, `2K`, `4K`) ถึง `sampleImageSize` พิกเซล `size` ระบุเฉพาะอัตราส่วนภาพเท่านั้น ไม่รับประกันขนาดพิกเซล อัตราส่วน ความละเอียด และจำนวนที่รองรับจะแตกต่างกันไปตามรุ่น
+- `zm/inclusionai/ming-image-0.1-design` เลือกขนาดของตัวเอง ละเว้น `size`, `aspect_ratio` และ `image_size`; ค่าที่ชัดเจนส่งคืน HTTP 400 สามารถขอ PNG, JPEG และ WebP ด้วย `output_format` ได้
 
-การเชื่อมต่อสำหรับการลงชื่อเข้าใช้ Microsoft 365 Copilot จะให้บริการ
-`copilot-m365-web/m365-copilot-image` ผ่านเครื่องมือสร้างภาพในตัวของ Copilot: ใช้การสนทนา Copilot หนึ่งครั้งต่อภาพหนึ่งภาพ
-(`n` 1–4), `size` มีผลต่อการกำหนดเพียงแนวการวางภาพ และภาพจะถูกส่งคืนแบบฝังอยู่ในผลลัพธ์
-(`b64_json` หรือ data URL สำหรับ `response_format: "url"`) ดู [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation)
+This integration supports text-to-image generation, not reference-image editing. Vertex output is normalized to `data[].b64_json`; `response_format: "url"` returns an upstream HTTPS URL or a base64 data URL when only image bytes are available. Empty/filtered outputs return an error rather than an empty success. Model access depends on the ZenMux account. See [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) and [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+
+การเชื่อมต่อการลงชื่อเข้าใช้ Microsoft 365 Copilot ให้บริการ `copilot-m365-web/m365-copilot-image` ผ่านเครื่องมือรูปภาพในตัวของ Copilot: หนึ่งการหมุน Copilot ต่อรูปภาพ (`n` 1–4) การควบคุม `size` เฉพาะการวางแนว และรูปภาพที่ส่งคืนในบรรทัด (`b64_json` หรือข้อมูล URL สำหรับ `response_format: "url"`) ดู [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation)
 
 ```bash
-# แสดงรายการโมเดลภาพทั้งหมด
+# List all image models
 GET /v1/images/generations
 ```
 

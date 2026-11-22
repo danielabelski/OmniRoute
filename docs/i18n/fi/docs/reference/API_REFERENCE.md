@@ -49,7 +49,7 @@ Kukin käyttöönotto tarjoaa oman kopionsa määrityksestä osoitteessa `/opena
 
 ---
 
-## Chat Completions
+## Chatin valmistuminen
 
 ```bash
 POST /v1/chat/completions
@@ -67,33 +67,32 @@ Content-Type: application/json
 
 ### Mukautetut otsikot
 
-| Header                   | Suunta  | Kuvaus                                                                                                                                                                                                                                                           |
-| ------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `X-OmniRoute-No-Cache`   | Pyyntö  | Aseta arvoksi `true`, jos haluat ohittaa välimuistin                                                                                                                                                                                                             |
-| `x-omniroute-no-memory`  | Pyyntö  | Aseta arvoksi `true`, jos haluat ohittaa muistin + taitojen injektoinnin tässä pyynnössä (peilaa no-cache-asetusta; välttää kutsukohtaisen tokenien/kustannusten yleiskulun)                                                                                     |
-| `X-OmniRoute-Progress`   | Pyyntö  | Aseta arvoksi `true`, jos haluat etenemistapahtumia                                                                                                                                                                                                              |
-| `X-Session-Id`           | Pyyntö  | Kiinteän istunnon avain ulkoista istuntoaffiniteettia varten                                                                                                                                                                                                     |
-| `x_session_id`           | Pyyntö  | Alaviivaversio hyväksytään myös (suora HTTP)                                                                                                                                                                                                                     |
-| `X-OmniRoute-Session-Id` | Pyyntö  | Kutsujan toimittama istunto-/keskustelutunniste (syötetään myös muistiin). Kun se on annettu, tallennetaan sellaisenaan kohteeseen `call_logs.session_tag` istuntokohtaista kustannusten kohdistusta varten (#8249) — sitä ei koskaan muodosteta, jos se puuttuu |
-| `Idempotency-Key`        | Pyyntö  | Kaksoiskappaleiden poistamisen avain (5 sekunnin ikkuna)                                                                                                                                                                                                         |
-| `X-Request-Id`           | Pyyntö  | Vaihtoehtoinen kaksoiskappaleiden poistamisen avain                                                                                                                                                                                                              |
-| `x-omniroute-connection` | Pyyntö  | Kiinnitä yhden mallin pyyntö yhteen palveluntarjoajan yhteyteen (tiliin) sen tunnisteella — katso [Tilin kiinnittäminen pyyntöä kohden](#account-pinning-per-request)                                                                                            |
-| `X-OmniRoute-Cache`      | Vastaus | `HIT` tai `MISS` (ei-suoratoistava)                                                                                                                                                                                                                              |
-| `X-OmniRoute-Idempotent` | Vastaus | `true`, jos kaksoiskappale poistettiin                                                                                                                                                                                                                           |
-| `X-OmniRoute-Progress`   | Vastaus | `enabled`, jos etenemisen seuranta on käytössä                                                                                                                                                                                                                   |
-| `X-OmniRoute-Session-Id` | Vastaus | OmniRouten käyttämä tehokas istuntotunnus                                                                                                                                                                                                                        |
-| `X-OmniRoute-Request-Id` | Vastaus | Pyynnön korrelaatiotunnus (kun tiedossa)                                                                                                                                                                                                                         |
-| `X-OmniRoute-Version`    | Vastaus | OmniRoute-koontiversio (aina mukana)                                                                                                                                                                                                                             |
-| `X-OmniRoute-Cost-Saved` | Vastaus | Välimuistin HIT-tapauksessa säästämä USD-määrä (vain välimuistin osumat)                                                                                                                                                                                         |
-| `X-OmniRoute-Decision`   | Vastaus | Reitityksen jäljitys: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` on yhdistelmästrategia tai `single` muussa kuin yhdistelmäpyynnössä) — aina mukana valmistumisvastauksissa                                                                   |
+| Otsikko                  | Suunta  | Kuvaus                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Pyytää  | Aseta `true` ohittaaksesi välimuistin                                                                                                                                                                                                                                                                                                                                                       |
+| `x-omniroute-no-memory`  | Pyytää  | Aseta arvoksi `true` jos haluat ohittaa muistin + -taitojen lisäämisen tälle pyynnölle (peilaa ilman välimuistia; välttää puhelukohtaisen token/cost ylimäärän)                                                                                                                                                                                                                             |
+| `x-omniroute-no-log`     | Pyytää  | Aseta arvoksi `true` jos haluat jättää request/response -hyötykuormat pois tämän päättelypyynnön puhelulokeista (kaikki chat-perhereitit: Chat Completions, Responses, Messages, Completions, Gemini). Aikaleima, malli, tila, kesto ja merkkimäärät tallennetaan edelleen. Yhdistä `x-omniroute-no-memory` ja `x-omniroute-no-cache` kanssa, jos haluat poistaa sisällön kokonaan käytöstä |
+| `X-OmniRoute-Progress`   | Pyytää  | Aseta `true` edistymistapahtumia varten                                                                                                                                                                                                                                                                                                                                                     |
+| `X-Session-Id`           | Pyytää  | Kiinnittyvä istuntoavain ulkoisen istunnon affiniteettiin                                                                                                                                                                                                                                                                                                                                   |
+| `x_session_id`           | Pyytää  | Myös alaviivamuunnos hyväksytään (suora HTTP)                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | Pyytää  | Soittajan toimittama session/conversation -tunniste (syöttää myös muistia). Kun se on olemassa, säilyi sanatarkasti `call_logs.session_tag` hen istuntokohtaisten kustannusten määrittämistä varten (#8249) — ei koskaan syntetisoitu poissa ollessa                                                                                                                                        |
+| `Idempotency-Key`        | Pyytää  | Dedup-avain (5 sekunnin ikkuna)                                                                                                                                                                                                                                                                                                                                                             |
+| `X-Request-Id`           | Pyytää  | Vaihtoehtoinen dedup-avain                                                                                                                                                                                                                                                                                                                                                                  |
+| `x-omniroute-connection` | Pyytää  | Kiinnitä yhden mallin pyyntö yhden palveluntarjoajan yhteyteen (tiliin) sen tunnuksella — katso [Tilin kiinnitys pyyntöä kohti](#account-pinning-per-request)                                                                                                                                                                                                                               |
+| `X-OmniRoute-Cache`      | Vastaus | `HIT` tai `MISS` (ei suoratoistoa)                                                                                                                                                                                                                                                                                                                                                          |
+| `X-OmniRoute-Idempotent` | Vastaus | `true`, jos kopioidaan                                                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Progress`   | Vastaus | `enabled` jos edistymisen seuranta päällä                                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Session-Id` | Vastaus | OmniRoute:n käyttämä tehokas istunto ID                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Request-Id` | Vastaus | Pyydä korrelaatiotunnusta (jos tiedossa)                                                                                                                                                                                                                                                                                                                                                    |
+| `X-OmniRoute-Version`    | Vastaus | OmniRoute build -versio (aina läsnä)                                                                                                                                                                                                                                                                                                                                                        |
+| `X-OmniRoute-Cost-Saved` | Vastaus | USD vältetty välimuisti HIT ssä (vain välimuistin osumat)                                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Decision`   | Vastaus | Reititysjälki: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` on yhdistelmästrategia tai `single` ei-yhdistelmäpyynnölle) — on aina läsnä valmistumisvastauksissa                                                                                                                                                                                                            |
 
-> Nginx-huomautus: jos käytät alaviivallisia otsakkeita (esimerkiksi `x_session_id`), ota käyttöön `underscores_in_headers on;`.
+> Nginx-huomautus: jos luotat alaviiva-otsikoihin (esimerkiksi `x_session_id`), ota `underscores_in_headers on;` käyttöön.
 
-#### Tilin kiinnittäminen pyyntöä kohden
+#### Tilin kiinnitys pyynnön mukaan
 
-Kun palveluntarjoajalla on useita yhteyksiä (tilejä tai avaimia), OmniRoute valitsee normaalisti yhden
-tilinvalintastrategiansa avulla. Pyyntö voi sen sijaan kiinnittää tietyn yhteyden
-otsakkeella `x-omniroute-connection`:
+Kun palveluntarjoajalla on useita yhteyksiä (tilejä tai avaimia), OmniRoute valitsee tavallisesti yhden tilinvalintastrategiallaan. Pyyntö voi sen sijaan kiinnittää yhden tietyn yhteyden `x-omniroute-connection` otsikon kanssa:
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,26 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Mistä tunniste löytyy.** Avaa palveluntarjoajan sivu hallintapaneelissa
-  (**Dashboard → Providers → <provider>**) ja napsauta yhteysrivin `xxxxxxxx…`-tunnistepainiketta —
-  se kopioi koko yhteyden tunnisteen.
-- **Mitkä pyynnöt käyttävät sitä.** Yhden mallin pyynnöt (`provider/model`) osoitteissa
-  `/v1/chat/completions`, `/v1/messages` ja `/v1/responses`. Yhdistelmät ohittavat otsakkeen: kiinnitä
-  tili kunkin yhdistelmävaiheen osalta erikseen vaiheen oman yhteyden kautta.
-- **Kiinnitys on ehdoton, ei vain toive.** Kiinnitettyä yhteyttä käytetään yksinomaan. Pyynnön
-  sisäinen virhe merkitsee tilille jäähdytysajan, mutta ei siirrä pyyntöä saman palveluntarjoajan
-  toiseen tiliin.
-- **Jäähdytys ja kiintiö vapauttavat kiinnityksen.** Kun kiinnitetty yhteys on jäähdytystilassa,
-  kiintiö on käytetty loppuun tai kiintiökäytäntö estää käytön, myöhemmät pyynnöt siirtyvät
-  palveluntarjoajan muihin yhteyksiin täsmälleen kuten kiinnittämätön liikenne.
-- **Tuntemattomat tai käytöstä poistetut tunnisteet aiheuttavat virheen.** Tunniste, joka ei kuulu
-  palveluntarjoajan aktiiviseen joukkoon (poistettu, deaktivoitu tai toiselle palveluntarjoajalle
-  kuuluva), ei jätä yhtään kelvollista tiliä, joten pyyntö epäonnistuu sen sijaan, että se
-  reititettäisiin huomaamatta muualle.
+- **Mistä tunnuksen löytää.** Avaa palveluntarjoajasivu kojelaudassa (** Kojelauta → Providers → <provider>** ) ja napsauta `xxxxxxxx…` id -sirua yhteysrivillä — se kopioi koko yhteystunnuksen.
+- **Mitkä pyynnöt kunnioittavat sitä.** Yhden mallin pyynnöt (`provider/model`) `/v1/chat/completions` ssä, `/v1/messages` ja `/v1/responses`. Yhdistelmät ohittavat otsikon: kiinnitä tili yhdistelmävaihetta kohti sen sijaan vaiheen oman yhteyden kautta.
+- **Pinta on tiukka, ei mieltymys.** Kiinnitettyä yhteyttä käytetään yksinomaan. Pyynnön sisällä oleva virhe tallentaa tilin jäähtymisen, mutta tekee sen** ei** vaihtaa saman palveluntarjoajan sisarustilille.
+- **Jäähdytys ja kiintiö vapauta merkki.** Kun kiinnitetty yhteys on jäähtymässä, kiintiö loppunut tai kiintiökäytännön estänyt, myöhemmät pyynnöt palautuvat palveluntarjoajan muille yhteyksille aivan kuten kiinnittämätön liikenne.
+- **Tuntemattomat tai käytöstä poistetut tunnukset epäonnistuvat.** Tunnus, joka ei ole palveluntarjoajan aktiivisessa poolissa (poistettu, poistettu käytöstä tai kuuluu toiselle palveluntarjoajalle), ei jätä kelvollista tiliä, joten pyyntö epäonnistuu sen sijaan, että se reitittäisi hiljaa muualle.
 
-Claude Code lähettää mukautetut otsakkeet muuttujan `ANTHROPIC_CUSTOM_HEADERS` kautta. Lisää se
-tiedoston `~/.claude/settings.json` `env`-lohkoon tai projektikohtaiseen
-`.claude/settings.json`-tiedostoon, jos haluat kiinnittää eri tilin kullekin projektille:
+Claude Code lähettää mukautetut otsikot `ANTHROPIC_CUSTOM_HEADERS` kautta. Aseta se `env` n `~/.claude/settings.json`-lohkoon tai projektitason `.claude/settings.json` kiinnittääksesi eri tilin projektia kohti:
 
 ```jsonc
 {
@@ -134,29 +120,11 @@ tiedoston `~/.claude/settings.json` `env`-lohkoon tai projektikohtaiseen
 }
 ```
 
-Lähde: `src/sse/handlers/chat.ts` (otsakkeen luku), `src/sse/services/auth.ts` ja
-`src/sse/services/sessionAffinityPin.ts` (kiinnityksen vapautus ja joukosta puuttumisen tarkistus).
+Lähde: `src/sse/handlers/chat.ts` (otsikon lukeminen), `src/sse/services/auth.ts` ja `src/sse/services/sessionAffinityPin.ts` (nastan vapautus ja puuttuvan altaan tarkistus).
 
-> **Kustannusten telemetriaotsakkeet:** suoratoistamattomat onnistuneet vastaukset sisältävät myös
-> `X-OmniRoute-*`-kustannustelemetrian — `X-OmniRoute-Response-Cost` (USD, aina 10 desimaalia;
-> maksuttomille tai hinnoittelemattomille `0.0000000000`), `X-OmniRoute-Tokens-In` /
-> `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`,
-> `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` ja `X-OmniRoute-Fallback-Attempts`
-> (vain kun arvo on > 0) sekä `X-OmniRoute-Request-Id` ja `X-OmniRoute-Version`. Nämä tuotetaan
-> chat completion -pyynnöissä, osoitteessa `/v1/responses`, osoitteessa `/v1/messages` **ja
-> media-rajapinnoissa** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`,
-> `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` ja
-> `/v1/moderations` (aina kustannuksella `0`). Median kustannus lasketaan modaliteetin mukaan
-> (kuvaa, sekuntia, merkkiä tai hakuyksikköä kohti), kun hinnoittelu on saatavilla; muussa
-> tapauksessa arvo on `0` (fail-open).
+> **Kustannustelemetrian otsikot:** Ei-suoratoiston onnistumisvastaukset sisältävät myös `X-OmniRoute-*` kustannustelemetriajoukon — `X-OmniRoute-Response-Cost` (USD, kiinteä 10 desimaaleja; `0.0000000000` free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit`, ja `X-OmniRoute-Fallback-Attempts` 0 ja > ), `X-OmniRoute-Version` `X-OmniRoute-Request-Id` Näitä lähettävät keskustelun päättymiset, `/v1/responses`, `/v1/messages`,** ja median päätepisteet** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` ja `/v1/moderations` (maksaa aina `0`). Mediakustannukset lasketaan modaliteettikohtaisesti (kuva, sekunti, merkki, hakuyksikköä kohti), kun hinnoittelu on saatavilla, muussa tapauksessa `0` (fail-open).
 
-> **Välimuistiosuman kustannussemantiikka:** semanttisen välimuistin osuman
-> (`X-OmniRoute-Cache-Hit: true`) yhteydessä ylävirran kutsua ei tehdä, joten
-> `X-OmniRoute-Response-Cost` on `0.0000000000` (osuman palvelemisen **lisäkustannus**).
-> Alkuperäinen kustannus tai kustannus, joka olisi muuten syntynyt, ilmoitetaan erikseen
-> otsakkeessa `X-OmniRoute-Cost-Saved`. Laskutuksesta vastaavien kuluttajien tulee laskea yhteen
-> `X-OmniRoute-Response-Cost` (osumat eivät maksa mitään); välimuistianalytiikka voi koostaa
-> arvon `X-OmniRoute-Cost-Saved` perusteella.
+> **Välimuistin osuman kustannussemantiikka:** semanttisessa välimuistissa HIT (`X-OmniRoute-Cache-Hit: true`) ylävirran puhelua ei tehdä, joten `X-OmniRoute-Response-Cost` on `0.0000000000` (** inkrementaalinen** osuman toimituskulut). original/would-have-been kustannus ilmoitetaan erikseen `X-OmniRoute-Cost-Saved` ssä. Laskutuskuluttajien tulisi summa `X-OmniRoute-Response-Cost` (osumat eivät maksa mitään); välimuistin analytiikka voi yhdistää `X-OmniRoute-Cost-Saved`.
 
 ## Eksklusiiviset hallitut istuntovaraukset
 
@@ -375,6 +343,8 @@ Content-Type: application/json
 Saatavilla olevat palveluntarjoajat ovat OpenAI (GPT Image 2 ), xAI (Grok Image ), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (paikallinen), ComfyUI (paikallinen).
 
 `n` palauttaa `n` kuvat `data[]` muodossa. Palveluntarjoajat, joiden ylävirran API palauttaa yhden kuvan puhelua kohden (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI), saavat `n` erilliset ylävirran puhelut, enintään 4 lennon aikana. Kiinteä `seed` korvataan kutsuindeksillä (`seed`, `seed + 1`, …), joten kuvat eroavat toisistaan, mutta pysyvät toistettavissa. `n` yläraja on 10. Pyyntö epäonnistuu kokonaisuudessaan, jos jokin puhelu epäonnistuu. Fan-out-muotojen luettelo on `SINGLE_IMAGE_FANOUT_FORMATS` muodossa `open-sse/handlers/imageGeneration/fanOut.ts`.
+
+Codex GPT Kuvamallit (`codex/gpt-image-*`) palauttavat vain PNG :n: ylävirta vastaa `200` PNG -tavuilla, vaikka `jpeg` tai `webp` pyydetään. Pyyntö jollakin muulla `output_format` llä (`webp`, `jpeg`, ...) hylätään HTTP 400:lla sen sijaan, että se jätettäisiin hiljaa huomiotta; jätä se pois tai lähetä `png`. `output_compression` ei välitetä eteenpäin.
 
 ZenMux käyttää uudelleen olemassa olevaa API-avainyhteyttä ja hyväksyy `zenmux/` tai `zm/` -etuliitteet:
 

@@ -49,7 +49,7 @@ Każde wdrożenie udostępnia własną kopię specyfikacji pod adresem `/openapi
 
 ---
 
-## Uzupełnianie czatu
+## Zakończenia czatu
 
 ```bash
 POST /v1/chat/completions
@@ -65,35 +65,34 @@ Content-Type: application/json
 }
 ```
 
-### Nagłówki niestandardowe
+### Niestandardowe nagłówki
 
-| Header                   | Direction | Description                                                                                                                                                                                                                                            |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `X-OmniRoute-No-Cache`   | Żądanie   | Ustaw na `true`, aby pominąć pamięć podręczną                                                                                                                                                                                                          |
-| `x-omniroute-no-memory`  | Żądanie   | Ustaw na `true`, aby pominąć wstrzykiwanie pamięci i umiejętności dla tego żądania (odzwierciedla no-cache; pozwala uniknąć narzutu tokenów/kosztów dla każdego wywołania)                                                                             |
-| `X-OmniRoute-Progress`   | Żądanie   | Ustaw na `true`, aby włączyć zdarzenia postępu                                                                                                                                                                                                         |
-| `X-Session-Id`           | Żądanie   | Klucz trwałej sesji dla zewnętrznego powiązania sesji                                                                                                                                                                                                  |
-| `x_session_id`           | Żądanie   | Akceptowany jest również wariant z podkreśleniami (bezpośredni HTTP)                                                                                                                                                                                   |
-| `X-OmniRoute-Session-Id` | Żądanie   | Dostarczony przez wywołującego znacznik sesji/konwersacji (również zasila pamięć). Gdy jest obecny, jest zapisywany bez zmian w `call_logs.session_tag` na potrzeby przypisywania kosztów do sesji (#8249) — nigdy nie jest generowany, gdy go brakuje |
-| `Idempotency-Key`        | Żądanie   | Klucz deduplikacji (okno 5 s)                                                                                                                                                                                                                          |
-| `X-Request-Id`           | Żądanie   | Alternatywny klucz deduplikacji                                                                                                                                                                                                                        |
-| `x-omniroute-connection` | Żądanie   | Przypisuje żądanie dotyczące pojedynczego modelu do jednego połączenia dostawcy (konta) na podstawie jego identyfikatora — zobacz [Przypisywanie konta na żądanie](#account-pinning-per-request)                                                       |
-| `X-OmniRoute-Cache`      | Odpowiedź | `HIT` lub `MISS` (bez strumieniowania)                                                                                                                                                                                                                 |
-| `X-OmniRoute-Idempotent` | Odpowiedź | `true`, jeśli zastosowano deduplikację                                                                                                                                                                                                                 |
-| `X-OmniRoute-Progress`   | Odpowiedź | `enabled`, jeśli śledzenie postępu jest włączone                                                                                                                                                                                                       |
-| `X-OmniRoute-Session-Id` | Odpowiedź | Efektywny identyfikator sesji używany przez OmniRoute                                                                                                                                                                                                  |
-| `X-OmniRoute-Request-Id` | Odpowiedź | Identyfikator korelacji żądania (gdy jest znany)                                                                                                                                                                                                       |
-| `X-OmniRoute-Version`    | Odpowiedź | Wersja kompilacji OmniRoute (zawsze obecna)                                                                                                                                                                                                            |
-| `X-OmniRoute-Cost-Saved` | Odpowiedź | Kwota w USD zaoszczędzona dzięki pamięci podręcznej w przypadku `HIT` (tylko przy trafieniach pamięci podręcznej)                                                                                                                                      |
-| `X-OmniRoute-Decision`   | Odpowiedź | Ślad routingu: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` to strategia złożona lub `single` w przypadku żądania niezłożonego) — zawsze obecny w odpowiedziach kończących                                                            |
+| Chodnikowiec             | Kierunek  | Opis                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-OmniRoute-No-Cache`   | Wniosek   | Ustaw na `true`, aby ominąć pamięć podręczną                                                                                                                                                                                                                                                                                                                                                    |
+| `x-omniroute-no-memory`  | Wniosek   | Ustaw na `true`, aby pominąć wstrzykiwanie umiejętności + do pamięci dla tego żądania (odzwierciedla brak pamięci podręcznej; pozwala uniknąć narzutu token/cost na połączenie)                                                                                                                                                                                                                 |
+| `x-omniroute-no-log`     | Wniosek   | Ustaw na `true`, aby pominąć ładunki request/response z dzienników połączeń dla tego żądania wnioskowania (wszystkie trasy rodziny rozmów: zakończenia czatu, odpowiedzi, wiadomości, uzupełnienia, Gemini). Znacznik czasu, model, status, czas trwania i liczba tokenów są nadal rejestrowane. Połącz z `x-omniroute-no-memory` i `x-omniroute-no-cache`, aby zrezygnować z pełnej zawartości |
+| `X-OmniRoute-Progress`   | Wniosek   | Ustaw na `true` dla zdarzeń postępu                                                                                                                                                                                                                                                                                                                                                             |
+| `X-Session-Id`           | Wniosek   | Przyklejony klucz sesji dla powinowactwa sesji zewnętrznej                                                                                                                                                                                                                                                                                                                                      |
+| `x_session_id`           | Wniosek   | Akceptowany jest również wariant podkreślenia (bezpośrednie HTTP)                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Session-Id` | Wniosek   | Znacznik session/conversation dostarczany przez rozmówcę (również zasila pamięć). Jeśli jest obecny, utrwalony dosłownie w `call_logs.session_tag` w celu przypisania kosztów na sesję (#8249) — nigdy nie jest syntetyzowany, gdy jest nieobecny                                                                                                                                               |
+| `Idempotency-Key`        | Wniosek   | Klucz deduplikacji (okno 5s)                                                                                                                                                                                                                                                                                                                                                                    |
+| `X-Request-Id`           | Wniosek   | Alternatywny klucz deduplikacji                                                                                                                                                                                                                                                                                                                                                                 |
+| `x-omniroute-connection` | Wniosek   | Przypnij żądanie jednego modelu do połączenia jednego dostawcy (konta) według jego identyfikatora — zobacz [Przypinanie konta na żądanie](#account-pinning-per-request)                                                                                                                                                                                                                         |
+| `X-OmniRoute-Cache`      | Odpowiedź | `HIT` lub `MISS` (bez przesyłania strumieniowego)                                                                                                                                                                                                                                                                                                                                               |
+| `X-OmniRoute-Idempotent` | Odpowiedź | `true` w przypadku deduplikacji                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Progress`   | Odpowiedź | `enabled` jeśli włączone jest śledzenie postępu                                                                                                                                                                                                                                                                                                                                                 |
+| `X-OmniRoute-Session-Id` | Odpowiedź | Efektywna sesja ID używana przez OmniRoute                                                                                                                                                                                                                                                                                                                                                      |
+| `X-OmniRoute-Request-Id` | Odpowiedź | Identyfikator korelacji żądania (jeśli jest znany)                                                                                                                                                                                                                                                                                                                                              |
+| `X-OmniRoute-Version`    | Odpowiedź | Wersja kompilacji OmniRoute (zawsze obecna)                                                                                                                                                                                                                                                                                                                                                     |
+| `X-OmniRoute-Cost-Saved` | Odpowiedź | USD unikanie pamięci podręcznej na HIT (tylko trafienia w pamięci podręcznej)                                                                                                                                                                                                                                                                                                                   |
+| `X-OmniRoute-Decision`   | Odpowiedź | Śledzenie routingu: `strategy=<name>; provider=<alias>; latency_ms=<n>` (`<name>` to strategia łączona lub `single` w przypadku żądania innego niż kombinowane) — zawsze obecne po zakończeniu odpowiedzi                                                                                                                                                                                       |
 
-> Uwaga dotycząca Nginx: jeśli korzystasz z nagłówków zawierających podkreślenia (na przykład `x_session_id`), włącz `underscores_in_headers on;`.
+> Uwaga Nginx: jeśli polegasz na nagłówkach podkreśleń (na przykład `x_session_id`), włącz `underscores_in_headers on;`.
 
-#### Przypisywanie konta na żądanie
+#### Przypinanie konta na żądanie
 
-Gdy dostawca ma kilka połączeń (kont lub kluczy), OmniRoute zwykle wybiera jedno
-za pomocą swojej strategii wyboru konta. Żądanie może zamiast tego przypisać konkretne połączenie
-za pomocą nagłówka `x-omniroute-connection`:
+Gdy dostawca ma kilka połączeń (kont lub kluczy), OmniRoute zwykle wybiera jedno w ramach swojej strategii wyboru konta. Zamiast tego żądanie może przypiąć jedno konkretne połączenie za pomocą nagłówka `x-omniroute-connection` :
 
 ```bash
 curl http://localhost:20128/v1/chat/completions \
@@ -103,26 +102,13 @@ curl http://localhost:20128/v1/chat/completions \
   -d '{"model": "codex/gpt-5.5", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
-- **Gdzie znaleźć identyfikator.** Otwórz stronę dostawcy w panelu
-  (**Dashboard → Providers → <provider>**) i kliknij układ z identyfikatorem `xxxxxxxx…` w wierszu
-  połączenia — spowoduje to skopiowanie pełnego identyfikatora połączenia.
-- **Które żądania go uwzględniają.** Żądania pojedynczego modelu (`provider/model`) kierowane do
-  `/v1/chat/completions`, `/v1/messages` i `/v1/responses`. Kombinacje ignorują ten nagłówek:
-  przypnij konto dla każdego kroku kombinacji za pośrednictwem własnego połączenia tego kroku.
-- **Przypięcie jest ścisłe, a nie preferencyjne.** Przypięte połączenie jest używane wyłącznie. Błąd
-  występujący podczas żądania rejestruje czas oczekiwania konta, ale **nie** powoduje przełączenia na
-  inne konto tego samego dostawcy.
-- **Czas oczekiwania i wyczerpanie limitu zwalniają przypięcie.** Gdy przypięte połączenie jest
-  objęte czasem oczekiwania, wyczerpało limit lub zostało zablokowane przez zasadę limitu, kolejne
-  żądania przechodzą na inne połączenia dostawcy, dokładnie tak jak w przypadku ruchu bez przypięcia.
-- **Nieznane lub wyłączone identyfikatory powodują błąd.** Identyfikator, którego nie ma w aktywnej
-  puli dostawcy (został usunięty, dezaktywowany lub należy do innego dostawcy), nie pozostawia
-  żadnego kwalifikującego się konta, więc żądanie kończy się niepowodzeniem zamiast być potajemnie
-  przekierowane gdzie indziej.
+- **Gdzie znaleźć identyfikator.** Otwórz stronę dostawcy w panelu kontrolnym (** Pulpit nawigacyjny → Dostawcy → <provider>** ) i kliknij chip `xxxxxxxx…` id w wierszu połączenia — kopiuje pełny identyfikator połączenia.
+- **Które prośby to honorują.** Żądania pojedynczego modelu (`provider/model`) na `/v1/chat/completions`, `/v1/messages` i `/v1/responses`. Kombinacje ignorują nagłówek: zamiast tego przypinaj konto na krok kombinacji poprzez własne połączenie tego kroku.
+- **Pin jest rygorystyczny, a nie preferowany.** Stosowane jest wyłącznie połączenie przegubowe. Błąd w żądaniu rejestruje czas odnowienia konta, ale tak jest** nie** przejść na konto rodzeństwa tego samego dostawcy.
+- **Cooldown i limit zwalniają pin.** Podczas gdy przypięte połączenie stygnie, wyczerpuje się przydział lub jest blokowane przez zasady przydziału, późniejsze żądania wracają do innych połączeń dostawcy, dokładnie tak samo jak ruch nieprzypięty.
+- **Nieznane lub wyłączone identyfikatory nie powiodły się.** Identyfikator, który nie znajduje się w aktywnej puli dostawcy (usunięty, dezaktywowany lub należący do innego dostawcy), nie pozostawia kwalifikującego się konta, więc żądanie kończy się niepowodzeniem i zamiast być dyskretnie kierowane gdzie indziej.
 
-Claude Code wysyła niestandardowe nagłówki za pośrednictwem `ANTHROPIC_CUSTOM_HEADERS`. Umieść go w bloku
-`env` pliku `~/.claude/settings.json` albo w pliku `.claude/settings.json` na poziomie projektu, aby
-przypiąć inne konto dla każdego projektu:
+Kod Claude wysyła niestandardowe nagłówki poprzez `ANTHROPIC_CUSTOM_HEADERS`. Umieść go w bloku `env` `~/.claude/settings.json` lub w `.claude/settings.json` na poziomie projektu, aby przypiąć inne konto dla każdego projektu:
 
 ```jsonc
 {
@@ -134,27 +120,11 @@ przypiąć inne konto dla każdego projektu:
 }
 ```
 
-Źródło: `src/sse/handlers/chat.ts` (odczyt nagłówka), `src/sse/services/auth.ts` i
-`src/sse/services/sessionAffinityPin.ts` (zwalnianie przypięcia i sprawdzanie braku w puli).
+Źródło: `src/sse/handlers/chat.ts` (odczyt nagłówka), `src/sse/services/auth.ts` i `src/sse/services/sessionAffinityPin.ts` (zwolnienie pinów i sprawdzenie braku w puli).
 
-> **Nagłówki telemetrii kosztów:** odpowiedzi powodzenia bez strumieniowania również zawierają zestaw
-> telemetrii kosztów `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, stałe 10 miejsc dziesiętnych;
-> `0.0000000000` dla bezpłatnych/niewycenionych), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`,
-> `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`,
-> `X-OmniRoute-Cache-Hit` i `X-OmniRoute-Fallback-Attempts` (tylko gdy > 0), a także
-> `X-OmniRoute-Request-Id` i `X-OmniRoute-Version`. Są one emitowane przez completions czatu,
-> `/v1/responses`, `/v1/messages` **oraz punkty końcowe mediów** — `/v1/embeddings`,
-> `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`,
-> `/v1/videos/generations`, `/v1/music/generations` i `/v1/moderations` (zawsze koszt `0`). Koszt
-> mediów jest obliczany według modalności (na obraz, sekundę, znak lub jednostkę wyszukiwania), gdy
-> wycena jest dostępna; w przeciwnym razie wynosi `0` (fail-open).
+> **Nagłówki telemetrii kosztów:** Odpowiedzi na sukces inne niż przesyłanie strumieniowe zawierają również zestaw telemetrii kosztów `X-OmniRoute-*` — `X-OmniRoute-Response-Cost` (USD, stałe 10 miejsc po przecinku; `0.0000000000` dla free/unpriced), `X-OmniRoute-Tokens-In` / `X-OmniRoute-Tokens-Out`, `X-OmniRoute-Model`, `X-OmniRoute-Provider`, `X-OmniRoute-Latency-Ms`, `X-OmniRoute-Cache-Hit` i `X-OmniRoute-Fallback-Attempts` (tylko gdy > 0) plus `X-OmniRoute-Request-Id` i `X-OmniRoute-Version`. Są one emitowane przez zakończenia czatu, `/v1/responses`, `/v1/messages`,** i punkty końcowe mediów** — `/v1/embeddings`, `/v1/images/generations`, `/v1/audio/speech`, `/v1/audio/transcriptions`, `/v1/rerank`, `/v1/videos/generations`, `/v1/music/generations` i `/v1/moderations` (zawsze kosztują `0`). Koszt mediów jest obliczany według modalności (na obraz, na sekundę, na znak, na jednostkę wyszukiwania), jeśli dostępna jest cena, w przeciwnym razie `0` (bezczynne otwieranie).
 
-> **Semantyka kosztu trafienia w pamięć podręczną:** w przypadku trafienia w pamięć semantyczną
-> (`X-OmniRoute-Cache-Hit: true`) nie jest wykonywane żadne wywołanie usługi nadrzędnej, dlatego
-> `X-OmniRoute-Response-Cost` wynosi `0.0000000000` (jest to **przyrostowy** koszt obsłużenia trafienia).
-> Pierwotny/przewidywany koszt jest raportowany osobno w `X-OmniRoute-Cost-Saved`. Konsumenci danych
-> rozliczeniowych powinni sumować `X-OmniRoute-Response-Cost` (trafienia nic nie kosztują); analityka
-> pamięci podręcznej może agregować `X-OmniRoute-Cost-Saved`.
+> **Semantyka kosztów trafień w pamięci podręcznej:** w semantycznej pamięci podręcznej HIT (`X-OmniRoute-Cache-Hit: true`) nie jest wykonywane żadne wywołanie w górę, więc `X-OmniRoute-Response-Cost` to `0.0000000000` (** przyrostowe** koszt serwowania trafienia). Koszt original/would-have-been jest wykazywany oddzielnie w `X-OmniRoute-Cost-Saved`. Konsumenci rozliczeniowi powinni sumować `X-OmniRoute-Response-Cost` (trafienia nic nie kosztują); analiza pamięci podręcznej może agregować `X-OmniRoute-Cost-Saved`.
 
 ## Ekskluzywne dzierżawy zarządzanych sesji
 
@@ -359,7 +329,7 @@ GET /v1/embeddings
 
 ---
 
-## Generowanie obrazów
+## Generowanie obrazu
 
 ```bash
 POST /v1/images/generations
@@ -373,34 +343,24 @@ Content-Type: application/json
 }
 ```
 
-Dostępni dostawcy obejmują OpenAI (GPT Image 2), xAI (Grok Image), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana, **OpenRouter**, **ZenMux**, SD WebUI (lokalne), ComfyUI (lokalne).
+Dostępni dostawcy to OpenAI (obraz GPT 2), xAI (obrazek Grok ), Together AI (FLUX), Fireworks AI, Nebius (FLUX), Hyperbolic, NanoBanana,**OpenRouter** ,**ZenMux** , SD WebUI (lokalny), ComfyUI (lokalny).
 
-`n` zwraca `n` obrazów w `data[]`. Dostawcy, których nadrzędne API zwraca jeden obraz na wywołanie
-(Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik,
-NVIDIA NIM, Cloudflare Workers AI), wykonują `n` oddzielnych wywołań nadrzędnego API, maksymalnie 4 jednocześnie. Stała wartość `seed` jest zwiększana o indeks wywołania (`seed`, `seed + 1`, …), dzięki czemu obrazy różnią się, ale pozostają odtwarzalne. Wartość `n` jest ograniczona do 10. Żądanie kończy się niepowodzeniem w całości, jeśli którekolwiek wywołanie zakończy się niepowodzeniem. Lista formatów obsługujących rozdzielanie wywołań znajduje się w `SINGLE_IMAGE_FANOUT_FORMATS` w
-`open-sse/handlers/imageGeneration/fanOut.ts`.
+`n` zwraca obrazy `n` w `data[]`. Dostawcy, których upstream API zwraca jeden obraz na połączenie (Black Forest Labs, Stability AI, Leonardo, Ideogram, Haiper, Hyperbolic, Magnific/Freepik, NVIDIA NIM, Cloudflare Workers AI) otrzymują `n` oddzielne wywołania upstream, maksymalnie 4 w locie. Ustalony `seed` jest przesunięty przez indeks wywołania (`seed`, `seed + 1`, …), więc obrazy różnią się, ale pozostają powtarzalne. `n` jest ograniczone do 10. Żądanie kończy się niepowodzeniem w całości, jeśli jakiekolwiek wywołanie nie powiedzie się. Lista formatów rozwinięcia to `SINGLE_IMAGE_FANOUT_FORMATS` w `open-sse/handlers/imageGeneration/fanOut.ts`.
 
-ZenMux ponownie wykorzystuje istniejące połączenie z kluczem API i akceptuje prefiksy
-`zenmux/` lub `zm/`:
+Codex GPT Modele obrazów (`codex/gpt-image-*`) zwracają tylko PNG : element nadrzędny odpowiada `200` bajtami PNG, nawet jeśli żądane jest `jpeg` lub `webp`. Żądanie z jakimkolwiek innym `output_format` (`webp`, `jpeg`, ...) jest odrzucane z HTTP 400 zamiast być dyskretnie ignorowane; pomiń go lub wyślij `png`. `output_compression` nie jest przekazywany.
 
-- `zenmux/openai/gpt-image-2` korzysta z API obrazów OpenAI w ZenMux. Opcje obejmują `size`,
-  `quality`, `n`, `output_format`, `output_compression`, `background` oraz `response_format`.
-- Inni wydawcy, tacy jak `zm/meta/muse-image-1.0`, korzystają z punktu końcowego Vertex AI `:predict` w ZenMux. `n` jest mapowane na `sampleCount`, `aspect_ratio` na `aspectRatio`, a `image_size`
-  (`1K`, `2K`, `4K`) na `sampleImageSize`. Pikselowy parametr `size` określa wyłącznie współczynnik proporcji,
-  a nie gwarantowane wymiary w pikselach. Obsługiwane proporcje, rozdzielczości i liczby obrazów różnią się w zależności od modelu.
-- `zm/inclusionai/ming-image-0.1-design` samodzielnie wybiera wymiary. Pomiń `size`,
-  `aspect_ratio` i `image_size`; podanie jawnych wartości zwraca HTTP 400. Za pomocą `output_format` można zażądać formatu PNG, JPEG lub WebP.
+ZenMux ponownie wykorzystuje istniejące połączenie klucza API i akceptuje prefiksy `zenmux/` lub `zm/` :
 
-Ta integracja obsługuje generowanie obrazów na podstawie tekstu, ale nie edycję obrazów referencyjnych. Wynik Vertex jest normalizowany do `data[].b64_json`; `response_format: "url"` zwraca nadrzędny adres URL HTTPS lub adres URL danych base64, gdy dostępne są wyłącznie bajty obrazu. Puste lub odfiltrowane wyniki zwracają błąd zamiast pomyślnego wyniku bez danych. Dostęp do modeli zależy od konta ZenMux.
-Zobacz [API Vertex firmy ZenMux](https://docs.zenmux.ai/api/vertexai/generate-images) oraz
-[API obrazów OpenAI](https://docs.zenmux.ai/api/openai/generate-an-image).
+- `zenmux/openai/gpt-image-2` używa obrazów ZenMuxOpenAI API. Opcje obejmują `size`, `quality`, `n`, `output_format`, `output_compression`, `background` i `response_format`.
+- Inni wydawcy, tacy jak `zm/meta/muse-image-1.0`, używają punktu końcowego ZenMuxAI `:predict`. `n` mapuje na `sampleCount`, `aspect_ratio` na `aspectRatio` i `image_size` (`1K`, `2K`, `4K`) na `sampleImageSize`. Piksel `size` zapewnia jedynie współczynnik kształtu, a nie gwarantowane wymiary w pikselach. Obsługiwane współczynniki, rozdzielczości i liczniki różnią się w zależności od modelu.
+- `zm/inclusionai/ming-image-0.1-design` wybiera własne wymiary. Pomiń `size`, `aspect_ratio` i `image_size`; jawne wartości zwracają HTTP 400. PNG, JPEG i WebP można zażądać za pomocą `output_format`.
 
-Połączenie logowania Microsoft 365 Copilot udostępnia `copilot-m365-web/m365-copilot-image`
-za pośrednictwem wbudowanego narzędzia obrazów Copilot: jedna tura Copilot na obraz (`n` 1–4), parametr `size` steruje wyłącznie orientacją, a obrazy są zwracane bezpośrednio (`b64_json` lub adres URL danych dla
-`response_format: "url"`). Zobacz [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
+This integration supports text-to-image generation, not reference-image editing. Vertex output is normalized to `data[].b64_json`; `response_format: "url"` returns an upstream HTTPS URL or a base64 data URL when only image bytes are available. Empty/filtered outputs return an error rather than an empty success. Model access depends on the ZenMux account. See [ZenMux's Vertex API](https://docs.zenmux.ai/api/vertexai/generate-images) and [OpenAI Images API](https://docs.zenmux.ai/api/openai/generate-an-image).
+
+Połączenie logowania Microsoft 365 Copilot obsługuje `copilot-m365-web/m365-copilot-image` poprzez wbudowane narzędzie obrazowe Copilot: jeden obrót Copilot na obraz (`n` 1–4), `size` steruje tylko orientacją i obrazy zwracane w linii (`b64_json` lub dane URL dla `response_format: "url"`). Zobacz [Microsoft 365 Copilot](../providers/COPILOT-M365.md#image-generation).
 
 ```bash
-# Wyświetl listę wszystkich modeli obrazów
+# List all image models
 GET /v1/images/generations
 ```
 
