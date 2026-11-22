@@ -973,7 +973,8 @@
       "description": "Pārvaldīt izturības konfigurāciju",
       "threshold": "Kļūdas slieksnis",
       "resetTimeout": "Atiestatīšanas taimauts milisekundēs",
-      "baseCooldown": "Bāzes atdzišanas laiks milisekundēs"
+      "baseCooldown": "Bāzes atdzišanas laiks milisekundēs",
+      "p2cLatencyWeight": "p2c latentuma svars, no 0 (izslēgts) līdz 20"
     }
   },
   "nodes": {

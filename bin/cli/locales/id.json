@@ -973,7 +973,8 @@
       "description": "Kelola konfigurasi ketahanan",
       "threshold": "Ambang batas kegagalan",
       "resetTimeout": "Batas waktu pengaturan ulang dalam ms",
-      "baseCooldown": "Cooldown dasar dalam ms"
+      "baseCooldown": "Cooldown dasar dalam ms",
+      "p2cLatencyWeight": "berat latensi p2c, 0 (mati) hingga 20"
     }
   },
   "nodes": {

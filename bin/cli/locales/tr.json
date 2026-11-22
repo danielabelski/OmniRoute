@@ -973,7 +973,8 @@
       "description": "Dayanıklılık yapılandırmasını yönet",
       "threshold": "Hata eşiği",
       "resetTimeout": "Sıfırlama zaman aşımı (ms)",
-      "baseCooldown": "Temel bekleme süresi (ms)"
+      "baseCooldown": "Temel bekleme süresi (ms)",
+      "p2cLatencyWeight": "p2c gecikme ağırlığı, 0 (kapalı) ila 20"
     }
   },
   "nodes": {

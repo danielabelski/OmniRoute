@@ -973,7 +973,8 @@
       "description": "ခံနိုင်ရည် စီစဉ်သတ်မှတ်ချက်ကို စီမံရန်",
       "threshold": "ချို့ယွင်းမှု သတ်မှတ်အဆင့်",
       "resetTimeout": "ပြန်လည်သတ်မှတ်ရန် အချိန်ကုန်ဆုံးမှု (ms)",
-      "baseCooldown": "အခြေခံ ခေတ္တရပ်နားချိန် (ms)"
+      "baseCooldown": "အခြေခံ ခေတ္တရပ်နားချိန် (ms)",
+      "p2cLatencyWeight": "p2c latency weight, 0 (off) မှ 20"
     }
   },
   "nodes": {

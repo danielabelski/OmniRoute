@@ -973,7 +973,8 @@
       "description": "Dayanıqlılıq konfiqurasiyasını idarə et",
       "threshold": "Uğursuzluq həddi",
       "resetTimeout": "Sıfırlama taymautu, ms",
-      "baseCooldown": "Əsas gözləmə müddəti, ms"
+      "baseCooldown": "Əsas gözləmə müddəti, ms",
+      "p2cLatencyWeight": "p2c gecikmə çəkisi, 0-dan 20-yə qədər"
     }
   },
   "nodes": {
